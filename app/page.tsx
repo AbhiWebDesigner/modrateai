@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Shield, Zap, Globe, BarChart3, Bell, MessageSquare, Check, ChevronRight, Star, Trash2 } from 'lucide-react';
+import { Shield, Zap, Globe, BarChart3, Bell, MessageSquare, Check, ChevronRight, Star, } from 'lucide-react';
 
 export default function Home() {
   return (

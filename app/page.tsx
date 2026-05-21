@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Shield, Zap, Globe, BarChart3, Bell, MessageSquare, Check, ChevronRight, Star, } from 'lucide-react';
+import { Shield, Zap, Globe, BarChart3, Bell, MessageSquare, Check, ChevronRight, Star, AlertTriangle } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -22,7 +22,7 @@ export default function Home() {
         .stat-num { background: linear-gradient(135deg, #a855f7, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .nav-bg { background: rgba(8,8,15,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.07); }
         .comment-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; }
-        .blue-section { background: linear-gradient(135deg, rgba(139,92,246,0.9), rgba(109,40,217,0.95)); }
+        .timeout-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; }
       `}</style>
 
       {/* NAV */}
@@ -58,7 +58,7 @@ export default function Home() {
           In every language.
         </h1>
         <p className="text-gray-400 text-xl max-w-2xl mb-10 leading-relaxed">
-          AI-powered YouTube moderation for Telugu, Hindi, Tamil, Kannada, Malayalam, Punjabi and 100+ languages. Bad comments deleted. Good ones auto-replied. 24/7.
+          AI-powered YouTube moderation for Telugu, Hindi, Tamil, Kannada, Malayalam, Punjabi and 100+ languages. Bad comments hidden for review. Live chat timeouts. Auto-replied. 24/7.
         </p>
         <div className="flex flex-wrap gap-4 justify-center mb-6">
           <Link href="/login" className="gold-btn px-8 py-4 rounded-xl text-lg transition-all">
@@ -68,7 +68,7 @@ export default function Home() {
             See how it works
           </a>
         </div>
-        <p className="text-sm text-gray-600">✓ No credit card &nbsp;✓ 7-day free trial &nbsp;✓ Cancel anytime</p>
+        <p className="text-sm text-gray-600">✓ No credit card &nbsp;✓ 19-day free trial &nbsp;✓ Cancel anytime</p>
 
         {/* DEMO CARD */}
         <div className="mt-16 w-full max-w-lg purple-glow rounded-2xl overflow-hidden card text-left">
@@ -81,9 +81,9 @@ export default function Home() {
           <div className="p-5 space-y-3">
             {[
               { user: 'Ravi Kumar', text: 'Bhai bohot acha video tha! 🙌', status: '✓ KEPT', bg: 'rgba(34,197,94,0.1)', color: '#4ade80', border: 'rgba(34,197,94,0.2)' },
-              { user: 'anonymous_x', text: 'ni amma [abusive Telugu slang]', status: '🗑 DELETED', bg: 'rgba(239,68,68,0.1)', color: '#f87171', border: 'rgba(239,68,68,0.2)' },
+              { user: 'anonymous_x', text: 'ni amma [abusive Telugu slang]', status: '🙈 HIDDEN', bg: 'rgba(239,68,68,0.1)', color: '#f87171', border: 'rgba(239,68,68,0.2)' },
               { user: 'Priya Sharma', text: 'ella unaru? video chala bagundi!', status: '↩ REPLIED', bg: 'rgba(168,85,247,0.1)', color: '#c084fc', border: 'rgba(168,85,247,0.2)' },
-              { user: 'troll_99', text: 'kys bro [death threat detected]', status: '🗑 DELETED', bg: 'rgba(239,68,68,0.1)', color: '#f87171', border: 'rgba(239,68,68,0.2)' },
+              { user: 'troll_99 (3rd offense)', text: 'kys bro [repeat offender]', status: '⏱ 10s TIMEOUT', bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: 'rgba(245,158,11,0.2)' },
             ].map((c, i) => (
               <div key={i} className="comment-card flex items-center justify-between p-3">
                 <div>
@@ -118,14 +118,37 @@ export default function Home() {
       <section id="how" className="py-24 px-4" style={{ background: '#08080f' }}>
         <div className="max-w-5xl mx-auto">
           <p className="text-purple-400 text-sm font-bold tracking-widest uppercase mb-3 text-center">How it works</p>
-          <h2 className="text-4xl font-black mb-4 text-center">Up and running in 5 minutes</h2>
-          <p className="text-gray-500 text-center mb-16">Connect once. ModrateAI handles everything automatically.</p>
+          <h2 className="text-4xl font-black mb-4 text-center">Smart moderation that learns</h2>
+          <p className="text-gray-500 text-center mb-12">Repeat offenders get progressively longer timeouts. Connect once, protect forever.</p>
+
+          {/* LIVE CHAT TIMEOUT SYSTEM */}
+          <div className="card rounded-2xl p-6 mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+              <p className="text-amber-400 text-sm font-bold">Live Chat Progressive Timeout System</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-3">
+              {[
+                { range: '1st – 2nd offense', timeout: '10 seconds', color: '#4ade80', bg: 'rgba(34,197,94,0.08)' },
+                { range: '3rd – 14th offense', timeout: '30 minutes', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+                { range: '15th – 20th offense', timeout: '24 hours', color: '#f87171', bg: 'rgba(239,68,68,0.08)' },
+                { range: '10 bad words spam', timeout: 'Auto hide + 24hr timeout', color: '#c084fc', bg: 'rgba(168,85,247,0.08)' },
+              ].map((t) => (
+                <div key={t.range} className="timeout-row" style={{ background: t.bg, border: `1px solid ${t.color}22` }}>
+                  <span className="text-sm text-gray-400">{t.range}</span>
+                  <span className="text-sm font-black" style={{ color: t.color }}>{t.timeout}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-600 mt-4">✦ Spam messages with repeated bad words trigger auto-hide or 24hr timeout automatically</p>
+          </div>
+
           <div className="grid md:grid-cols-4 gap-4">
             {[
               { num: '01', title: 'Connect YouTube', desc: 'One-click Google login. No API keys or technical setup.' },
-              { num: '02', title: 'AI scans comments', desc: 'Every 2 minutes, all your videos and live chats scanned.' },
-              { num: '03', title: 'Transliteration', desc: 'Sarvam AI converts Romanized Indian text to native script.' },
-              { num: '04', title: 'Delete + Reply', desc: 'Bad comments deleted. Good ones get smart auto-replies.' },
+              { num: '02', title: 'AI scans everything', desc: 'Every 2 minutes — all videos, shorts, posts, live chats scanned.' },
+              { num: '03', title: 'Hide for review', desc: 'Bad comments hidden from public. You review and decide from dashboard.' },
+              { num: '04', title: 'Auto-reply', desc: 'Good comments get AI replies with 45 second natural delay.' },
             ].map((step, i) => (
               <div key={i} className="card rounded-2xl p-6 transition-all" style={{ cursor: 'default' }}>
                 <div className="text-5xl font-black mb-4" style={{ color: 'rgba(168,85,247,0.2)' }}>{step.num}</div>
@@ -145,11 +168,11 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-4">
             {[
               { icon: Globe, title: 'Multilingual AI', desc: 'Detects toxic content in Telugu, Hindi, Tamil, Kannada, Punjabi, Malayalam and 100+ languages including Romanized scripts.', color: '#a855f7' },
-              { icon: Zap, title: 'Live chat moderation', desc: 'Monitors your YouTube live streams in real time. Bad messages removed before your audience sees them.', color: '#f59e0b' },
-              { icon: MessageSquare, title: 'Smart auto-replies', desc: 'Automatically replies to positive comments on your behalf. Engage your community 24/7 without lifting a finger.', color: '#ec4899' },
-              { icon: BarChart3, title: 'Analytics dashboard', desc: 'See total comments scanned, deleted, replied. Track which videos attract the most toxic traffic.', color: '#06b6d4' },
-              { icon: Bell, title: 'Telegram alerts', desc: 'Get instant notifications on Telegram whenever a toxic comment is detected and removed from your channel.', color: '#a855f7' },
-              { icon: Shield, title: 'All videos protected', desc: 'Every 2 minutes, ALL your videos — old shorts, new uploads, everything — are scanned automatically.', color: '#f59e0b' },
+              { icon: Zap, title: 'Live chat timeouts', desc: '1st-2nd offense: 10sec. 3rd-14th: 30min. 15th-20th+: 24hr timeout. Spam with 10+ bad words: auto-hide + 24hr ban.', color: '#f59e0b' },
+              { icon: MessageSquare, title: 'Smart auto-replies', desc: '3 AI replies per video on free plan. Replies to good comments with 45 second natural delay. Unlimited on Pro.', color: '#ec4899' },
+              { icon: BarChart3, title: 'Comments review', desc: 'All hidden bad comments from videos, shorts, posts available in your dashboard for review. Restore or delete permanently.', color: '#06b6d4' },
+              { icon: Bell, title: 'Spam detection', desc: 'Repeated bad words and spam messages automatically trigger hide or progressive timeout — no manual setup needed.', color: '#a855f7' },
+              { icon: Shield, title: 'All content protected', desc: 'Videos, Shorts, Posts, Live chats — everything scanned every 2 minutes. Bad ones hidden, good ones replied.', color: '#f59e0b' },
             ].map((f, i) => (
               <div key={i} className="card rounded-2xl p-6" style={{ transition: 'all 0.3s', cursor: 'default' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.borderColor = `${f.color}44`; }}
@@ -186,25 +209,59 @@ export default function Home() {
         <div className="max-w-5xl mx-auto">
           <p className="text-amber-400 text-sm font-bold tracking-widest uppercase mb-3 text-center">Pricing</p>
           <h2 className="text-4xl font-black mb-4 text-center">Simple pricing. No surprises.</h2>
-          <p className="text-gray-500 text-center mb-16">All plans include a 7-day free trial. Pay via UPI, card, or net banking.</p>
+          <p className="text-gray-500 text-center mb-16">Start free for 19 days. Pay via UPI, card, or net banking.</p>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 name: 'Free Trial', price: '₹0', period: '/month', tagline: 'Try before you pay',
-                badge: null, featured: false,
-                features: ['1 YouTube channel', '1,500 comments/month', 'All videos + Shorts scanned', 'Bad comments auto-deleted', '3 auto-replies/month', '10+ Indian languages', 'Basic dashboard'],
+                badge: null, featured: false, trialDays: '19-day free trial',
+                features: [
+                  '1 YouTube channel',
+                  '1,500 comments scanned/month',
+                  'All videos + Shorts + Posts scanned',
+                  'Unlimited bad comments hidden for review',
+                  'Live chat progressive timeouts',
+                  'Spam detection & auto-hide',
+                  '3 AI replies per video (45s delay)',
+                  '10+ Indian languages',
+                  'Basic dashboard',
+                ],
                 cta: 'Start free trial', href: '/login'
               },
               {
                 name: 'Pro', price: '₹299', period: '/month', tagline: 'For growing creators',
-                badge: 'MOST POPULAR', featured: true,
-                features: ['1 YouTube channel', '5,000 comments/month', 'All videos + Shorts + Live chat', 'Bad comments auto-deleted', 'Auto-replies scale with comments', '100+ world languages', 'Full analytics dashboard', 'Telegram alerts', 'Priority support'],
+                badge: 'MOST POPULAR', featured: true, trialDays: '7-day free trial',
+                features: [
+                  '1 YouTube channel',
+                  '5,000 comments scanned/month',
+                  'All videos + Shorts + Posts + Live chat',
+                  'Unlimited bad comments hidden for review',
+                  'Live chat progressive timeouts',
+                  'Spam detection & auto-hide',
+                  'Auto-replies scale with comments (45s delay)',
+                  '100+ world languages',
+                  'Full analytics dashboard',
+                  'Telegram alerts',
+                  'Priority support',
+                ],
                 cta: 'Get Pro', href: '/login'
               },
               {
                 name: 'Agency', price: '₹1,900', period: '/month', tagline: 'Unlimited everything',
-                badge: null, featured: false,
-                features: ['1 YouTube channel', 'Unlimited comments scanned', 'All videos + Shorts + Live chat', 'Unlimited bad comment deletion', 'Unlimited auto-replies', '100+ world languages', 'Advanced analytics + exports', 'Telegram + WhatsApp alerts', 'Dedicated support', 'API access'],
+                badge: null, featured: false, trialDays: '7-day free trial',
+                features: [
+                  '1 YouTube channel',
+                  'Unlimited comments scanned',
+                  'All videos + Shorts + Posts + Live chat',
+                  'Unlimited bad comment hiding',
+                  'Advanced timeout controls',
+                  'Unlimited auto-replies',
+                  '100+ world languages',
+                  'Advanced analytics + exports',
+                  'Telegram + WhatsApp alerts',
+                  'Dedicated support',
+                  'API access',
+                ],
                 cta: 'Get Agency', href: '/login'
               },
             ].map((plan) => (
@@ -215,7 +272,7 @@ export default function Home() {
                 <div className="text-xl font-black mb-1 text-white">{plan.name}</div>
                 <div className="text-sm mb-6 text-gray-500">{plan.tagline}</div>
                 <div className="text-5xl font-black mb-1 text-white">{plan.price}<span className="text-base font-normal text-gray-500">{plan.period}</span></div>
-                <div className="text-sm mb-6 text-amber-400">✦ 7-day free trial included</div>
+                <div className="text-sm mb-6 text-amber-400">✦ {plan.trialDays}</div>
                 <div className="h-px bg-white/8 mb-6"></div>
                 <ul className="space-y-3 flex-1 mb-8">
                   {plan.features.map((f) => (
@@ -241,9 +298,9 @@ export default function Home() {
           <h2 className="text-4xl font-black mb-16 text-center">Telugu & Hindi YouTubers love it</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: 'Ravi Kumar', role: 'Tech YouTuber · 85K subs', text: '"Finally a tool that understands Telugu slang! It deleted 200+ abusive comments from my latest video automatically."', avatar: 'RK', color: '#a855f7' },
-              { name: 'Priya Sharma', role: 'Lifestyle creator · 120K subs', text: '"My live streams are so much cleaner now. The bot catches bad words in Hindi, English, even Romanized Telugu!"', avatar: 'PS', color: '#f59e0b' },
-              { name: 'Karthik Vlogs', role: 'Travel creator · 45K subs', text: '"The auto-reply feature is a game changer. My audience thinks I\'m super active but ModrateAI is doing all the work!"', avatar: 'KV', color: '#ec4899' },
+              { name: 'Ravi Kumar', role: 'Tech YouTuber · 85K subs', text: '"Finally a tool that understands Telugu slang! It hides 200+ abusive comments and I can review them later from the dashboard."', avatar: 'RK', color: '#a855f7' },
+              { name: 'Priya Sharma', role: 'Lifestyle creator · 120K subs', text: '"The timeout system is brilliant! Repeat trolls get longer and longer bans automatically. My live streams are so peaceful now!"', avatar: 'PS', color: '#f59e0b' },
+              { name: 'Karthik Vlogs', role: 'Travel creator · 45K subs', text: '"The auto-reply feature with 45 second delay feels so natural. My audience thinks I am super active but ModrateAI does all the work!"', avatar: 'KV', color: '#ec4899' },
             ].map((t, i) => (
               <div key={i} className="card rounded-2xl p-6">
                 <div className="flex gap-1 mb-4">
@@ -270,12 +327,12 @@ export default function Home() {
         <h2 className="text-5xl font-black mb-4">Your community deserves<br /><span className="grad-text">a safe space.</span></h2>
         <p className="text-gray-500 mb-8 text-lg">Join Indian YouTubers who trust ModrateAI to protect their channels 24/7</p>
         <Link href="/login" className="gold-btn inline-flex items-center gap-2 px-10 py-4 rounded-xl text-lg transition-all">
-          Start free — no credit card needed <ChevronRight className="w-5 h-5" />
+          Start 19-day free trial — no credit card <ChevronRight className="w-5 h-5" />
         </Link>
       </section>
 
       {/* FOOTER */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} className="px-8 py-6 flex flex-wrap items-center justify-between gap-4" >
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} className="px-8 py-6 flex flex-wrap items-center justify-between gap-4">
         <div className="font-black flex items-center gap-2">
           <Shield className="w-4 h-4 text-amber-400" />
           <span className="grad-text">ModrateAI</span>

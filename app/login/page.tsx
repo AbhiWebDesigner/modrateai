@@ -90,7 +90,7 @@ export default function LoginPage() {
           <div className="text-6xl font-black mb-6">Join 1000+<br />Creators 🚀</div>
           <p className="text-blue-200 text-lg mb-10">Indian YouTubers protecting their channels with ModrateAI</p>
           <div className="space-y-4">
-            {[{ stat: '1,500', label: 'Free comments/month' }, { stat: '7 days', label: 'Free trial' }, { stat: '10+', label: 'Indian languages' }].map((s) => (
+            {[{ stat: '1,500', label: 'Free comments/month' }, { stat: '19 days', label: 'Free trial' }, { stat: '10+', label: 'Indian languages' }].map((s) => (
               <div key={s.label} className="bg-white/10 rounded-xl px-6 py-4 flex justify-between items-center">
                 <span className="text-blue-200">{s.label}</span>
                 <span className="font-black text-xl">{s.stat}</span>

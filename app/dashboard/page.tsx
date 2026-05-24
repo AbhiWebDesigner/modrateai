@@ -3,15 +3,14 @@ import { useState, useEffect } from 'react';
 import { Shield, Trash2, MessageSquare, Eye, Settings, LogOut, Home, BarChart3, Bell, ChevronRight, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { doc, getDoc, DocumentData } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [userData, setUserData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('home');
+  const [user, setUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,10 +39,17 @@ export default function Dashboard() {
     </div>
   );
 
-  const plan = userData?.plan || 'free';
-  const commentsUsed = userData?.comments_used || 0;
-  const commentsLimit = userData?.comments_limit || 1500;
-  const youtubeConnected = userData?.youtube_connected || false;
+  const plan = (userData?.plan as string) || 'free';
+  const commentsUsed = (userData?.comments_used as number) || 0;
+  const commentsLimit = (userData?.comments_limit as number) || 1500;
+  const youtubeConnected = (userData?.youtube_connected as boolean) || false;
+
+  const navItems = [
+    { icon: Home, label: 'Home', href: '/dashboard' },
+    { icon: BarChart3, label: 'Analytics', href: '/analytics' },
+    { icon: Bell, label: 'Alerts', href: '/alerts' },
+    { icon: Settings, label: 'Settings', href: '/settings' },
+  ];
 
   return (
     <main className="min-h-screen bg-gray-50 flex">
@@ -72,19 +78,19 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {[
-            { id: 'home', icon: Home, label: 'Home' },
-            { id: 'analytics', icon: BarChart3, label: 'Analytics' },
-            { id: 'alerts', icon: Bell, label: 'Alerts' },
-            { id: 'settings', icon: Settings, label: 'Settings' },
-          ].map((item) => (
-            <button key={item.id} onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${activeTab === item.id ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'}`}>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-blue-600`}
+            >
               <item.icon className="w-4 h-4" /> {item.label}
-            </button>
+            </Link>
           ))}
         </nav>
+
         <div className="px-3 pb-4 space-y-2">
           {plan === 'free' && (
             <div className="bg-blue-600 rounded-xl p-4 text-white">
@@ -141,7 +147,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
               { icon: Eye, label: 'Comments Scanned', value: commentsUsed.toLocaleString(), color: 'text-blue-600', bg: 'bg-blue-50' },
-              { icon: Trash2, label: 'Bad Comments Deleted', value: '0', color: 'text-red-500', bg: 'bg-red-50' },
+              { icon: Trash2, label: 'Hidden for Review', value: '0', color: 'text-red-500', bg: 'bg-red-50' },
               { icon: MessageSquare, label: 'Auto-Replies Sent', value: '0', color: 'text-green-600', bg: 'bg-green-50' },
               { icon: Shield, label: 'Protection Status', value: youtubeConnected ? 'ACTIVE' : 'INACTIVE', color: youtubeConnected ? 'text-green-600' : 'text-orange-500', bg: youtubeConnected ? 'bg-green-50' : 'bg-orange-50' },
             ].map((s) => (

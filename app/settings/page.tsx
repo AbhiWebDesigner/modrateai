@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Shield, ArrowLeft, Check, Lock, Key, Smartphone, Eye, EyeOff } from 'lucide-react';
+import { Shield, ArrowLeft, Check, Lock, Key, Smartphone, Eye, EyeOff, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -11,14 +11,26 @@ export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('security');
+
+  // Password
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [passMsg, setPassMsg] = useState('');
   const [passError, setPassError] = useState('');
+
+  // 2FA
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpMsg, setOtpMsg] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const [twoFAVerified, setTwoFAVerified] = useState(false);
   const [twoFASaved, setTwoFASaved] = useState(false);
+
+  // Encryption
   const [encryptionEnabled, setEncryptionEnabled] = useState(true);
 
   useEffect(() => {
@@ -30,12 +42,76 @@ export default function SettingsPage() {
     return () => unsub();
   }, [router]);
 
+  const handleSendOTP = async () => {
+    if (!user?.email) return;
+    setOtpLoading(true);
+    setOtpError('');
+    setOtpMsg('');
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, action: 'send' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOtpSent(true);
+        setOtpMsg(`OTP sent to ${user.email}! Check your inbox.`);
+      } else {
+        setOtpError(data.error || 'Failed to send OTP');
+      }
+    } catch {
+      setOtpError('Network error. Please try again.');
+    }
+    setOtpLoading(false);
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!user?.email || !otpInput) return;
+    setOtpLoading(true);
+    setOtpError('');
+    try {
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, action: 'verify', otp: otpInput }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTwoFAVerified(true);
+        setOtpMsg('✅ 2FA verified and enabled successfully!');
+        setTwoFAEnabled(true);
+      } else {
+        setOtpError(data.error || 'Invalid OTP');
+      }
+    } catch {
+      setOtpError('Network error. Please try again.');
+    }
+    setOtpLoading(false);
+  };
+
+  const handleToggle2FA = () => {
+    if (!twoFAEnabled) {
+      setTwoFAEnabled(true);
+      setOtpSent(false);
+      setOtpInput('');
+      setOtpMsg('');
+      setOtpError('');
+      setTwoFAVerified(false);
+    } else {
+      setTwoFAEnabled(false);
+      setOtpSent(false);
+      setTwoFAVerified(false);
+      setOtpMsg('');
+    }
+  };
+
   const handlePasswordChange = () => {
-    setPassMsg(''); setPassError('');
+    setPassError('');
+    if (!newPass || !confirmPass) { setPassError('Please fill all fields.'); return; }
     if (newPass !== confirmPass) { setPassError('Passwords do not match!'); return; }
     if (newPass.length < 8) { setPassError('Password must be at least 8 characters!'); return; }
-    if (!currentPass) { setPassError('Please enter current password.'); return; }
-    setPassError('Google account — password change not available directly. Please use Google Account settings.');
+    setPassError('Google account users cannot change password here. Please use Google Account settings at myaccount.google.com');
   };
 
   if (loading) return (
@@ -66,6 +142,7 @@ export default function SettingsPage() {
           ))}
         </div>
 
+        {/* SECURITY TAB */}
         {activeTab === 'security' && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
@@ -82,14 +159,14 @@ export default function SettingsPage() {
                 <div>
                   <div className="font-bold text-gray-900">{user?.displayName}</div>
                   <div className="text-sm text-gray-500">{user?.email}</div>
+                  <div className="text-xs text-green-600 mt-1">✓ Signed in with Google</div>
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 p-6">
               <h2 className="font-black text-gray-900 mb-1">Change Password</h2>
-              <p className="text-sm text-gray-400 mb-4">For Google login accounts, manage password via Google Account</p>
-              {passMsg && <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2"><Check className="w-4 h-4" />{passMsg}</div>}
+              <p className="text-sm text-gray-400 mb-4">For Google login — manage at myaccount.google.com</p>
               {passError && <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-4">{passError}</div>}
               <div className="space-y-4">
                 <div>
@@ -123,38 +200,91 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* 2FA TAB */}
         {activeTab === '2fa' && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
             <div>
               <h2 className="font-black text-gray-900 mb-1">Two-Factor Authentication</h2>
-              <p className="text-sm text-gray-400">Extra layer of security for your account</p>
+              <p className="text-sm text-gray-400">Verify your identity via Email OTP every login</p>
             </div>
+
+            {/* TOGGLE */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                  <Smartphone className="w-5 h-5 text-blue-600" />
+                  <Mail className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <div className="font-bold text-gray-900 text-sm">Authenticator App 2FA</div>
-                  <div className="text-xs text-gray-400">Google Authenticator or Authy</div>
+                  <div className="font-bold text-gray-900 text-sm">Email OTP 2FA</div>
+                  <div className="text-xs text-gray-400">{user?.email}</div>
                 </div>
               </div>
-              <button onClick={() => setTwoFAEnabled(!twoFAEnabled)}
+              <button onClick={handleToggle2FA}
                 className={`w-12 h-6 rounded-full transition-colors relative ${twoFAEnabled ? 'bg-blue-600' : 'bg-gray-200'}`}>
                 <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${twoFAEnabled ? 'left-6' : 'left-0.5'}`}></div>
               </button>
             </div>
-            {twoFAEnabled && (
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                <p className="text-sm text-blue-700 font-bold mb-2">Setup Instructions:</p>
-                <ol className="text-sm text-blue-600 space-y-1 list-decimal list-inside">
-                  <li>Download Google Authenticator app</li>
-                  <li>Scan QR code (coming soon)</li>
-                  <li>Enter 6-digit code to verify</li>
-                </ol>
-                <p className="text-xs text-blue-500 mt-3">🔐 Full 2FA setup coming in next update!</p>
+
+            {/* OTP FLOW */}
+            {twoFAEnabled && !twoFAVerified && (
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                  <p className="text-sm text-blue-700 font-bold mb-1">Setup Email 2FA</p>
+                  <p className="text-xs text-blue-600">We will send a 6-digit OTP to your email to verify and enable 2FA.</p>
+                </div>
+
+                {otpMsg && <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl flex items-center gap-2"><Check className="w-4 h-4" />{otpMsg}</div>}
+                {otpError && <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">{otpError}</div>}
+
+                {!otpSent ? (
+                  <button onClick={handleSendOTP} disabled={otpLoading}
+                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-60 flex items-center justify-center gap-2">
+                    {otpLoading ? (
+                      <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Sending...</>
+                    ) : (
+                      <><Mail className="w-4 h-4" /> Send OTP to {user?.email}</>
+                    )}
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-bold text-gray-700 mb-2 block">Enter 6-digit OTP</label>
+                      <input
+                        type="text"
+                        maxLength={6}
+                        value={otpInput}
+                        onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                        placeholder="000000"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400 text-center text-2xl font-black tracking-widest"
+                      />
+                    </div>
+                    <button onClick={handleVerifyOTP} disabled={otpLoading || otpInput.length !== 6}
+                      className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-60 flex items-center justify-center gap-2">
+                      {otpLoading ? (
+                        <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Verifying...</>
+                      ) : 'Verify OTP & Enable 2FA'}
+                    </button>
+                    <button onClick={handleSendOTP} className="w-full text-blue-600 text-sm font-bold hover:underline">
+                      Resend OTP
+                    </button>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* SUCCESS */}
+            {twoFAVerified && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                  <Check className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <div className="font-bold text-green-800">2FA Enabled Successfully!</div>
+                  <div className="text-xs text-green-600">Your account is now protected with Email OTP verification.</div>
+                </div>
+              </div>
+            )}
+
             <button onClick={() => { setTwoFASaved(true); setTimeout(() => setTwoFASaved(false), 2000); }}
               className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${twoFASaved ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
               {twoFASaved ? <span className="flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Saved!</span> : 'Save 2FA Settings'}
@@ -162,6 +292,7 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* ENCRYPTION TAB */}
         {activeTab === 'encryption' && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
             <div>

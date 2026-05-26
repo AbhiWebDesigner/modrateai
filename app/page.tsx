@@ -331,16 +331,16 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* FOOTER */}
+      {/* FOOTER — Privacy & Terms links updated */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} className="px-8 py-6 flex flex-wrap items-center justify-between gap-4">
         <div className="font-black flex items-center gap-2">
           <Shield className="w-4 h-4 text-amber-400" />
           <span className="grad-text">ModrateAI</span>
         </div>
         <div className="flex gap-6">
-          <a href="#" className="text-sm text-gray-600 hover:text-gray-400">Privacy</a>
-          <a href="#" className="text-sm text-gray-600 hover:text-gray-400">Terms</a>
-          <a href="#" className="text-sm text-gray-600 hover:text-gray-400">Contact</a>
+          <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-400 transition-colors">Privacy</Link>
+          <Link href="/terms" className="text-sm text-gray-600 hover:text-gray-400 transition-colors">Terms</Link>
+          <a href="mailto:contact@moderateai.site" className="text-sm text-gray-600 hover:text-gray-400 transition-colors">Contact</a>
         </div>
         <div className="text-sm text-gray-600">© 2026 ModrateAI. Made in India 🇮🇳</div>
       </footer>

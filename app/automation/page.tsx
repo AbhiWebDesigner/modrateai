@@ -87,7 +87,7 @@ export default function AutomationPage() {
   };
 
   return (
-    <div style={bgStyle} className="flex text-white">
+    <div style={{...bgStyle, position: "fixed", inset: 0, overflowY: "auto"}} className="flex text-white">
       {/* Sidebar */}
       <div style={{ background: "rgba(255,255,255,0.03)", borderRight: "1px solid rgba(255,255,255,0.08)" }}
         className="w-56 min-h-screen flex flex-col p-4 fixed left-0 top-0 z-10">

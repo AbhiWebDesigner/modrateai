@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Shield, Trash2, MessageSquare, Eye, Settings, LogOut, Home, BarChart3, Bell, ChevronRight, RefreshCw } from 'lucide-react';
+import { Shield, Trash2, MessageSquare, Eye, Settings, LogOut, Home, BarChart3, Bell, ChevronRight, RefreshCw, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -45,12 +45,12 @@ export default function Dashboard() {
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
 
   const navItems = [
-    { icon: Home, label: 'Home', href: '/dashboard' },
-    { icon: BarChart3, label: 'Analytics', href: '/analytics' },
-    { icon: Bell, label: 'Alerts', href: '/alerts' },
-    { icon: Settings, label: 'Settings', href: '/settings' },
-  ];
-
+  { icon: Home, label: 'Home', href: '/dashboard' },
+  { icon: BarChart3, label: 'Analytics', href: '/analytics' },
+  { icon: Zap, label: 'Automation', href: '/automation' },
+  { icon: Bell, label: 'Alerts', href: '/alerts' },
+  { icon: Settings, label: 'Settings', href: '/settings' },
+];
   return (
     <main className="min-h-screen bg-gray-50 flex">
       <aside className="w-60 bg-white border-r border-gray-100 flex flex-col fixed h-full">

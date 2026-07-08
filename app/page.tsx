@@ -5,12 +5,11 @@ import { Zap, Globe, BarChart3, Bell, MessageSquare, Check, ChevronRight, Star, 
 
 export default function Home() {
   return (
-    <main style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif" }} className="min-h-screen text-white"
-      css-bg="true">
+    <main style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif" }} className="min-h-screen text-white">
       <style>{`
-        body { background: #08080f; }
+        body { background: #09090B; }
         .grad-text { background: linear-gradient(135deg, #a855f7, #f59e0b, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .hero-bg { background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139,92,246,0.25) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 80% 50%, rgba(245,158,11,0.1) 0%, transparent 60%), #08080f; }
+        .hero-bg { background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(139,92,246,0.25) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 80% 50%, rgba(245,158,11,0.1) 0%, transparent 60%), #09090B; }
         .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); }
         .card:hover { background: rgba(255,255,255,0.06); border-color: rgba(168,85,247,0.3); transform: translateY(-4px); transition: all 0.3s; }
         .gold-btn { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 800; }
@@ -21,10 +20,13 @@ export default function Home() {
         .pricing-featured { background: linear-gradient(135deg, rgba(139,92,246,0.2), rgba(245,158,11,0.1)); border: 2px solid rgba(245,158,11,0.5) !important; }
         .lang-featured { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); color: #f59e0b; }
         .stat-num { background: linear-gradient(135deg, #a855f7, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .nav-bg { background: rgba(8,8,15,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .nav-bg { background: rgba(9,9,11,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.07); }
         .comment-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; }
         .timeout-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; }
       `}</style>
+
+      {/* Premium Background */}
+      <div className="premium-bg" />
 
       {/* NAV */}
       <nav className="nav-bg fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4">
@@ -36,8 +38,8 @@ export default function Home() {
           <a href="#how" className="text-sm text-gray-400 hover:text-white transition-colors">How it works</a>
           <a href="#pricing" className="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">Login</Link>
+        <div className="flex items-center gap-4">
+          <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors px-2">Login</Link>
           <Link href="/login" className="gold-btn px-5 py-2.5 rounded-xl text-sm transition-all">
             Start for free
           </Link>
@@ -113,13 +115,12 @@ export default function Home() {
       </div>
 
       {/* HOW IT WORKS */}
-      <section id="how" className="py-24 px-4" style={{ background: '#08080f' }}>
+      <section id="how" className="py-24 px-4" style={{ background: '#09090B' }}>
         <div className="max-w-5xl mx-auto">
           <p className="text-purple-400 text-sm font-bold tracking-widest uppercase mb-3 text-center">How it works</p>
           <h2 className="text-4xl font-black mb-4 text-center">Smart moderation that learns</h2>
           <p className="text-gray-500 text-center mb-12">Repeat offenders get progressively longer timeouts. Connect once, protect forever.</p>
 
-          {/* LIVE CHAT TIMEOUT SYSTEM */}
           <div className="card rounded-2xl p-6 mb-12">
             <div className="flex items-center gap-2 mb-6">
               <AlertTriangle className="w-5 h-5 text-amber-400" />
@@ -187,7 +188,7 @@ export default function Home() {
       </section>
 
       {/* LANGUAGES */}
-      <section className="py-24 px-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(245,158,11,0.08) 100%), #08080f' }}>
+      <section className="py-24 px-4" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(245,158,11,0.08) 100%), #09090B' }}>
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-purple-400 text-sm font-bold tracking-widest uppercase mb-3">Language support</p>
           <h2 className="text-4xl font-black mb-4">Every Indian language. Every slang.</h2>
@@ -203,7 +204,7 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-24 px-4" style={{ background: '#08080f' }}>
+      <section id="pricing" className="py-24 px-4" style={{ background: '#09090B' }}>
         <div className="max-w-5xl mx-auto">
           <p className="text-amber-400 text-sm font-bold tracking-widest uppercase mb-3 text-center">Pricing</p>
           <h2 className="text-4xl font-black mb-4 text-center">Simple pricing. No surprises.</h2>
@@ -321,7 +322,7 @@ export default function Home() {
       </section>
 
       {/* CTA BOTTOM */}
-      <section className="py-24 px-4 text-center" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(139,92,246,0.2) 0%, transparent 70%), #08080f', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <section className="py-24 px-4 text-center" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(139,92,246,0.2) 0%, transparent 70%), #09090B', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <h2 className="text-5xl font-black mb-4">Your community deserves<br /><span className="grad-text">a safe space.</span></h2>
         <p className="text-gray-500 mb-8 text-lg">Join Indian YouTubers who trust ModrateAI to protect their channels 24/7</p>
         <Link href="/login" className="gold-btn inline-flex items-center gap-2 px-10 py-4 rounded-xl text-lg transition-all">

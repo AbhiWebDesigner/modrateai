@@ -34,20 +34,27 @@ export default function LoginPage() {
         });
       }
       router.push('/dashboard');
-    } catch (err: unknown) {
-      const message = err instanceof Error && err.message ? err.message : 'Login failed. Please try again.';
-      setError(message);
+    } catch {
+      setError('Login failed. Please try again.');
       setLoading(false);
     }
   };
 
   return (
     <main className="min-h-screen flex" style={{
-      background: 'radial-gradient(circle at bottom right, rgba(255,120,40,.12), transparent 30%), radial-gradient(circle at top left, rgba(130,70,255,.18), transparent 45%), #07030F'
+      background: `
+        radial-gradient(circle at 0% 0%, #F59E0B30 0%, transparent 40%),
+        radial-gradient(circle at 50% 100%, #7C3AED25 0%, transparent 45%),
+        #09090B
+      `
     }}>
       {/* Left Panel */}
       <div className="hidden lg:flex flex-1 flex-col justify-between p-12" style={{
-        background: 'radial-gradient(circle at top right, rgba(130,70,255,.25), transparent 60%), radial-gradient(circle at bottom left, rgba(255,120,40,.15), transparent 50%), #0d0720'
+        background: `
+          radial-gradient(circle at left top, rgba(245,158,11,0.25) 0%, transparent 45%),
+          radial-gradient(circle at center bottom, rgba(124,58,237,0.22) 0%, transparent 55%),
+          #09090B
+        `
       }}>
         <Link href="/" className="flex items-center gap-2">
           <div style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', borderRadius: 10 }} className="w-9 h-9 flex items-center justify-center">
@@ -84,14 +91,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {['#f59e0b', '#7c3aed', '#06b6d4', '#22c55e'].map((color, i) => (
-              <div key={i} style={{ background: color, border: '2px solid #0d0720', borderRadius: '50%', width: 32, height: 32 }} />
-            ))}
-          </div>
-          <span className="text-gray-400 text-sm">Trusted by 1,000+ Indian YouTubers</span>
-        </div>
+        <div style={{ opacity: 0 }} className="h-8" />
       </div>
 
       {/* Right Panel */}
@@ -145,7 +145,7 @@ export default function LoginPage() {
             <div style={{ background: 'rgba(255,255,255,0.1)' }} className="flex-1 h-px"></div>
           </div>
 
-          {/* Email (Coming Soon) */}
+          {/* Email Coming Soon */}
           <button disabled
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12 }}
             className="w-full py-3.5 text-gray-500 text-sm font-medium mb-6">
@@ -153,19 +153,11 @@ export default function LoginPage() {
           </button>
 
           {/* Terms */}
-          <p className="text-center text-xs text-gray-500 mb-4">
+          <p className="text-center text-xs text-gray-500">
             By continuing, you agree to our{' '}
             <Link href="/terms" className="text-gray-300 hover:text-white underline">Terms</Link>{' '}
             and{' '}
             <Link href="/privacy" className="text-gray-300 hover:text-white underline">Privacy Policy</Link>.
-          </p>
-
-          {/* Explore */}
-          <p className="text-center text-sm text-gray-500">
-            New to ModrateAI?{' '}
-            <Link href="/" style={{ color: '#f59e0b' }} className="font-semibold hover:underline">
-              Explore product →
-            </Link>
           </p>
         </div>
       </div>

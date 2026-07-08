@@ -34,30 +34,97 @@ export default function LoginPage() {
         });
       }
       router.push('/dashboard');
-    } catch (err: any) {
-      setError('Login failed. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error && err.message ? err.message : 'Login failed. Please try again.';
+      setError(message);
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex">
+    <main className="min-h-screen flex" style={{
+      background: 'radial-gradient(circle at bottom right, rgba(255,120,40,.12), transparent 30%), radial-gradient(circle at top left, rgba(130,70,255,.18), transparent 45%), #07030F'
+    }}>
+      {/* Left Panel */}
+      <div className="hidden lg:flex flex-1 flex-col justify-between p-12" style={{
+        background: 'radial-gradient(circle at top right, rgba(130,70,255,.25), transparent 60%), radial-gradient(circle at bottom left, rgba(255,120,40,.15), transparent 50%), #0d0720'
+      }}>
+        <Link href="/" className="flex items-center gap-2">
+          <div style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', borderRadius: 10 }} className="w-9 h-9 flex items-center justify-center">
+            <Shield className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-white font-black text-xl">ModrateAI</span>
+        </Link>
+
+        <div>
+          <h1 className="text-5xl font-black text-white leading-tight mb-6">
+            Sign in and start<br />
+            moderating in{' '}
+            <span style={{ color: '#f59e0b' }}>60 seconds.</span>
+          </h1>
+          <p className="text-gray-400 text-lg mb-10">
+            One-click Google login. We only ask for the YouTube<br />
+            permissions moderation actually needs.
+          </p>
+          <div className="flex flex-col gap-4">
+            {[
+              'Detects toxic comments in 100+ languages',
+              'Progressive live-chat timeouts',
+              'AI auto-replies with natural human delay',
+              'Cancel anytime — 19-day free trial',
+            ].map((feature) => (
+              <div key={feature} className="flex items-center gap-3">
+                <div style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '50%' }}
+                  className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                  <span style={{ color: '#f59e0b' }} className="text-xs">✓</span>
+                </div>
+                <span className="text-gray-300 text-sm">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex -space-x-2">
+            {['#f59e0b', '#7c3aed', '#06b6d4', '#22c55e'].map((color, i) => (
+              <div key={i} style={{ background: color, border: '2px solid #0d0720', borderRadius: '50%', width: 32, height: 32 }} />
+            ))}
+          </div>
+          <span className="text-gray-400 text-sm">Trusted by 1,000+ Indian YouTubers</span>
+        </div>
+      </div>
+
+      {/* Right Panel */}
       <div className="flex-1 flex items-center justify-center px-8 py-12">
         <div className="w-full max-w-md">
-          <Link href="/" className="flex items-center gap-2 font-black text-xl text-blue-600 mb-10">
-            <Shield className="w-6 h-6" />
-            ModrateAI
-          </Link>
-          <h1 className="text-3xl font-black text-gray-900 mb-2">Get Started</h1>
-          <p className="text-gray-500 mb-8">Create your account in seconds — no credit card needed</p>
+
+          {/* Mobile Logo */}
+          <div className="flex lg:hidden items-center gap-2 mb-10">
+            <div style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', borderRadius: 10 }} className="w-9 h-9 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-white font-black text-xl">ModrateAI</span>
+          </div>
+
+          {/* Badge */}
+          <div className="mb-6">
+            <span style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, color: '#f59e0b' }}
+              className="text-xs px-3 py-1.5 font-semibold">
+              ✨ New: Live-chat timeouts
+            </span>
+          </div>
+
+          <h2 className="text-3xl font-black text-white mb-2">Welcome back</h2>
+          <p className="text-gray-400 mb-8">Sign in to your ModrateAI dashboard.</p>
+
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-4">{error}</div>
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}
+              className="text-red-400 text-sm px-4 py-3 rounded-xl mb-4">{error}</div>
           )}
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 py-3.5 rounded-xl font-medium hover:bg-gray-50 transition-all shadow-sm mb-6 disabled:opacity-60"
-          >
+
+          {/* Google Button */}
+          <button onClick={handleGoogleLogin} disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-3.5 rounded-xl font-semibold hover:bg-gray-50 transition-all mb-4 disabled:opacity-60">
             {loading ? (
               <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
             ) : (
@@ -68,35 +135,38 @@ export default function LoginPage() {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
             )}
-            {loading ? 'Signing in...' : 'Sign up with Google'}
+            {loading ? 'Signing in...' : 'Continue with Google'}
           </button>
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3 mb-6">
-            <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="text-sm font-bold text-blue-900">Official YouTube API only</div>
-              <div className="text-xs text-blue-600 mt-0.5">Your account is secure. We only request comment moderation permission.</div>
-            </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-4">
+            <div style={{ background: 'rgba(255,255,255,0.1)' }} className="flex-1 h-px"></div>
+            <span className="text-gray-500 text-xs">OR</span>
+            <div style={{ background: 'rgba(255,255,255,0.1)' }} className="flex-1 h-px"></div>
           </div>
-          <p className="text-center text-xs text-gray-400">
-            By continuing, you agree to our <a href="#" className="text-blue-600 hover:underline">Terms</a> & <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+
+          {/* Email (Coming Soon) */}
+          <button disabled
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12 }}
+            className="w-full py-3.5 text-gray-500 text-sm font-medium mb-6">
+            Continue with email <span className="text-xs opacity-60">(coming soon)</span>
+          </button>
+
+          {/* Terms */}
+          <p className="text-center text-xs text-gray-500 mb-4">
+            By continuing, you agree to our{' '}
+            <Link href="/terms" className="text-gray-300 hover:text-white underline">Terms</Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-gray-300 hover:text-white underline">Privacy Policy</Link>.
           </p>
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Already have an account? <button onClick={handleGoogleLogin} className="text-blue-600 font-bold hover:underline">Sign in</button>
+
+          {/* Explore */}
+          <p className="text-center text-sm text-gray-500">
+            New to ModrateAI?{' '}
+            <Link href="/" style={{ color: '#f59e0b' }} className="font-semibold hover:underline">
+              Explore product →
+            </Link>
           </p>
-        </div>
-      </div>
-      <div className="hidden lg:flex flex-1 bg-blue-600 items-center justify-center p-12">
-        <div className="text-white text-center max-w-sm">
-          <div className="text-6xl font-black mb-6">Join 1000+<br />Creators 🚀</div>
-          <p className="text-blue-200 text-lg mb-10">Indian YouTubers protecting their channels with ModrateAI</p>
-          <div className="space-y-4">
-            {[{ stat: '1,500', label: 'Free comments/month' }, { stat: '19 days', label: 'Free trial' }, { stat: '10+', label: 'Indian languages' }].map((s) => (
-              <div key={s.label} className="bg-white/10 rounded-xl px-6 py-4 flex justify-between items-center">
-                <span className="text-blue-200">{s.label}</span>
-                <span className="font-black text-xl">{s.stat}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </main>

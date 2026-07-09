@@ -15,7 +15,6 @@
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
     "next": "15.5.2",
-    "nodemailer": "^8.0.8",
     "postcss": "^8.5.16",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -24,7 +23,6 @@
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",
     "@types/node": "^20",
-    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

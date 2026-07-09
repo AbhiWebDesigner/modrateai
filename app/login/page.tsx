@@ -85,6 +85,12 @@ export default function LoginPage() {
           <div style={{ opacity: 0 }} className="h-8" />
         </div>
 
+        {/* Middle Divider Line */}
+        <div className="hidden lg:block self-stretch my-12" style={{
+          width: '1px',
+          background: 'linear-gradient(to bottom, transparent, rgba(245,158,11,0.4), transparent)'
+        }} />
+
         {/* Right Panel */}
         <div className="flex-1 flex items-center justify-center px-8 py-12">
           <div className="w-full max-w-md">

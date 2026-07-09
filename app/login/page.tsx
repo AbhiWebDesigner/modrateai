@@ -46,56 +46,6 @@ export default function LoginPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
         * { font-family: 'Inter', sans-serif; letter-spacing: -0.02em; }
 
-        .login-bg {
-          position: fixed; inset: 0; z-index: 0;
-          background: #09090B;
-        }
-
-        .grid-overlay {
-          position: fixed; inset: 0; z-index: 1;
-          background-image:
-            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-          background-size: 40px 40px;
-          mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
-          -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
-        }
-
-        .glow-amber-tl {
-          position: fixed; top: -80px; left: -80px;
-          width: 700px; height: 700px; z-index: 1;
-          background: radial-gradient(circle, rgba(245,158,11,0.28) 0%, transparent 65%);
-          filter: blur(70px); pointer-events: none;
-          animation: glowPulse 6s ease-in-out infinite;
-        }
-
-        .glow-purple-bl {
-          position: fixed; bottom: -100px; left: -60px;
-          width: 700px; height: 600px; z-index: 1;
-          background: radial-gradient(circle, rgba(124,58,237,0.35) 0%, transparent 65%);
-          filter: blur(80px); pointer-events: none;
-          animation: glowPulse 8s ease-in-out infinite reverse;
-        }
-
-        .glow-violet-tr {
-          position: fixed; top: -60px; right: -60px;
-          width: 500px; height: 500px; z-index: 1;
-          background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
-          filter: blur(60px); pointer-events: none;
-        }
-
-        .glow-purple-bc {
-          position: fixed; bottom: -150px; left: 50%; transform: translateX(-50%);
-          width: 900px; height: 600px; z-index: 1;
-          background: radial-gradient(circle, rgba(109,40,217,0.20) 0%, transparent 65%);
-          filter: blur(90px); pointer-events: none;
-        }
-
-        @keyframes glowPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.75; transform: scale(1.08); }
-        }
-
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
@@ -158,13 +108,8 @@ export default function LoginPage() {
         }
       `}</style>
 
-      {/* Backgrounds */}
-      <div className="login-bg" />
-      <div className="grid-overlay" />
-      <div className="glow-amber-tl" />
-      <div className="glow-purple-bl" />
-      <div className="glow-violet-tr" />
-      <div className="glow-purple-bc" />
+      {/* Premium Background from globals.css */}
+      <div className="premium-bg" />
 
       <main style={{ minHeight: '100vh', display: 'flex', position: 'relative', zIndex: 10 }}>
 
@@ -194,7 +139,7 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* Headline + Features — vertically centered */}
+          {/* Headline + Features */}
           <div>
             <div className="fade-up-2">
               <h1 style={{
@@ -237,7 +182,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Empty bottom spacer — avatars removed */}
           <div style={{ height: 40 }} />
         </div>
 
@@ -262,7 +206,7 @@ export default function LoginPage() {
               }}>
                 <Shield size={20} color="white" />
               </div>
-              <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 20 }}>ModrateAI</span>
+              <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 20 }}>ModerateAI</span>
             </div>
 
             {/* Badge */}
@@ -285,7 +229,7 @@ export default function LoginPage() {
                 Welcome back
               </h2>
               <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, marginBottom: 32 }}>
-                Sign in to your ModrateAI dashboard.
+                Sign in to your ModerateAI dashboard.
               </p>
             </div>
 

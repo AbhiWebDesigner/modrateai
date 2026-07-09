@@ -1,6 +1,7 @@
 /* stylelint-disable at-rule-no-unknown */
 @import "tailwindcss";
-@source "../app/**/*.{js,ts,jsx,tsx}"; 
+@source "../app/**/*.{js,ts,jsx,tsx}";
+@variant md (@media (min-width: 768px));
 
 /* ============================================
    PREMIUM BACKGROUND

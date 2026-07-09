@@ -60,13 +60,14 @@ export default function LoginPage() {
         {/* Left Panel */}
         <div className="hidden lg:flex flex-1 flex-col justify-between p-12">
           <Link href="/" className="flex items-center gap-2">
+            {/* Logo matching Image 2 - orange+purple */}
             <div style={{
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+              background: 'linear-gradient(135deg, #f59e0b 0%, #8b5cf6 100%)',
               borderRadius: 10
             }} className="w-9 h-9 flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
-            <span className="text-white font-black text-xl">ModrateAI</span>
+            <span className="text-white font-black text-xl">ModerateAI</span>
           </Link>
 
           <div>
@@ -103,6 +104,13 @@ export default function LoginPage() {
           <div className="h-8" />
         </div>
 
+        {/* Middle Vertical Line */}
+        <div className="hidden lg:block self-stretch" style={{
+          width: '1px',
+          background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 20%, rgba(255,255,255,0.15) 80%, transparent 100%)',
+          margin: '40px 0',
+        }} />
+
         {/* Right Panel */}
         <div className="flex-1 flex items-center justify-center px-8 py-12">
           <div className="w-full max-w-md">
@@ -110,7 +118,7 @@ export default function LoginPage() {
             {/* Mobile Logo */}
             <div className="flex lg:hidden items-center gap-2 mb-10">
               <div style={{
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #8b5cf6 100%)',
                 borderRadius: 10
               }} className="w-9 h-9 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />

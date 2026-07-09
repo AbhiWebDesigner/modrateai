@@ -44,7 +44,6 @@ export default function LoginPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
-
         * { font-family: 'Inter', sans-serif; letter-spacing: -0.02em; }
 
         .login-bg {
@@ -63,24 +62,38 @@ export default function LoginPage() {
         }
 
         .glow-amber-tl {
-          position: fixed; top: -100px; left: -100px;
-          width: 600px; height: 600px; z-index: 1;
-          background: radial-gradient(circle, rgba(245,158,11,0.22) 0%, transparent 70%);
+          position: fixed; top: -80px; left: -80px;
+          width: 700px; height: 700px; z-index: 1;
+          background: radial-gradient(circle, rgba(245,158,11,0.28) 0%, transparent 65%);
+          filter: blur(70px); pointer-events: none;
+          animation: glowPulse 6s ease-in-out infinite;
+        }
+
+        .glow-purple-bl {
+          position: fixed; bottom: -100px; left: -60px;
+          width: 700px; height: 600px; z-index: 1;
+          background: radial-gradient(circle, rgba(124,58,237,0.35) 0%, transparent 65%);
+          filter: blur(80px); pointer-events: none;
+          animation: glowPulse 8s ease-in-out infinite reverse;
+        }
+
+        .glow-violet-tr {
+          position: fixed; top: -60px; right: -60px;
+          width: 500px; height: 500px; z-index: 1;
+          background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
           filter: blur(60px); pointer-events: none;
         }
 
         .glow-purple-bc {
           position: fixed; bottom: -150px; left: 50%; transform: translateX(-50%);
-          width: 800px; height: 600px; z-index: 1;
-          background: radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%);
-          filter: blur(80px); pointer-events: none;
+          width: 900px; height: 600px; z-index: 1;
+          background: radial-gradient(circle, rgba(109,40,217,0.20) 0%, transparent 65%);
+          filter: blur(90px); pointer-events: none;
         }
 
-        .glow-violet-tr {
-          position: fixed; top: -50px; right: -50px;
-          width: 400px; height: 400px; z-index: 1;
-          background: radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%);
-          filter: blur(60px); pointer-events: none;
+        @keyframes glowPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.75; transform: scale(1.08); }
         }
 
         @keyframes gradientShift {
@@ -90,12 +103,12 @@ export default function LoginPage() {
         }
 
         .animated-gradient-text {
-          background: linear-gradient(90deg, #F59E0B, #FBBF24, #7C3AED, #A855F7, #F59E0B);
+          background: linear-gradient(90deg, #F59E0B, #FBBF24, #D97706, #F59E0B);
           background-size: 300% 300%;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          animation: gradientShift 4s ease infinite;
+          animation: gradientShift 3s ease infinite;
         }
 
         @keyframes fadeSlideUp {
@@ -104,11 +117,11 @@ export default function LoginPage() {
         }
 
         .fade-up-1 { animation: fadeSlideUp 0.6s ease forwards; opacity: 0; }
-        .fade-up-2 { animation: fadeSlideUp 0.6s ease 0.1s forwards; opacity: 0; }
-        .fade-up-3 { animation: fadeSlideUp 0.6s ease 0.2s forwards; opacity: 0; }
-        .fade-up-4 { animation: fadeSlideUp 0.6s ease 0.3s forwards; opacity: 0; }
-        .fade-up-5 { animation: fadeSlideUp 0.6s ease 0.4s forwards; opacity: 0; }
-        .fade-up-6 { animation: fadeSlideUp 0.6s ease 0.5s forwards; opacity: 0; }
+        .fade-up-2 { animation: fadeSlideUp 0.6s ease 0.10s forwards; opacity: 0; }
+        .fade-up-3 { animation: fadeSlideUp 0.6s ease 0.20s forwards; opacity: 0; }
+        .fade-up-4 { animation: fadeSlideUp 0.6s ease 0.30s forwards; opacity: 0; }
+        .fade-up-5 { animation: fadeSlideUp 0.6s ease 0.40s forwards; opacity: 0; }
+        .fade-up-6 { animation: fadeSlideUp 0.6s ease 0.50s forwards; opacity: 0; }
 
         .google-btn {
           width: 100%;
@@ -122,7 +135,10 @@ export default function LoginPage() {
         }
         .google-btn:hover:not(:disabled) {
           transform: translateY(-2px) scale(1.01);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.45), 0 0 60px rgba(245,158,11,0.15);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.45), 0 0 60px rgba(245,158,11,0.18);
+        }
+        .google-btn:active:not(:disabled) {
+          transform: translateY(0) scale(0.99);
         }
         .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -131,24 +147,14 @@ export default function LoginPage() {
           width: 1px;
           background: linear-gradient(to bottom,
             transparent 0%,
-            rgba(255,255,255,0.08) 20%,
-            rgba(255,255,255,0.08) 80%,
+            rgba(255,255,255,0.07) 20%,
+            rgba(255,255,255,0.07) 80%,
             transparent 100%
           );
         }
 
-        .glass-card {
-          background: rgba(24,24,27,0.55);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255,255,255,0.06);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.45);
-        }
-
-        .avatar-ring {
-          width: 32px; height: 32px; border-radius: 50%;
-          border: 2px solid #09090B;
-          margin-left: -8px;
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
 
@@ -156,38 +162,43 @@ export default function LoginPage() {
       <div className="login-bg" />
       <div className="grid-overlay" />
       <div className="glow-amber-tl" />
-      <div className="glow-purple-bc" />
+      <div className="glow-purple-bl" />
       <div className="glow-violet-tr" />
+      <div className="glow-purple-bc" />
 
       <main style={{ minHeight: '100vh', display: 'flex', position: 'relative', zIndex: 10 }}>
 
         {/* LEFT PANEL */}
-        <div style={{
-          flex: 1, display: 'none', flexDirection: 'column',
-          justifyContent: 'space-between', padding: '48px',
-          position: 'relative',
-        }} className="hidden lg:flex">
-
+        <div
+          className="hidden lg:flex"
+          style={{
+            flex: 1,
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '48px 56px',
+            position: 'relative',
+          }}
+        >
           {/* Logo */}
           <div className="fade-up-1">
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
               <div style={{
                 background: 'linear-gradient(135deg, #F59E0B 0%, #7C3AED 100%)',
                 borderRadius: 12, width: 38, height: 38,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 60px rgba(245,158,11,0.30)',
+                boxShadow: '0 0 40px rgba(245,158,11,0.35)',
               }}>
                 <Shield size={20} color="white" />
               </div>
-              <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 20 }}>ModrateAI</span>
+              <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 20 }}>ModerateAI</span>
             </Link>
           </div>
 
-          {/* Headline + Features */}
+          {/* Headline + Features — vertically centered */}
           <div>
             <div className="fade-up-2">
               <h1 style={{
-                fontSize: 52, fontWeight: 900, color: '#FAFAFA',
+                fontSize: 50, fontWeight: 900, color: '#FAFAFA',
                 lineHeight: 1.1, marginBottom: 20,
               }}>
                 Sign in and start<br />
@@ -197,13 +208,13 @@ export default function LoginPage() {
             </div>
 
             <div className="fade-up-3">
-              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 16, lineHeight: 1.6, marginBottom: 40 }}>
+              <p style={{ color: 'rgba(255,255,255,0.60)', fontSize: 15, lineHeight: 1.65, marginBottom: 36 }}>
                 One-click Google login. We only ask for the YouTube<br />
                 permissions moderation actually needs.
               </p>
             </div>
 
-            <div className="fade-up-4" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="fade-up-4" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
                 'Detects toxic comments in 100+ languages',
                 'Progressive live-chat timeouts',
@@ -212,31 +223,22 @@ export default function LoginPage() {
               ].map((feature) => (
                 <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
-                    width: 24, height: 24, borderRadius: '50%',
+                    width: 22, height: 22, borderRadius: '50%',
                     background: 'rgba(245,158,11,0.15)',
-                    border: '1px solid rgba(245,158,11,0.35)',
+                    border: '1px solid rgba(245,158,11,0.40)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0,
                   }}>
                     <span style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700 }}>✓</span>
                   </div>
-                  <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14 }}>{feature}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 14 }}>{feature}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Bottom Avatars */}
-          <div className="fade-up-5" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {['#F59E0B', '#8B5CF6', '#06B6D4', '#10B981'].map((color, i) => (
-                <div key={i} className="avatar-ring" style={{ background: color, zIndex: 4 - i }} />
-              ))}
-            </div>
-            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>
-              Joined by <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>2,400+</span> creators this month
-            </span>
-          </div>
+          {/* Empty bottom spacer — avatars removed */}
+          <div style={{ height: 40 }} />
         </div>
 
         {/* MIDDLE DIVIDER */}
@@ -279,10 +281,10 @@ export default function LoginPage() {
 
             {/* Heading */}
             <div className="fade-up-2">
-              <h2 style={{ fontSize: 48, fontWeight: 800, color: '#FAFAFA', marginBottom: 8, lineHeight: 1.1 }}>
+              <h2 style={{ fontSize: 42, fontWeight: 800, color: '#FAFAFA', marginBottom: 8, lineHeight: 1.1 }}>
                 Welcome back
               </h2>
-              <p style={{ color: 'rgba(255,255,255,0.60)', fontSize: 15, marginBottom: 32 }}>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, marginBottom: 32 }}>
                 Sign in to your ModrateAI dashboard.
               </p>
             </div>
@@ -290,7 +292,7 @@ export default function LoginPage() {
             {/* Error */}
             {error && (
               <div style={{
-                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.30)',
                 borderRadius: 10, padding: '12px 16px', marginBottom: 16,
                 color: '#f87171', fontSize: 14,
               }}>{error}</div>
@@ -330,7 +332,7 @@ export default function LoginPage() {
                 width: '100%', padding: '14px 24px', borderRadius: 14,
                 background: 'rgba(255,255,255,0.03)',
                 border: '1px solid rgba(255,255,255,0.08)',
-                color: 'rgba(255,255,255,0.35)', fontSize: 14, fontWeight: 500,
+                color: 'rgba(255,255,255,0.30)', fontSize: 14, fontWeight: 500,
                 cursor: 'not-allowed', marginBottom: 24,
               }}>
                 Continue with email{' '}
@@ -340,11 +342,11 @@ export default function LoginPage() {
 
             {/* Terms */}
             <div className="fade-up-6">
-              <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+              <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.40)' }}>
                 By continuing, you agree to our{' '}
-                <Link href="/terms" style={{ color: '#FAFAFA', textDecoration: 'underline' }}>Terms</Link>{' '}
+                <Link href="/terms" style={{ color: 'rgba(255,255,255,0.80)', textDecoration: 'underline' }}>Terms</Link>{' '}
                 and{' '}
-                <Link href="/privacy" style={{ color: '#FAFAFA', textDecoration: 'underline' }}>Privacy Policy</Link>.
+                <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.80)', textDecoration: 'underline' }}>Privacy Policy</Link>.
               </p>
             </div>
 
@@ -352,12 +354,6 @@ export default function LoginPage() {
         </div>
 
       </main>
-
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </>
   );
 }

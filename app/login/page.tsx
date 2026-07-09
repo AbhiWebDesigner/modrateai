@@ -42,13 +42,47 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="premium-bg" />
+      {/* Background */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        background: 'linear-gradient(135deg, #1a0a2e 0%, #16213e 40%, #0f3460 70%, #1a0a2e 100%)',
+      }} />
+      {/* Purple glow left */}
+      <div style={{
+        position: 'fixed',
+        top: '20%',
+        left: '10%',
+        width: 400,
+        height: 400,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)',
+        zIndex: 0,
+        filter: 'blur(60px)',
+      }} />
+      {/* Blue glow right */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20%',
+        right: '10%',
+        width: 350,
+        height: 350,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%)',
+        zIndex: 0,
+        filter: 'blur(60px)',
+      }} />
+
       <main className="min-h-screen flex relative z-10">
 
         {/* Left Panel */}
         <div className="hidden lg:flex flex-1 flex-col justify-between p-12">
           <Link href="/" className="flex items-center gap-2">
-            <div style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', borderRadius: 10 }} className="w-9 h-9 flex items-center justify-center">
+            <div style={{
+              background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+              borderRadius: 10
+            }} className="w-9 h-9 flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <span className="text-white font-black text-xl">ModrateAI</span>
@@ -72,9 +106,12 @@ export default function LoginPage() {
                 'Cancel anytime — 19-day free trial',
               ].map((feature) => (
                 <div key={feature} className="flex items-center gap-3">
-                  <div style={{ background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '50%' }}
-                    className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                    <span style={{ color: '#f59e0b' }} className="text-xs">✓</span>
+                  <div style={{
+                    background: 'rgba(139,92,246,0.2)',
+                    border: '1px solid rgba(139,92,246,0.4)',
+                    borderRadius: '50%'
+                  }} className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                    <span style={{ color: '#a78bfa' }} className="text-xs">✓</span>
                   </div>
                   <span className="text-gray-300 text-sm">{feature}</span>
                 </div>
@@ -82,14 +119,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div style={{ opacity: 0 }} className="h-8" />
+          <div className="h-8" />
         </div>
-
-        {/* Middle Divider Line */}
-        <div className="hidden lg:block self-stretch my-12" style={{
-          width: '1px',
-          background: 'linear-gradient(to bottom, transparent, rgba(245,158,11,0.4), transparent)'
-        }} />
 
         {/* Right Panel */}
         <div className="flex-1 flex items-center justify-center px-8 py-12">
@@ -97,7 +128,10 @@ export default function LoginPage() {
 
             {/* Mobile Logo */}
             <div className="flex lg:hidden items-center gap-2 mb-10">
-              <div style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', borderRadius: 10 }} className="w-9 h-9 flex items-center justify-center">
+              <div style={{
+                background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                borderRadius: 10
+              }} className="w-9 h-9 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <span className="text-white font-black text-xl">ModrateAI</span>
@@ -105,8 +139,12 @@ export default function LoginPage() {
 
             {/* Badge */}
             <div className="mb-6">
-              <span style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 20, color: '#f59e0b' }}
-                className="text-xs px-3 py-1.5 font-semibold">
+              <span style={{
+                background: 'rgba(139,92,246,0.15)',
+                border: '1px solid rgba(139,92,246,0.3)',
+                borderRadius: 20,
+                color: '#a78bfa'
+              }} className="text-xs px-3 py-1.5 font-semibold">
                 ✨ New: Live-chat timeouts
               </span>
             </div>
@@ -144,7 +182,11 @@ export default function LoginPage() {
 
             {/* Email Coming Soon */}
             <button disabled
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12 }}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 12
+              }}
               className="w-full py-3.5 text-gray-500 text-sm font-medium mb-6">
               Continue with email <span className="text-xs opacity-60">(coming soon)</span>
             </button>

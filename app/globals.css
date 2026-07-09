@@ -1,6 +1,6 @@
 /* stylelint-disable at-rule-no-unknown */
 @import "tailwindcss";
-@source "../app";
+@source "../app/**/*.{js,ts,jsx,tsx}"; 
 
 /* ============================================
    PREMIUM BACKGROUND

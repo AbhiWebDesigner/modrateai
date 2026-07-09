@@ -1,5 +1,7 @@
 /* stylelint-disable at-rule-no-unknown */
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ============================================
    PREMIUM BACKGROUND

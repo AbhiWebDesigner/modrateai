@@ -160,10 +160,10 @@ export default function LoginPage() {
           position: absolute;
           inset: -10%;
           background:
-            radial-gradient(48% 38% at 14% 18%, rgba(245,158,11,0.16) 0%, transparent 65%),
-            radial-gradient(42% 34% at 86% 12%, rgba(124,58,237,0.14) 0%, transparent 65%),
-            radial-gradient(55% 45% at 78% 82%, rgba(251,146,60,0.10) 0%, transparent 65%),
-            radial-gradient(40% 32% at 8% 88%, rgba(124,58,237,0.10) 0%, transparent 65%),
+            radial-gradient(52% 46% at 18% 20%, rgba(245,158,11,0.22) 0%, transparent 62%),
+            radial-gradient(58% 52% at 8% 92%, rgba(124,58,237,0.34) 0%, transparent 66%),
+            radial-gradient(46% 40% at 92% 8%, rgba(124,58,237,0.20) 0%, transparent 62%),
+            radial-gradient(60% 50% at 82% 78%, rgba(251,146,60,0.16) 0%, transparent 65%),
             radial-gradient(60% 60% at 50% 50%, rgba(20,20,23,0.4) 0%, #08080A 72%);
           animation: driftGlow 22s ease-in-out infinite;
         }
@@ -185,12 +185,13 @@ export default function LoginPage() {
         .auth-bg__blend {
           position: absolute;
           inset: 0;
-          background: linear-gradient(90deg,
-            transparent 0%,
-            transparent 38%,
-            rgba(245,158,11,0.05) 50%,
-            transparent 62%,
-            transparent 100%);
+          background: linear-gradient(115deg,
+            rgba(124,58,237,0.16) 0%,
+            rgba(124,58,237,0.08) 22%,
+            transparent 42%,
+            transparent 58%,
+            rgba(245,158,11,0.10) 78%,
+            rgba(251,146,60,0.14) 100%);
         }
 
         @keyframes driftGlow {

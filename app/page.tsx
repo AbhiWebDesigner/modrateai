@@ -25,7 +25,6 @@ export default function Home() {
         .timeout-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; }
       `}</style>
 
-      {/* Premium Background */}
       <div className="premium-bg" />
 
       {/* NAV */}
@@ -38,8 +37,8 @@ export default function Home() {
           <a href="#how" className="text-sm text-gray-400 hover:text-white transition-colors">How it works</a>
           <a href="#pricing" className="text-sm text-gray-400 hover:text-white transition-colors">Pricing</a>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors px-2">Login</Link>
+        <div className="flex items-center gap-6">
+          <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">Login</Link>
           <Link href="/login" className="gold-btn px-5 py-2.5 rounded-xl text-sm transition-all">
             Start for free
           </Link>
@@ -70,7 +69,6 @@ export default function Home() {
         </div>
         <p className="text-sm text-gray-600">✓ No credit card &nbsp;✓ 19-day free trial &nbsp;✓ Cancel anytime</p>
 
-        {/* DEMO CARD */}
         <div className="mt-16 w-full max-w-lg purple-glow rounded-2xl overflow-hidden card text-left">
           <div className="px-5 py-3 border-b border-white/8 flex items-center gap-2" style={{ background: 'rgba(255,255,255,0.03)' }}>
             <div className="w-3 h-3 rounded-full bg-red-500/70"></div>
@@ -120,7 +118,6 @@ export default function Home() {
           <p className="text-purple-400 text-sm font-bold tracking-widest uppercase mb-3 text-center">How it works</p>
           <h2 className="text-4xl font-black mb-4 text-center">Smart moderation that learns</h2>
           <p className="text-gray-500 text-center mb-12">Repeat offenders get progressively longer timeouts. Connect once, protect forever.</p>
-
           <div className="card rounded-2xl p-6 mb-12">
             <div className="flex items-center gap-2 mb-6">
               <AlertTriangle className="w-5 h-5 text-amber-400" />
@@ -141,7 +138,6 @@ export default function Home() {
             </div>
             <p className="text-xs text-gray-600 mt-4">✦ Spam messages with repeated bad words trigger auto-hide or 24hr timeout automatically</p>
           </div>
-
           <div className="grid md:grid-cols-4 gap-4">
             {[
               { num: '01', title: 'Connect YouTube', desc: 'One-click Google login. No API keys or technical setup.' },
@@ -214,53 +210,19 @@ export default function Home() {
               {
                 name: 'Free Trial', price: '₹0', period: '/month', tagline: 'Try before you pay',
                 badge: null, featured: false, trialDays: '19-day free trial',
-                features: [
-                  '1 YouTube channel',
-                  '1,500 comments scanned/month',
-                  'All videos + Shorts + Posts scanned',
-                  'Unlimited bad comments hidden for review',
-                  'Live chat progressive timeouts',
-                  'Spam detection & auto-hide',
-                  '3 AI replies per video (45s delay)',
-                  '10+ Indian languages',
-                  'Basic dashboard',
-                ],
+                features: ['1 YouTube channel', '1,500 comments scanned/month', 'All videos + Shorts + Posts scanned', 'Unlimited bad comments hidden for review', 'Live chat progressive timeouts', 'Spam detection & auto-hide', '3 AI replies per video (45s delay)', '10+ Indian languages', 'Basic dashboard'],
                 cta: 'Start free trial', href: '/login'
               },
               {
                 name: 'Pro', price: '₹299', period: '/month', tagline: 'For growing creators',
                 badge: 'MOST POPULAR', featured: true, trialDays: '7-day free trial',
-                features: [
-                  '1 YouTube channel',
-                  '5,000 comments scanned/month',
-                  'All videos + Shorts + Posts + Live chat',
-                  'Unlimited bad comments hidden for review',
-                  'Live chat progressive timeouts',
-                  'Spam detection & auto-hide',
-                  'Auto-replies scale with comments (45s delay)',
-                  '100+ world languages',
-                  'Full analytics dashboard',
-                  'Telegram alerts',
-                  'Priority support',
-                ],
+                features: ['1 YouTube channel', '5,000 comments scanned/month', 'All videos + Shorts + Posts + Live chat', 'Unlimited bad comments hidden for review', 'Live chat progressive timeouts', 'Spam detection & auto-hide', 'Auto-replies scale with comments (45s delay)', '100+ world languages', 'Full analytics dashboard', 'Telegram alerts', 'Priority support'],
                 cta: 'Get Pro', href: '/login'
               },
               {
                 name: 'Agency', price: '₹1,900', period: '/month', tagline: 'Unlimited everything',
                 badge: null, featured: false, trialDays: '7-day free trial',
-                features: [
-                  '1 YouTube channel',
-                  'Unlimited comments scanned',
-                  'All videos + Shorts + Posts + Live chat',
-                  'Unlimited bad comment hiding',
-                  'Advanced timeout controls',
-                  'Unlimited auto-replies',
-                  '100+ world languages',
-                  'Advanced analytics + exports',
-                  'Telegram + WhatsApp alerts',
-                  'Dedicated support',
-                  'API access',
-                ],
+                features: ['1 YouTube channel', 'Unlimited comments scanned', 'All videos + Shorts + Posts + Live chat', 'Unlimited bad comment hiding', 'Advanced timeout controls', 'Unlimited auto-replies', '100+ world languages', 'Advanced analytics + exports', 'Telegram + WhatsApp alerts', 'Dedicated support', 'API access'],
                 cta: 'Get Agency', href: '/login'
               },
             ].map((plan) => (
@@ -276,8 +238,7 @@ export default function Home() {
                 <ul className="space-y-3 flex-1 mb-8">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-3 text-sm text-gray-400">
-                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-400" />
-                      {f}
+                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-400" />{f}
                     </li>
                   ))}
                 </ul>
@@ -307,9 +268,7 @@ export default function Home() {
                 </div>
                 <p className="text-sm text-gray-400 leading-relaxed mb-6">{t.text}</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ background: t.color }}>
-                    {t.avatar}
-                  </div>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ background: t.color }}>{t.avatar}</div>
                   <div>
                     <div className="text-sm font-bold text-white">{t.name}</div>
                     <div className="text-xs text-gray-500">{t.role}</div>
@@ -321,7 +280,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA BOTTOM */}
+      {/* CTA */}
       <section className="py-24 px-4 text-center" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(139,92,246,0.2) 0%, transparent 70%), #09090B', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <h2 className="text-5xl font-black mb-4">Your community deserves<br /><span className="grad-text">a safe space.</span></h2>
         <p className="text-gray-500 mb-8 text-lg">Join Indian YouTubers who trust ModrateAI to protect their channels 24/7</p>

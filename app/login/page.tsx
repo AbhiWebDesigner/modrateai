@@ -224,7 +224,7 @@ export default function LoginPage() {
               </h1>
             </div>
             <div className="fade-up-3">
-              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, lineHeight: 1.7, marginBottom: 32, maxWidth: 400 }}>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, lineHeight: 1.7, marginBottom: 32, maxWidth: 400 }}>
                 One-click Google login. We only ask for the YouTube permissions moderation actually needs.
               </p>
             </div>

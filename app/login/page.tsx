@@ -14,7 +14,7 @@ function Logo({ size = 38 }: { size?: number }) {
         background: 'linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)',
         borderRadius: 12, width: size, height: size,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 0 0 1px rgba(255,255,255,0.08) inset, 0 8px 24px rgba(245,158,11,0.35)',
+        boxShadow: '0 0 0 1px rgba(255,255,255,0.10) inset, 0 8px 24px rgba(245,158,11,0.35)',
       }}>
         <Shield size={size * 0.52} color="white" strokeWidth={2.25} />
       </div>
@@ -30,13 +30,13 @@ function FeatureRow({ label, delay }: { label: string; delay: string }) {
     <div className="feature-row" style={{ animationDelay: delay, display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{
         width: 22, height: 22, borderRadius: '50%',
-        background: 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(124,58,237,0.14))',
-        border: '1px solid rgba(245,158,11,0.40)',
+        background: 'rgba(245,158,11,0.15)',
+        border: '1px solid rgba(245,158,11,0.45)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>
         <span style={{ color: '#FBBF24', fontSize: 11, fontWeight: 700 }}>✓</span>
       </div>
-      <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, letterSpacing: '-0.01em' }}>{label}</span>
+      <span style={{ color: 'rgba(255,255,255,0.80)', fontSize: 15, letterSpacing: '-0.01em' }}>{label}</span>
     </div>
   );
 }
@@ -96,54 +96,11 @@ export default function LoginPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { background: #08080A; }
-
-        .auth-bg {
-          position: fixed; inset: 0; z-index: 0;
-          background-color: #09090B;
-          overflow: hidden;
+        *, *::before, *::after {
+          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+          letter-spacing: -0.02em; box-sizing: border-box; margin: 0; padding: 0;
         }
-        /* Amber top-left — bright like reference */
-        .glow-amber {
-          position: absolute;
-          top: -120px; left: -80px;
-          width: 680px; height: 680px;
-          background: radial-gradient(circle, rgba(245,158,11,0.38) 0%, rgba(234,88,12,0.18) 40%, transparent 70%);
-          filter: blur(60px);
-          animation: driftGlow 18s ease-in-out infinite;
-        }
-        /* Purple bottom-left — intense like reference */
-        .glow-purple {
-          position: absolute;
-          bottom: -140px; left: -80px;
-          width: 750px; height: 650px;
-          background: radial-gradient(circle, rgba(109,40,217,0.55) 0%, rgba(124,58,237,0.30) 40%, transparent 70%);
-          filter: blur(70px);
-          animation: driftGlow 22s ease-in-out infinite reverse;
-        }
-        /* Subtle violet top-right */
-        .glow-violet {
-          position: absolute;
-          top: -60px; right: -60px;
-          width: 400px; height: 400px;
-          background: radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 65%);
-          filter: blur(55px);
-        }
-        .auth-bg__grid {
-          position: absolute; inset: 0;
-          background-image:
-            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-          background-size: 56px 56px;
-          -webkit-mask-image: radial-gradient(85% 75% at 40% 40%, #000 0%, transparent 75%);
-          mask-image: radial-gradient(85% 75% at 40% 40%, #000 0%, transparent 75%);
-        }
-
-        @keyframes driftGlow {
-          0%, 100% { transform: translate3d(0,0,0) scale(1); }
-          50% { transform: translate3d(2%, -2%, 0) scale(1.06); }
-        }
+        html, body { background: #000; }
 
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
@@ -160,7 +117,7 @@ export default function LoginPage() {
         }
 
         @keyframes fadeSlideUp {
-          from { opacity: 0; transform: translateY(22px); }
+          from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
         .fade-up-1 { animation: fadeSlideUp 0.7s cubic-bezier(0.16,1,0.3,1) forwards; opacity: 0; }
@@ -178,37 +135,20 @@ export default function LoginPage() {
           padding: 15px 24px; border-radius: 14px;
           font-size: 15px; font-weight: 600;
           border: none; cursor: pointer;
-          transition: transform 0.28s cubic-bezier(0.16,1,0.3,1), box-shadow 0.28s ease;
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
           box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-          overflow: hidden;
-          letter-spacing: -0.01em;
-        }
-        .google-btn::after {
-          content: ''; position: absolute; inset: 0;
-          background: linear-gradient(120deg, transparent 30%, rgba(245,158,11,0.22) 50%, transparent 70%);
-          transform: translateX(-120%); transition: transform 0.6s ease;
+          letter-spacing: -0.01em; overflow: hidden;
         }
         .google-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 16px 40px rgba(245,158,11,0.22), 0 6px 18px rgba(0,0,0,0.30);
+          box-shadow: 0 16px 40px rgba(245,158,11,0.20), 0 6px 18px rgba(0,0,0,0.25);
         }
-        .google-btn:hover:not(:disabled)::after { transform: translateX(120%); }
         .google-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
         .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .email-btn {
-          width: 100%; padding: 14px 24px; border-radius: 14px;
-          background: transparent;
-          border: 1px solid rgba(255,255,255,0.10);
-          color: rgba(255,255,255,0.28); font-size: 14px; font-weight: 500;
-          cursor: not-allowed;
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-          letter-spacing: -0.01em;
-        }
-
         @keyframes glowPulse {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.18); }
-          50% { box-shadow: 0 0 0 1px rgba(245,158,11,0.35), 0 0 20px rgba(245,158,11,0.12); }
+          0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.20); }
+          50% { box-shadow: 0 0 0 1px rgba(245,158,11,0.40), 0 0 20px rgba(245,158,11,0.14); }
         }
         .badge-pulse { animation: glowPulse 3s ease-in-out infinite; }
 
@@ -226,33 +166,61 @@ export default function LoginPage() {
         }
       `}</style>
 
-      <div className="auth-bg">
-        <div className="glow-amber" />
-        <div className="glow-purple" />
-        <div className="glow-violet" />
-        <div className="auth-bg__grid" />
-      </div>
+      <main style={{ minHeight: '100vh', display: 'flex' }}>
 
-      <main style={{ minHeight: '100vh', display: 'flex', position: 'relative', zIndex: 10 }}>
+        {/* LEFT PANEL — colored gradient background */}
+        <div
+          className="auth-left"
+          style={{
+            flex: 1,
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: '52px 64px',
+            position: 'relative',
+            overflow: 'hidden',
+            /* Base dark color */
+            background: '#0D0B0E',
+          }}
+        >
+          {/* Amber glow top-left */}
+          <div style={{
+            position: 'absolute', top: -100, left: -80,
+            width: 650, height: 650,
+            background: 'radial-gradient(circle, rgba(245,158,11,0.42) 0%, rgba(234,88,12,0.20) 38%, transparent 68%)',
+            filter: 'blur(55px)', pointerEvents: 'none',
+          }} />
+          {/* Purple glow bottom-left */}
+          <div style={{
+            position: 'absolute', bottom: -120, left: -60,
+            width: 720, height: 680,
+            background: 'radial-gradient(circle, rgba(109,40,217,0.60) 0%, rgba(124,58,237,0.35) 38%, transparent 68%)',
+            filter: 'blur(65px)', pointerEvents: 'none',
+          }} />
+          {/* Subtle grid */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+            backgroundSize: '56px 56px',
+            WebkitMaskImage: 'radial-gradient(80% 70% at 35% 35%, #000 0%, transparent 75%)',
+            maskImage: 'radial-gradient(80% 70% at 35% 35%, #000 0%, transparent 75%)',
+            pointerEvents: 'none',
+          }} />
 
-        {/* LEFT PANEL */}
-        <div className="auth-left" style={{
-          flex: 1, flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '52px 64px', position: 'relative',
-        }}>
-          <div className="fade-up-1"><Logo /></div>
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 2 }} className="fade-up-1">
+            <Logo />
+          </div>
 
-          <div style={{ maxWidth: 500 }}>
+          <div style={{ position: 'relative', zIndex: 2, maxWidth: 500 }}>
             <div className="fade-up-2">
-              <h1 style={{ fontSize: 56, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.06, marginBottom: 22 }}>
+              <h1 style={{ fontSize: 58, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.05, marginBottom: 20 }}>
                 Sign in and start<br />
                 moderating in<br />
                 <span className="animated-gradient-text">60 seconds.</span>
               </h1>
             </div>
             <div className="fade-up-3">
-              <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: 16, lineHeight: 1.7, marginBottom: 40, maxWidth: 420 }}>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, lineHeight: 1.7, marginBottom: 40, maxWidth: 420 }}>
                 One-click Google login. We only ask for the YouTube permissions moderation actually needs.
               </p>
             </div>
@@ -266,10 +234,14 @@ export default function LoginPage() {
           <div style={{ height: 24 }} />
         </div>
 
-        {/* RIGHT PANEL */}
+        {/* RIGHT PANEL — pure black */}
         <div style={{
-          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           padding: '48px 32px',
+          background: '#000000',
         }}>
           <div style={{ width: '100%', maxWidth: 420 }}>
 
@@ -282,10 +254,10 @@ export default function LoginPage() {
             <div className="fade-up-1" style={{ marginBottom: 28 }}>
               <span className="badge-pulse" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'rgba(245,158,11,0.07)',
-                border: '1px solid rgba(245,158,11,0.22)',
+                background: 'rgba(245,158,11,0.08)',
+                border: '1px solid rgba(245,158,11,0.25)',
                 borderRadius: 100, padding: '6px 14px',
-                color: 'rgba(255,255,255,0.80)', fontSize: 12, fontWeight: 500,
+                color: 'rgba(255,255,255,0.82)', fontSize: 12, fontWeight: 500,
               }}>
                 <Sparkles size={12} color="#FBBF24" />
                 New: Live-chat timeouts
@@ -294,10 +266,10 @@ export default function LoginPage() {
 
             {/* Heading */}
             <div className="fade-up-2">
-              <h2 style={{ fontSize: 38, fontWeight: 800, color: '#FAFAFA', marginBottom: 8, lineHeight: 1.12 }}>
+              <h2 style={{ fontSize: 40, fontWeight: 800, color: '#FAFAFA', marginBottom: 8, lineHeight: 1.1 }}>
                 Welcome back
               </h2>
-              <p style={{ color: 'rgba(255,255,255,0.48)', fontSize: 15, marginBottom: 32 }}>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 15, marginBottom: 32 }}>
                 Sign in to your ModrateAI dashboard.
               </p>
             </div>
@@ -328,7 +300,15 @@ export default function LoginPage() {
 
             {/* Email */}
             <div className="fade-up-5">
-              <button disabled className="email-btn">
+              <button disabled style={{
+                width: '100%', padding: '14px 24px', borderRadius: 14,
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.10)',
+                color: 'rgba(255,255,255,0.28)', fontSize: 14, fontWeight: 500,
+                cursor: 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                letterSpacing: '-0.01em',
+              }}>
                 Continue with email
                 <span style={{ fontSize: 12, opacity: 0.65 }}>(coming soon)</span>
               </button>
@@ -336,11 +316,11 @@ export default function LoginPage() {
 
             {/* Terms */}
             <div className="fade-up-6" style={{ marginTop: 28 }}>
-              <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 1.6 }}>
+              <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.32)', lineHeight: 1.6 }}>
                 By continuing, you agree to our{' '}
-                <Link href="/terms" style={{ color: 'rgba(255,255,255,0.72)', textDecoration: 'underline' }}>Terms</Link>{' '}
+                <Link href="/terms" style={{ color: 'rgba(255,255,255,0.70)', textDecoration: 'underline' }}>Terms</Link>{' '}
                 and{' '}
-                <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.72)', textDecoration: 'underline' }}>Privacy Policy</Link>.
+                <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.70)', textDecoration: 'underline' }}>Privacy Policy</Link>.
               </p>
             </div>
 

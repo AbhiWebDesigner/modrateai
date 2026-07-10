@@ -216,21 +216,21 @@ export default function LoginPage() {
             maxWidth: 460,
             paddingTop: 20,
           }}>
-            <div className="fade-up-2">
-              <h1 style={{ fontSize: 36, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.08, marginBottom: 16 }}>
-                Sign in and start moderating in{' '}
-                <span className="animated-gradient-text">60 seconds.</span>
-              </h1>
-            </div>
-            <div className="fade-up-3">
-              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, lineHeight: 1.7, marginBottom: 32, maxWidth: 400 }}>
+            <div className="relative">
+              <h2
+                className="text-4xl xl:text-5xl font-bold tracking-tight leading-[1.05]"
+                style={{ color: '#FAFAFA' }}
+              >
+                Sign in and start<br />moderating in <span className="animated-gradient-text">60 seconds</span>.
+              </h2>
+              <p className="mt-5" style={{ color: 'rgba(255,255,255,0.60)', fontSize: 16, maxWidth: '38rem' }}>
                 One-click Google login. We only ask for the YouTube permissions moderation actually needs.
               </p>
-            </div>
-            <div className="fade-up-4" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {features.map((feature, i) => (
-                <FeatureRow key={feature} label={feature} delay={`${0.45 + i * 0.08}s`} />
-              ))}
+              <div className="mt-8" style={{ display: 'grid', gap: 12 }}>
+                {features.map((feature, index) => (
+                  <FeatureRow key={feature} label={feature} delay={`${index * 0.08}s`} />
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -217,17 +217,17 @@ export default function Dashboard() {
             {/* STAT CARDS */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
               {[
-                { icon: Eye, label: 'Comments Scanned', value: commentsUsed.toLocaleString(), badge: '+18.2%', iconColor: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)' },
-                { icon: Trash2, label: 'Hidden', value: '0', badge: '+4.3%', iconColor: '#f87171', iconBg: 'rgba(239,68,68,0.15)' },
-                { icon: MessageSquare, label: 'Auto-Replies', value: '0', badge: '+12.7%', iconColor: '#60a5fa', iconBg: 'rgba(59,130,246,0.15)' },
-                { icon: Shield, label: 'Protection Status', value: youtubeConnected ? 'Active' : 'Inactive', badge: '99.4% uptime', iconColor: youtubeConnected ? '#4ade80' : '#fb923c', iconBg: youtubeConnected ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)' },
+               { icon: Eye, label: 'Comments Scanned', value: commentsUsed.toLocaleString(), badge: null, iconColor: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)' },
+              { icon: Trash2, label: 'Hidden', value: '0', badge: null, iconColor: '#f87171', iconBg: 'rgba(239,68,68,0.15)' },
+              { icon: MessageSquare, label: 'Auto-Replies', value: '0', badge: null, iconColor: '#60a5fa', iconBg: 'rgba(59,130,246,0.15)' },
+              { icon: Shield, label: 'Protection Status', value: youtubeConnected ? 'Active' : 'Inactive', badge: null, iconColor: youtubeConnected ? '#4ade80' : '#fb923c', iconBg: youtubeConnected ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)' },
               ].map((s) => (
                 <div key={s.label} className="stat-card">
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                     <div style={{ width: 36, height: 36, background: s.iconBg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <s.icon size={18} color={s.iconColor} />
                     </div>
-                    <span style={{ color: '#4ade80', fontSize: 12, fontWeight: 600 }}>↗ {s.badge}</span>
+  
                   </div>
                   <div style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{s.value}</div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 6 }}>{s.label}</div>

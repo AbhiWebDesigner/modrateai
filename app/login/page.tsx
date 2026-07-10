@@ -217,7 +217,7 @@ export default function LoginPage() {
             paddingTop: 20,
           }}>
             <div className="fade-up-2">
-              <h1 style={{ fontSize: 32, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.1, marginBottom: 16 }}>
+              <h1 style={{ fontSize: 52, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.1, marginBottom: 16 }}>
                 Sign in and start<br />
                 moderating in{' '}
                 <span className="animated-gradient-text">60 seconds.</span>

@@ -1,5 +1,5 @@
 'use client';
-import { Shield, Sparkles, ArrowRight } from 'lucide-react';
+import { Shield, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from '@/lib/firebase';
@@ -7,37 +7,19 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-/* -------------------------------------------------------------------------
- * Reusable pieces
- * ---------------------------------------------------------------------- */
-
 function Logo({ size = 38 }: { size?: number }) {
   return (
-    <Link
-      href="/"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 10,
-        textDecoration: 'none',
-      }}
-    >
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)',
-          borderRadius: 12,
-          width: size,
-          height: size,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 0 1px rgba(255,255,255,0.08) inset, 0 8px 24px rgba(245,158,11,0.28)',
-        }}
-      >
+    <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+      <div style={{
+        background: 'linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)',
+        borderRadius: 12, width: size, height: size,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 0 0 1px rgba(255,255,255,0.08) inset, 0 8px 24px rgba(245,158,11,0.28)',
+      }}>
         <Shield size={size * 0.52} color="white" strokeWidth={2.25} />
       </div>
       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 19, letterSpacing: '-0.02em' }}>
-        ModerateAI
+        ModrateAI
       </span>
     </Link>
   );
@@ -45,28 +27,16 @@ function Logo({ size = 38 }: { size?: number }) {
 
 function FeatureRow({ label, delay }: { label: string; delay: string }) {
   return (
-    <div
-      className="feature-row"
-      style={{ animationDelay: delay, display: 'flex', alignItems: 'center', gap: 12 }}
-    >
-      <div
-        style={{
-          width: 22,
-          height: 22,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(124,58,237,0.14))',
-          border: '1px solid rgba(245,158,11,0.35)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
+    <div className="feature-row" style={{ animationDelay: delay, display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{
+        width: 22, height: 22, borderRadius: '50%',
+        background: 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(124,58,237,0.14))',
+        border: '1px solid rgba(245,158,11,0.35)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
         <span style={{ color: '#FBBF24', fontSize: 11, fontWeight: 700 }}>✓</span>
       </div>
-      <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 14.5, letterSpacing: '-0.01em' }}>
-        {label}
-      </span>
+      <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 14.5, letterSpacing: '-0.01em' }}>{label}</span>
     </div>
   );
 }
@@ -74,29 +44,13 @@ function FeatureRow({ label, delay }: { label: string; delay: string }) {
 function GoogleIcon() {
   return (
     <svg width="19" height="19" viewBox="0 0 24 24">
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-      />
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
     </svg>
   );
 }
-
-/* -------------------------------------------------------------------------
- * Page
- * ---------------------------------------------------------------------- */
 
 export default function LoginPage() {
   const router = useRouter();
@@ -142,34 +96,23 @@ export default function LoginPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-
-        * { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; box-sizing: border-box; }
-
+        *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; box-sizing: border-box; margin: 0; padding: 0; }
         html, body { background: #08080A; }
 
-        /* ---------- layered premium background ---------- */
-        .auth-bg {
-          position: fixed;
-          inset: 0;
-          z-index: 0;
-          background-color: #08080A;
-          overflow: hidden;
-        }
+        .auth-bg { position: fixed; inset: 0; z-index: 0; background-color: #08080A; overflow: hidden; }
         .auth-bg::before {
           content: '';
-          position: absolute;
-          inset: -10%;
+          position: absolute; inset: -10%;
           background:
-            radial-gradient(52% 46% at 18% 20%, rgba(245,158,11,0.22) 0%, transparent 62%),
-            radial-gradient(58% 52% at 8% 92%, rgba(124,58,237,0.34) 0%, transparent 66%),
-            radial-gradient(46% 40% at 92% 8%, rgba(124,58,237,0.20) 0%, transparent 62%),
-            radial-gradient(60% 50% at 82% 78%, rgba(251,146,60,0.16) 0%, transparent 65%),
+            radial-gradient(52% 46% at 18% 20%, rgba(245,158,11,0.24) 0%, transparent 62%),
+            radial-gradient(58% 52% at 8% 92%, rgba(124,58,237,0.38) 0%, transparent 66%),
+            radial-gradient(46% 40% at 92% 8%, rgba(124,58,237,0.22) 0%, transparent 62%),
+            radial-gradient(60% 50% at 82% 78%, rgba(251,146,60,0.18) 0%, transparent 65%),
             radial-gradient(60% 60% at 50% 50%, rgba(20,20,23,0.4) 0%, #08080A 72%);
           animation: driftGlow 22s ease-in-out infinite;
         }
         .auth-bg__grid {
-          position: absolute;
-          inset: 0;
+          position: absolute; inset: 0;
           background-image:
             linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
@@ -178,27 +121,21 @@ export default function LoginPage() {
           mask-image: radial-gradient(85% 75% at 50% 30%, #000 0%, transparent 78%);
         }
         .auth-bg__vignette {
-          position: absolute;
-          inset: 0;
+          position: absolute; inset: 0;
           background: radial-gradient(120% 90% at 50% 100%, rgba(0,0,0,0.55) 0%, transparent 55%);
         }
         .auth-bg__blend {
-          position: absolute;
-          inset: 0;
+          position: absolute; inset: 0;
           background: linear-gradient(115deg,
-            rgba(124,58,237,0.16) 0%,
-            rgba(124,58,237,0.08) 22%,
-            transparent 42%,
-            transparent 58%,
-            rgba(245,158,11,0.10) 78%,
-            rgba(251,146,60,0.14) 100%);
+            rgba(124,58,237,0.16) 0%, rgba(124,58,237,0.08) 22%,
+            transparent 42%, transparent 58%,
+            rgba(245,158,11,0.10) 78%, rgba(251,146,60,0.14) 100%);
         }
 
         @keyframes driftGlow {
           0%, 100% { transform: translate3d(0,0,0) scale(1); }
           50% { transform: translate3d(-1.5%, 1.5%, 0) scale(1.04); }
         }
-
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
@@ -212,7 +149,6 @@ export default function LoginPage() {
           background-clip: text;
           animation: gradientShift 4s ease infinite;
         }
-
         @keyframes fadeSlideUp {
           from { opacity: 0; transform: translateY(22px); }
           to { opacity: 1; transform: translateY(0); }
@@ -223,13 +159,8 @@ export default function LoginPage() {
         .fade-up-4 { animation: fadeSlideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.24s forwards; opacity: 0; }
         .fade-up-5 { animation: fadeSlideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.32s forwards; opacity: 0; }
         .fade-up-6 { animation: fadeSlideUp 0.7s cubic-bezier(0.16,1,0.3,1) 0.40s forwards; opacity: 0; }
+        .feature-row { animation: fadeSlideUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards; opacity: 0; }
 
-        .feature-row {
-          animation: fadeSlideUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
-          opacity: 0;
-        }
-
-        /* ---------- glass card ---------- */
         .auth-card {
           position: relative;
           background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
@@ -238,16 +169,12 @@ export default function LoginPage() {
           padding: 44px 40px;
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          box-shadow:
-            0 1px 0 rgba(255,255,255,0.06) inset,
-            0 30px 80px rgba(0,0,0,0.45);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 30px 80px rgba(0,0,0,0.45);
         }
         .auth-card::before {
           content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: 24px;
-          padding: 1px;
+          position: absolute; inset: 0;
+          border-radius: 24px; padding: 1px;
           background: linear-gradient(135deg, rgba(245,158,11,0.35), transparent 40%, rgba(124,58,237,0.25));
           -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           -webkit-mask-composite: xor;
@@ -255,26 +182,21 @@ export default function LoginPage() {
           pointer-events: none;
         }
 
-        /* ---------- google button ---------- */
         .google-btn {
-          position: relative;
-          width: 100%;
+          position: relative; width: 100%;
           display: flex; align-items: center; justify-content: center; gap: 12px;
           background: #FAFAFA; color: #0A0A0B;
           padding: 15px 24px; border-radius: 14px;
           font-size: 15px; font-weight: 600;
           border: none; cursor: pointer;
-          transition: transform 0.28s cubic-bezier(0.16,1,0.3,1), box-shadow 0.28s ease, background 0.28s ease;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.04) inset;
+          transition: transform 0.28s cubic-bezier(0.16,1,0.3,1), box-shadow 0.28s ease;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.15);
           overflow: hidden;
         }
         .google-btn::after {
-          content: '';
-          position: absolute;
-          inset: 0;
+          content: ''; position: absolute; inset: 0;
           background: linear-gradient(120deg, transparent 30%, rgba(245,158,11,0.25) 50%, transparent 70%);
-          transform: translateX(-120%);
-          transition: transform 0.6s ease;
+          transform: translateX(-120%); transition: transform 0.6s ease;
         }
         .google-btn:hover:not(:disabled) {
           transform: translateY(-2px);
@@ -285,11 +207,6 @@ export default function LoginPage() {
         .google-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
         .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        .email-btn {
-          width: '100%';
-        }
-
-        /* ---------- badge glow pulse ---------- */
         @keyframes glowPulse {
           0%, 100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.14), 0 0 18px rgba(245,158,11,0.06); }
           50% { box-shadow: 0 0 0 1px rgba(245,158,11,0.30), 0 0 28px rgba(245,158,11,0.16); }
@@ -304,76 +221,42 @@ export default function LoginPage() {
           animation: spin 0.75s linear infinite;
         }
 
-        @media (max-width: 1024px) {
-          .auth-left { display: none !important; }
+        .auth-left { display: none; }
+        @media (min-width: 1024px) {
+          .auth-left { display: flex !important; }
+          .mobile-logo { display: none !important; }
         }
       `}</style>
 
-      {/* Layered background */}
       <div className="auth-bg">
         <div className="auth-bg__grid" />
         <div className="auth-bg__blend" />
         <div className="auth-bg__vignette" />
       </div>
 
-      <main
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          position: 'relative',
-          zIndex: 10,
-        }}
-      >
-        {/* LEFT PANEL */}
-        <div
-          className="auth-left"
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '52px 64px',
-            position: 'relative',
-          }}
-        >
-          <div className="fade-up-1">
-            <Logo />
-          </div>
+      <main style={{ minHeight: '100vh', display: 'flex', position: 'relative', zIndex: 10 }}>
+
+        {/* LEFT PANEL — desktop only */}
+        <div className="auth-left" style={{
+          flex: 1, flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: '52px 64px', position: 'relative',
+        }}>
+          <div className="fade-up-1"><Logo /></div>
 
           <div style={{ maxWidth: 480 }}>
             <div className="fade-up-2">
-              <h1
-                style={{
-                  fontSize: 52,
-                  fontWeight: 900,
-                  color: '#FAFAFA',
-                  lineHeight: 1.08,
-                  marginBottom: 22,
-                }}
-              >
-                Sign in and start
-                <br />
-                moderating in
-                <br />
+              <h1 style={{ fontSize: 52, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.08, marginBottom: 22 }}>
+                Sign in and start<br />
+                moderating in<br />
                 <span className="animated-gradient-text">60 seconds.</span>
               </h1>
             </div>
-
             <div className="fade-up-3">
-              <p
-                style={{
-                  color: 'rgba(255,255,255,0.55)',
-                  fontSize: 15.5,
-                  lineHeight: 1.7,
-                  marginBottom: 40,
-                  maxWidth: 400,
-                }}
-              >
-                One-click Google login. We only ask for the YouTube permissions
-                moderation actually needs.
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15.5, lineHeight: 1.7, marginBottom: 40, maxWidth: 400 }}>
+                One-click Google login. We only ask for the YouTube permissions moderation actually needs.
               </p>
             </div>
-
             <div className="fade-up-4" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {features.map((feature, i) => (
                 <FeatureRow key={feature} label={feature} delay={`${0.45 + i * 0.08}s`} />
@@ -385,89 +268,48 @@ export default function LoginPage() {
         </div>
 
         {/* RIGHT PANEL */}
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '48px 32px',
-            position: 'relative',
-          }}
-        >
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '48px 32px', position: 'relative',
+        }}>
           <div style={{ width: '100%', maxWidth: 420 }}>
-            {/* Mobile logo */}
-            <div
-              className="fade-up-1"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                marginBottom: 32,
-              }}
-            >
+
+            {/* Mobile logo only */}
+            <div className="mobile-logo fade-up-1" style={{ marginBottom: 32 }}>
               <Logo size={34} />
             </div>
 
             <div className="auth-card">
-              {/* Badge */}
               <div className="fade-up-1" style={{ marginBottom: 26 }}>
-                <span
-                  className="badge-pulse"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    background: 'rgba(245,158,11,0.06)',
-                    border: '1px solid rgba(245,158,11,0.18)',
-                    borderRadius: 100,
-                    padding: '6px 14px',
-                    color: 'rgba(255,255,255,0.78)',
-                    fontSize: 12,
-                    fontWeight: 500,
-                  }}
-                >
+                <span className="badge-pulse" style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(245,158,11,0.06)',
+                  border: '1px solid rgba(245,158,11,0.18)',
+                  borderRadius: 100, padding: '6px 14px',
+                  color: 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: 500,
+                }}>
                   <Sparkles size={12} color="#FBBF24" />
                   New: Live-chat timeouts
                 </span>
               </div>
 
-              {/* Heading */}
               <div className="fade-up-2">
-                <h2
-                  style={{
-                    fontSize: 34,
-                    fontWeight: 800,
-                    color: '#FAFAFA',
-                    marginBottom: 8,
-                    lineHeight: 1.15,
-                  }}
-                >
+                <h2 style={{ fontSize: 34, fontWeight: 800, color: '#FAFAFA', marginBottom: 8, lineHeight: 1.15 }}>
                   Welcome back
                 </h2>
                 <p style={{ color: 'rgba(255,255,255,0.50)', fontSize: 14.5, marginBottom: 30 }}>
-                  Sign in to your ModerateAI dashboard.
+                  Sign in to your ModrateAI dashboard.
                 </p>
               </div>
 
-              {/* Error */}
               {error && (
-                <div
-                  style={{
-                    background: 'rgba(239,68,68,0.10)',
-                    border: '1px solid rgba(239,68,68,0.30)',
-                    borderRadius: 12,
-                    padding: '12px 16px',
-                    marginBottom: 18,
-                    color: '#f87171',
-                    fontSize: 13.5,
-                  }}
-                >
-                  {error}
-                </div>
+                <div style={{
+                  background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.30)',
+                  borderRadius: 12, padding: '12px 16px', marginBottom: 18,
+                  color: '#f87171', fontSize: 13.5,
+                }}>{error}</div>
               )}
 
-              {/* Google button */}
               <div className="fade-up-3">
                 <button onClick={handleGoogleLogin} disabled={loading} className="google-btn">
                   {loading ? <div className="spinner" /> : <GoogleIcon />}
@@ -475,54 +317,33 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Divider */}
-              <div
-                className="fade-up-4"
-                style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}
-              >
+              <div className="fade-up-4" style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
                 <span style={{ color: 'rgba(255,255,255,0.30)', fontSize: 11.5, fontWeight: 500 }}>OR</span>
                 <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
               </div>
 
-              {/* Email (disabled) */}
               <div className="fade-up-5">
-                <button
-                  disabled
-                  style={{
-                    width: '100%',
-                    padding: '14px 24px',
-                    borderRadius: 14,
-                    background: 'rgba(255,255,255,0.025)',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    color: 'rgba(255,255,255,0.28)',
-                    fontSize: 14,
-                    fontWeight: 500,
-                    cursor: 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                  }}
-                >
+                <button disabled style={{
+                  width: '100%', padding: '14px 24px', borderRadius: 14,
+                  background: 'rgba(255,255,255,0.025)',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                  color: 'rgba(255,255,255,0.28)', fontSize: 14, fontWeight: 500,
+                  cursor: 'not-allowed',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
                   Continue with email
                   <span style={{ fontSize: 11.5, opacity: 0.7 }}>(coming soon)</span>
                 </button>
               </div>
             </div>
 
-            {/* Terms */}
             <div className="fade-up-6" style={{ marginTop: 24 }}>
               <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.38)', lineHeight: 1.6 }}>
                 By continuing, you agree to our{' '}
-                <Link href="/terms" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline' }}>
-                  Terms
-                </Link>{' '}
+                <Link href="/terms" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline' }}>Terms</Link>{' '}
                 and{' '}
-                <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline' }}>
-                  Privacy Policy
-                </Link>
-                .
+                <Link href="/privacy" style={{ color: 'rgba(255,255,255,0.75)', textDecoration: 'underline' }}>Privacy Policy</Link>.
               </p>
             </div>
           </div>

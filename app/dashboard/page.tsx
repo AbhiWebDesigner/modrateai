@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Shield, Trash2, MessageSquare, Eye, Settings, LogOut, Home, BarChart3, Bell, ChevronRight, RefreshCw, Zap } from 'lucide-react';
+import { Shield, Trash2, MessageSquare, Eye, Settings, LogOut, Home, BarChart3, Bell, ChevronRight, Zap, Search } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -31,11 +31,12 @@ export default function Dashboard() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-500">Loading...</p>
+    <div style={{ minHeight: '100vh', background: '#09090B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ width: 40, height: 40, border: '2px solid #F59E0B', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }}></div>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Loading...</p>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
@@ -43,164 +44,286 @@ export default function Dashboard() {
   const commentsUsed = (userData?.comments_used as number) || 0;
   const commentsLimit = (userData?.comments_limit as number) || 1500;
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
+  const usagePercent = Math.min(100, (commentsUsed / commentsLimit) * 100);
 
   const navItems = [
-  { icon: Home, label: 'Home', href: '/dashboard' },
-  { icon: BarChart3, label: 'Analytics', href: '/analytics' },
-  { icon: Zap, label: 'Automation', href: '/automation' },
-  { icon: Bell, label: 'Alerts', href: '/alerts' },
-  { icon: Settings, label: 'Settings', href: '/settings' },
-];
+    { icon: Home, label: 'Overview', href: '/dashboard', active: true },
+    { icon: BarChart3, label: 'Analytics', href: '/analytics', active: false },
+    { icon: Zap, label: 'Automation', href: '/automation', active: false },
+    { icon: Bell, label: 'Alerts', href: '/alerts', active: false },
+    { icon: Settings, label: 'Settings', href: '/settings', active: false },
+  ];
+
+  const firstName = user?.displayName?.split(' ')[0] || 'User';
+
   return (
-    <main className="min-h-screen bg-gray-50 flex">
-      <aside className="w-60 bg-white border-r border-gray-100 flex flex-col fixed h-full">
-        <div className="px-6 py-5 border-b border-gray-100">
-          <div className="flex items-center gap-2 font-black text-lg text-blue-600">
-            <Shield className="w-5 h-5" /> ModrateAI
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #09090B; }
+        ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 4px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+        .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; text-decoration:none; transition:all 0.2s; color:rgba(255,255,255,0.5); }
+        .nav-item:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.9); }
+        .nav-item.active { background:rgba(245,158,11,0.12); color:#F59E0B; border-left:2px solid #F59E0B; }
+        .stat-card { background:#18181B; border:1px solid #27272A; border-radius:16px; padding:20px; transition:all 0.2s; }
+        .stat-card:hover { border-color:rgba(245,158,11,0.2); }
+        .glass-card { background:#18181B; border:1px solid #27272A; border-radius:16px; }
+        .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600; }
+        .badge-hidden { background:rgba(239,68,68,0.15); color:#f87171; }
+        .badge-replied { background:rgba(59,130,246,0.15); color:#60a5fa; }
+        .badge-kept { background:rgba(34,197,94,0.15); color:#4ade80; }
+        .search-input { background:rgba(255,255,255,0.05); border:1px solid #27272A; border-radius:10px; padding:8px 16px 8px 36px; color:#FAFAFA; font-size:14px; outline:none; width:240px; transition:all 0.2s; }
+        .search-input:focus { border-color:rgba(245,158,11,0.4); background:rgba(255,255,255,0.07); }
+        .search-input::placeholder { color:rgba(255,255,255,0.3); }
+        .connect-btn { background:#F59E0B; color:#09090B; font-weight:700; padding:10px 20px; border-radius:10px; border:none; cursor:pointer; font-size:14px; display:flex; align-items:center; gap:6px; transition:all 0.2s; white-space:nowrap; }
+        .connect-btn:hover { background:#FBBF24; transform:translateY(-1px); }
+        .upgrade-btn { background:linear-gradient(135deg,#F59E0B,#FBBF24); color:#09090B; font-weight:700; padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-size:13px; width:100%; transition:all 0.2s; }
+        .upgrade-btn:hover { opacity:0.9; transform:translateY(-1px); }
+        .logout-btn { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; color:rgba(255,255,255,0.4); background:none; border:none; cursor:pointer; width:100%; transition:all 0.2s; }
+        .logout-btn:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); }
+      `}</style>
+
+      <div className="premium-bg" />
+
+      <main style={{ minHeight: '100vh', display: 'flex', position: 'relative', zIndex: 10 }}>
+
+        {/* SIDEBAR */}
+        <aside style={{ width: 240, background: 'rgba(9,9,11,0.8)', borderRight: '1px solid #27272A', display: 'flex', flexDirection: 'column', position: 'fixed', height: '100vh', backdropFilter: 'blur(20px)' }}>
+
+          {/* Logo */}
+          <div style={{ padding: '24px 20px', borderBottom: '1px solid #27272A' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Shield size={18} color="white" />
+              </div>
+              <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 17 }}>ModerateAI</span>
+            </div>
           </div>
-        </div>
-        <div className="px-4 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-            {user?.photoURL ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.photoURL} className="w-9 h-9 rounded-full" alt="avatar" />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                {user?.displayName?.charAt(0) || 'U'}
+
+          {/* User */}
+          <div style={{ padding: '16px 12px', borderBottom: '1px solid #27272A' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10 }}>
+              {user?.photoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.photoURL} style={{ width: 34, height: 34, borderRadius: '50%' }} alt="avatar" />
+              ) : (
+                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14 }}>
+                  {user?.displayName?.charAt(0) || 'U'}
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName || 'User'}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: youtubeConnected ? '#22c55e' : '#f97316', display: 'inline-block' }}></span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, textTransform: 'capitalize' }}>{plan} plan</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Nav */}
+          <nav style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href} className={`nav-item${item.active ? ' active' : ''}`}>
+                <item.icon size={16} /> {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Upgrade + Logout */}
+          <div style={{ padding: '12px 8px', borderTop: '1px solid #27272A', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {plan === 'free' && (
+              <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <Zap size={14} color="#F59E0B" />
+                  <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 13 }}>Upgrade to Pro</span>
+                </div>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>Unlock unlimited hidden comments and Telegram alerts.</p>
+                <Link href="/pricing">
+                  <button className="upgrade-btn">Upgrade — ₹299/mo</button>
+                </Link>
               </div>
             )}
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-bold text-gray-800 truncate">{user?.displayName || 'User'}</div>
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${youtubeConnected ? 'bg-green-500' : 'bg-orange-400'}`}></span>
-                <span className="text-xs text-gray-500 capitalize">{plan} Plan</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-gray-600 hover:bg-gray-50 hover:text-blue-600`}
-            >
-              <item.icon className="w-4 h-4" /> {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="px-3 pb-4 space-y-2">
-          {plan === 'free' && (
-            <div className="bg-blue-600 rounded-xl p-4 text-white">
-              <div className="font-bold text-sm mb-1">Upgrade to Pro 🚀</div>
-              <div className="text-xs text-blue-200 mb-3">5,000 comments + live chat</div>
-              <Link href="/pricing" className="block bg-white text-blue-600 text-center text-xs font-bold py-2 rounded-lg">Upgrade — ₹299/mo</Link>
-            </div>
-          )}
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-gray-50">
-            <LogOut className="w-4 h-4" /> Logout
-          </button>
-        </div>
-      </aside>
-
-      <div className="flex-1 ml-60">
-        <header className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
-          <div>
-            <h1 className="text-xl font-black text-gray-900">Welcome back, {user?.displayName?.split(' ')[0]} 👋</h1>
-            <p className="text-sm text-gray-400">{youtubeConnected ? 'Your channel is protected' : 'Connect YouTube to start'}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-50">
-              <RefreshCw className="w-4 h-4" /> Refresh
+            <button onClick={handleLogout} className="logout-btn">
+              <LogOut size={16} /> Logout
             </button>
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${youtubeConnected ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
-              <span className={`w-2 h-2 rounded-full animate-pulse ${youtubeConnected ? 'bg-green-500' : 'bg-orange-400'}`}></span>
-              <span className={`text-sm font-medium ${youtubeConnected ? 'text-green-700' : 'text-orange-600'}`}>
-                {youtubeConnected ? 'Bot Active' : 'Not Connected'}
-              </span>
-            </div>
           </div>
-        </header>
+        </aside>
 
-        <div className="p-8">
-          {!youtubeConnected && (
-            <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-6 mb-8 flex items-center justify-between text-white">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+        {/* MAIN */}
+        <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column' }}>
+
+          {/* HEADER */}
+          <header style={{ background: 'rgba(9,9,11,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #27272A', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <h1 style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 18, margin: 0 }}>Overview</h1>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: youtubeConnected ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: youtubeConnected ? '#4ade80' : '#fb923c' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: youtubeConnected ? '#22c55e' : '#f97316', display: 'inline-block', animation: 'pulse 2s infinite' }}></span>
+                  {youtubeConnected ? 'Live' : 'Offline'}
+                </span>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: 0 }}>Welcome back, {firstName} 👋 — {youtubeConnected ? 'Your channel is protected' : 'Connect YouTube to start'}</p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* Search */}
+              <div style={{ position: 'relative' }}>
+                <Search size={14} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+                <input className="search-input" placeholder="Search comments, users..." />
+              </div>
+              {/* Bell */}
+              <button style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #27272A', borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
+                <Bell size={16} color="rgba(255,255,255,0.6)" />
+                <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, background: '#F59E0B', borderRadius: '50%' }}></span>
+              </button>
+              {/* Connect YouTube */}
+              {!youtubeConnected && (
+                <button onClick={handleYouTubeConnect} className="connect-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                   </svg>
+                  Connect YouTube
+                </button>
+              )}
+              {/* Avatar */}
+              {user?.photoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.photoURL} style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid #27272A' }} alt="avatar" />
+              ) : (
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14 }}>
+                  {firstName.charAt(0)}
                 </div>
-                <div>
-                  <div className="font-black text-lg">Connect your YouTube channel</div>
-                  <div className="text-red-100 text-sm">Connect once to start protecting your comments automatically</div>
-                </div>
-              </div>
-              <button onClick={handleYouTubeConnect} className="bg-white text-red-600 font-bold px-6 py-2.5 rounded-xl hover:bg-red-50 flex items-center gap-2">
-                Connect YouTube <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {[
-              { icon: Eye, label: 'Comments Scanned', value: commentsUsed.toLocaleString(), color: 'text-blue-600', bg: 'bg-blue-50' },
-              { icon: Trash2, label: 'Hidden for Review', value: '0', color: 'text-red-500', bg: 'bg-red-50' },
-              { icon: MessageSquare, label: 'Auto-Replies Sent', value: '0', color: 'text-green-600', bg: 'bg-green-50' },
-              { icon: Shield, label: 'Protection Status', value: youtubeConnected ? 'ACTIVE' : 'INACTIVE', color: youtubeConnected ? 'text-green-600' : 'text-orange-500', bg: youtubeConnected ? 'bg-green-50' : 'bg-orange-50' },
-            ].map((s) => (
-              <div key={s.label} className="bg-white rounded-2xl p-5 border border-gray-100">
-                <div className={`w-10 h-10 ${s.bg} rounded-xl flex items-center justify-center mb-3`}>
-                  <s.icon className={`w-5 h-5 ${s.color}`} />
-                </div>
-                <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-                <div className="text-xs text-gray-400 mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-8">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="font-black text-gray-900">Monthly Usage</h2>
-                <p className="text-sm text-gray-400 capitalize">{plan} plan — {commentsLimit.toLocaleString()} comments/month</p>
-              </div>
-              {plan === 'free' && (
-                <Link href="/pricing" className="text-blue-600 text-sm font-bold hover:underline flex items-center gap-1">
-                  Upgrade <ChevronRight className="w-3 h-3" />
-                </Link>
               )}
             </div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-500">Comments used</span>
-              <span className="font-bold text-gray-900">{commentsUsed} / {commentsLimit.toLocaleString()}</span>
-            </div>
-            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-600 rounded-full" style={{ width: `${Math.min(100, (commentsUsed / commentsLimit) * 100)}%` }}></div>
-            </div>
-          </div>
+          </header>
 
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-black text-gray-900">Recent Activity</h2>
-              <span className="text-xs text-gray-400">{youtubeConnected ? 'Live' : 'Connect YouTube to see activity'}</span>
-            </div>
-            {!youtubeConnected ? (
-              <div className="px-6 py-12 text-center">
-                <Shield className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">Connect your YouTube channel to see comment activity</p>
-                <button onClick={handleYouTubeConnect} className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700">
-                  Connect YouTube →
+          {/* CONTENT */}
+          <div style={{ padding: '28px 32px', flex: 1 }}>
+
+            {/* Connect Banner */}
+            {!youtubeConnected && (
+              <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ width: 44, height: 44, background: 'rgba(245,158,11,0.15)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Connect your YouTube channel</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 2 }}>Currently viewing demo data. Connect to start real-time moderation.</div>
+                  </div>
+                </div>
+                <button onClick={handleYouTubeConnect} className="connect-btn">
+                  Connect now <ChevronRight size={16} />
                 </button>
               </div>
-            ) : (
-              <div className="px-6 py-4 text-center text-gray-400 text-sm">No activity yet</div>
             )}
+
+            {/* STAT CARDS */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+              {[
+                { icon: Eye, label: 'Comments Scanned', value: commentsUsed.toLocaleString(), badge: '+18.2%', iconColor: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)' },
+                { icon: Trash2, label: 'Hidden', value: '0', badge: '+4.3%', iconColor: '#f87171', iconBg: 'rgba(239,68,68,0.15)' },
+                { icon: MessageSquare, label: 'Auto-Replies', value: '0', badge: '+12.7%', iconColor: '#60a5fa', iconBg: 'rgba(59,130,246,0.15)' },
+                { icon: Shield, label: 'Protection Status', value: youtubeConnected ? 'Active' : 'Inactive', badge: '99.4% uptime', iconColor: youtubeConnected ? '#4ade80' : '#fb923c', iconBg: youtubeConnected ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)' },
+              ].map((s) => (
+                <div key={s.label} className="stat-card">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <div style={{ width: 36, height: 36, background: s.iconBg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <s.icon size={18} color={s.iconColor} />
+                    </div>
+                    <span style={{ color: '#4ade80', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+                      ↗ {s.badge}
+                    </span>
+                  </div>
+                  <div style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 6 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* BOTTOM GRID */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 16 }}>
+
+              {/* Monthly Usage */}
+              <div className="glass-card" style={{ padding: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <div>
+                    <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, margin: 0 }}>Monthly Usage</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 3 }}>
+                      {plan} plan · resets in 12 days
+                    </p>
+                  </div>
+                  <span style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, textTransform: 'uppercase' }}>{plan}</span>
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{commentsUsed.toLocaleString()}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15 }}> / {commentsLimit.toLocaleString()} comments</span>
+                </div>
+                {/* Progress bar */}
+                <div style={{ height: 8, background: 'rgba(255,255,255,0.08)', borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
+                  <div style={{ height: '100%', width: `${usagePercent}%`, background: 'linear-gradient(90deg,#F59E0B,#7C3AED)', borderRadius: 8, transition: 'width 0.5s ease' }}></div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>
+                  <span>{usagePercent.toFixed(0)}% used</span>
+                  <span>{(commentsLimit - commentsUsed).toLocaleString()} left</span>
+                </div>
+                {plan === 'free' && (
+                  <Link href="/pricing">
+                    <button className="upgrade-btn">Upgrade to Pro — ₹299/mo</button>
+                  </Link>
+                )}
+              </div>
+
+              {/* Recent Activity */}
+              <div className="glass-card" style={{ overflow: 'hidden' }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid #27272A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, margin: 0 }}>Recent Activity</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Live moderation events</p>
+                  </div>
+                  <span style={{ color: '#F59E0B', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>View all →</span>
+                </div>
+
+                {!youtubeConnected ? (
+                  <div style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                    {/* Demo activity items */}
+                    {[
+                      { initials: 'TO', name: 'toxic_user_47', badge: 'HIDDEN', badgeClass: 'badge-hidden', comment: '@#$! creators like you should just stop making videos', time: '2 min ago', color: '#f87171' },
+                      { initials: 'RA', name: 'RajeshK', badge: 'REPLIED', badgeClass: 'badge-replied', comment: 'Bhai video kab aayega next?', time: '3 min ago', color: '#60a5fa' },
+                      { initials: 'AN', name: 'Ananya S.', badge: 'KEPT', badgeClass: 'badge-kept', comment: 'This tutorial is exactly what I needed, thank you!', time: '5 min ago', color: '#4ade80' },
+                      { initials: 'HA', name: 'hater_x', badge: 'HIDDEN', badgeClass: 'badge-hidden', comment: 'నువ్వు చేసే కంటెంట్ ఎందుకు?', time: '8 min ago', color: '#f87171' },
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 0', borderBottom: i < 3 ? '1px solid #27272A' : 'none' }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                          {item.initials}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <span style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13 }}>{item.name}</span>
+                            <span className={`badge ${item.badgeClass}`}>{item.badge}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginLeft: 'auto' }}>{item.time}</span>
+                          </div>
+                          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.comment}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, textAlign: 'center', marginTop: 12 }}>Connect YouTube to see real activity</p>
+                  </div>
+                ) : (
+                  <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No activity yet</div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }

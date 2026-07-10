@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import {
   Shield, ArrowLeft, Check, Lock, Key, Smartphone, Mail,
-  User as UserIcon, ExternalLink, Youtube, Pencil,
+  User as UserIcon, ExternalLink, Pencil,
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth } from '@/lib/firebase';
@@ -463,10 +463,17 @@ export default function SettingsPage() {
                       YouTube channel
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <Youtube
-                        size={16}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
                         style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.35)' }}
-                      />
+                        aria-hidden
+                      >
+                        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="currentColor"/>
+                        <path d="M9.8 15.6V8.4l6.2 3.6-6.2 3.6z" fill="#fff" opacity="0.9"/>
+                      </svg>
                       <input
                         type="text"
                         value={youtubeChannel}

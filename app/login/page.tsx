@@ -7,18 +7,20 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-function Logo({ size = 38 }: { size?: number }) {
+function Logo({ size = 32 }: { size?: number }) {
   return (
-    <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+    <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
       <div style={{
         background: 'linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)',
-        borderRadius: 12, width: size, height: size,
+        borderRadius: '50%',
+        width: size, height: size,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 0 0 1px rgba(255,255,255,0.10) inset, 0 8px 24px rgba(245,158,11,0.35)',
+        boxShadow: '0 0 0 1px rgba(255,255,255,0.10) inset, 0 4px 16px rgba(245,158,11,0.30)',
+        flexShrink: 0,
       }}>
-        <Shield size={size * 0.52} color="white" strokeWidth={2.25} />
+        <Shield size={size * 0.50} color="white" strokeWidth={2.25} />
       </div>
-      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 19, letterSpacing: '-0.02em' }}>
+      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 17, letterSpacing: '-0.02em' }}>
         ModrateAI
       </span>
     </Link>
@@ -137,7 +139,7 @@ export default function LoginPage() {
           border: none; cursor: pointer;
           transition: transform 0.25s ease, box-shadow 0.25s ease;
           box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-          letter-spacing: -0.01em; overflow: hidden;
+          letter-spacing: -0.01em;
         }
         .google-btn:hover:not(:disabled) {
           transform: translateY(-2px);
@@ -168,17 +170,16 @@ export default function LoginPage() {
 
       <main style={{ minHeight: '100vh', display: 'flex' }}>
 
-        {/* LEFT PANEL — colored gradient background */}
+        {/* LEFT PANEL */}
         <div
           className="auth-left"
           style={{
             flex: 1,
             flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '52px 64px',
+            justifyContent: 'flex-start',
+            padding: '40px 56px',
             position: 'relative',
             overflow: 'hidden',
-            /* Base dark color */
             background: '#0D0B0E',
           }}
         >
@@ -196,7 +197,7 @@ export default function LoginPage() {
             background: 'radial-gradient(circle, rgba(109,40,217,0.60) 0%, rgba(124,58,237,0.35) 38%, transparent 68%)',
             filter: 'blur(65px)', pointerEvents: 'none',
           }} />
-          {/* Subtle grid */}
+          {/* Grid */}
           <div style={{
             position: 'absolute', inset: 0,
             backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
@@ -206,32 +207,35 @@ export default function LoginPage() {
             pointerEvents: 'none',
           }} />
 
-          {/* Content */}
+          {/* Logo top */}
           <div style={{ position: 'relative', zIndex: 2 }} className="fade-up-1">
             <Logo />
           </div>
 
-          <div style={{ position: 'relative', zIndex: 2, maxWidth: 500 }}>
+          {/* Content vertically centered */}
+          <div style={{
+            position: 'relative', zIndex: 2,
+            flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            maxWidth: 480,
+          }}>
             <div className="fade-up-2">
-              <h1 style={{ fontSize: 58, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.05, marginBottom: 20 }}>
+              <h1 style={{ fontSize: 48, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.08, marginBottom: 18 }}>
                 Sign in and start<br />
                 moderating in<br />
                 <span className="animated-gradient-text">60 seconds.</span>
               </h1>
             </div>
             <div className="fade-up-3">
-              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, lineHeight: 1.7, marginBottom: 40, maxWidth: 420 }}>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15.5, lineHeight: 1.7, marginBottom: 36, maxWidth: 400 }}>
                 One-click Google login. We only ask for the YouTube permissions moderation actually needs.
               </p>
             </div>
-            <div className="fade-up-4" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div className="fade-up-4" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {features.map((feature, i) => (
                 <FeatureRow key={feature} label={feature} delay={`${0.45 + i * 0.08}s`} />
               ))}
             </div>
           </div>
-
-          <div style={{ height: 24 }} />
         </div>
 
         {/* RIGHT PANEL — pure black */}

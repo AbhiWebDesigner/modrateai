@@ -32,6 +32,7 @@ export default function AlertsPage() {
   const [saved, setSaved] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [userEmail, setUserEmail] = useState('');
+  const [userPlan, setUserPlan] = useState<string>('free');
   const [telegramConnected, setTelegramConnected] = useState(false);
   const [emailConnected, setEmailConnected] = useState(true);
   const [telegramUsername, setTelegramUsername] = useState('');
@@ -45,9 +46,14 @@ export default function AlertsPage() {
       setUser(u);
       setUserEmail(u.email || '');
       try {
-        const snap = await getDoc(doc(db, 'users', u.uid, 'settings', 'alerts'));
-        if (snap.exists()) {
-          const data = snap.data();
+        const userSnap = await getDoc(doc(db, 'users', u.uid));
+        if (userSnap.exists()) {
+          const data = userSnap.data();
+          setUserPlan(data.plan || 'free');
+        }
+        const alertSnap = await getDoc(doc(db, 'users', u.uid, 'settings', 'alerts'));
+        if (alertSnap.exists()) {
+          const data = alertSnap.data();
           if (data.telegramConnected !== undefined) setTelegramConnected(data.telegramConnected);
           if (data.emailConnected !== undefined) setEmailConnected(data.emailConnected);
           if (data.telegramUsername) setTelegramUsername(data.telegramUsername);
@@ -99,7 +105,7 @@ export default function AlertsPage() {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${active ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
                 <Icon className="w-4 h-4" />
                 {label}
-                {active && label === 'Alerts' && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400" />}
+                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400" />}
               </Link>
             );
           })}
@@ -131,6 +137,18 @@ export default function AlertsPage() {
             <p className="text-xs text-gray-400 mt-0.5">Get notified where you already are</p>
           </div>
           <div className="flex items-center gap-3">
+            {/* Search */}
+            <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input placeholder="Search comments, users..." className="bg-transparent text-sm text-white placeholder-gray-500 outline-none w-44" />
+            </div>
+            {/* Notification Bell */}
+            <button className="relative w-9 h-9 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors">
+              <Bell className="w-4 h-4 text-gray-300" />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-yellow-400 rounded-full" />
+            </button>
             <button className="hidden sm:flex items-center gap-2 bg-yellow-400 text-black text-sm font-black px-4 py-2 rounded-xl hover:bg-yellow-300 transition-colors">
               <span>▶</span> Connect YouTube
             </button>
@@ -140,7 +158,7 @@ export default function AlertsPage() {
               </div>
               <div className="hidden sm:block">
                 <p className="text-xs font-bold text-white">{user?.displayName || 'User'}</p>
-                <p className="text-xs text-gray-400">Free plan</p>
+                <p className="text-xs text-gray-400">{userPlan === 'agency' ? 'Agency plan' : userPlan === 'pro' ? 'Pro plan' : 'Free plan'}</p>
               </div>
             </div>
           </div>
@@ -162,17 +180,20 @@ export default function AlertsPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white text-sm">Telegram</span>
-                      <span className="text-xs bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded font-medium">Pro</span>
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded font-medium">Agency</span>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">Instant DMs when action is needed</p>
                   </div>
                 </div>
-                {telegramConnected
-                  ? <span className="flex items-center gap-1 text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-lg font-medium">✓ Connected</span>
-                  : <button onClick={() => setTelegramConnected(true)} className="text-xs border border-white/20 text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors font-medium">+ Connect</button>
-                }
+                {userPlan === 'agency' ? (
+                  telegramConnected
+                    ? <span className="flex items-center gap-1 text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-lg font-medium">✓ Connected</span>
+                    : <button onClick={() => setTelegramConnected(true)} className="text-xs border border-white/20 text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors font-medium">+ Connect</button>
+                ) : (
+                  <span className="text-xs bg-white/5 text-gray-500 px-3 py-1.5 rounded-lg font-medium cursor-not-allowed">Agency only</span>
+                )}
               </div>
-              {telegramConnected && (
+              {telegramConnected && userPlan === 'agency' && (
                 <div className="mt-3 flex items-center justify-between">
                   <p className="text-xs text-gray-400">Sending to <span className="text-white font-medium">@{telegramUsername || userEmail.split('@')[0]}</span></p>
                   <button onClick={() => setTelegramConnected(false)} className="text-xs text-gray-400 hover:text-white transition-colors">Manage</button>

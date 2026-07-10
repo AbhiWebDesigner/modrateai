@@ -102,7 +102,7 @@ export default function LoginPage() {
           font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
           letter-spacing: -0.02em; box-sizing: border-box; margin: 0; padding: 0;
         }
-        html, body { background: #000; }
+        html, body { background: #0D0B0E; }
 
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
@@ -138,7 +138,6 @@ export default function LoginPage() {
           font-size: 15px; font-weight: 600;
           border: none; cursor: pointer;
           transition: transform 0.25s ease, box-shadow 0.25s ease;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.15);
           letter-spacing: -0.01em;
         }
         .google-btn:hover:not(:disabled) {
@@ -168,7 +167,19 @@ export default function LoginPage() {
         }
       `}</style>
 
-      <main style={{ minHeight: '100vh', display: 'flex' }}>
+      {/* Full page — single background, no hard split */}
+      <main style={{
+        minHeight: '100vh',
+        display: 'flex',
+        position: 'relative',
+        /* Single background with amber top-left, purple bottom-left, dark right */
+        background: `
+          radial-gradient(ellipse 60% 55% at 5% 15%, rgba(245,158,11,0.38) 0%, transparent 60%),
+          radial-gradient(ellipse 65% 60% at 5% 95%, rgba(109,40,217,0.55) 0%, transparent 62%),
+          radial-gradient(ellipse 45% 70% at 50% 50%, rgba(20,10,30,0.85) 0%, transparent 80%),
+          #0D0B0E
+        `,
+      }}>
 
         {/* LEFT PANEL */}
         <div
@@ -177,33 +188,18 @@ export default function LoginPage() {
             flex: 1,
             flexDirection: 'column',
             justifyContent: 'flex-start',
-            padding: '40px 56px',
+            padding: '36px 52px',
             position: 'relative',
             overflow: 'hidden',
-            background: '#0D0B0E',
           }}
         >
-          {/* Amber glow top-left */}
-          <div style={{
-            position: 'absolute', top: -100, left: -80,
-            width: 650, height: 650,
-            background: 'radial-gradient(circle, rgba(245,158,11,0.42) 0%, rgba(234,88,12,0.20) 38%, transparent 68%)',
-            filter: 'blur(55px)', pointerEvents: 'none',
-          }} />
-          {/* Purple glow bottom-left */}
-          <div style={{
-            position: 'absolute', bottom: -120, left: -60,
-            width: 720, height: 680,
-            background: 'radial-gradient(circle, rgba(109,40,217,0.60) 0%, rgba(124,58,237,0.35) 38%, transparent 68%)',
-            filter: 'blur(65px)', pointerEvents: 'none',
-          }} />
-          {/* Grid */}
+          {/* Grid overlay left only */}
           <div style={{
             position: 'absolute', inset: 0,
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
-            backgroundSize: '56px 56px',
-            WebkitMaskImage: 'radial-gradient(80% 70% at 35% 35%, #000 0%, transparent 75%)',
-            maskImage: 'radial-gradient(80% 70% at 35% 35%, #000 0%, transparent 75%)',
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
+            backgroundSize: '52px 52px',
+            WebkitMaskImage: 'radial-gradient(75% 65% at 30% 30%, #000 0%, transparent 70%)',
+            maskImage: 'radial-gradient(75% 65% at 30% 30%, #000 0%, transparent 70%)',
             pointerEvents: 'none',
           }} />
 
@@ -215,22 +211,23 @@ export default function LoginPage() {
           {/* Content vertically centered */}
           <div style={{
             position: 'relative', zIndex: 2,
-            flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            maxWidth: 480,
+            flex: 1, display: 'flex', flexDirection: 'column',
+            justifyContent: 'center',
+            maxWidth: 460,
+            paddingTop: 20,
           }}>
             <div className="fade-up-2">
-              <h1 style={{ fontSize: 48, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.08, marginBottom: 18 }}>
-                Sign in and start<br />
-                moderating in<br />
+              <h1 style={{ fontSize: 46, fontWeight: 900, color: '#FAFAFA', lineHeight: 1.08, marginBottom: 16 }}>
+                Sign in and start moderating in{' '}
                 <span className="animated-gradient-text">60 seconds.</span>
               </h1>
             </div>
             <div className="fade-up-3">
-              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15.5, lineHeight: 1.7, marginBottom: 36, maxWidth: 400 }}>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, lineHeight: 1.7, marginBottom: 32, maxWidth: 400 }}>
                 One-click Google login. We only ask for the YouTube permissions moderation actually needs.
               </p>
             </div>
-            <div className="fade-up-4" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="fade-up-4" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {features.map((feature, i) => (
                 <FeatureRow key={feature} label={feature} delay={`${0.45 + i * 0.08}s`} />
               ))}
@@ -238,14 +235,15 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* RIGHT PANEL — pure black */}
+        {/* RIGHT PANEL — dark but not pure black, matches reference */}
         <div style={{
           flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           padding: '48px 32px',
-          background: '#000000',
+          background: 'rgba(10,8,14,0.80)',
+          backdropFilter: 'blur(0px)',
         }}>
           <div style={{ width: '100%', maxWidth: 420 }}>
 

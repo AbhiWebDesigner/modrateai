@@ -213,7 +213,7 @@ export default function LoginPage() {
             position: 'relative', zIndex: 2,
             flex: 1, display: 'flex', flexDirection: 'column',
             justifyContent: 'center',
-            maxWidth: 620,
+            maxWidth: 700,
             paddingTop: 20,
           }}>
             <div className="fade-up-2">

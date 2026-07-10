@@ -45,6 +45,7 @@ export default function Dashboard() {
   const commentsLimit = (userData?.comments_limit as number) || 1500;
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
   const usagePercent = Math.min(100, (commentsUsed / commentsLimit) * 100);
+  const firstName = user?.displayName?.split(' ')[0] || 'User';
 
   const navItems = [
     { icon: Home, label: 'Overview', href: '/dashboard', active: true },
@@ -53,8 +54,6 @@ export default function Dashboard() {
     { icon: Bell, label: 'Alerts', href: '/alerts', active: false },
     { icon: Settings, label: 'Settings', href: '/settings', active: false },
   ];
-
-  const firstName = user?.displayName?.split(' ')[0] || 'User';
 
   return (
     <>
@@ -72,10 +71,6 @@ export default function Dashboard() {
         .stat-card { background:#18181B; border:1px solid #27272A; border-radius:16px; padding:20px; transition:all 0.2s; }
         .stat-card:hover { border-color:rgba(245,158,11,0.2); }
         .glass-card { background:#18181B; border:1px solid #27272A; border-radius:16px; }
-        .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600; }
-        .badge-hidden { background:rgba(239,68,68,0.15); color:#f87171; }
-        .badge-replied { background:rgba(59,130,246,0.15); color:#60a5fa; }
-        .badge-kept { background:rgba(34,197,94,0.15); color:#4ade80; }
         .search-input { background:rgba(255,255,255,0.05); border:1px solid #27272A; border-radius:10px; padding:8px 16px 8px 36px; color:#FAFAFA; font-size:14px; outline:none; width:240px; transition:all 0.2s; }
         .search-input:focus { border-color:rgba(245,158,11,0.4); background:rgba(255,255,255,0.07); }
         .search-input::placeholder { color:rgba(255,255,255,0.3); }
@@ -85,6 +80,8 @@ export default function Dashboard() {
         .upgrade-btn:hover { opacity:0.9; transform:translateY(-1px); }
         .logout-btn { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; color:rgba(255,255,255,0.4); background:none; border:none; cursor:pointer; width:100%; transition:all 0.2s; }
         .logout-btn:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); }
+        .avatar-btn { background:none; border:none; cursor:pointer; padding:0; border-radius:50%; transition:all 0.2s; }
+        .avatar-btn:hover { opacity:0.85; transform:scale(1.05); }
       `}</style>
 
       <div className="premium-bg" />
@@ -104,29 +101,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* User */}
-          <div style={{ padding: '16px 12px', borderBottom: '1px solid #27272A' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: 10 }}>
-              {user?.photoURL ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.photoURL} style={{ width: 34, height: 34, borderRadius: '50%' }} alt="avatar" />
-              ) : (
-                <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14 }}>
-                  {user?.displayName?.charAt(0) || 'U'}
-                </div>
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName || 'User'}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: youtubeConnected ? '#22c55e' : '#f97316', display: 'inline-block' }}></span>
-                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, textTransform: 'capitalize' }}>{plan} plan</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Nav */}
-          <nav style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <nav style={{ flex: 1, padding: '16px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={`nav-item${item.active ? ' active' : ''}`}>
                 <item.icon size={16} /> {item.label}
@@ -167,7 +143,9 @@ export default function Dashboard() {
                   {youtubeConnected ? 'Live' : 'Offline'}
                 </span>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: 0 }}>Welcome back, {firstName} 👋 — {youtubeConnected ? 'Your channel is protected' : 'Connect YouTube to start'}</p>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: 0 }}>
+                Welcome back, {firstName} 👋 — {youtubeConnected ? 'Your channel is protected' : 'Connect YouTube to start'}
+              </p>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -176,11 +154,13 @@ export default function Dashboard() {
                 <Search size={14} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
                 <input className="search-input" placeholder="Search comments, users..." />
               </div>
+
               {/* Bell */}
               <button style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #27272A', borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
                 <Bell size={16} color="rgba(255,255,255,0.6)" />
                 <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, background: '#F59E0B', borderRadius: '50%' }}></span>
               </button>
+
               {/* Connect YouTube */}
               {!youtubeConnected && (
                 <button onClick={handleYouTubeConnect} className="connect-btn">
@@ -190,15 +170,24 @@ export default function Dashboard() {
                   Connect YouTube
                 </button>
               )}
-              {/* Avatar */}
-              {user?.photoURL ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.photoURL} style={{ width: 36, height: 36, borderRadius: '50%', border: '2px solid #27272A' }} alt="avatar" />
-              ) : (
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 14 }}>
-                  {firstName.charAt(0)}
+
+              {/* Avatar with name + plan — click → /settings */}
+              <button className="avatar-btn" onClick={() => router.push('/settings')}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid #27272A', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
+                  {user?.photoURL ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.photoURL} style={{ width: 32, height: 32, borderRadius: '50%' }} alt="avatar" />
+                  ) : (
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13 }}>
+                      {firstName.charAt(0)}
+                    </div>
+                  )}
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>{firstName}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, textTransform: 'capitalize', lineHeight: 1.2 }}>{plan} plan</div>
+                  </div>
                 </div>
-              )}
+              </button>
             </div>
           </header>
 
@@ -238,9 +227,7 @@ export default function Dashboard() {
                     <div style={{ width: 36, height: 36, background: s.iconBg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <s.icon size={18} color={s.iconColor} />
                     </div>
-                    <span style={{ color: '#4ade80', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
-                      ↗ {s.badge}
-                    </span>
+                    <span style={{ color: '#4ade80', fontSize: 12, fontWeight: 600 }}>↗ {s.badge}</span>
                   </div>
                   <div style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{s.value}</div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 6 }}>{s.label}</div>
@@ -266,7 +253,6 @@ export default function Dashboard() {
                   <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{commentsUsed.toLocaleString()}</span>
                   <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15 }}> / {commentsLimit.toLocaleString()} comments</span>
                 </div>
-                {/* Progress bar */}
                 <div style={{ height: 8, background: 'rgba(255,255,255,0.08)', borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
                   <div style={{ height: '100%', width: `${usagePercent}%`, background: 'linear-gradient(90deg,#F59E0B,#7C3AED)', borderRadius: 8, transition: 'width 0.5s ease' }}></div>
                 </div>
@@ -288,37 +274,19 @@ export default function Dashboard() {
                     <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, margin: 0 }}>Recent Activity</h2>
                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Live moderation events</p>
                   </div>
-                  <span style={{ color: '#F59E0B', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>View all →</span>
                 </div>
 
-                {!youtubeConnected ? (
-                  <div style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    {/* Demo activity items */}
-                    {[
-                      { initials: 'TO', name: 'toxic_user_47', badge: 'HIDDEN', badgeClass: 'badge-hidden', comment: '@#$! creators like you should just stop making videos', time: '2 min ago', color: '#f87171' },
-                      { initials: 'RA', name: 'RajeshK', badge: 'REPLIED', badgeClass: 'badge-replied', comment: 'Bhai video kab aayega next?', time: '3 min ago', color: '#60a5fa' },
-                      { initials: 'AN', name: 'Ananya S.', badge: 'KEPT', badgeClass: 'badge-kept', comment: 'This tutorial is exactly what I needed, thank you!', time: '5 min ago', color: '#4ade80' },
-                      { initials: 'HA', name: 'hater_x', badge: 'HIDDEN', badgeClass: 'badge-hidden', comment: 'నువ్వు చేసే కంటెంట్ ఎందుకు?', time: '8 min ago', color: '#f87171' },
-                    ].map((item, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 0', borderBottom: i < 3 ? '1px solid #27272A' : 'none' }}>
-                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
-                          {item.initials}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                            <span style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13 }}>{item.name}</span>
-                            <span className={`badge ${item.badgeClass}`}>{item.badge}</span>
-                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginLeft: 'auto' }}>{item.time}</span>
-                          </div>
-                          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.comment}</p>
-                        </div>
-                      </div>
-                    ))}
-                    <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, textAlign: 'center', marginTop: 12 }}>Connect YouTube to see real activity</p>
-                  </div>
-                ) : (
-                  <div style={{ padding: '24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No activity yet</div>
-                )}
+                <div style={{ padding: '40px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                  <Shield size={36} color="rgba(255,255,255,0.1)" />
+                  <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, margin: 0, textAlign: 'center' }}>
+                    {youtubeConnected ? 'No activity yet' : 'Connect YouTube to see real-time activity'}
+                  </p>
+                  {!youtubeConnected && (
+                    <button onClick={handleYouTubeConnect} className="connect-btn" style={{ marginTop: 4 }}>
+                      Connect YouTube →
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

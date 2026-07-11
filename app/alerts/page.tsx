@@ -263,7 +263,7 @@ export default function AlertsPage() {
       </main>
 
       {/* Bottom Nav - always visible */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-white/10 z-30 px-2 py-2">
+       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-white/10 z-30 px-2 py-2">  
         <div className="flex justify-around lg:justify-center lg:gap-8">
           {navItems.map(({ href, icon: Icon, label }) => {
             const active = pathname === href;

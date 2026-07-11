@@ -87,7 +87,7 @@ function Sidebar({ pathname }: { pathname: string }) {
           background: "rgba(255,255,255,0.12)", borderRadius: 8,
           width: "100%", fontSize: 11, padding: "7px 0",
           fontWeight: 600, color: "#FAFAFA", border: "none", cursor: "pointer",
-        }}>Upgrade — ₹299/mo</button>
+        }}>Upgrade — ₹349/mo</button>
       </div>
     </div>
   );

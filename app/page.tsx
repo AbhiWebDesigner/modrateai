@@ -214,7 +214,7 @@ export default function Home() {
                 cta: 'Start free trial', href: '/login'
               },
               {
-                name: 'Pro', price: '₹299', period: '/month', tagline: 'For growing creators',
+                name: 'Pro', price: '₹349', period: '/month', tagline: 'For growing creators',
                 badge: 'MOST POPULAR', featured: true, trialDays: '7-day free trial',
                 features: ['1 YouTube channel', '5,000 comments scanned/month', 'All videos + Shorts + Posts + Live chat', 'Unlimited bad comments hidden for review', 'Live chat progressive timeouts', 'Spam detection & auto-hide', 'Auto-replies scale with comments (45s delay)', '100+ world languages', 'Full analytics dashboard', 'Telegram alerts', 'Priority support'],
                 cta: 'Get Pro', href: '/login'

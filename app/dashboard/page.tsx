@@ -153,7 +153,7 @@ export default function Dashboard() {
                 </div>
                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>Unlock unlimited hidden comments and Telegram alerts.</p>
                 <Link href="/pricing">
-                  <button className="upgrade-btn">Upgrade — ₹299/mo</button>
+                  <button className="upgrade-btn">Upgrade — ₹349/mo</button>
                 </Link>
               </div>
             )}
@@ -292,7 +292,7 @@ export default function Dashboard() {
                 </div>
                 {plan === 'free' && (
                   <Link href="/pricing">
-                    <button className="upgrade-btn">Upgrade to Pro — ₹299/mo</button>
+                    <button className="upgrade-btn">Upgrade to Pro — ₹349/mo</button>
                   </Link>
                 )}
               </div>

@@ -224,7 +224,7 @@ export default function AnalyticsPage() {
                 <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 13 }}>Upgrade to Pro</span>
               </div>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>Unlock unlimited hidden comments and Telegram alerts.</p>
-              <Link href="/pricing"><button className="upgrade-btn">Upgrade — ₹299/mo</button></Link>
+              <Link href="/pricing"><button className="upgrade-btn">Upgrade — ₹349/mo</button></Link>
             </div>
             <button onClick={() => signOut(auth).then(() => router.push('/login'))} className="logout-btn">
               <LogOut size={16} /> Logout

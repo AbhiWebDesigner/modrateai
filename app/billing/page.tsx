@@ -125,7 +125,7 @@ function Sidebar({ pathname }: { pathname: string }) {
       <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.25),rgba(79,70,229,0.20))", border: "1px solid rgba(124,58,237,0.30)", borderRadius: 14, padding: "14px 12px", marginTop: 16 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#FAFAFA", marginBottom: 4 }}>Upgrade to Pro 🚀</div>
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", marginBottom: 10 }}>5,000 comments + live chat</div>
-        <button style={{ background: "rgba(255,255,255,0.12)", borderRadius: 8, width: "100%", fontSize: 11, padding: "7px 0", fontWeight: 600, color: "#FAFAFA", border: "none", cursor: "pointer" }}>Upgrade — ₹299/mo</button>
+        <button style={{ background: "rgba(255,255,255,0.12)", borderRadius: 8, width: "100%", fontSize: 11, padding: "7px 0", fontWeight: 600, color: "#FAFAFA", border: "none", cursor: "pointer" }}>Upgrade — ₹349/mo</button>
       </div>
     </div>
   );

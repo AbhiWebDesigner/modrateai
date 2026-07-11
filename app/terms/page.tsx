@@ -130,7 +130,7 @@ export default function TermsPage() {
               },
               {
                 name: "Pro Plan",
-                price: "₹299/month",
+                price: "₹349/month",
                 trial: "7-day free trial",
                 features: [
                   "1 YouTube channel",

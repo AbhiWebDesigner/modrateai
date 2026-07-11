@@ -97,7 +97,7 @@ export default function Dashboard() {
         .main-content { margin-left:240px; }
 
         /* RESPONSIVE */
-        @media (max-width: 768px) {
+        @media (max-width: 1023px) {
           .sidebar { display:none !important; }
           .main-content { margin-left:0 !important; padding-bottom:72px; }
           .bottom-nav { display:flex; }
@@ -112,7 +112,7 @@ export default function Dashboard() {
           .mobile-connect-btn { display:flex !important; }
         }
 
-        @media (min-width: 769px) {
+       @media (min-width: 1024px) {
           .mobile-connect-btn { display:none !important; }
         }
       `}</style>

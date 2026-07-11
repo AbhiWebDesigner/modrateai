@@ -87,8 +87,8 @@ export default function AlertsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex">
 
-      {/* Sidebar - desktop */}
-      <aside className="hidden md:flex w-56 flex-col fixed left-0 top-0 bottom-0 bg-[#111111] border-r border-white/10 z-30">
+      {/* Sidebar - desktop only (lg+) */}
+      <aside className="hidden lg:flex w-56 flex-col fixed left-0 top-0 bottom-0 bg-[#111111] border-r border-white/10 z-30">
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center">
@@ -105,7 +105,6 @@ export default function AlertsPage() {
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${active ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
                 <Icon className="w-4 h-4" />
                 {label}
-                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-yellow-400" />}
               </Link>
             );
           })}
@@ -123,22 +122,22 @@ export default function AlertsPage() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 md:ml-56 flex flex-col min-h-screen">
+      <main className="flex-1 lg:ml-56 flex flex-col min-h-screen">
 
         {/* Header */}
-        <header className="sticky top-0 z-20 bg-[#0a0a0a]/80 backdrop-blur border-b border-white/10 px-6 py-4 flex items-center justify-between">
+        <header className="sticky top-0 z-20 bg-[#0a0a0a]/80 backdrop-blur border-b border-white/10 px-4 lg:px-6 py-4 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-black text-white">Alerts</h1>
+              <h1 className="text-lg lg:text-xl font-black text-white">Alerts</h1>
               <span className="flex items-center gap-1 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-medium">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> Live
               </span>
             </div>
             <p className="text-xs text-gray-400 mt-0.5">Get notified where you already are</p>
           </div>
-          <div className="flex items-center gap-3">
-            {/* Search */}
-            <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+          <div className="flex items-center gap-2 lg:gap-3">
+            {/* Search - desktop only */}
+            <div className="hidden lg:flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -149,14 +148,15 @@ export default function AlertsPage() {
               <Bell className="w-4 h-4 text-gray-300" />
               <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-yellow-400 rounded-full" />
             </button>
-            <button className="hidden sm:flex items-center gap-2 bg-yellow-400 text-black text-sm font-black px-4 py-2 rounded-xl hover:bg-yellow-300 transition-colors">
+            {/* Connect YouTube - desktop only */}
+            <button className="hidden lg:flex items-center gap-2 bg-yellow-400 text-black text-sm font-black px-4 py-2 rounded-xl hover:bg-yellow-300 transition-colors">
               <span>▶</span> Connect YouTube
             </button>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-black">
                 {user?.displayName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
               </div>
-              <div className="hidden sm:block">
+              <div className="hidden lg:block">
                 <p className="text-xs font-bold text-white">{user?.displayName || 'User'}</p>
                 <p className="text-xs text-gray-400">{userPlan === 'agency' ? 'Agency plan' : userPlan === 'pro' ? 'Pro plan' : 'Free plan'}</p>
               </div>
@@ -165,7 +165,7 @@ export default function AlertsPage() {
         </header>
 
         {/* Content */}
-        <div className="flex-1 p-6 pb-24 md:pb-6 max-w-4xl mx-auto w-full space-y-4">
+        <div className="flex-1 p-4 lg:p-6 pb-28 lg:pb-6 max-w-4xl mx-auto w-full space-y-4">
 
           {/* Channel Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -231,13 +231,13 @@ export default function AlertsPage() {
           </div>
 
           {/* Notification Settings */}
-          <div className="bg-[#161616] border border-white/10 rounded-2xl p-6">
+          <div className="bg-[#161616] border border-white/10 rounded-2xl p-5 lg:p-6">
             <h2 className="font-bold text-white mb-1">Notification Settings</h2>
             <p className="text-xs text-gray-400 mb-5">Choose which events trigger alerts</p>
             <div className="space-y-5">
               {notificationEvents.map(({ id, label, desc }) => (
-                <div key={id} className="flex items-center justify-between">
-                  <div>
+                <div key={id} className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white">{label}</p>
                     <p className="text-xs text-gray-400">{desc}</p>
                   </div>
@@ -261,8 +261,8 @@ export default function AlertsPage() {
         </div>
       </main>
 
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-white/10 z-30 px-2 py-2">
+      {/* Mobile Bottom Nav - shown below lg */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-white/10 z-30 px-2 py-2">
         <div className="flex justify-around">
           {navItems.map(({ href, icon: Icon, label }) => {
             const active = pathname === href;

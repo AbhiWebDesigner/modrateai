@@ -65,9 +65,18 @@ export default function Dashboard() {
         ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 4px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+        /* SIDEBAR NAV */
         .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; text-decoration:none; transition:all 0.2s; color:rgba(255,255,255,0.5); }
         .nav-item:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.9); }
         .nav-item.active { background:rgba(245,158,11,0.12); color:#F59E0B; border-left:2px solid #F59E0B; }
+
+        /* BOTTOM NAV (mobile) */
+        .bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; background:rgba(9,9,11,0.95); border-top:1px solid #27272A; backdrop-filter:blur(20px); padding:8px 0 env(safe-area-inset-bottom, 8px); }
+        .bottom-nav-item { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; flex:1; padding:6px 4px; text-decoration:none; color:rgba(255,255,255,0.4); font-size:10px; font-weight:500; transition:all 0.2s; border:none; background:none; cursor:pointer; }
+        .bottom-nav-item.active { color:#F59E0B; }
+        .bottom-nav-item:hover { color:rgba(255,255,255,0.8); }
+
         .stat-card { background:#18181B; border:1px solid #27272A; border-radius:16px; padding:20px; transition:all 0.2s; }
         .stat-card:hover { border-color:rgba(245,158,11,0.2); }
         .glass-card { background:#18181B; border:1px solid #27272A; border-radius:16px; }
@@ -80,17 +89,40 @@ export default function Dashboard() {
         .upgrade-btn:hover { opacity:0.9; transform:translateY(-1px); }
         .logout-btn { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; color:rgba(255,255,255,0.4); background:none; border:none; cursor:pointer; width:100%; transition:all 0.2s; }
         .logout-btn:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); }
-        .avatar-btn { background:none; border:none; cursor:pointer; padding:0; border-radius:50%; transition:all 0.2s; }
+        .avatar-btn { background:none; border:none; cursor:pointer; padding:0; transition:all 0.2s; }
         .avatar-btn:hover { opacity:0.85; transform:scale(1.05); }
+
+        /* SIDEBAR — visible on md+ */
+        .sidebar { display:flex; }
+        .main-content { margin-left:240px; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+          .sidebar { display:none !important; }
+          .main-content { margin-left:0 !important; padding-bottom:72px; }
+          .bottom-nav { display:flex; }
+          .desktop-search { display:none !important; }
+          .desktop-avatar { display:none !important; }
+          .stat-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .bottom-grid { grid-template-columns: 1fr !important; }
+          .header-padding { padding: 12px 16px !important; }
+          .content-padding { padding: 16px !important; }
+          .connect-banner { flex-direction:column !important; align-items:flex-start !important; gap:12px !important; }
+          .connect-banner-btn { width:100% !important; justify-content:center !important; }
+          .mobile-connect-btn { display:flex !important; }
+        }
+
+        @media (min-width: 769px) {
+          .mobile-connect-btn { display:none !important; }
+        }
       `}</style>
 
       <div className="premium-bg" />
 
       <main style={{ minHeight: '100vh', display: 'flex', position: 'relative', zIndex: 10 }}>
 
-        {/* SIDEBAR */}
-        <aside style={{ width: 240, background: 'rgba(9,9,11,0.8)', borderRight: '1px solid #27272A', display: 'flex', flexDirection: 'column', position: 'fixed', height: '100vh', backdropFilter: 'blur(20px)' }}>
-
+        {/* SIDEBAR — desktop only */}
+        <aside className="sidebar" style={{ width: 240, background: 'rgba(9,9,11,0.8)', borderRight: '1px solid #27272A', flexDirection: 'column', position: 'fixed', height: '100vh', backdropFilter: 'blur(20px)' }}>
           {/* Logo */}
           <div style={{ padding: '24px 20px', borderBottom: '1px solid #27272A' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -131,10 +163,10 @@ export default function Dashboard() {
         </aside>
 
         {/* MAIN */}
-        <div style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column' }}>
+        <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
 
           {/* HEADER */}
-          <header style={{ background: 'rgba(9,9,11,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #27272A', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
+          <header className="header-padding" style={{ background: 'rgba(9,9,11,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #27272A', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <h1 style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 18, margin: 0 }}>Overview</h1>
@@ -149,8 +181,8 @@ export default function Dashboard() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {/* Search */}
-              <div style={{ position: 'relative' }}>
+              {/* Search — desktop only */}
+              <div className="desktop-search" style={{ position: 'relative' }}>
                 <Search size={14} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
                 <input className="search-input" placeholder="Search comments, users..." />
               </div>
@@ -161,9 +193,9 @@ export default function Dashboard() {
                 <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, background: '#F59E0B', borderRadius: '50%' }}></span>
               </button>
 
-              {/* Connect YouTube */}
+              {/* Connect YouTube — desktop only */}
               {!youtubeConnected && (
-                <button onClick={handleYouTubeConnect} className="connect-btn">
+                <button onClick={handleYouTubeConnect} className="connect-btn desktop-search">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                   </svg>
@@ -171,8 +203,8 @@ export default function Dashboard() {
                 </button>
               )}
 
-              {/* Avatar with name + plan — click → /settings */}
-              <button className="avatar-btn" onClick={() => router.push('/settings')}>
+              {/* Avatar — desktop only */}
+              <button className="avatar-btn desktop-avatar" onClick={() => router.push('/settings')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid #27272A', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
                   {user?.photoURL ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -192,13 +224,13 @@ export default function Dashboard() {
           </header>
 
           {/* CONTENT */}
-          <div style={{ padding: '28px 32px', flex: 1 }}>
+          <div className="content-padding" style={{ padding: '28px 32px', flex: 1 }}>
 
             {/* Connect Banner */}
             {!youtubeConnected && (
-              <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className="connect-banner" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 44, height: 44, background: 'rgba(245,158,11,0.15)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 44, height: 44, background: 'rgba(245,158,11,0.15)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B">
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
@@ -208,26 +240,23 @@ export default function Dashboard() {
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 2 }}>Currently viewing demo data. Connect to start real-time moderation.</div>
                   </div>
                 </div>
-                <button onClick={handleYouTubeConnect} className="connect-btn">
+                <button onClick={handleYouTubeConnect} className="connect-btn connect-banner-btn">
                   Connect now <ChevronRight size={16} />
                 </button>
               </div>
             )}
 
             {/* STAT CARDS */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+            <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
               {[
-               { icon: Eye, label: 'Comments Scanned', value: commentsUsed.toLocaleString(), badge: null, iconColor: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)' },
-              { icon: Trash2, label: 'Hidden', value: '0', badge: null, iconColor: '#f87171', iconBg: 'rgba(239,68,68,0.15)' },
-              { icon: MessageSquare, label: 'Auto-Replies', value: '0', badge: null, iconColor: '#60a5fa', iconBg: 'rgba(59,130,246,0.15)' },
-              { icon: Shield, label: 'Protection Status', value: youtubeConnected ? 'Active' : 'Inactive', badge: null, iconColor: youtubeConnected ? '#4ade80' : '#fb923c', iconBg: youtubeConnected ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)' },
+                { icon: Eye, label: 'Comments Scanned', value: commentsUsed.toLocaleString(), iconColor: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)' },
+                { icon: Trash2, label: 'Hidden', value: '0', iconColor: '#f87171', iconBg: 'rgba(239,68,68,0.15)' },
+                { icon: MessageSquare, label: 'Auto-Replies', value: '0', iconColor: '#60a5fa', iconBg: 'rgba(59,130,246,0.15)' },
+                { icon: Shield, label: 'Protection Status', value: youtubeConnected ? 'Active' : 'Inactive', iconColor: youtubeConnected ? '#4ade80' : '#fb923c', iconBg: youtubeConnected ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)' },
               ].map((s) => (
                 <div key={s.label} className="stat-card">
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <div style={{ width: 36, height: 36, background: s.iconBg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <s.icon size={18} color={s.iconColor} />
-                    </div>
-  
+                  <div style={{ width: 36, height: 36, background: s.iconBg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                    <s.icon size={18} color={s.iconColor} />
                   </div>
                   <div style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{s.value}</div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 6 }}>{s.label}</div>
@@ -236,7 +265,7 @@ export default function Dashboard() {
             </div>
 
             {/* BOTTOM GRID */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 16 }}>
+            <div className="bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 16 }}>
 
               {/* Monthly Usage */}
               <div className="glass-card" style={{ padding: 24 }}>
@@ -269,13 +298,10 @@ export default function Dashboard() {
 
               {/* Recent Activity */}
               <div className="glass-card" style={{ overflow: 'hidden' }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #27272A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, margin: 0 }}>Recent Activity</h2>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Live moderation events</p>
-                  </div>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid #27272A' }}>
+                  <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, margin: 0 }}>Recent Activity</h2>
+                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Live moderation events</p>
                 </div>
-
                 <div style={{ padding: '40px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                   <Shield size={36} color="rgba(255,255,255,0.1)" />
                   <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, margin: 0, textAlign: 'center' }}>
@@ -291,6 +317,21 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* BOTTOM NAV — mobile only */}
+        <nav className="bottom-nav">
+          {navItems.map((item) => (
+            <Link key={item.href} href={item.href} className={`bottom-nav-item${item.active ? ' active' : ''}`}>
+              <item.icon size={20} />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+          <button className="bottom-nav-item" onClick={handleLogout}>
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </nav>
+
       </main>
     </>
   );

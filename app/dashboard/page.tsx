@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Shield, Trash2, MessageSquare, Eye, Settings, LogOut, Home, BarChart3, Bell, ChevronRight, Zap, Search } from 'lucide-react';
+import { Shield, Trash2, MessageSquare, Eye, Settings, LogOut, Home, BarChart3, Bell, ChevronRight, Zap, Search, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -53,6 +53,7 @@ export default function Dashboard() {
     { icon: Zap, label: 'Automation', href: '/automation', active: false },
     { icon: Bell, label: 'Alerts', href: '/alerts', active: false },
     { icon: Settings, label: 'Settings', href: '/settings', active: false },
+    { icon: CreditCard, label: 'Billing', href: '/billing', active: false },
   ];
 
   return (

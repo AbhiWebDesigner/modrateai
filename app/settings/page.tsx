@@ -255,18 +255,17 @@ export default function SettingsPage() {
           border: none; border-radius: 10px;
           padding: 8px 14px; font-weight: 800; font-size: 13px; cursor: pointer;
         }
-
-        /* Settings inner layout */
-        .settings-inner {
-          max-width: 920px; margin: 0 auto;
+    /* Settings inner layout */
+     .settings-inner {
+         max-width: 920px; margin: 0 auto;
           padding: 40px 32px;
-          display: flex; gap: 32px; align-items: flex-start;
-        }
-        .settings-sidebar-nav {
-          width: 200px; flex-shrink: 0;
-          display: flex; flex-direction: column; gap: 4px;
-          position: sticky; top: 100px;
-        }
+          display: flex; flex-direction: column; gap: 0;
+}
+      .settings-sidebar-nav {
+     width: 100%;
+     display: flex; flex-direction: row; gap: 4px;
+     margin-bottom: 20px;
+}
         .settings-content { flex: 1; min-width: 0; }
 
         /* Mobile bottom nav */
@@ -298,7 +297,7 @@ export default function SettingsPage() {
           }
           .mobile-bottom-nav-item.active { color: #FBBF24; }
           .settings-inner { padding: 20px 16px; flex-direction: column; gap: 20px; }
-          .settings-sidebar-nav { width: 100%; flex-direction: row; position: static; overflow-x: auto; gap: 6px; padding-bottom: 4px; }
+          .settings-sidebar-nav { width: 100%; display: flex; flex-direction: row; gap: 6px; margin-bottom: 16px; }
           .nav-item { white-space: nowrap; flex: 1; justify-content: center; }
           .settings-content { padding-bottom: 88px; }
         }

@@ -87,7 +87,7 @@ export default function AlertsPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex">
 
-      {/* Sidebar - desktop only (lg+) */}
+      {/* Sidebar - desktop only */}
       <aside className="hidden lg:flex w-56 flex-col fixed left-0 top-0 bottom-0 bg-[#111111] border-r border-white/10 z-30">
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export default function AlertsPage() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 lg:ml-56 flex flex-col min-h-screen">
+      <main className="flex-1 lg:ml-56 flex flex-col">
 
         {/* Header */}
         <header className="sticky top-0 z-20 bg-[#0a0a0a]/80 backdrop-blur border-b border-white/10 px-4 lg:px-6 py-4 flex items-center justify-between">
@@ -152,7 +152,8 @@ export default function AlertsPage() {
             <button className="hidden lg:flex items-center gap-2 bg-yellow-400 text-black text-sm font-black px-4 py-2 rounded-xl hover:bg-yellow-300 transition-colors">
               <span>▶</span> Connect YouTube
             </button>
-            <div className="flex items-center gap-2">
+            {/* Profile → Settings */}
+            <Link href="/settings" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-black">
                 {user?.displayName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
               </div>
@@ -160,12 +161,12 @@ export default function AlertsPage() {
                 <p className="text-xs font-bold text-white">{user?.displayName || 'User'}</p>
                 <p className="text-xs text-gray-400">{userPlan === 'agency' ? 'Agency plan' : userPlan === 'pro' ? 'Pro plan' : 'Free plan'}</p>
               </div>
-            </div>
+            </Link>
           </div>
         </header>
 
         {/* Content */}
-        <div className="flex-1 p-4 lg:p-6 pb-28 lg:pb-6 max-w-4xl mx-auto w-full space-y-4">
+        <div className="p-4 lg:p-6 pb-28 lg:pb-6 max-w-4xl mx-auto w-full space-y-4">
 
           {/* Channel Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -261,9 +262,9 @@ export default function AlertsPage() {
         </div>
       </main>
 
-      {/* Mobile Bottom Nav - shown below lg */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-white/10 z-30 px-2 py-2">
-        <div className="flex justify-around">
+      {/* Bottom Nav - always visible */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-white/10 z-30 px-2 py-2">
+        <div className="flex justify-around lg:justify-center lg:gap-8">
           {navItems.map(({ href, icon: Icon, label }) => {
             const active = pathname === href;
             return (

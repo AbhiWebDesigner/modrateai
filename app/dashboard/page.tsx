@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import {
-  Shield, MessageSquare, Eye, Settings, LogOut,
+  Shield, MessageSquare, Eye, Settings, LogOut, MoreHorizontal, CreditCard, X,
   Home, BarChart3, Bell, Zap, Search,
   Layers, Radio, Activity, Wifi, Cpu,
   TrendingUp, TrendingDown, CheckCircle, Target
@@ -133,6 +133,7 @@ export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -171,6 +172,8 @@ export default function Dashboard() {
   const commentsLimit     = (userData?.comments_limit      as number) || 1500;
   const youtubeConnected  = (userData?.youtube_connected   as boolean) || false;
   const usagePercent      = Math.min(100, (commentsUsed / commentsLimit) * 100);
+  const channelName       = (userData?.youtube_channel_name as string) || (userData?.channel_name as string) || null;
+  const displayGreeting   = channelName ? channelName : (user?.displayName || 'Creator');
   const firstName         = user?.displayName?.split(' ')[0] || 'User';
   const initials          = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const planLabel         = plan === 'free' ? 'Free Trial' : plan === 'pro' ? 'Pro' : plan === 'agency' ? 'Agency' : 'Free Trial';
@@ -208,6 +211,7 @@ export default function Dashboard() {
         @keyframes spin    { to { transform: rotate(360deg); } }
         @keyframes pulse   { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
         @keyframes fadeIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+        @keyframes slideUp  { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #08080A; }
@@ -472,15 +476,19 @@ export default function Dashboard() {
               <span style={{ position: 'absolute', top: 7, right: 7, width: 6, height: 6, background: '#F59E0B', borderRadius: '50%', border: '1.5px solid #08080A' }} />
             </button>
 
-            {/* Avatar */}
+            {/* Avatar — shows channel name if connected, else display name */}
             <div className="db-avatar" onClick={() => router.push('/settings')} style={{ cursor: 'pointer' }}>
               {user?.photoURL
                 ? <img src={user.photoURL} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} alt="avatar" />
                 : <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 11 }}>{initials}</div>
               }
               <div>
-                <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5, lineHeight: 1.2 }}>{firstName}</div>
-                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10.5, lineHeight: 1.2 }}>{planLabel} plan</div>
+                <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5, lineHeight: 1.2 }}>
+                  {channelName ? channelName : firstName}
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10.5, lineHeight: 1.2 }}>
+                  {channelName ? `Welcome back, ${firstName}` : `${planLabel} plan`}
+                </div>
               </div>
               <span style={{ background: plan === 'free' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)', color: plan === 'free' ? '#F59E0B' : '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 5, letterSpacing: '0.04em', marginLeft: 2 }}>
                 {plan === 'free' ? 'FREE' : plan.toUpperCase()}
@@ -600,23 +608,87 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* BOTTOM NAV — phone only, icons only */}
+        {/* BOTTOM NAV — phone only, icons only, More drawer */}
         <nav className="db-bottom-nav">
           {navItems.slice(0, 5).map(item => (
             <Link key={item.href} href={item.href} className={`db-bnav-item${item.active ? ' active' : ''}`} title={item.label}>
               <span className="db-bnav-icon">
                 <item.icon size={20} />
               </span>
-              <span className="db-bnav-label">{item.label}</span>
             </Link>
           ))}
-          <button className="db-bnav-item" onClick={handleLogout} title="Logout">
+          {/* More button — last on right */}
+          <button className={`db-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)} title="More">
             <span className="db-bnav-icon">
-              <LogOut size={20} />
+              <MoreHorizontal size={20} />
             </span>
-            <span className="db-bnav-label">Logout</span>
           </button>
         </nav>
+
+        {/* MORE DRAWER — slides up from bottom on mobile */}
+        {moreOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              onClick={() => setMoreOpen(false)}
+              style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+            />
+            {/* Sheet */}
+            <div style={{
+              position: 'fixed', bottom: 68, left: 12, right: 12, zIndex: 60,
+              background: '#141418', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 20, padding: '8px 8px 12px',
+              boxShadow: '0 -8px 48px rgba(0,0,0,0.6)',
+              animation: 'slideUp 0.22s ease'
+            }}>
+              {/* Handle */}
+              <div style={{ width: 36, height: 3, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '6px auto 14px' }} />
+
+              {/* Channel / Welcome */}
+              <div style={{ padding: '0 12px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {user?.photoURL
+                    ? <img src={user.photoURL} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} alt="avatar" />
+                    : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{initials}</div>
+                  }
+                  <div>
+                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 13.5 }}>{channelName ? channelName : firstName}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>Welcome back{firstName ? `, ${firstName}` : ''}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* More links */}
+              {[
+                { icon: CreditCard, label: 'Billing',  href: '/billing',  color: '#F59E0B' },
+                { icon: Layers,     label: 'Channels', href: '/channels', color: '#60a5fa' },
+                { icon: Settings,   label: 'Settings', href: '/settings', color: '#a78bfa' },
+              ].map(item => (
+                <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14, transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${item.color}18`, border: `1px solid ${item.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <item.icon size={16} color={item.color} />
+                  </div>
+                  {item.label}
+                </Link>
+              ))}
+
+              {/* Divider + Logout */}
+              <div style={{ margin: '8px 16px 0', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                <button onClick={() => { setMoreOpen(false); handleLogout(); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 14, width: '100%' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LogOut size={16} color="#f87171" />
+                  </div>
+                  Logout
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
       </div>
     </>

@@ -11,9 +11,6 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
-/* ─────────────────────────────────────────
-   SPARKLINE — only rendered when hasReal
-───────────────────────────────────────── */
 function Sparkline({ color, up = true }: { color: string; up?: boolean }) {
   const points = up
     ? [28, 22, 32, 24, 36, 28, 42, 34, 48, 38, 56, 44, 62]
@@ -40,9 +37,6 @@ function Sparkline({ color, up = true }: { color: string; up?: boolean }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   CIRCULAR PROGRESS (Monthly Usage)
-───────────────────────────────────────── */
 function CircularProgress({ pct }: { pct: number }) {
   const r = 40, circ = 2 * Math.PI * r;
   const filled = (Math.min(pct, 100) / 100) * circ;
@@ -66,9 +60,6 @@ function CircularProgress({ pct }: { pct: number }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   MONTHLY USAGE CARD
-───────────────────────────────────────── */
 function MonthlyUsageCard({
   plan, youtubeConnected, commentsUsed, commentsLimit,
   trialDaysLeft, onConnectYouTube
@@ -90,7 +81,6 @@ function MonthlyUsageCard({
     textTransform: 'uppercase',
   };
 
-  /* ── EMPTY STATE ── */
   if (!youtubeConnected) {
     return (
       <div className="db-card" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -121,7 +111,6 @@ function MonthlyUsageCard({
     );
   }
 
-  /* ── AGENCY ── */
   if (plan === 'agency') {
     return (
       <div className="db-card">
@@ -150,7 +139,6 @@ function MonthlyUsageCard({
     );
   }
 
-  /* ── FREE TRIAL / PRO ── */
   const isFree = plan === 'free';
   const quotaDisplay = isFree ? '1,500' : commentsLimit.toLocaleString();
 
@@ -172,7 +160,6 @@ function MonthlyUsageCard({
         )}
       </div>
       <div className="db-card-body">
-        {/* Usage row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
           <CircularProgress pct={usagePct} />
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -194,7 +181,6 @@ function MonthlyUsageCard({
           </div>
         </div>
 
-        {/* Progress bar */}
         <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
           <div style={{ height: '100%', borderRadius: 8, background: 'linear-gradient(90deg, #F59E0B, #7C3AED)', width: `${usagePct}%`, transition: 'width 0.6s cubic-bezier(.4,0,.2,1)' }} />
         </div>
@@ -207,7 +193,6 @@ function MonthlyUsageCard({
           )}
         </div>
 
-        {/* CTA */}
         {isFree && (
           <Link href="/billing" className="db-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
             <Zap size={13} /> Upgrade to Pro
@@ -228,9 +213,6 @@ function MonthlyUsageCard({
   );
 }
 
-/* ─────────────────────────────────────────
-   SYSTEM HEALTH ROW
-───────────────────────────────────────── */
 function HealthRow({ icon: Icon, label, sub, value, color = '#34d399', dot = 'green' }:
   { icon: any; label: string; sub: string; value?: string; color?: string; dot?: 'green' | 'amber' | 'red' }) {
   const dotColor = { green: '#22c55e', amber: '#F59E0B', red: '#f87171' }[dot];
@@ -253,9 +235,6 @@ function HealthRow({ icon: Icon, label, sub, value, color = '#34d399', dot = 'gr
   );
 }
 
-/* ─────────────────────────────────────────
-   MODERATION ACCURACY CARD
-───────────────────────────────────────── */
 function AccuracyCard({ accuracy }: { accuracy: number | null }) {
   if (accuracy === null) {
     return (
@@ -300,9 +279,6 @@ function AccuracyCard({ accuracy }: { accuracy: number | null }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   YOUTUBE ICON
-───────────────────────────────────────── */
 function YTIcon({ color = '#f87171', size = 14 }: { color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
@@ -311,9 +287,6 @@ function YTIcon({ color = '#f87171', size = 14 }: { color?: string; size?: numbe
   );
 }
 
-/* ═══════════════════════════════════════════
-   MAIN DASHBOARD
-═══════════════════════════════════════════ */
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -326,7 +299,6 @@ export default function Dashboard() {
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
-      // Real-time listener — auto-refresh on any Firestore change
       if (unsubDocRef.current) unsubDocRef.current();
       unsubDocRef.current = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
@@ -354,7 +326,6 @@ export default function Dashboard() {
     </div>
   );
 
-  /* ── DERIVED DATA ── */
   const plan             = (userData?.plan as string) || 'free';
   const commentsScanned  = (userData?.comments_scanned  as number) ?? (userData?.comments_used as number) ?? null;
   const hiddenComments   = (userData?.hidden_comments   as number) ?? null;
@@ -370,13 +341,12 @@ export default function Dashboard() {
   const webhookPct       = (userData?.webhook_delivery_percent as number) ?? null;
   const webhookAge       = (userData?.webhook_last_delivery_age as string) ?? null;
 
-  // Trial days remaining
   const trialEndsAt = userData?.trial_ends_at?.toDate?.() as Date | undefined;
   const trialDaysLeft = trialEndsAt
     ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000))
     : null;
 
-  const firstName  = user?.displayName?.split(' ')[0] || 'User';
+  const firstName  = user?.displayName?.split(' ')[0] || 'there';
   const initials   = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const planLabel  = plan === 'free' ? 'Free Trial' : plan === 'pro' ? 'Pro' : plan === 'agency' ? 'Agency' : 'Free Trial';
 
@@ -400,7 +370,6 @@ export default function Dashboard() {
     { label: 'Avg Response',     fmtValue: fmtMs(avgResponseMs),  raw: avgResponseMs,    up: false, color: '#34d399', icon: Activity     },
   ];
 
-  /* System Health rows — only real data */
   type HRow = { key: string; icon: any; label: string; sub: string; value?: string; color: string; dot: 'green' | 'amber' | 'red' };
   const healthRows: HRow[] = [];
 
@@ -455,14 +424,12 @@ export default function Dashboard() {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
 
-        /* ────────── BACKGROUND ────────── */
         .db-bg {
           min-height: 100vh;
           background: #090909;
           position: relative;
           overflow: hidden;
         }
-        /* Ambient glows */
         .db-bg::before {
           content:'';
           position:fixed; inset:0; z-index:0; pointer-events:none;
@@ -470,7 +437,6 @@ export default function Dashboard() {
             radial-gradient(ellipse 60% 50% at -5% 0%, rgba(245,158,11,0.09) 0%, transparent 65%),
             radial-gradient(ellipse 55% 45% at 105% 100%, rgba(124,58,237,0.07) 0%, transparent 65%);
         }
-        /* Grid overlay */
         .db-bg::after {
           content:'';
           position:fixed; inset:0; z-index:0; pointer-events:none;
@@ -479,19 +445,17 @@ export default function Dashboard() {
             linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
           background-size: 40px 40px;
         }
-        /* Noise texture via SVG data URI */
         .db-noise {
           position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.018;
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
           background-size: 160px 160px;
         }
-        /* Vignette */
         .db-vignette {
           position:fixed; inset:0; z-index:0; pointer-events:none;
           background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
         }
 
-        /* ────────── SIDEBAR ────────── */
+        /* ── SIDEBAR ── */
         .db-sidebar {
           width: 220px; min-width: 220px;
           background: rgba(10,10,13,0.82);
@@ -506,7 +470,6 @@ export default function Dashboard() {
             4px 0 40px rgba(0,0,0,0.4),
             4px 0 16px rgba(245,158,11,0.04);
         }
-        /* Left amber line */
         .db-sidebar::before {
           content:'';
           position:absolute; left:0; top:18%; bottom:18%; width:2px; border-radius:0 2px 2px 0;
@@ -550,7 +513,6 @@ export default function Dashboard() {
           backdrop-filter: blur(20px);
           font-weight: 600;
         }
-        /* Left gradient indicator */
         .db-nav-item.active::before {
           content:'';
           position:absolute; left:0; top:50%; transform:translateY(-50%);
@@ -581,10 +543,10 @@ export default function Dashboard() {
 
         .db-sidebar-bottom { padding:8px 10px 22px; border-top:1px solid rgba(255,255,255,0.045); display:flex; flex-direction:column; gap:4px; }
 
-        /* ────────── MAIN ────────── */
+        /* ── MAIN ── */
         .db-main { margin-left:220px; min-height:100vh; display:flex; flex-direction:column; position:relative; z-index:1; }
 
-        /* ────────── TOPBAR ────────── */
+        /* ── TOPBAR ── */
         .db-topbar {
           position:sticky; top:0; z-index:30;
           background:rgba(9,9,9,0.8); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
@@ -612,11 +574,12 @@ export default function Dashboard() {
         .db-avatar { display:flex; align-items:center; gap:9px; background:rgba(255,255,255,0.038); border:1px solid rgba(255,255,255,0.065); border-radius:10px; padding:4px 10px 4px 4px; cursor:pointer; transition:all 0.2s; }
         .db-avatar:hover { border-color:rgba(255,255,255,0.1); background:rgba(255,255,255,0.055); }
 
-        /* ────────── CONTENT ────────── */
+        /* ── CONTENT ── */
         .db-content { padding:28px; flex:1; animation:fadeIn 0.35s ease; }
         .db-page-title { font-size:27px; font-weight:900; color:#FAFAFA; letter-spacing:-0.035em; margin-bottom:4px; }
+        .db-welcome { color:rgba(255,255,255,0.38); font-size:13px; font-weight:500; margin-bottom:6px; letter-spacing:0.01em; }
 
-        /* ────────── STAT CARDS ────────── */
+        /* ── STAT CARDS ── */
         .db-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
         .db-stat {
           background: rgba(15,15,19,0.9);
@@ -632,7 +595,7 @@ export default function Dashboard() {
         .db-stat-zero  { font-size:30px; font-weight:900; color:rgba(255,255,255,0.45); letter-spacing:-0.045em; font-variant-numeric:tabular-nums; line-height:1; }
         .db-stat-empty { font-size:30px; font-weight:900; color:rgba(255,255,255,0.15); letter-spacing:-0.045em; line-height:1; }
 
-        /* ────────── BOTTOM GRID ────────── */
+        /* ── BOTTOM GRID ── */
         .db-bottom { display:grid; grid-template-columns:1fr 1fr 1.1fr; gap:12px; }
 
         .db-card {
@@ -648,10 +611,8 @@ export default function Dashboard() {
         .db-card-sub { color:rgba(255,255,255,0.3); font-size:11px; margin-top:2px; font-weight:400; }
         .db-card-body { padding:18px 20px; }
 
-        /* ────────── HEALTH ────────── */
         .db-health-badge { display:flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; color:#34d399; background:rgba(34,197,94,0.09); border:1px solid rgba(34,197,94,0.18); border-radius:7px; padding:3px 8px; white-space:nowrap; }
 
-        /* ────────── BUTTONS ────────── */
         .db-btn-primary { background:linear-gradient(135deg,#F59E0B,#FBBF24); color:#08080A; font-weight:700; font-size:12.5px; padding:10px 16px; border-radius:10px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.22s; text-decoration:none; white-space:nowrap; box-shadow:0 2px 10px rgba(245,158,11,0.25); }
         .db-btn-primary:hover { box-shadow:0 4px 20px rgba(245,158,11,0.4); transform:translateY(-1px); }
         .db-btn-ghost { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); font-weight:600; font-size:12.5px; padding:10px 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:all 0.18s; text-decoration:none; white-space:nowrap; }
@@ -661,7 +622,7 @@ export default function Dashboard() {
         .db-btn-logout { display:flex; align-items:center; gap:9px; padding:9px 13px; border-radius:10px; font-size:12.5px; font-weight:500; color:rgba(255,255,255,0.32); background:none; border:none; cursor:pointer; width:100%; transition:all 0.18s; }
         .db-btn-logout:hover { background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.6); }
 
-        /* ────────── BOTTOM NAV (mobile) ────────── */
+        /* ── BOTTOM NAV (mobile) ── */
         .db-bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; background:rgba(9,9,9,0.95); border-top:1px solid rgba(255,255,255,0.055); backdrop-filter:blur(24px); padding:10px 0 env(safe-area-inset-bottom,10px); }
         .db-bnav-item { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; padding:4px; text-decoration:none; color:rgba(255,255,255,0.32); border:none; background:none; cursor:pointer; transition:color 0.18s; }
         .db-bnav-item.active { color:#F59E0B; }
@@ -669,35 +630,36 @@ export default function Dashboard() {
         .db-bnav-item.active .db-bnav-icon { background:rgba(245,158,11,0.1); border-radius:10px; }
         .db-bnav-icon { width:40px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:10px; transition:background 0.18s; }
 
-        /* ────────── RESPONSIVE ────────── */
+        /* ── RESPONSIVE ── */
         @media (max-width:767px) {
-          .db-sidebar { display:none; }
-          .db-main { margin-left:0; padding-bottom:68px; }
-          .db-bottom-nav { display:flex; }
+          .db-sidebar { display:none !important; }
+          .db-main { margin-left:0 !important; padding-bottom:72px; }
+          .db-bottom-nav { display:flex !important; }
           .db-stats { grid-template-columns:1fr 1fr; gap:10px; }
           .db-bottom { grid-template-columns:1fr; }
           .db-content { padding:14px; }
           .db-topbar { padding:0 14px; }
           .db-topbar-search, .db-topbar-status { display:none !important; }
+          .db-page-title { font-size:22px; }
+          .db-welcome { font-size:12px; }
         }
         @media (min-width:768px) and (max-width:1023px) {
-          .db-bottom-nav { display:none; }
+          .db-bottom-nav { display:none !important; }
           .db-stats { grid-template-columns:repeat(2,1fr); }
           .db-bottom { grid-template-columns:1fr 1fr; }
           .db-content { padding:20px; }
           .db-topbar { padding:0 20px; }
         }
         @media (min-width:1024px) {
-          .db-bottom-nav { display:none; }
+          .db-bottom-nav { display:none !important; }
         }
       `}</style>
 
       <div className="db-bg" style={{ display:'flex' }}>
-        {/* Ambient layers */}
         <div className="db-noise" />
         <div className="db-vignette" />
 
-        {/* ──────────── SIDEBAR ──────────── */}
+        {/* ── SIDEBAR ── */}
         <aside className="db-sidebar">
           <div className="db-logo">
             <div className="db-logo-inner">
@@ -732,7 +694,7 @@ export default function Dashboard() {
               <p style={{ color:'rgba(255,255,255,0.3)', fontSize:11, lineHeight:1.6, marginBottom:11 }}>
                 Unlock unlimited moderation and Telegram alerts.
               </p>
-              <Link href="/billing" className="db-btn-upgrade">Upgrade — ₹349/mo</Link>
+              <Link href="/billing" className="db-btn-upgrade">Upgrade to Pro</Link>
             </div>
           )}
 
@@ -743,7 +705,7 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* ──────────── MAIN ──────────── */}
+        {/* ── MAIN ── */}
         <div className="db-main">
 
           {/* TOPBAR */}
@@ -797,7 +759,9 @@ export default function Dashboard() {
           {/* CONTENT */}
           <div className="db-content">
 
+            {/* ── WELCOME + TITLE ── */}
             <div style={{ marginBottom:22 }}>
+              <p className="db-welcome">Welcome back, {firstName}! 👋</p>
               <h1 className="db-page-title">Overview</h1>
             </div>
 
@@ -836,7 +800,6 @@ export default function Dashboard() {
             {/* BOTTOM GRID */}
             <div className="db-bottom" style={{ marginTop:12 }}>
 
-              {/* Monthly Usage */}
               <MonthlyUsageCard
                 plan={plan}
                 youtubeConnected={youtubeConnected}
@@ -846,7 +809,6 @@ export default function Dashboard() {
                 onConnectYouTube={handleYouTubeConnect}
               />
 
-              {/* Moderation Accuracy */}
               <div className="db-card">
                 <div className="db-card-header">
                   <div className="db-card-title">Moderation Accuracy</div>
@@ -855,7 +817,6 @@ export default function Dashboard() {
                 <AccuracyCard accuracy={moderationAcc} />
               </div>
 
-              {/* System Health */}
               <div className="db-card">
                 <div className="db-card-header" style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
                   <div>
@@ -884,7 +845,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ──────────── BOTTOM NAV ──────────── */}
+        {/* ── BOTTOM NAV (mobile only) ── */}
         <nav className="db-bottom-nav">
           {navItems.slice(0, 5).map(item => (
             <Link key={item.href} href={item.href} className={`db-bnav-item${item.active ? ' active' : ''}`} title={item.label}>
@@ -898,7 +859,7 @@ export default function Dashboard() {
           </button>
         </nav>
 
-        {/* ──────────── MORE DRAWER ──────────── */}
+        {/* ── MORE DRAWER ── */}
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position:'fixed', inset:0, zIndex:55, background:'rgba(0,0,0,0.65)', backdropFilter:'blur(6px)' }} />

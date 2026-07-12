@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 import {
-  Shield, Trash2, MessageSquare, Eye, Settings, LogOut,
-  Home, BarChart3, Bell, ChevronRight, Zap, Search,
-  CreditCard, Layers, Radio, Activity, Wifi, Cpu,
-  TrendingUp, TrendingDown, CheckCircle, AlertTriangle, X
+  Shield, MessageSquare, Eye, Settings, LogOut,
+  Home, BarChart3, Bell, Zap, Search,
+  Layers, Radio, Activity, Wifi, Cpu,
+  TrendingUp, TrendingDown, CheckCircle, Target
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -62,12 +62,77 @@ function HealthRow({ icon: Icon, label, sub, value, color = '#34d399', dot = 'gr
   );
 }
 
+/* ── MODERATION ACCURACY CARD ── */
+function AccuracyCard({ accuracy }: { accuracy: number | null }) {
+  const pct = accuracy ?? 0;
+  // Gauge ring math
+  const r = 54;
+  const circ = 2 * Math.PI * r;
+  const filled = (pct / 100) * circ;
+
+  const color = pct >= 90 ? '#34d399' : pct >= 70 ? '#F59E0B' : '#f87171';
+  const label = pct >= 90 ? 'Excellent' : pct >= 70 ? 'Good' : 'Needs review';
+
+  if (accuracy === null) {
+    return (
+      <div style={{ padding: '40px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Target size={22} color="rgba(255,255,255,0.15)" />
+        </div>
+        <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 13, textAlign: 'center' }}>
+          No accuracy data yet. Connect YouTube and let the AI moderate to see confidence scores.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      {/* Gauge */}
+      <div style={{ position: 'relative', width: 140, height: 140 }}>
+        <svg width={140} height={140} viewBox="0 0 140 140" style={{ transform: 'rotate(-90deg)' }}>
+          {/* Track */}
+          <circle cx={70} cy={70} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={10} />
+          {/* Fill */}
+          <circle
+            cx={70} cy={70} r={r} fill="none"
+            stroke={color}
+            strokeWidth={10}
+            strokeDasharray={`${filled} ${circ - filled}`}
+            strokeLinecap="round"
+            style={{ filter: `drop-shadow(0 0 6px ${color}66)`, transition: 'stroke-dasharray 0.8s ease' }}
+          />
+        </svg>
+        {/* Center label */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ color: '#FAFAFA', fontSize: 28, fontWeight: 900, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{pct}<span style={{ fontSize: 16, fontWeight: 700, color: 'rgba(255,255,255,0.5)' }}>%</span></span>
+          <span style={{ color, fontSize: 11, fontWeight: 700, marginTop: 2 }}>{label}</span>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {[
+          { label: 'True Positive', value: `${pct}%`, color: '#34d399' },
+          { label: 'False Positive', value: `${(100 - pct).toFixed(1)}%`, color: '#f87171' },
+        ].map(s => (
+          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
+            <div style={{ color: s.color, fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10.5, marginTop: 2 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>Rolling 24h · updated in real time</div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -95,31 +160,41 @@ export default function Dashboard() {
     </div>
   );
 
+  /* ── REAL DATA FROM FIRESTORE ── */
   const plan = (userData?.plan as string) || 'free';
-  const commentsUsed = (userData?.comments_used as number) || 0;
-  const commentsLimit = (userData?.comments_limit as number) || 1500;
-  const youtubeConnected = (userData?.youtube_connected as boolean) || false;
-  const usagePercent = Math.min(100, (commentsUsed / commentsLimit) * 100);
-  const firstName = user?.displayName?.split(' ')[0] || 'User';
-  const initials = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const commentsScanned   = (userData?.comments_scanned   as number) ?? (userData?.comments_used as number) ?? null;
+  const hiddenComments    = (userData?.hidden_comments     as number) ?? null;
+  const aiReplies         = (userData?.ai_replies          as number) ?? null;
+  const avgResponseMs     = (userData?.avg_response_ms     as number) ?? null;
+  const moderationAcc     = (userData?.moderation_accuracy as number) ?? null;
+  const commentsUsed      = (userData?.comments_used       as number) || 0;
+  const commentsLimit     = (userData?.comments_limit      as number) || 1500;
+  const youtubeConnected  = (userData?.youtube_connected   as boolean) || false;
+  const usagePercent      = Math.min(100, (commentsUsed / commentsLimit) * 100);
+  const firstName         = user?.displayName?.split(' ')[0] || 'User';
+  const initials          = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const planLabel         = plan === 'free' ? 'Free Trial' : plan === 'pro' ? 'Pro' : plan === 'agency' ? 'Agency' : 'Free Trial';
 
-  const planLabel = plan === 'free' ? 'Free Trial' : plan === 'pro' ? 'Pro' : plan === 'agency' ? 'Agency' : 'Free Trial';
+  /* Format helpers */
+  const fmt = (n: number | null) => n === null ? '—' : n >= 1000 ? n.toLocaleString() : String(n);
+  const fmtMs = (ms: number | null) => ms === null ? '—' : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
 
   const navItems = [
-    { icon: Home, label: 'Overview', href: '/dashboard', active: true },
-    { icon: Radio, label: 'Live Feed', href: '/live-feed', active: false },
-    { icon: BarChart3, label: 'Analytics', href: '/analytics', active: false },
-    { icon: Zap, label: 'Automations', href: '/automation', active: false },
-    { icon: Bell, label: 'Alerts', href: '/alerts', active: false },
-    { icon: Layers, label: 'Channels', href: '/channels', active: false },
-    { icon: Settings, label: 'Settings', href: '/settings', active: false },
+    { icon: Home,     label: 'Overview',    href: '/dashboard',   active: true  },
+    { icon: Radio,    label: 'Live Feed',   href: '/live-feed',   active: false },
+    { icon: BarChart3,label: 'Analytics',   href: '/analytics',   active: false },
+    { icon: Zap,      label: 'Automations', href: '/automation',  active: false },
+    { icon: Bell,     label: 'Alerts',      href: '/alerts',      active: false },
+    { icon: Layers,   label: 'Channels',    href: '/channels',    active: false },
+    { icon: Settings, label: 'Settings',    href: '/settings',    active: false },
   ];
 
+  /* Stat cards — null means no data yet, shows "—" */
   const statCards = [
-    { label: 'Comments Scanned', value: commentsUsed > 0 ? commentsUsed.toLocaleString() : '128,420', trend: '+8.2%', up: true, color: '#F59E0B', icon: MessageSquare },
-    { label: 'Hidden Comments', value: '3,186', trend: '+2.1%', up: true, color: '#f87171', icon: Eye },
-    { label: 'AI Replies', value: '1,972', trend: '+14%', up: true, color: '#a78bfa', icon: MessageSquare },
-    { label: 'Avg Response', value: '1.8s', trend: '-0.3s', up: false, color: '#34d399', icon: Activity },
+    { label: 'Comments Scanned', value: fmt(commentsScanned), trend: null, up: true,  color: '#F59E0B', icon: MessageSquare },
+    { label: 'Hidden Comments',  value: fmt(hiddenComments),  trend: null, up: true,  color: '#f87171', icon: Eye          },
+    { label: 'AI Replies',       value: fmt(aiReplies),       trend: null, up: true,  color: '#a78bfa', icon: MessageSquare},
+    { label: 'Avg Response',     value: fmtMs(avgResponseMs), trend: null, up: false, color: '#34d399', icon: Activity     },
   ];
 
   return (
@@ -130,9 +205,9 @@ export default function Dashboard() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
         html, body { background: #08080A; }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes pulse   { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+        @keyframes fadeIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #08080A; }
@@ -146,10 +221,8 @@ export default function Dashboard() {
           display: flex; flex-direction: column;
           position: fixed; height: 100vh; left: 0; top: 0;
           z-index: 40;
-          /* SIGNATURE: amber glow on left edge */
           box-shadow: inset -1px 0 0 rgba(255,255,255,0.04), 4px 0 32px rgba(245,158,11,0.06);
         }
-        /* Left edge amber glow line */
         .db-sidebar::before {
           content: '';
           position: absolute; left: 0; top: 20%; bottom: 20%;
@@ -162,7 +235,6 @@ export default function Dashboard() {
         .db-logo-inner { display: flex; align-items: center; gap: 10px; }
         .db-logo-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #F59E0B, #7C3AED); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .db-logo-text { color: #FAFAFA; font-weight: 800; font-size: 15px; letter-spacing: -0.02em; }
-        .db-logo-badge { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 1px; }
 
         .db-nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 1px; overflow-y: auto; }
         .db-nav-item {
@@ -188,14 +260,6 @@ export default function Dashboard() {
         }
         .db-nav-live { display: inline-flex; align-items: center; gap: 4px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 2px 6px; font-size: 9px; font-weight: 700; color: #F59E0B; margin-left: auto; letter-spacing: 0.04em; }
         .db-nav-live-dot { width: 4px; height: 4px; border-radius: 50%; background: #F59E0B; animation: pulse 2s infinite; }
-
-        .db-protection {
-          margin: 0 8px 8px;
-          background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.14);
-          border-radius: 12px; padding: 12px 14px;
-        }
-        .db-protection-bar { height: 4px; background: rgba(255,255,255,0.07); border-radius: 4px; margin: 8px 0 4px; overflow: hidden; }
-        .db-protection-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #34d399); border-radius: 4px; width: 86%; }
 
         .db-upgrade {
           margin: 0 8px 8px;
@@ -233,40 +297,12 @@ export default function Dashboard() {
         .db-yt-btn:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.35); }
         .db-avatar { display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 4px 10px 4px 4px; cursor: pointer; transition: all 0.2s; }
         .db-avatar:hover { border-color: rgba(255,255,255,0.12); }
-        .db-avatar-img { width: 28px; height: 28px; border-radius: '50%'; object-fit: cover; }
-        .db-avatar-fallback { width: 28px; height: 28px; border-radius: '50%'; background: linear-gradient(135deg,#F59E0B,#7C3AED); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 11px; flex-shrink: 0; }
 
         /* ── CONTENT ── */
         .db-content { padding: 28px; flex: 1; animation: fadeIn 0.4s ease; }
 
         .db-page-title { font-size: 28px; font-weight: 900; color: #FAFAFA; letter-spacing: -0.03em; margin-bottom: 4px; }
         .db-page-sub { color: rgba(255,255,255,0.38); font-size: 13.5px; }
-        .db-status-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-        .db-badge { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
-
-        /* ── CONNECT BANNER ── */
-        .db-connect-banner {
-          background: linear-gradient(135deg, rgba(12,12,15,0.9) 0%, rgba(20,12,30,0.8) 100%);
-          border: 1px solid rgba(255,255,255,0.08); border-radius: 18px;
-          padding: 28px; margin-bottom: 20px;
-          display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: center;
-          position: relative; overflow: hidden;
-        }
-        .db-connect-banner::before {
-          content: '';
-          position: absolute; right: -60px; top: -60px;
-          width: 200px; height: 200px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(124,58,237,0.15), transparent 70%);
-        }
-        .db-connect-preview {
-          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 14px; padding: 32px 20px;
-          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-        }
-        .db-yt-icon { width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #FF0000, #CC0000); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(255,0,0,0.3); }
-        .db-feat-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 20px; }
-        .db-feat-pill { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 5px 12px; font-size: 11.5px; color: rgba(255,255,255,0.55); font-weight: 500; }
-        .db-connect-actions { display: flex; align-items: center; gap: 10px; }
 
         /* ── STAT CARDS ── */
         .db-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
@@ -279,9 +315,9 @@ export default function Dashboard() {
         .db-stat:hover { border-color: rgba(255,255,255,0.10); }
         .db-stat-top { display: flex; align-items: center; justify-content: space-between; }
         .db-stat-label { color: rgba(255,255,255,0.42); font-size: 12.5px; font-weight: 500; }
-        .db-stat-trend { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 6px; }
         .db-stat-value { font-size: 30px; font-weight: 900; color: #FAFAFA; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
         .db-stat-bottom { display: flex; align-items: flex-end; justify-content: space-between; }
+        .db-stat-empty { font-size: 30px; font-weight: 900; color: rgba(255,255,255,0.18); letter-spacing: -0.04em; line-height: 1; }
 
         /* ── BOTTOM GRID ── */
         .db-bottom { display: grid; grid-template-columns: 1fr 1fr 1.1fr; gap: 14px; }
@@ -293,7 +329,6 @@ export default function Dashboard() {
         .db-card-body { padding: 18px 20px; }
 
         /* ── USAGE ── */
-        .db-usage-nums { margin-bottom: 14px; }
         .db-usage-big { font-size: 32px; font-weight: 900; color: #FAFAFA; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
         .db-usage-of { color: rgba(255,255,255,0.3); font-size: 14px; font-weight: 500; }
         .db-usage-bar { height: 7px; background: rgba(255,255,255,0.07); border-radius: 8px; overflow: hidden; margin: 10px 0 6px; }
@@ -301,18 +336,12 @@ export default function Dashboard() {
         .db-usage-row { display: flex; justify-content: space-between; font-size: 11.5px; color: rgba(255,255,255,0.35); margin-bottom: 16px; }
         .db-plan-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #F59E0B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
 
-        /* ── RECENT ACTIVITY ── */
-        .db-activity-empty { padding: 28px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-
         /* ── SYSTEM HEALTH ── */
         .db-health-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #34d399; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 3px 8px; }
-        .db-health-dot { width: 5px; height: 5px; border-radius: '50%'; background: #22c55e; animation: pulse 2s infinite; }
 
         /* ── BUTTONS ── */
         .db-btn-primary { background: #F59E0B; color: #08080A; font-weight: 700; font-size: 13px; padding: 10px 18px; border-radius: 9px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; text-decoration: none; white-space: nowrap; }
         .db-btn-primary:hover { background: #FBBF24; box-shadow: 0 0 22px rgba(245,158,11,0.3); }
-        .db-btn-ghost { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); font-weight: 600; font-size: 13px; padding: 10px 18px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.08); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; text-decoration: none; white-space: nowrap; }
-        .db-btn-ghost:hover { background: rgba(255,255,255,0.08); }
         .db-btn-upgrade { width: 100%; background: linear-gradient(135deg, #F59E0B, #FBBF24); color: #08080A; font-weight: 700; font-size: 12.5px; padding: 9px; border-radius: 9px; border: none; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none; display: block; }
         .db-btn-upgrade:hover { opacity: 0.9; transform: translateY(-1px); }
         .db-btn-logout { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 9px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.35); background: none; border: none; cursor: pointer; width: 100%; transition: all 0.2s; }
@@ -330,8 +359,6 @@ export default function Dashboard() {
           .db-bottom-nav { display: flex; }
           .db-stats { grid-template-columns: repeat(2,1fr); }
           .db-bottom { grid-template-columns: 1fr; }
-          .db-connect-banner { grid-template-columns: 1fr; }
-          .db-connect-preview { display: none; }
           .db-content { padding: 16px; }
           .db-topbar { padding: 0 16px; }
           .db-topbar-search { display: none !important; }
@@ -346,13 +373,12 @@ export default function Dashboard() {
 
         {/* ── SIDEBAR ── */}
         <aside className="db-sidebar">
-          {/* Logo */}
+          {/* Logo — no badge */}
           <div className="db-logo">
             <div className="db-logo-inner">
               <div className="db-logo-mark"><Shield size={18} color="white" /></div>
               <div>
                 <div className="db-logo-text">ModerateAI</div>
-                <div className="db-logo-badge">Enterprise · v2</div>
               </div>
             </div>
           </div>
@@ -371,21 +397,6 @@ export default function Dashboard() {
               </Link>
             ))}
           </nav>
-
-          {/* Protection status */}
-          <div className="db-protection">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <CheckCircle size={13} color="#22c55e" />
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600 }}>Protection</span>
-              </div>
-              <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 700 }}>Active</span>
-            </div>
-            <div className="db-protection-bar">
-              <div className="db-protection-fill" />
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5 }}>86% coverage · 1.2k rules</div>
-          </div>
 
           {/* Upgrade — free plan only */}
           {plan === 'free' && (
@@ -429,7 +440,7 @@ export default function Dashboard() {
 
             <div style={{ flex: 1 }} />
 
-            {/* Connect YouTube */}
+            {/* Connect YouTube — only if not connected */}
             {!youtubeConnected && (
               <button onClick={handleYouTubeConnect} className="db-yt-btn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -448,8 +459,8 @@ export default function Dashboard() {
             {/* Avatar */}
             <div className="db-avatar" onClick={() => router.push('/settings')} style={{ cursor: 'pointer' }}>
               {user?.photoURL
-                ? <img src={user.photoURL} className="db-avatar-img" style={{ width: 28, height: 28, borderRadius: '50%' }} alt="avatar" />
-                : <div className="db-avatar-fallback" style={{ borderRadius: '50%' }}>{initials}</div>
+                ? <img src={user.photoURL} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} alt="avatar" />
+                : <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 11 }}>{initials}</div>
               }
               <div>
                 <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5, lineHeight: 1.2 }}>{firstName}</div>
@@ -464,98 +475,38 @@ export default function Dashboard() {
           {/* CONTENT */}
           <div className="db-content">
 
-            {/* Page heading */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
-                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>Live · Protected</span>
-              </div>
+            {/* Page heading — clean, no badges/subtitle */}
+            <div style={{ marginBottom: 24 }}>
               <h1 className="db-page-title">Overview</h1>
-              <p className="db-page-sub">Your AI moderator is active. Here's what's happening across your channels right now.</p>
-
-              <div className="db-status-row">
-                {[
-                  { label: 'Online', dot: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.18)', color: 'rgba(255,255,255,0.65)' },
-                  { label: 'Scanning', dot: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.18)', color: 'rgba(255,255,255,0.65)' },
-                  { label: 'Protected', dot: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.18)', color: 'rgba(255,255,255,0.65)' },
-                ].map(b => (
-                  <div key={b.label} className="db-badge" style={{ background: b.bg, border: `1px solid ${b.border}`, color: b.color }}>
-                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: b.dot }} />
-                    {b.label}
-                  </div>
-                ))}
-              </div>
             </div>
 
-            {/* Connect Banner */}
-            {!youtubeConnected && (
-              <div className="db-connect-banner">
-                <div className="db-connect-preview">
-                  <div className="db-yt-icon">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                    </svg>
+            {/* STAT CARDS — real Firebase data */}
+            <div className="db-stats" style={{ marginBottom: 20 }}>
+              {statCards.map((s) => {
+                const hasData = s.value !== '—';
+                return (
+                  <div key={s.label} className="db-stat">
+                    <div className="db-stat-top">
+                      <span className="db-stat-label">{s.label}</span>
+                      {hasData && (
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: `${s.color}18`, border: `1px solid ${s.color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <s.icon size={13} color={s.color} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="db-stat-bottom">
+                      {hasData ? (
+                        <>
+                          <div className="db-stat-value">{s.value}</div>
+                          <Sparkline color={s.color} up={s.up} />
+                        </>
+                      ) : (
+                        <div className="db-stat-empty">—</div>
+                      )}
+                    </div>
                   </div>
-                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11.5 }}>Awaiting connection · OAuth 2.0</span>
-                </div>
-
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F59E0B', animation: 'pulse 2s infinite' }} />
-                    <span style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Ready to Connect</span>
-                  </div>
-                  <h2 style={{ color: '#FAFAFA', fontSize: 22, fontWeight: 900, letterSpacing: '-0.025em', marginBottom: 10, lineHeight: 1.2 }}>
-                    Connect your <span style={{ color: '#F59E0B' }}>YouTube channel</span>
-                  </h2>
-                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13.5, lineHeight: 1.65, marginBottom: 16, maxWidth: 500 }}>
-                    Grant secure OAuth access and ModerateAI starts protecting your community in seconds — hiding toxic comments, replying to fans, and surfacing insights in real time.
-                  </p>
-                  <div className="db-feat-pills">
-                    {[
-                      { icon: Shield, label: 'Connect securely' },
-                      { icon: Activity, label: 'Realtime moderation' },
-                      { icon: BarChart3, label: 'Instant analytics' },
-                      { icon: MessageSquare, label: 'Auto replies' },
-                    ].map(f => (
-                      <div key={f.label} className="db-feat-pill">
-                        <f.icon size={11} color="rgba(255,255,255,0.45)" /> {f.label}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="db-connect-actions">
-                    <button onClick={handleYouTubeConnect} className="db-btn-primary">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                      </svg>
-                      Connect YouTube ↗
-                    </button>
-                    <button className="db-btn-ghost">View demo dashboard</button>
-                    <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11.5, marginLeft: 4 }}>Uses read-only + moderation scopes. Revoke anytime.</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* STAT CARDS */}
-            <div className="db-stats">
-              {statCards.map((s) => (
-                <div key={s.label} className="db-stat">
-                  <div className="db-stat-top">
-                    <span className="db-stat-label">{s.label}</span>
-                    <span className="db-stat-trend" style={{
-                      background: s.up ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                      color: s.up ? '#4ade80' : '#f87171'
-                    }}>
-                      {s.up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                      {s.trend}
-                    </span>
-                  </div>
-                  <div className="db-stat-bottom">
-                    <div className="db-stat-value">{s.value}</div>
-                    <Sparkline color={s.color} up={s.up} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* BOTTOM GRID */}
@@ -573,7 +524,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="db-card-body">
-                  <div className="db-usage-nums">
+                  <div style={{ marginBottom: 14 }}>
                     <span className="db-usage-big">{commentsUsed.toLocaleString()}</span>
                     <span className="db-usage-of"> / {commentsLimit.toLocaleString()}</span>
                   </div>
@@ -596,27 +547,13 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Recent Activity */}
+              {/* Moderation Accuracy */}
               <div className="db-card">
                 <div className="db-card-header">
-                  <div className="db-card-title">Live Moderation Feed</div>
-                  <div className="db-card-sub">Real-time moderation events</div>
+                  <div className="db-card-title">Moderation Accuracy</div>
+                  <div className="db-card-sub">AI confidence · rolling 24h</div>
                 </div>
-                <div className="db-activity-empty">
-                  <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Radio size={22} color="rgba(255,255,255,0.15)" />
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 13.5, textAlign: 'center', lineHeight: 1.55 }}>
-                    {youtubeConnected
-                      ? 'No activity yet. Comments will appear here in real time.'
-                      : 'Connect YouTube to see live moderation events here.'}
-                  </p>
-                  {!youtubeConnected && (
-                    <button onClick={handleYouTubeConnect} className="db-btn-primary" style={{ marginTop: 4 }}>
-                      Connect YouTube →
-                    </button>
-                  )}
-                </div>
+                <AccuracyCard accuracy={moderationAcc} />
               </div>
 
               {/* System Health */}
@@ -627,7 +564,7 @@ export default function Dashboard() {
                     <div className="db-card-sub">Live infra status</div>
                   </div>
                   <div className="db-health-badge">
-                    <div className="db-health-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
                     Healthy
                   </div>
                 </div>

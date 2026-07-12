@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import {
   LayoutDashboard, BarChart2, Zap, Bell, Settings,
-  LogOut, Star, Play, Shield, Search
+  LogOut, Star, Play, Shield, Search, CreditCard
 } from 'lucide-react';
 const Youtube = Play;
 import Link from 'next/link';
@@ -62,7 +62,8 @@ const NAV_ITEMS = [
   { label: 'Analytics', icon: BarChart2, href: '/analytics', active: true },
   { label: 'Automation', icon: Zap, href: '/automation', active: false },
   { label: 'Alerts', icon: Bell, href: '/alerts', active: false },
-  { label: 'Settings', icon: Settings, href: '/settings', active: false },
+{ label: 'Settings', icon: Settings, href: '/settings', active: false },
+{ label: 'Billing', icon: CreditCard, href: '/billing', active: false },
 ];
 
 const ChartTooltip = ({ active, payload, label }: any) => {

@@ -1,25 +1,80 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Shield, Trash2, MessageSquare, Eye, Settings, LogOut, Home, BarChart3, Bell, ChevronRight, Zap, Search, CreditCard } from 'lucide-react';
+import {
+  Shield, Trash2, MessageSquare, Eye, Settings, LogOut,
+  Home, BarChart3, Bell, ChevronRight, Zap, Search,
+  CreditCard, Layers, Radio, Activity, Wifi, Cpu,
+  TrendingUp, TrendingDown, CheckCircle, AlertTriangle, X
+} from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, getDoc, DocumentData } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
+/* ── MINI SPARKLINE ── */
+function Sparkline({ color, up = true }: { color: string; up?: boolean }) {
+  const points = up
+    ? [28, 22, 32, 24, 36, 28, 42, 34, 48, 38, 56, 44, 62]
+    : [62, 58, 52, 60, 48, 54, 44, 50, 40, 46, 38, 42, 36];
+  const max = Math.max(...points);
+  const min = Math.min(...points);
+  const h = 36; const w = 80;
+  const pts = points.map((p, i) => {
+    const x = (i / (points.length - 1)) * w;
+    const y = h - ((p - min) / (max - min)) * h;
+    return `${x},${y}`;
+  }).join(' ');
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id={`sg-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#sg-${color.replace('#', '')})`} />
+    </svg>
+  );
+}
+
+/* ── SYSTEM HEALTH ROW ── */
+function HealthRow({ icon: Icon, label, sub, value, color = '#34d399', dot = 'green' }:
+  { icon: any; label: string; sub: string; value?: string; color?: string; dot?: 'green' | 'amber' | 'red' }) {
+  const dotColor = { green: '#22c55e', amber: '#F59E0B', red: '#f87171' }[dot];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={14} color={color} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12.5, fontWeight: 600 }}>{label}</div>
+        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{sub}</div>
+      </div>
+      {value && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: dotColor }} />
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 600 }}>{value}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
-      const userRef = doc(db, 'users', firebaseUser.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) setUserData(userSnap.data());
+      const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
+      if (snap.exists()) setUserData(snap.data());
       setLoading(false);
     });
     return () => unsub();
@@ -31,10 +86,10 @@ export default function Dashboard() {
   };
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#09090B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', background: '#08080A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '2px solid #F59E0B', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }}></div>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Loading...</p>
+        <div style={{ width: 36, height: 36, border: '2px solid rgba(245,158,11,0.3)', borderTopColor: '#F59E0B', borderRadius: '50%', animation: 'spin 0.75s linear infinite', margin: '0 auto 14px' }} />
+        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Loading dashboard…</p>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -46,294 +101,567 @@ export default function Dashboard() {
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
   const usagePercent = Math.min(100, (commentsUsed / commentsLimit) * 100);
   const firstName = user?.displayName?.split(' ')[0] || 'User';
+  const initials = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+
+  const planLabel = plan === 'free' ? 'Free Trial' : plan === 'pro' ? 'Pro' : plan === 'agency' ? 'Agency' : 'Free Trial';
 
   const navItems = [
     { icon: Home, label: 'Overview', href: '/dashboard', active: true },
+    { icon: Radio, label: 'Live Feed', href: '/live-feed', active: false },
     { icon: BarChart3, label: 'Analytics', href: '/analytics', active: false },
-    { icon: Zap, label: 'Automation', href: '/automation', active: false },
+    { icon: Zap, label: 'Automations', href: '/automation', active: false },
     { icon: Bell, label: 'Alerts', href: '/alerts', active: false },
+    { icon: Layers, label: 'Channels', href: '/channels', active: false },
     { icon: Settings, label: 'Settings', href: '/settings', active: false },
-    { icon: CreditCard, label: 'Billing', href: '/billing', active: false },
+  ];
+
+  const statCards = [
+    { label: 'Comments Scanned', value: commentsUsed > 0 ? commentsUsed.toLocaleString() : '128,420', trend: '+8.2%', up: true, color: '#F59E0B', icon: MessageSquare },
+    { label: 'Hidden Comments', value: '3,186', trend: '+2.1%', up: true, color: '#f87171', icon: Eye },
+    { label: 'AI Replies', value: '1,972', trend: '+14%', up: true, color: '#a78bfa', icon: MessageSquare },
+    { label: 'Avg Response', value: '1.8s', trend: '-0.3s', up: false, color: '#34d399', icon: Activity },
   ];
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #09090B; }
-        ::-webkit-scrollbar-thumb { background: #27272A; border-radius: 4px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+        html, body { background: #08080A; }
+
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 
-        /* SIDEBAR NAV */
-        .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; text-decoration:none; transition:all 0.2s; color:rgba(255,255,255,0.5); }
-        .nav-item:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.9); }
-        .nav-item.active { background:rgba(245,158,11,0.12); color:#F59E0B; border-left:2px solid #F59E0B; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #08080A; }
+        ::-webkit-scrollbar-thumb { background: #1E1E22; border-radius: 4px; }
 
-        /* BOTTOM NAV (mobile) */
-        .bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; background:rgba(9,9,11,0.95); border-top:1px solid #27272A; backdrop-filter:blur(20px); padding:8px 0 env(safe-area-inset-bottom, 8px); }
-        .bottom-nav-item { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; flex:1; padding:6px 4px; text-decoration:none; color:rgba(255,255,255,0.4); font-size:10px; font-weight:500; transition:all 0.2s; border:none; background:none; cursor:pointer; }
-        .bottom-nav-item.active { color:#F59E0B; }
-        .bottom-nav-item:hover { color:rgba(255,255,255,0.8); }
-
-        .stat-card { background:#18181B; border:1px solid #27272A; border-radius:16px; padding:20px; transition:all 0.2s; }
-        .stat-card:hover { border-color:rgba(245,158,11,0.2); }
-        .glass-card { background:#18181B; border:1px solid #27272A; border-radius:16px; }
-        .search-input { background:rgba(255,255,255,0.05); border:1px solid #27272A; border-radius:10px; padding:8px 16px 8px 36px; color:#FAFAFA; font-size:14px; outline:none; width:240px; transition:all 0.2s; }
-        .search-input:focus { border-color:rgba(245,158,11,0.4); background:rgba(255,255,255,0.07); }
-        .search-input::placeholder { color:rgba(255,255,255,0.3); }
-        .connect-btn { background:#F59E0B; color:#09090B; font-weight:700; padding:10px 20px; border-radius:10px; border:none; cursor:pointer; font-size:14px; display:flex; align-items:center; gap:6px; transition:all 0.2s; white-space:nowrap; }
-        .connect-btn:hover { background:#FBBF24; transform:translateY(-1px); }
-        .upgrade-btn { background:linear-gradient(135deg,#F59E0B,#FBBF24); color:#09090B; font-weight:700; padding:10px 16px; border-radius:10px; border:none; cursor:pointer; font-size:13px; width:100%; transition:all 0.2s; }
-        .upgrade-btn:hover { opacity:0.9; transform:translateY(-1px); }
-        .logout-btn { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; font-size:14px; font-weight:500; color:rgba(255,255,255,0.4); background:none; border:none; cursor:pointer; width:100%; transition:all 0.2s; }
-        .logout-btn:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); }
-        .avatar-btn { background:none; border:none; cursor:pointer; padding:0; transition:all 0.2s; }
-        .avatar-btn:hover { opacity:0.85; transform:scale(1.05); }
-
-        /* SIDEBAR — visible on md+ */
-        .sidebar { display:flex; }
-        .main-content { margin-left:240px; }
-
-        /* RESPONSIVE */
-        @media (max-width: 1023px) {
-          .sidebar { display:none !important; }
-          .main-content { margin-left:0 !important; padding-bottom:72px; }
-          .bottom-nav { display:flex; }
-          .desktop-search { display:none !important; }
-          .desktop-avatar { display:none !important; }
-          .stat-grid { grid-template-columns: repeat(2,1fr) !important; }
-          .bottom-grid { grid-template-columns: 1fr !important; }
-          .header-padding { padding: 12px 16px !important; }
-          .content-padding { padding: 16px !important; }
-          .connect-banner { flex-direction:column !important; align-items:flex-start !important; gap:12px !important; }
-          .connect-banner-btn { width:100% !important; justify-content:center !important; }
-          .mobile-connect-btn { display:flex !important; }
+        /* ── SIDEBAR ── */
+        .db-sidebar {
+          width: 224px; min-width: 224px;
+          background: #0C0C0F;
+          border-right: 1px solid rgba(255,255,255,0.06);
+          display: flex; flex-direction: column;
+          position: fixed; height: 100vh; left: 0; top: 0;
+          z-index: 40;
+          /* SIGNATURE: amber glow on left edge */
+          box-shadow: inset -1px 0 0 rgba(255,255,255,0.04), 4px 0 32px rgba(245,158,11,0.06);
+        }
+        /* Left edge amber glow line */
+        .db-sidebar::before {
+          content: '';
+          position: absolute; left: 0; top: 20%; bottom: 20%;
+          width: 2px; border-radius: 2px;
+          background: linear-gradient(180deg, transparent, rgba(245,158,11,0.5), rgba(245,158,11,0.8), rgba(245,158,11,0.5), transparent);
+          box-shadow: 0 0 12px rgba(245,158,11,0.4), 0 0 28px rgba(245,158,11,0.15);
         }
 
-       @media (min-width: 1024px) {
-          .mobile-connect-btn { display:none !important; }
+        .db-logo { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .db-logo-inner { display: flex; align-items: center; gap: 10px; }
+        .db-logo-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #F59E0B, #7C3AED); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .db-logo-text { color: #FAFAFA; font-weight: 800; font-size: 15px; letter-spacing: -0.02em; }
+        .db-logo-badge { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 1px; }
+
+        .db-nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 1px; overflow-y: auto; }
+        .db-nav-item {
+          display: flex; align-items: center; gap: 10px;
+          padding: 9px 12px; border-radius: 9px;
+          font-size: 13.5px; font-weight: 500;
+          text-decoration: none; color: rgba(255,255,255,0.42);
+          transition: all 0.18s; border: 1px solid transparent;
+          position: relative;
+        }
+        .db-nav-item:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.8); }
+        .db-nav-item.active {
+          background: rgba(245,158,11,0.09);
+          color: #F59E0B;
+          border-color: rgba(245,158,11,0.15);
+        }
+        .db-nav-item.active::before {
+          content: '';
+          position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
+          width: 3px; height: 20px; border-radius: 0 2px 2px 0;
+          background: #F59E0B;
+          box-shadow: 0 0 8px rgba(245,158,11,0.6);
+        }
+        .db-nav-live { display: inline-flex; align-items: center; gap: 4px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2); border-radius: 10px; padding: 2px 6px; font-size: 9px; font-weight: 700; color: #F59E0B; margin-left: auto; letter-spacing: 0.04em; }
+        .db-nav-live-dot { width: 4px; height: 4px; border-radius: 50%; background: #F59E0B; animation: pulse 2s infinite; }
+
+        .db-protection {
+          margin: 0 8px 8px;
+          background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.14);
+          border-radius: 12px; padding: 12px 14px;
+        }
+        .db-protection-bar { height: 4px; background: rgba(255,255,255,0.07); border-radius: 4px; margin: 8px 0 4px; overflow: hidden; }
+        .db-protection-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #34d399); border-radius: 4px; width: 86%; }
+
+        .db-upgrade {
+          margin: 0 8px 8px;
+          background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.16);
+          border-radius: 12px; padding: 14px;
+        }
+
+        .db-sidebar-bottom { padding: 8px 8px 20px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 6px; }
+
+        /* ── MAIN ── */
+        .db-main { margin-left: 224px; min-height: 100vh; display: flex; flex-direction: column; }
+
+        /* ── TOPBAR ── */
+        .db-topbar {
+          position: sticky; top: 0; z-index: 30;
+          background: rgba(8,8,10,0.85); backdrop-filter: blur(20px);
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+          padding: 0 28px; height: 60px;
+          display: flex; align-items: center; gap: 16px;
+        }
+        .db-search {
+          flex: 1; max-width: 460px;
+          background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 10px; padding: 0 14px 0 36px; height: 36px;
+          color: #FAFAFA; font-size: 13px; outline: none;
+          transition: all 0.2s;
+        }
+        .db-search:focus { border-color: rgba(245,158,11,0.35); background: rgba(255,255,255,0.06); }
+        .db-search::placeholder { color: rgba(255,255,255,0.25); }
+        .db-status-pill { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.16); font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); white-space: nowrap; }
+        .db-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
+        .db-icon-btn { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; position: relative; }
+        .db-icon-btn:hover { background: rgba(255,255,255,0.07); }
+        .db-yt-btn { display: flex; align-items: center; gap: 8px; background: #F59E0B; color: #08080A; font-weight: 700; font-size: 13px; padding: 0 16px; height: 36px; border-radius: 9px; border: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .db-yt-btn:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.35); }
+        .db-avatar { display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 4px 10px 4px 4px; cursor: pointer; transition: all 0.2s; }
+        .db-avatar:hover { border-color: rgba(255,255,255,0.12); }
+        .db-avatar-img { width: 28px; height: 28px; border-radius: '50%'; object-fit: cover; }
+        .db-avatar-fallback { width: 28px; height: 28px; border-radius: '50%'; background: linear-gradient(135deg,#F59E0B,#7C3AED); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+
+        /* ── CONTENT ── */
+        .db-content { padding: 28px; flex: 1; animation: fadeIn 0.4s ease; }
+
+        .db-page-title { font-size: 28px; font-weight: 900; color: #FAFAFA; letter-spacing: -0.03em; margin-bottom: 4px; }
+        .db-page-sub { color: rgba(255,255,255,0.38); font-size: 13.5px; }
+        .db-status-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+        .db-badge { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+
+        /* ── CONNECT BANNER ── */
+        .db-connect-banner {
+          background: linear-gradient(135deg, rgba(12,12,15,0.9) 0%, rgba(20,12,30,0.8) 100%);
+          border: 1px solid rgba(255,255,255,0.08); border-radius: 18px;
+          padding: 28px; margin-bottom: 20px;
+          display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: center;
+          position: relative; overflow: hidden;
+        }
+        .db-connect-banner::before {
+          content: '';
+          position: absolute; right: -60px; top: -60px;
+          width: 200px; height: 200px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(124,58,237,0.15), transparent 70%);
+        }
+        .db-connect-preview {
+          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 14px; padding: 32px 20px;
+          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        }
+        .db-yt-icon { width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #FF0000, #CC0000); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 32px rgba(255,0,0,0.3); }
+        .db-feat-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 20px; }
+        .db-feat-pill { display: flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 5px 12px; font-size: 11.5px; color: rgba(255,255,255,0.55); font-weight: 500; }
+        .db-connect-actions { display: flex; align-items: center; gap: 10px; }
+
+        /* ── STAT CARDS ── */
+        .db-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+        .db-stat {
+          background: #0F0F13; border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 16px; padding: 20px;
+          transition: border-color 0.2s;
+          display: flex; flex-direction: column; gap: 12px;
+        }
+        .db-stat:hover { border-color: rgba(255,255,255,0.10); }
+        .db-stat-top { display: flex; align-items: center; justify-content: space-between; }
+        .db-stat-label { color: rgba(255,255,255,0.42); font-size: 12.5px; font-weight: 500; }
+        .db-stat-trend { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 6px; }
+        .db-stat-value { font-size: 30px; font-weight: 900; color: #FAFAFA; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+        .db-stat-bottom { display: flex; align-items: flex-end; justify-content: space-between; }
+
+        /* ── BOTTOM GRID ── */
+        .db-bottom { display: grid; grid-template-columns: 1fr 1fr 1.1fr; gap: 14px; }
+
+        .db-card { background: #0F0F13; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; }
+        .db-card-header { padding: 18px 20px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .db-card-title { color: #FAFAFA; font-size: 14px; font-weight: 700; letter-spacing: -0.015em; }
+        .db-card-sub { color: rgba(255,255,255,0.35); font-size: 11.5px; margin-top: 2px; }
+        .db-card-body { padding: 18px 20px; }
+
+        /* ── USAGE ── */
+        .db-usage-nums { margin-bottom: 14px; }
+        .db-usage-big { font-size: 32px; font-weight: 900; color: #FAFAFA; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+        .db-usage-of { color: rgba(255,255,255,0.3); font-size: 14px; font-weight: 500; }
+        .db-usage-bar { height: 7px; background: rgba(255,255,255,0.07); border-radius: 8px; overflow: hidden; margin: 10px 0 6px; }
+        .db-usage-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, #F59E0B, #7C3AED); transition: width 0.6s ease; }
+        .db-usage-row { display: flex; justify-content: space-between; font-size: 11.5px; color: rgba(255,255,255,0.35); margin-bottom: 16px; }
+        .db-plan-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #F59E0B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+
+        /* ── RECENT ACTIVITY ── */
+        .db-activity-empty { padding: 28px 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+        /* ── SYSTEM HEALTH ── */
+        .db-health-badge { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #34d399; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); border-radius: 6px; padding: 3px 8px; }
+        .db-health-dot { width: 5px; height: 5px; border-radius: '50%'; background: #22c55e; animation: pulse 2s infinite; }
+
+        /* ── BUTTONS ── */
+        .db-btn-primary { background: #F59E0B; color: #08080A; font-weight: 700; font-size: 13px; padding: 10px 18px; border-radius: 9px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; text-decoration: none; white-space: nowrap; }
+        .db-btn-primary:hover { background: #FBBF24; box-shadow: 0 0 22px rgba(245,158,11,0.3); }
+        .db-btn-ghost { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); font-weight: 600; font-size: 13px; padding: 10px 18px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.08); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; text-decoration: none; white-space: nowrap; }
+        .db-btn-ghost:hover { background: rgba(255,255,255,0.08); }
+        .db-btn-upgrade { width: 100%; background: linear-gradient(135deg, #F59E0B, #FBBF24); color: #08080A; font-weight: 700; font-size: 12.5px; padding: 9px; border-radius: 9px; border: none; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none; display: block; }
+        .db-btn-upgrade:hover { opacity: 0.9; transform: translateY(-1px); }
+        .db-btn-logout { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 9px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.35); background: none; border: none; cursor: pointer; width: 100%; transition: all 0.2s; }
+        .db-btn-logout:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.65); }
+
+        /* ── BOTTOM NAV (mobile) ── */
+        .db-bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: rgba(8,8,10,0.96); border-top: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(20px); padding: 8px 0 env(safe-area-inset-bottom, 8px); }
+        .db-bnav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; padding: 6px 4px; text-decoration: none; color: rgba(255,255,255,0.35); font-size: 9.5px; font-weight: 500; border: none; background: none; cursor: pointer; }
+        .db-bnav-item.active { color: #F59E0B; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1023px) {
+          .db-sidebar { display: none; }
+          .db-main { margin-left: 0; padding-bottom: 72px; }
+          .db-bottom-nav { display: flex; }
+          .db-stats { grid-template-columns: repeat(2,1fr); }
+          .db-bottom { grid-template-columns: 1fr; }
+          .db-connect-banner { grid-template-columns: 1fr; }
+          .db-connect-preview { display: none; }
+          .db-content { padding: 16px; }
+          .db-topbar { padding: 0 16px; }
+          .db-topbar-search { display: none !important; }
+          .db-topbar-status { display: none !important; }
+        }
+        @media (max-width: 640px) {
+          .db-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
         }
       `}</style>
 
-      <div className="premium-bg" />
+      <div style={{ display: 'flex', background: '#08080A', minHeight: '100vh' }}>
 
-      <main style={{ minHeight: '100vh', display: 'flex', position: 'relative', zIndex: 10 }}>
-
-        {/* SIDEBAR — desktop only */}
-        <aside className="sidebar" style={{ width: 240, background: 'rgba(9,9,11,0.8)', borderRight: '1px solid #27272A', flexDirection: 'column', position: 'fixed', height: '100vh', backdropFilter: 'blur(20px)' }}>
+        {/* ── SIDEBAR ── */}
+        <aside className="db-sidebar">
           {/* Logo */}
-          <div style={{ padding: '24px 20px', borderBottom: '1px solid #27272A' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Shield size={18} color="white" />
+          <div className="db-logo">
+            <div className="db-logo-inner">
+              <div className="db-logo-mark"><Shield size={18} color="white" /></div>
+              <div>
+                <div className="db-logo-text">ModerateAI</div>
+                <div className="db-logo-badge">Enterprise · v2</div>
               </div>
-              <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 17 }}>ModerateAI</span>
             </div>
           </div>
 
           {/* Nav */}
-          <nav style={{ flex: 1, padding: '16px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className={`nav-item${item.active ? ' active' : ''}`}>
-                <item.icon size={16} /> {item.label}
+          <nav className="db-nav">
+            {navItems.map(item => (
+              <Link key={item.href} href={item.href} className={`db-nav-item${item.active ? ' active' : ''}`}>
+                <item.icon size={15} />
+                {item.label}
+                {item.active && (
+                  <span className="db-nav-live">
+                    <span className="db-nav-live-dot" /> live
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
 
-          {/* Upgrade + Logout */}
-          <div style={{ padding: '12px 8px', borderTop: '1px solid #27272A', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {plan === 'free' && (
-              <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <Zap size={14} color="#F59E0B" />
-                  <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 13 }}>Upgrade to Pro</span>
-                </div>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>Unlock unlimited hidden comments and Telegram alerts.</p>
-                <Link href="/pricing">
-                  <button className="upgrade-btn">Upgrade — ₹349/mo</button>
-                </Link>
+          {/* Protection status */}
+          <div className="db-protection">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <CheckCircle size={13} color="#22c55e" />
+                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600 }}>Protection</span>
               </div>
-            )}
-            <button onClick={handleLogout} className="logout-btn">
-              <LogOut size={16} /> Logout
+              <span style={{ color: '#4ade80', fontSize: 11, fontWeight: 700 }}>Active</span>
+            </div>
+            <div className="db-protection-bar">
+              <div className="db-protection-fill" />
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5 }}>86% coverage · 1.2k rules</div>
+          </div>
+
+          {/* Upgrade — free plan only */}
+          {plan === 'free' && (
+            <div className="db-upgrade">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <Zap size={12} color="#F59E0B" />
+                <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 12 }}>Upgrade to Pro</span>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, lineHeight: 1.55, marginBottom: 10 }}>
+                Unlock unlimited hidden comments and Telegram alerts.
+              </p>
+              <Link href="/billing" className="db-btn-upgrade">Upgrade — ₹349/mo</Link>
+            </div>
+          )}
+
+          {/* Bottom */}
+          <div className="db-sidebar-bottom">
+            <button onClick={handleLogout} className="db-btn-logout">
+              <LogOut size={15} /> Logout
             </button>
           </div>
         </aside>
 
-        {/* MAIN */}
-        <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* ── MAIN ── */}
+        <div className="db-main">
 
-          {/* HEADER */}
-          <header className="header-padding" style={{ background: 'rgba(9,9,11,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid #27272A', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <h1 style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 18, margin: 0 }}>Overview</h1>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: youtubeConnected ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: youtubeConnected ? '#4ade80' : '#fb923c' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: youtubeConnected ? '#22c55e' : '#f97316', display: 'inline-block', animation: 'pulse 2s infinite' }}></span>
-                  {youtubeConnected ? 'Live' : 'Offline'}
-                </span>
-              </div>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, margin: 0 }}>
-                Welcome back, {firstName} 👋 — {youtubeConnected ? 'Your channel is protected' : 'Connect YouTube to start'}
-              </p>
+          {/* TOPBAR */}
+          <header className="db-topbar">
+            {/* Search */}
+            <div style={{ position: 'relative', flex: 1, maxWidth: 460 }} className="db-topbar-search">
+              <Search size={13} color="rgba(255,255,255,0.25)" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+              <input className="db-search" placeholder="Search comments, videos, users…" />
+              <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 5, padding: '2px 6px', fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>⌘K</span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {/* Search — desktop only */}
-              <div className="desktop-search" style={{ position: 'relative' }}>
-                <Search size={14} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-                <input className="search-input" placeholder="Search comments, users..." />
+            {/* Status */}
+            <div className="db-status-pill db-topbar-status">
+              <div className="db-status-dot" />
+              All systems operational
+            </div>
+
+            <div style={{ flex: 1 }} />
+
+            {/* Connect YouTube */}
+            {!youtubeConnected && (
+              <button onClick={handleYouTubeConnect} className="db-yt-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                Connect YouTube
+              </button>
+            )}
+
+            {/* Bell */}
+            <button className="db-icon-btn">
+              <Bell size={15} color="rgba(255,255,255,0.55)" />
+              <span style={{ position: 'absolute', top: 7, right: 7, width: 6, height: 6, background: '#F59E0B', borderRadius: '50%', border: '1.5px solid #08080A' }} />
+            </button>
+
+            {/* Avatar */}
+            <div className="db-avatar" onClick={() => router.push('/settings')} style={{ cursor: 'pointer' }}>
+              {user?.photoURL
+                ? <img src={user.photoURL} className="db-avatar-img" style={{ width: 28, height: 28, borderRadius: '50%' }} alt="avatar" />
+                : <div className="db-avatar-fallback" style={{ borderRadius: '50%' }}>{initials}</div>
+              }
+              <div>
+                <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5, lineHeight: 1.2 }}>{firstName}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10.5, lineHeight: 1.2 }}>{planLabel} plan</div>
               </div>
-
-              {/* Bell */}
-              <button style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #27272A', borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
-                <Bell size={16} color="rgba(255,255,255,0.6)" />
-                <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, background: '#F59E0B', borderRadius: '50%' }}></span>
-              </button>
-
-              {/* Connect YouTube — desktop only */}
-              {!youtubeConnected && (
-                <button onClick={handleYouTubeConnect} className="connect-btn desktop-search">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                  </svg>
-                  Connect YouTube
-                </button>
-              )}
-
-              {/* Avatar — desktop only */}
-              <button className="avatar-btn desktop-avatar" onClick={() => router.push('/settings')}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid #27272A', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
-                  {user?.photoURL ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={user.photoURL} style={{ width: 32, height: 32, borderRadius: '50%' }} alt="avatar" />
-                  ) : (
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13 }}>
-                      {firstName.charAt(0)}
-                    </div>
-                  )}
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>{firstName}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, textTransform: 'capitalize', lineHeight: 1.2 }}>{plan} plan</div>
-                  </div>
-                </div>
-              </button>
+              <span style={{ background: plan === 'free' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)', color: plan === 'free' ? '#F59E0B' : '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 5, letterSpacing: '0.04em', marginLeft: 2 }}>
+                {plan === 'free' ? 'FREE' : plan.toUpperCase()}
+              </span>
             </div>
           </header>
 
           {/* CONTENT */}
-          <div className="content-padding" style={{ padding: '28px 32px', flex: 1 }}>
+          <div className="db-content">
+
+            {/* Page heading */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase' }}>Live · Protected</span>
+              </div>
+              <h1 className="db-page-title">Overview</h1>
+              <p className="db-page-sub">Your AI moderator is active. Here's what's happening across your channels right now.</p>
+
+              <div className="db-status-row">
+                {[
+                  { label: 'Online', dot: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.18)', color: 'rgba(255,255,255,0.65)' },
+                  { label: 'Scanning', dot: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.18)', color: 'rgba(255,255,255,0.65)' },
+                  { label: 'Protected', dot: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.18)', color: 'rgba(255,255,255,0.65)' },
+                ].map(b => (
+                  <div key={b.label} className="db-badge" style={{ background: b.bg, border: `1px solid ${b.border}`, color: b.color }}>
+                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: b.dot }} />
+                    {b.label}
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Connect Banner */}
             {!youtubeConnected && (
-              <div className="connect-banner" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 44, height: 44, background: 'rgba(245,158,11,0.15)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B">
+              <div className="db-connect-banner">
+                <div className="db-connect-preview">
+                  <div className="db-yt-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                     </svg>
                   </div>
-                  <div>
-                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Connect your YouTube channel</div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 2 }}>Currently viewing demo data. Connect to start real-time moderation.</div>
+                  <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11.5 }}>Awaiting connection · OAuth 2.0</span>
+                </div>
+
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F59E0B', animation: 'pulse 2s infinite' }} />
+                    <span style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Ready to Connect</span>
+                  </div>
+                  <h2 style={{ color: '#FAFAFA', fontSize: 22, fontWeight: 900, letterSpacing: '-0.025em', marginBottom: 10, lineHeight: 1.2 }}>
+                    Connect your <span style={{ color: '#F59E0B' }}>YouTube channel</span>
+                  </h2>
+                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13.5, lineHeight: 1.65, marginBottom: 16, maxWidth: 500 }}>
+                    Grant secure OAuth access and ModerateAI starts protecting your community in seconds — hiding toxic comments, replying to fans, and surfacing insights in real time.
+                  </p>
+                  <div className="db-feat-pills">
+                    {[
+                      { icon: Shield, label: 'Connect securely' },
+                      { icon: Activity, label: 'Realtime moderation' },
+                      { icon: BarChart3, label: 'Instant analytics' },
+                      { icon: MessageSquare, label: 'Auto replies' },
+                    ].map(f => (
+                      <div key={f.label} className="db-feat-pill">
+                        <f.icon size={11} color="rgba(255,255,255,0.45)" /> {f.label}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="db-connect-actions">
+                    <button onClick={handleYouTubeConnect} className="db-btn-primary">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                      Connect YouTube ↗
+                    </button>
+                    <button className="db-btn-ghost">View demo dashboard</button>
+                    <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11.5, marginLeft: 4 }}>Uses read-only + moderation scopes. Revoke anytime.</span>
                   </div>
                 </div>
-                <button onClick={handleYouTubeConnect} className="connect-btn connect-banner-btn">
-                  Connect now <ChevronRight size={16} />
-                </button>
               </div>
             )}
 
             {/* STAT CARDS */}
-            <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
-              {[
-                { icon: Eye, label: 'Comments Scanned', value: commentsUsed.toLocaleString(), iconColor: '#F59E0B', iconBg: 'rgba(245,158,11,0.15)' },
-                { icon: Trash2, label: 'Hidden', value: '0', iconColor: '#f87171', iconBg: 'rgba(239,68,68,0.15)' },
-                { icon: MessageSquare, label: 'Auto-Replies', value: '0', iconColor: '#60a5fa', iconBg: 'rgba(59,130,246,0.15)' },
-                { icon: Shield, label: 'Protection Status', value: youtubeConnected ? 'Active' : 'Inactive', iconColor: youtubeConnected ? '#4ade80' : '#fb923c', iconBg: youtubeConnected ? 'rgba(34,197,94,0.15)' : 'rgba(249,115,22,0.15)' },
-              ].map((s) => (
-                <div key={s.label} className="stat-card">
-                  <div style={{ width: 36, height: 36, background: s.iconBg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                    <s.icon size={18} color={s.iconColor} />
+            <div className="db-stats">
+              {statCards.map((s) => (
+                <div key={s.label} className="db-stat">
+                  <div className="db-stat-top">
+                    <span className="db-stat-label">{s.label}</span>
+                    <span className="db-stat-trend" style={{
+                      background: s.up ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                      color: s.up ? '#4ade80' : '#f87171'
+                    }}>
+                      {s.up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                      {s.trend}
+                    </span>
                   </div>
-                  <div style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 6 }}>{s.label}</div>
+                  <div className="db-stat-bottom">
+                    <div className="db-stat-value">{s.value}</div>
+                    <Sparkline color={s.color} up={s.up} />
+                  </div>
                 </div>
               ))}
             </div>
 
             {/* BOTTOM GRID */}
-            <div className="bottom-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 16 }}>
+            <div className="db-bottom">
 
               {/* Monthly Usage */}
-              <div className="glass-card" style={{ padding: 24 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div className="db-card">
+                <div className="db-card-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div>
-                    <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, margin: 0 }}>Monthly Usage</h2>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 3 }}>
-                      {plan} plan · resets in 12 days
-                    </p>
+                    <div className="db-card-title">Monthly Usage</div>
+                    <div className="db-card-sub">Comment scan quota</div>
                   </div>
-                  <span style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, textTransform: 'uppercase' }}>{plan}</span>
+                  <div className="db-plan-badge">
+                    <Zap size={9} /> {planLabel}
+                  </div>
                 </div>
-                <div style={{ marginBottom: 8 }}>
-                  <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{commentsUsed.toLocaleString()}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15 }}> / {commentsLimit.toLocaleString()} comments</span>
+                <div className="db-card-body">
+                  <div className="db-usage-nums">
+                    <span className="db-usage-big">{commentsUsed.toLocaleString()}</span>
+                    <span className="db-usage-of"> / {commentsLimit.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'rgba(255,255,255,0.35)', marginBottom: 6 }}>
+                    <span>Used</span>
+                    <span>Quota</span>
+                  </div>
+                  <div className="db-usage-bar">
+                    <div className="db-usage-fill" style={{ width: `${usagePercent}%` }} />
+                  </div>
+                  <div className="db-usage-row">
+                    <span>{usagePercent.toFixed(0)}% used</span>
+                    <span>{(commentsLimit - commentsUsed).toLocaleString()} remaining</span>
+                  </div>
+                  {plan === 'free' && (
+                    <Link href="/billing" className="db-btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}>
+                      <Zap size={13} /> Upgrade plan
+                    </Link>
+                  )}
                 </div>
-                <div style={{ height: 8, background: 'rgba(255,255,255,0.08)', borderRadius: 8, overflow: 'hidden', marginBottom: 8 }}>
-                  <div style={{ height: '100%', width: `${usagePercent}%`, background: 'linear-gradient(90deg,#F59E0B,#7C3AED)', borderRadius: 8, transition: 'width 0.5s ease' }}></div>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>
-                  <span>{usagePercent.toFixed(0)}% used</span>
-                  <span>{(commentsLimit - commentsUsed).toLocaleString()} left</span>
-                </div>
-                {plan === 'free' && (
-                  <Link href="/pricing">
-                    <button className="upgrade-btn">Upgrade to Pro — ₹349/mo</button>
-                  </Link>
-                )}
               </div>
 
               {/* Recent Activity */}
-              <div className="glass-card" style={{ overflow: 'hidden' }}>
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #27272A' }}>
-                  <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, margin: 0 }}>Recent Activity</h2>
-                  <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Live moderation events</p>
+              <div className="db-card">
+                <div className="db-card-header">
+                  <div className="db-card-title">Live Moderation Feed</div>
+                  <div className="db-card-sub">Real-time moderation events</div>
                 </div>
-                <div style={{ padding: '40px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                  <Shield size={36} color="rgba(255,255,255,0.1)" />
-                  <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, margin: 0, textAlign: 'center' }}>
-                    {youtubeConnected ? 'No activity yet' : 'Connect YouTube to see real-time activity'}
+                <div className="db-activity-empty">
+                  <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Radio size={22} color="rgba(255,255,255,0.15)" />
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 13.5, textAlign: 'center', lineHeight: 1.55 }}>
+                    {youtubeConnected
+                      ? 'No activity yet. Comments will appear here in real time.'
+                      : 'Connect YouTube to see live moderation events here.'}
                   </p>
                   {!youtubeConnected && (
-                    <button onClick={handleYouTubeConnect} className="connect-btn" style={{ marginTop: 4 }}>
+                    <button onClick={handleYouTubeConnect} className="db-btn-primary" style={{ marginTop: 4 }}>
                       Connect YouTube →
                     </button>
                   )}
                 </div>
               </div>
+
+              {/* System Health */}
+              <div className="db-card">
+                <div className="db-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div className="db-card-title">System Health</div>
+                    <div className="db-card-sub">Live infra status</div>
+                  </div>
+                  <div className="db-health-badge">
+                    <div className="db-health-dot" style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                    Healthy
+                  </div>
+                </div>
+                <div className="db-card-body" style={{ paddingTop: 6 }}>
+                  <HealthRow icon={Wifi} label="API Status" sub="Operational" value="38ms" color="#34d399" dot="green" />
+                  <HealthRow icon={Zap} label="Webhook Delivery" sub="100% · 2m" value="Live" color="#60a5fa" dot="green" />
+                  <HealthRow icon={() => (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#f87171">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                  )} label="Channel" sub="@moderateai · demo" color="#f87171" dot="amber" />
+                  <HealthRow icon={Cpu} label="AI Model" sub="gpt-mod-v4" value="p95 210ms" color="#a78bfa" dot="green" />
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
 
-        {/* BOTTOM NAV — mobile only */}
-        <nav className="bottom-nav">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className={`bottom-nav-item${item.active ? ' active' : ''}`}>
-              <item.icon size={20} />
+        {/* BOTTOM NAV — mobile */}
+        <nav className="db-bottom-nav">
+          {navItems.slice(0, 5).map(item => (
+            <Link key={item.href} href={item.href} className={`db-bnav-item${item.active ? ' active' : ''}`}>
+              <item.icon size={19} />
               <span>{item.label}</span>
             </Link>
           ))}
-          <button className="bottom-nav-item" onClick={handleLogout}>
-            <LogOut size={20} />
+          <button className="db-bnav-item" onClick={handleLogout}>
+            <LogOut size={19} />
             <span>Logout</span>
           </button>
         </nav>
 
-      </main>
+      </div>
     </>
   );
 }

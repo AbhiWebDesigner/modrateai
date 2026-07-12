@@ -347,25 +347,41 @@ export default function Dashboard() {
         .db-btn-logout { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 9px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.35); background: none; border: none; cursor: pointer; width: 100%; transition: all 0.2s; }
         .db-btn-logout:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.65); }
 
-        /* ── BOTTOM NAV (mobile) ── */
-        .db-bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: rgba(8,8,10,0.96); border-top: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(20px); padding: 8px 0 env(safe-area-inset-bottom, 8px); }
-        .db-bnav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; padding: 6px 4px; text-decoration: none; color: rgba(255,255,255,0.35); font-size: 9.5px; font-weight: 500; border: none; background: none; cursor: pointer; }
+        /* ── BOTTOM NAV (mobile only) ── */
+        .db-bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; background: rgba(8,8,10,0.96); border-top: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(20px); padding: 10px 0 env(safe-area-inset-bottom, 10px); }
+        .db-bnav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 6px 4px; text-decoration: none; color: rgba(255,255,255,0.35); border: none; background: none; cursor: pointer; transition: color 0.18s; }
         .db-bnav-item.active { color: #F59E0B; }
+        .db-bnav-item:hover { color: rgba(255,255,255,0.7); }
+        /* active icon gets subtle amber glow bg pill */
+        .db-bnav-item.active .db-bnav-icon { background: rgba(245,158,11,0.12); border-radius: 10px; }
+        .db-bnav-icon { width: 40px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 10px; transition: background 0.18s; }
+        /* hide labels on mobile — icons only */
+        .db-bnav-label { display: none; }
 
         /* ── RESPONSIVE ── */
-        @media (max-width: 1023px) {
+        /* Phone: ≤ 767px — bottom nav, no sidebar */
+        @media (max-width: 767px) {
           .db-sidebar { display: none; }
-          .db-main { margin-left: 0; padding-bottom: 72px; }
+          .db-main { margin-left: 0; padding-bottom: 68px; }
           .db-bottom-nav { display: flex; }
-          .db-stats { grid-template-columns: repeat(2,1fr); }
+          .db-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
           .db-bottom { grid-template-columns: 1fr; }
-          .db-content { padding: 16px; }
-          .db-topbar { padding: 0 16px; }
+          .db-content { padding: 14px; }
+          .db-topbar { padding: 0 14px; }
           .db-topbar-search { display: none !important; }
           .db-topbar-status { display: none !important; }
         }
-        @media (max-width: 640px) {
-          .db-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+        /* Tablet: 768px–1023px — sidebar visible, no bottom nav */
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .db-bottom-nav { display: none; }
+          .db-stats { grid-template-columns: repeat(2, 1fr); }
+          .db-bottom { grid-template-columns: 1fr 1fr; }
+          .db-content { padding: 20px; }
+          .db-topbar { padding: 0 20px; }
+        }
+        /* Desktop/Laptop: ≥ 1024px — full sidebar, 4-col stats, 3-col bottom */
+        @media (min-width: 1024px) {
+          .db-bottom-nav { display: none; }
         }
       `}</style>
 
@@ -584,17 +600,21 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* BOTTOM NAV — mobile */}
+        {/* BOTTOM NAV — phone only, icons only */}
         <nav className="db-bottom-nav">
           {navItems.slice(0, 5).map(item => (
-            <Link key={item.href} href={item.href} className={`db-bnav-item${item.active ? ' active' : ''}`}>
-              <item.icon size={19} />
-              <span>{item.label}</span>
+            <Link key={item.href} href={item.href} className={`db-bnav-item${item.active ? ' active' : ''}`} title={item.label}>
+              <span className="db-bnav-icon">
+                <item.icon size={20} />
+              </span>
+              <span className="db-bnav-label">{item.label}</span>
             </Link>
           ))}
-          <button className="db-bnav-item" onClick={handleLogout}>
-            <LogOut size={19} />
-            <span>Logout</span>
+          <button className="db-bnav-item" onClick={handleLogout} title="Logout">
+            <span className="db-bnav-icon">
+              <LogOut size={20} />
+            </span>
+            <span className="db-bnav-label">Logout</span>
           </button>
         </nav>
 

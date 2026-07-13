@@ -11,6 +11,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
+/* ── SPARKLINE ── */
 function Sparkline({ color, up = true, width = 80, height = 36 }: { color: string; up?: boolean; width?: number; height?: number }) {
   const points = up
     ? [28, 22, 32, 24, 36, 28, 42, 34, 48, 38, 56, 44, 62]
@@ -36,6 +37,7 @@ function Sparkline({ color, up = true, width = 80, height = 36 }: { color: strin
   );
 }
 
+/* ── CIRCULAR PROGRESS (Monthly Usage) ── */
 function CircularProgress({ pct }: { pct: number }) {
   const r = 44, circ = 2 * Math.PI * r;
   const filled = (Math.min(pct, 100) / 100) * circ;
@@ -58,7 +60,8 @@ function CircularProgress({ pct }: { pct: number }) {
   );
 }
 
-function AccuracyRing({ accuracy }: { accuracy: number | null }) {
+/* ── SEMICIRCLE GAUGE (Moderation Accuracy) ── */
+function SemicircleGauge({ accuracy }: { accuracy: number | null }) {
   if (accuracy === null) {
     return (
       <div style={{ padding: '32px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -71,39 +74,116 @@ function AccuracyRing({ accuracy }: { accuracy: number | null }) {
       </div>
     );
   }
-  const r = 60, circ = 2 * Math.PI * r, pct = accuracy;
+
+  const pct = Math.min(100, Math.max(0, accuracy));
   const color = pct >= 90 ? '#34d399' : pct >= 70 ? '#F59E0B' : '#f87171';
-  const label = pct >= 90 ? 'Excellent' : pct >= 70 ? 'Good' : 'Needs review';
-  const filled = (pct / 100) * circ;
+  const label = pct >= 90 ? 'Excellent' : pct >= 70 ? 'Good' : 'Needs Review';
+
+  // Semicircle math — 180° arc
+  const W = 200, H = 110, cx = W / 2, cy = H - 10;
+  const R = 80;
+  // Arc from 180° to 0° (left to right), percentage fills left→right
+  const startAngle = Math.PI; // 180deg
+  const endAngle = 0;         // 0deg
+  const totalAngle = Math.PI; // 180deg sweep
+
+  const angleForPct = startAngle - (pct / 100) * totalAngle;
+
+  const polarToCart = (angle: number, r: number) => ({
+    x: cx + r * Math.cos(angle),
+    y: cy + r * Math.sin(angle),
+  });
+
+  // Track arc (full semicircle)
+  const trackStart = polarToCart(startAngle, R);
+  const trackEnd  = polarToCart(endAngle, R);
+  const trackD = `M ${trackStart.x} ${trackStart.y} A ${R} ${R} 0 0 1 ${trackEnd.x} ${trackEnd.y}`;
+
+  // Fill arc (0% → pct)
+  const fillEnd = polarToCart(angleForPct, R);
+  const largeArc = pct > 50 ? 1 : 0;
+  const fillD = pct === 0
+    ? ''
+    : pct === 100
+      ? `M ${trackStart.x} ${trackStart.y} A ${R} ${R} 0 1 1 ${trackEnd.x} ${trackEnd.y}`
+      : `M ${trackStart.x} ${trackStart.y} A ${R} ${R} 0 ${largeArc} 1 ${fillEnd.x} ${fillEnd.y}`;
+
+  // Gradient stops for multi-color (red→yellow→green)
+  const gradId = `semi-grad-${Math.round(pct)}`;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '20px' }}>
-      <div style={{ position: 'relative', width: 148, height: 148 }}>
-        <svg width={148} height={148} viewBox="0 0 148 148" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx={74} cy={74} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={11} />
-          <circle cx={74} cy={74} r={r} fill="none" stroke={color} strokeWidth={11}
-            strokeDasharray={`${filled} ${circ - filled}`} strokeLinecap="round"
-            style={{ filter: `drop-shadow(0 0 8px ${color}77)`, transition: 'stroke-dasharray 0.8s ease' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 20px 16px' }}>
+      {/* Gauge */}
+      <div style={{ position: 'relative', width: W, height: H + 20 }}>
+        <svg width={W} height={H + 20} viewBox={`0 0 ${W} ${H + 20}`}>
+          <defs>
+            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stopColor="#f87171" />
+              <stop offset="50%"  stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+          </defs>
+
+          {/* Tick marks */}
+          {[0, 25, 50, 75, 100].map(t => {
+            const a = startAngle - (t / 100) * totalAngle;
+            const inner = polarToCart(a, R - 10);
+            const outer = polarToCart(a, R + 4);
+            return (
+              <line key={t} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
+                stroke="rgba(255,255,255,0.12)" strokeWidth={1.5} strokeLinecap="round" />
+            );
+          })}
+
+          {/* Track */}
+          <path d={trackD} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={12} strokeLinecap="round" />
+
+          {/* Fill */}
+          {fillD && (
+            <path d={fillD} fill="none" stroke={`url(#${gradId})`} strokeWidth={12} strokeLinecap="round"
+              style={{ filter: `drop-shadow(0 0 6px ${color}66)`, transition: 'all 0.8s cubic-bezier(.4,0,.2,1)' }} />
+          )}
+
+          {/* Needle dot at fill end */}
+          {pct > 0 && pct < 100 && (
+            <circle cx={fillEnd.x} cy={fillEnd.y} r={5} fill={color}
+              style={{ filter: `drop-shadow(0 0 5px ${color})` }} />
+          )}
+
+          {/* Center value */}
+          <text x={cx} y={cy - 6} textAnchor="middle" fill="#FAFAFA"
+            style={{ fontSize: 28, fontWeight: 900, fontFamily: 'Inter, sans-serif', letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}>
+            {pct.toFixed(1)}%
+          </text>
+          <text x={cx} y={cy + 14} textAnchor="middle" fill={color}
+            style={{ fontSize: 10, fontWeight: 700, fontFamily: 'Inter, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            CONFIDENCE
+          </text>
+
+          {/* Min/Max labels */}
+          <text x={14} y={H + 18} fill="rgba(255,255,255,0.25)" style={{ fontSize: 10, fontFamily: 'Inter, sans-serif' }}>0%</text>
+          <text x={W - 28} y={H + 18} fill="rgba(255,255,255,0.25)" style={{ fontSize: 10, fontFamily: 'Inter, sans-serif' }}>100%</text>
         </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ color: '#FAFAFA', fontSize: 30, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-            {pct}<span style={{ fontSize: 18, color: 'rgba(255,255,255,0.45)' }}>%</span>
-          </span>
-          <span style={{ color, fontSize: 11, fontWeight: 700, marginTop: 3, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{label}</span>
-        </div>
       </div>
-      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        {[{ label: 'True Positive', value: `${pct}%`, color: '#34d399' }, { label: 'False Positive', value: `${(100 - pct).toFixed(1)}%`, color: '#f87171' }].map(s => (
+
+      {/* Stats row */}
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
+        {[
+          { label: 'True Positive',  value: `${pct.toFixed(1)}%`,           color: '#34d399' },
+          { label: 'False Positive', value: `${(100 - pct).toFixed(1)}%`,   color: '#f87171' },
+        ].map(s => (
           <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
             <div style={{ color: s.color, fontSize: 17, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 10.5, marginTop: 2 }}>{s.label}</div>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5, marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
       </div>
-      <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 11 }}>Rolling 24h · updated in real time</div>
+      <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, marginTop: 10 }}>Rolling 24h · updated in real time</div>
     </div>
   );
 }
 
+/* ── MONTHLY USAGE CARD ── */
 function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit, trialDaysLeft, onConnectYouTube }:
   { plan: string; youtubeConnected: boolean; commentsUsed: number; commentsLimit: number; trialDaysLeft: number | null; onConnectYouTube: () => void }) {
   const usagePct = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
@@ -199,6 +279,7 @@ function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit,
   );
 }
 
+/* ── HEALTH ROW ── */
 function HealthRow({ icon: Icon, label, sub, value, color = '#34d399', dot = 'green' }:
   { icon: any; label: string; sub: string; value?: string; color?: string; dot?: 'green' | 'amber' | 'red' }) {
   const dotColor = { green: '#22c55e', amber: '#F59E0B', red: '#f87171' }[dot];
@@ -229,7 +310,6 @@ function YTIcon({ color = '#f87171', size = 14 }: { color?: string; size?: numbe
   );
 }
 
-/* Bottom nav — 5 icons only (no labels, no logout) */
 const BOTTOM_NAV = [
   { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
   { label: 'Analytics',  icon: BarChart2,        href: '/analytics'  },
@@ -238,7 +318,6 @@ const BOTTOM_NAV = [
   { label: 'Settings',   icon: Settings,         href: '/settings'   },
 ];
 
-/* Sidebar nav — full list */
 const SIDEBAR_NAV = [
   { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
   { label: 'Analytics',  icon: BarChart2,        href: '/analytics'  },
@@ -248,6 +327,9 @@ const SIDEBAR_NAV = [
   { label: 'Billing',    icon: CreditCard,       href: '/billing'    },
 ];
 
+/* ══════════════════════════════════════
+   MAIN DASHBOARD
+══════════════════════════════════════ */
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -284,6 +366,7 @@ export default function Dashboard() {
     </div>
   );
 
+  /* ── FIRESTORE DATA ── */
   const plan             = (userData?.plan as string) || 'free';
   const commentsScanned  = (userData?.comments_scanned as number) ?? (userData?.comments_used as number) ?? null;
   const hiddenComments   = (userData?.hidden_comments  as number) ?? null;
@@ -362,7 +445,7 @@ export default function Dashboard() {
           background-image:linear-gradient(rgba(255,255,255,0.014) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.014) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        /* ── SIDEBAR ── */
+        /* SIDEBAR */
         .r-sidebar{width:228px;min-width:228px;background:rgba(10,10,15,0.92);backdrop-filter:blur(32px);
           border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
@@ -392,10 +475,10 @@ export default function Dashboard() {
         .r-upgrade{margin:0 10px 10px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.13);border-radius:14px;padding:15px;}
         .r-sidebar-bottom{padding:8px 10px 22px;border-top:1px solid rgba(255,255,255,0.045);display:flex;flex-direction:column;gap:4px;}
 
-        /* ── MAIN ── */
+        /* MAIN */
         .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
 
-        /* ── TOPBAR ── */
+        /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.88);backdrop-filter:blur(28px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 28px;height:60px;
           display:flex;align-items:center;gap:14px;
@@ -419,10 +502,10 @@ export default function Dashboard() {
           border-radius:11px;padding:4px 11px 4px 4px;cursor:pointer;transition:all 0.2s;}
         .r-avatar:hover{border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);}
 
-        /* ── CONTENT ── */
+        /* CONTENT */
         .r-content{padding:28px;flex:1;animation:fadeIn 0.35s ease;}
 
-        /* ── STAT CARDS ── */
+        /* STAT CARDS */
         .r-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
         .r-stat{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:20px 22px;
           transition:all 0.22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;backdrop-filter:blur(16px);position:relative;overflow:hidden;}
@@ -442,7 +525,7 @@ export default function Dashboard() {
         .r-stat-zero{font-size:34px;font-weight:900;color:rgba(255,255,255,0.4);letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
         .r-stat-empty{font-size:34px;font-weight:900;color:rgba(255,255,255,0.14);letter-spacing:-0.05em;line-height:1;}
 
-        /* ── CARDS ── */
+        /* CARDS */
         .ref-card{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:18px;backdrop-filter:blur(16px);
           transition:border-color 0.2s;display:flex;flex-direction:column;overflow:hidden;}
         .ref-card:hover{border-color:rgba(255,255,255,0.11);}
@@ -457,7 +540,7 @@ export default function Dashboard() {
           background:rgba(34,197,94,0.09);border:1px solid rgba(34,197,94,0.18);border-radius:7px;padding:3px 9px;white-space:nowrap;}
         .r-bottom{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:12px;}
 
-        /* ── BUTTONS ── */
+        /* BUTTONS */
         .ref-btn-primary{background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#08080A;font-weight:700;font-size:13px;
           padding:10px 18px;border-radius:10px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
           transition:all 0.2s;text-decoration:none;white-space:nowrap;box-shadow:0 2px 12px rgba(245,158,11,0.28);}
@@ -474,36 +557,19 @@ export default function Dashboard() {
           color:rgba(255,255,255,0.3);background:none;border:none;cursor:pointer;width:100%;transition:all 0.18s;}
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
-        /* ── BOTTOM NAV — phone only (≤767px) ── */
-        .r-bottom-nav{
-          display:none;
-          position:fixed;bottom:0;left:0;right:0;z-index:50;
-          background:rgba(10,10,15,0.97);
-          border-top:1px solid rgba(255,255,255,0.07);
-          backdrop-filter:blur(24px);
-          padding:8px 4px env(safe-area-inset-bottom,8px);
-        }
-        /* icon-only tap targets */
-        .r-bnav-item{
-          display:flex;flex-direction:column;align-items:center;justify-content:center;
-          flex:1;padding:6px 4px;text-decoration:none;
-          color:rgba(255,255,255,0.38);
-          border:none;background:none;cursor:pointer;
-          transition:color 0.18s;
-          -webkit-tap-highlight-color:transparent;
-        }
+        /* BOTTOM NAV — phone only */
+        .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
+          background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(24px);
+          padding:8px 4px env(safe-area-inset-bottom,8px);}
+        .r-bnav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;
+          flex:1;padding:6px 4px;text-decoration:none;color:rgba(255,255,255,0.38);
+          border:none;background:none;cursor:pointer;transition:color 0.18s;-webkit-tap-highlight-color:transparent;}
         .r-bnav-item.active{color:#F59E0B;}
         .r-bnav-item:hover{color:rgba(255,255,255,0.75);}
-        .r-bnav-icon{
-          width:40px;height:32px;
-          display:flex;align-items:center;justify-content:center;
-          border-radius:10px;transition:background 0.18s;
-        }
+        .r-bnav-icon{width:40px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background 0.18s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(245,158,11,0.12);}
 
-        /* ── RESPONSIVE ── */
-
-        /* Phone ≤767px — bottom nav, no sidebar */
+        /* RESPONSIVE */
         @media(max-width:767px){
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}
@@ -515,8 +581,6 @@ export default function Dashboard() {
           .r-topbar-search,.r-topbar-status{display:none!important;}
           .r-stat-value,.r-stat-zero{font-size:28px;}
         }
-
-        /* Tablet 768px–1023px — sidebar visible, no bottom nav */
         @media(min-width:768px) and (max-width:1023px){
           .r-bottom-nav{display:none!important;}
           .r-stats{grid-template-columns:1fr 1fr;}
@@ -524,16 +588,12 @@ export default function Dashboard() {
           .r-content{padding:20px;}
           .r-topbar{padding:0 20px;}
         }
-
-        /* Desktop ≥1024px — full layout */
-        @media(min-width:1024px){
-          .r-bottom-nav{display:none!important;}
-        }
+        @media(min-width:1024px){.r-bottom-nav{display:none!important;}}
       `}</style>
 
       <div className="r-bg" style={{ display: 'flex' }}>
 
-        {/* ── SIDEBAR ── */}
+        {/* SIDEBAR */}
         <aside className="r-sidebar">
           <div className="r-logo">
             <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
@@ -544,7 +604,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
           <nav className="r-nav">
             {SIDEBAR_NAV.map(item => {
               const isActive = currentPath === item.href;
@@ -557,7 +616,6 @@ export default function Dashboard() {
               );
             })}
           </nav>
-
           {plan === 'free' && (
             <div className="r-upgrade">
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
@@ -568,7 +626,6 @@ export default function Dashboard() {
               <Link href="/billing" className="r-btn-upgrade">Upgrade to Pro</Link>
             </div>
           )}
-
           <div className="r-sidebar-bottom">
             <button onClick={handleLogout} className="r-btn-logout">
               <LogOut size={14} strokeWidth={1.8} /> Logout
@@ -576,7 +633,7 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* ── MAIN ── */}
+        {/* MAIN */}
         <div className="r-main">
           <header className="r-topbar">
             <div style={{ position: 'relative', flex: 1, maxWidth: 460 }} className="r-topbar-search">
@@ -614,7 +671,7 @@ export default function Dashboard() {
           </header>
 
           <div className="r-content">
-            {/* Header */}
+            {/* Page header */}
             <div style={{ marginBottom: 26 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.6)', animation: 'pulse 2s infinite' }} />
@@ -664,13 +721,18 @@ export default function Dashboard() {
               <MonthlyUsageCard plan={plan} youtubeConnected={youtubeConnected} commentsUsed={commentsUsed}
                 commentsLimit={commentsLimit} trialDaysLeft={trialDaysLeft} onConnectYouTube={handleYouTubeConnect} />
 
+              {/* Moderation Accuracy — SEMICIRCLE GAUGE */}
               <div className="ref-card">
                 <div className="ref-card-top">
-                  <div><div className="ref-card-title">Moderation Accuracy</div><div className="ref-card-sub">AI confidence · rolling 24h</div></div>
+                  <div>
+                    <div className="ref-card-title">Moderation Accuracy</div>
+                    <div className="ref-card-sub">AI confidence · rolling 24h</div>
+                  </div>
                 </div>
-                <AccuracyRing accuracy={moderationAcc} />
+                <SemicircleGauge accuracy={moderationAcc} />
               </div>
 
+              {/* System Health */}
               <div className="ref-card">
                 <div className="ref-card-top" style={{ alignItems: 'center' }}>
                   <div><div className="ref-card-title">System Health</div><div className="ref-card-sub">Live infra status</div></div>
@@ -690,7 +752,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── BOTTOM NAV — phone only, icons only ── */}
+        {/* BOTTOM NAV — phone only, icons only */}
         <nav className="r-bottom-nav">
           {BOTTOM_NAV.map(item => {
             const isActive = currentPath === item.href;
@@ -702,15 +764,12 @@ export default function Dashboard() {
               </Link>
             );
           })}
-          {/* More button */}
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)} title="More">
-            <span className="r-bnav-icon">
-              <MoreHorizontal size={21} strokeWidth={1.7} />
-            </span>
+            <span className="r-bnav-icon"><MoreHorizontal size={21} strokeWidth={1.7} /></span>
           </button>
         </nav>
 
-        {/* ── MORE DRAWER ── */}
+        {/* MORE DRAWER */}
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }} />
@@ -722,8 +781,6 @@ export default function Dashboard() {
               animation: 'slideUp 0.2s ease'
             }}>
               <div style={{ width: 34, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
-
-              {/* User info */}
               <div style={{ padding: '0 12px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {user?.photoURL
@@ -736,8 +793,6 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-
-              {/* Extra links */}
               {[
                 { icon: CreditCard, label: 'Billing',  href: '/billing',  color: '#F59E0B' },
                 { icon: Layers,     label: 'Channels', href: '/channels', color: '#60a5fa' },
@@ -753,8 +808,6 @@ export default function Dashboard() {
                   {item.label}
                 </Link>
               ))}
-
-              {/* Logout */}
               <div style={{ margin: '8px 16px 0', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 14, width: '100%' }}>
@@ -767,7 +820,6 @@ export default function Dashboard() {
             </div>
           </>
         )}
-
       </div>
     </>
   );

@@ -789,12 +789,11 @@ export default function Dashboard() {
           .r-connect-right{border-radius:18px!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
-          .r-bottom-nav{display:none!important;}
-          .r-stats{grid-template-columns:1fr 1fr;}
+         .r-stats{grid-template-columns:1fr 1fr;}
           .r-bottom{grid-template-columns:1fr 1fr;}
           .r-content{padding:20px;}
           .r-topbar{padding:0 20px;}
-        }
+    }
         @media(min-width:1024px){.r-bottom-nav{display:none!important;}}
       `}</style>
 

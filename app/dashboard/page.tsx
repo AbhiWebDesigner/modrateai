@@ -263,7 +263,6 @@ function ConnectYouTubeBanner({ onConnect }: { onConnect: () => void }) {
       borderRadius: 20, overflow: 'hidden', marginBottom: 14,
       display: 'flex', gap: 0,
     }}>
-      {/* Left: visual — fixed narrow panel */}
       <div className="r-connect-left" style={{
         width: 160, flexShrink: 0,
         background: 'rgba(255,255,255,0.015)',
@@ -287,8 +286,6 @@ function ConnectYouTubeBanner({ onConnect }: { onConnect: () => void }) {
         </div>
         <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10, fontWeight: 500, textAlign: 'center', letterSpacing: '0.03em' }}>Awaiting connection · OAuth 2.0</div>
       </div>
-
-      {/* Right: content — takes all remaining space */}
       <div style={{ flex: 1, minWidth: 0, padding: '28px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
@@ -302,8 +299,6 @@ function ConnectYouTubeBanner({ onConnect }: { onConnect: () => void }) {
             Grant secure OAuth access and ModerateAI starts protecting your community in seconds — hiding toxic comments, replying to fans, and surfacing insights in real time.
           </p>
         </div>
-
-        {/* Feature pills */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
           {[
             { icon: Shield, label: 'Connect securely' },
@@ -321,8 +316,6 @@ function ConnectYouTubeBanner({ onConnect }: { onConnect: () => void }) {
             </div>
           ))}
         </div>
-
-        {/* Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <button onClick={onConnect} className="ref-btn-primary">
             <YTIcon color="#08080A" size={14} />
@@ -488,59 +481,194 @@ export default function Dashboard() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
         @keyframes indPulse{0%,100%{box-shadow:0 0 8px rgba(245,158,11,0.5)}50%{box-shadow:0 0 18px rgba(245,158,11,0.2)}}
+        @keyframes sidebarGlow{0%,100%{opacity:0.7}50%{opacity:1}}
         ::-webkit-scrollbar{width:3px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
 
         .r-bg{min-height:100vh;background:#0a0a0f;position:relative;}
         .r-bg::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-          background:radial-gradient(ellipse 55% 45% at -5% 0%,rgba(245,158,11,0.07) 0%,transparent 60%),
-                     radial-gradient(ellipse 50% 40% at 105% 100%,rgba(124,58,237,0.06) 0%,transparent 60%);}
+          background:
+            radial-gradient(ellipse 55% 45% at -5% 0%,rgba(245,158,11,0.07) 0%,transparent 60%),
+            radial-gradient(ellipse 50% 40% at 105% 100%,rgba(124,58,237,0.06) 0%,transparent 60%);}
         .r-bg::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
           background-image:linear-gradient(rgba(255,255,255,0.014) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.014) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        /* SIDEBAR */
-        .r-sidebar{width:228px;min-width:228px;background:rgba(10,10,15,0.92);backdrop-filter:blur(32px);
-          border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;
+        /* ═══════════════════════════════
+           SIDEBAR — PREMIUM UPGRADE
+        ═══════════════════════════════ */
+        .r-sidebar{
+          width:228px;min-width:228px;
+          background:linear-gradient(
+            180deg,
+            rgba(13,11,20,0.98) 0%,
+            rgba(11,10,18,0.99) 40%,
+            rgba(12,10,19,0.98) 100%
+          );
+          backdrop-filter:blur(40px) saturate(1.5);
+          border-right:1px solid rgba(245,158,11,0.09);
+          display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
-          box-shadow:inset -1px 0 0 rgba(255,255,255,0.02),4px 0 48px rgba(0,0,0,0.45);}
-        .r-sidebar::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2px;border-radius:0 2px 2px 0;
-          background:linear-gradient(180deg,transparent,rgba(245,158,11,0.6),rgba(245,158,11,0.95),rgba(245,158,11,0.6),transparent);
-          box-shadow:0 0 16px rgba(245,158,11,0.4),0 0 36px rgba(245,158,11,0.1);}
-        .r-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,0.05);}
-        .r-logo-mark{width:38px;height:38px;border-radius:12px;flex-shrink:0;
-          background:linear-gradient(135deg,#F59E0B 0%,#7C3AED 100%);
-          display:flex;align-items:center;justify-content:center;
-          box-shadow:0 2px 14px rgba(245,158,11,0.32),0 1px 4px rgba(0,0,0,0.4);}
-        .r-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
-        .r-nav-item{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:12px;
-          font-size:13.5px;font-weight:500;text-decoration:none;color:rgba(255,255,255,0.36);
-          transition:all 0.2s cubic-bezier(.4,0,.2,1);border:1px solid transparent;position:relative;overflow:hidden;}
-        .r-nav-item:hover{background:rgba(255,255,255,0.045);color:rgba(255,255,255,0.8);transform:translateX(2px);}
-        .r-nav-item.active{
-          background:linear-gradient(135deg,rgba(245,158,11,0.18) 0%,rgba(245,158,11,0.08) 100%);
-          color:#F5A623;
-          border-color:rgba(245,158,11,0.28);
-          font-weight:700;
-          box-shadow:0 0 18px rgba(245,158,11,0.12),inset 0 1px 0 rgba(245,158,11,0.15);
+          box-shadow:
+            inset -1px 0 0 rgba(245,158,11,0.05),
+            inset 1px 0 32px rgba(245,158,11,0.015),
+            4px 0 80px rgba(0,0,0,0.7),
+            12px 0 60px rgba(245,158,11,0.028),
+            24px 0 120px rgba(245,158,11,0.012);
         }
-        .r-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
-          width:3px;height:20px;border-radius:0 3px 3px 0;
-          background:linear-gradient(180deg,#F59E0B,#FBBF24);
-          box-shadow:0 0 8px rgba(245,158,11,0.7);}
-        .r-nav-item.active::after{content:'';position:absolute;inset:0;border-radius:12px;
-          background:radial-gradient(ellipse 80% 60% at 10% 50%,rgba(245,158,11,0.10) 0%,transparent 70%);
-          pointer-events:none;}
-        .r-live-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,0.1);
-          border:1px solid rgba(245,158,11,0.2);border-radius:7px;padding:2px 7px;
-          font-size:9px;font-weight:700;color:#F59E0B;margin-left:auto;letter-spacing:0.05em;text-transform:uppercase;}
-        .r-live-dot{width:4px;height:4px;border-radius:50%;background:#F59E0B;animation:pulse 1.8s infinite;flex-shrink:0;}
-        .r-upgrade{margin:0 10px 10px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.13);border-radius:14px;padding:15px;}
-        .r-sidebar-bottom{padding:8px 10px 22px;border-top:1px solid rgba(255,255,255,0.045);display:flex;flex-direction:column;gap:4px;}
+
+        /* Ambient orange halo — bleeds softly into dashboard */
+        .r-sidebar-glow{
+          position:fixed;left:0;top:0;bottom:0;width:500px;
+          pointer-events:none;z-index:1;
+          background:
+            radial-gradient(ellipse 55% 70% at 0% 30%, rgba(245,158,11,0.055) 0%, rgba(200,100,0,0.015) 40%, transparent 65%),
+            radial-gradient(ellipse 40% 50% at 0% 75%, rgba(245,158,11,0.03) 0%, transparent 55%);
+          animation:sidebarGlow 4s ease-in-out infinite;
+          filter:blur(1px);
+        }
+
+        /* Amber spine — the single bright accent line */
+        .r-sidebar::before{
+          content:'';position:absolute;left:0;top:18%;bottom:18%;width:2px;
+          border-radius:0 3px 3px 0;z-index:10;
+          background:linear-gradient(
+            180deg,
+            transparent 0%,
+            rgba(245,158,11,0.3) 15%,
+            rgba(251,191,36,0.95) 45%,
+            rgba(245,158,11,1) 50%,
+            rgba(251,191,36,0.95) 55%,
+            rgba(245,158,11,0.3) 85%,
+            transparent 100%
+          );
+          box-shadow:
+            0 0 8px rgba(245,158,11,0.7),
+            0 0 20px rgba(245,158,11,0.35),
+            0 0 48px rgba(245,158,11,0.12);
+        }
+
+        /* Subtle inner edge highlight */
+        .r-sidebar::after{
+          content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
+          background:linear-gradient(
+            180deg,
+            transparent,
+            rgba(245,158,11,0.08) 30%,
+            rgba(245,158,11,0.12) 50%,
+            rgba(245,158,11,0.08) 70%,
+            transparent
+          );
+          pointer-events:none;
+        }
+
+        .r-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,0.04);}
+
+        /* Logo mark — richer gradient + multi-layer glow */
+        .r-logo-mark{
+          width:38px;height:38px;border-radius:12px;flex-shrink:0;
+          background:linear-gradient(135deg,#F59E0B 0%,#D97706 40%,#7C3AED 100%);
+          display:flex;align-items:center;justify-content:center;
+          box-shadow:
+            0 2px 16px rgba(245,158,11,0.4),
+            0 0 0 1px rgba(245,158,11,0.2),
+            0 4px 32px rgba(245,158,11,0.15),
+            inset 0 1px 0 rgba(255,255,255,0.2);
+          transition:box-shadow 0.3s ease;
+        }
+        .r-logo-mark:hover{
+          box-shadow:
+            0 2px 20px rgba(245,158,11,0.55),
+            0 0 0 1px rgba(245,158,11,0.3),
+            0 4px 40px rgba(245,158,11,0.22),
+            inset 0 1px 0 rgba(255,255,255,0.25);
+        }
+
+        .r-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+
+        /* Nav item — refined hover with warm tint + smooth slide */
+        .r-nav-item{
+          display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:12px;
+          font-size:13.5px;font-weight:500;text-decoration:none;
+          color:rgba(255,255,255,0.32);
+          transition:all 0.22s cubic-bezier(.4,0,.2,1);
+          border:1px solid transparent;
+          position:relative;overflow:hidden;
+        }
+        .r-nav-item::before{
+          content:'';position:absolute;inset:0;border-radius:12px;
+          background:linear-gradient(90deg,rgba(245,158,11,0.0),transparent);
+          opacity:0;transition:opacity 0.22s ease;pointer-events:none;
+        }
+        .r-nav-item:hover{
+          background:rgba(245,158,11,0.055);
+          color:rgba(255,255,255,0.82);
+          transform:translateX(3px);
+          border-color:rgba(245,158,11,0.08);
+          box-shadow:inset 0 0 20px rgba(245,158,11,0.03);
+        }
+        .r-nav-item:hover::before{opacity:1;}
+
+        /* Active nav item — premium layered glow */
+        .r-nav-item.active{
+          background:linear-gradient(
+            135deg,
+            rgba(245,158,11,0.2) 0%,
+            rgba(245,158,11,0.10) 50%,
+            rgba(245,158,11,0.06) 100%
+          );
+          color:#FBBF24;
+          border-color:rgba(245,158,11,0.25);
+          font-weight:700;
+          box-shadow:
+            0 0 0 1px rgba(245,158,11,0.12),
+            0 2px 20px rgba(245,158,11,0.10),
+            inset 0 1px 0 rgba(245,158,11,0.18),
+            inset 0 0 28px rgba(245,158,11,0.06);
+          transform:translateX(0);
+        }
+
+        /* Active left accent bar */
+        .r-nav-item.active::before{
+          content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+          width:3px;height:22px;border-radius:0 3px 3px 0;
+          background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);
+          box-shadow:0 0 10px rgba(245,158,11,0.8),0 0 24px rgba(245,158,11,0.3);
+          opacity:1;
+        }
+
+        /* Active inner radial bloom */
+        .r-nav-item.active::after{
+          content:'';position:absolute;inset:0;border-radius:12px;
+          background:radial-gradient(ellipse 90% 70% at 8% 50%,rgba(245,158,11,0.12) 0%,transparent 65%);
+          pointer-events:none;
+        }
+
+        /* Live badge */
+        .r-live-badge{
+          display:inline-flex;align-items:center;gap:4px;
+          background:rgba(245,158,11,0.12);
+          border:1px solid rgba(245,158,11,0.22);
+          border-radius:7px;padding:2px 8px;
+          font-size:9px;font-weight:700;color:#F59E0B;
+          margin-left:auto;letter-spacing:0.05em;text-transform:uppercase;
+          box-shadow:0 0 10px rgba(245,158,11,0.12);
+        }
+        .r-live-dot{width:4px;height:4px;border-radius:50%;background:#F59E0B;animation:pulse 1.8s infinite;flex-shrink:0;
+          box-shadow:0 0 5px rgba(245,158,11,0.7);}
+
+        .r-upgrade{
+          margin:0 10px 10px;
+          background:linear-gradient(135deg,rgba(245,158,11,0.07) 0%,rgba(245,158,11,0.04) 100%);
+          border:1px solid rgba(245,158,11,0.14);
+          border-radius:14px;padding:15px;
+          box-shadow:inset 0 1px 0 rgba(245,158,11,0.1),0 0 20px rgba(245,158,11,0.04);
+        }
+        .r-sidebar-bottom{padding:8px 10px 22px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:4px;}
 
         /* MAIN */
-        .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
+        .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:2;}
 
         /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.88);backdrop-filter:blur(28px);
@@ -636,6 +764,7 @@ export default function Dashboard() {
         /* CONNECT BANNER — hide left panel on small screens */
         @media(max-width:767px){
           .r-sidebar{display:none!important;}
+          .r-sidebar-glow{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}
           .r-bottom-nav{display:flex!important;}
           .r-stats{grid-template-columns:1fr 1fr;gap:10px;}
@@ -658,6 +787,9 @@ export default function Dashboard() {
       `}</style>
 
       <div className="r-bg" style={{ display: 'flex' }}>
+
+        {/* AMBIENT SIDEBAR GLOW — bleeds into dashboard */}
+        <div className="r-sidebar-glow" />
 
         {/* SIDEBAR */}
         <aside className="r-sidebar">
@@ -752,7 +884,7 @@ export default function Dashboard() {
               <StatusPills youtubeConnected={youtubeConnected} />
             </div>
 
-            {/* CONNECT BANNER — only when not connected */}
+            {/* CONNECT BANNER */}
             {!youtubeConnected && <ConnectYouTubeBanner onConnect={handleYouTubeConnect} />}
 
             {/* STAT CARDS */}

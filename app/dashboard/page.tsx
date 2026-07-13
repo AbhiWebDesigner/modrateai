@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Shield, MessageSquare, Eye, Settings, LogOut, CreditCard,
   BarChart2, Bell, Zap, Search, Activity, Wifi, Cpu, Target,
-  CheckCircle, LayoutDashboard, TrendingUp, TrendingDown, MoreHorizontal, Layers
+  CheckCircle, LayoutDashboard, TrendingUp, TrendingDown,
+  MoreHorizontal, Layers, Rss, Bot, Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -37,7 +38,7 @@ function Sparkline({ color, up = true, width = 80, height = 36 }: { color: strin
   );
 }
 
-/* ── CIRCULAR PROGRESS (Monthly Usage) ── */
+/* ── CIRCULAR PROGRESS ── */
 function CircularProgress({ pct }: { pct: number }) {
   const r = 44, circ = 2 * Math.PI * r;
   const filled = (Math.min(pct, 100) / 100) * circ;
@@ -60,7 +61,7 @@ function CircularProgress({ pct }: { pct: number }) {
   );
 }
 
-/* ── SEMICIRCLE GAUGE (Moderation Accuracy) ── */
+/* ── SEMICIRCLE GAUGE ── */
 function SemicircleGauge({ accuracy }: { accuracy: number | null }) {
   if (accuracy === null) {
     return (
@@ -69,109 +70,54 @@ function SemicircleGauge({ accuracy }: { accuracy: number | null }) {
           <Target size={24} color="rgba(255,255,255,0.12)" />
         </div>
         <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12.5, textAlign: 'center', lineHeight: 1.6, maxWidth: 200 }}>
-          No accuracy data yet. Connect YouTube and let the AI moderate to see confidence scores.
+          No accuracy data yet. Connect YouTube and let AI moderate to see confidence scores.
         </p>
       </div>
     );
   }
-
   const pct = Math.min(100, Math.max(0, accuracy));
   const color = pct >= 90 ? '#34d399' : pct >= 70 ? '#F59E0B' : '#f87171';
-  const label = pct >= 90 ? 'Excellent' : pct >= 70 ? 'Good' : 'Needs Review';
-
-  // Semicircle math — 180° arc
-  const W = 200, H = 110, cx = W / 2, cy = H - 10;
-  const R = 80;
-  // Arc from 180° to 0° (left to right), percentage fills left→right
-  const startAngle = Math.PI; // 180deg
-  const endAngle = 0;         // 0deg
-  const totalAngle = Math.PI; // 180deg sweep
-
+  const W = 200, H = 110, cx = W / 2, cy = H - 10, R = 80;
+  const startAngle = Math.PI, endAngle = 0, totalAngle = Math.PI;
   const angleForPct = startAngle - (pct / 100) * totalAngle;
-
-  const polarToCart = (angle: number, r: number) => ({
-    x: cx + r * Math.cos(angle),
-    y: cy + r * Math.sin(angle),
-  });
-
-  // Track arc (full semicircle)
+  const polarToCart = (angle: number, r: number) => ({ x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) });
   const trackStart = polarToCart(startAngle, R);
-  const trackEnd  = polarToCart(endAngle, R);
+  const trackEnd = polarToCart(endAngle, R);
   const trackD = `M ${trackStart.x} ${trackStart.y} A ${R} ${R} 0 0 1 ${trackEnd.x} ${trackEnd.y}`;
-
-  // Fill arc (0% → pct)
   const fillEnd = polarToCart(angleForPct, R);
   const largeArc = pct > 50 ? 1 : 0;
-  const fillD = pct === 0
-    ? ''
-    : pct === 100
-      ? `M ${trackStart.x} ${trackStart.y} A ${R} ${R} 0 1 1 ${trackEnd.x} ${trackEnd.y}`
-      : `M ${trackStart.x} ${trackStart.y} A ${R} ${R} 0 ${largeArc} 1 ${fillEnd.x} ${fillEnd.y}`;
-
-  // Gradient stops for multi-color (red→yellow→green)
+  const fillD = pct === 0 ? '' : pct === 100
+    ? `M ${trackStart.x} ${trackStart.y} A ${R} ${R} 0 1 1 ${trackEnd.x} ${trackEnd.y}`
+    : `M ${trackStart.x} ${trackStart.y} A ${R} ${R} 0 ${largeArc} 1 ${fillEnd.x} ${fillEnd.y}`;
   const gradId = `semi-grad-${Math.round(pct)}`;
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 20px 16px' }}>
-      {/* Gauge */}
       <div style={{ position: 'relative', width: W, height: H + 20 }}>
         <svg width={W} height={H + 20} viewBox={`0 0 ${W} ${H + 20}`}>
           <defs>
             <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%"   stopColor="#f87171" />
-              <stop offset="50%"  stopColor="#F59E0B" />
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#F59E0B" />
               <stop offset="100%" stopColor="#34d399" />
             </linearGradient>
           </defs>
-
-          {/* Tick marks */}
           {[0, 25, 50, 75, 100].map(t => {
             const a = startAngle - (t / 100) * totalAngle;
             const inner = polarToCart(a, R - 10);
             const outer = polarToCart(a, R + 4);
-            return (
-              <line key={t} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y}
-                stroke="rgba(255,255,255,0.12)" strokeWidth={1.5} strokeLinecap="round" />
-            );
+            return <line key={t} x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke="rgba(255,255,255,0.12)" strokeWidth={1.5} strokeLinecap="round" />;
           })}
-
-          {/* Track */}
           <path d={trackD} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={12} strokeLinecap="round" />
-
-          {/* Fill */}
-          {fillD && (
-            <path d={fillD} fill="none" stroke={`url(#${gradId})`} strokeWidth={12} strokeLinecap="round"
-              style={{ filter: `drop-shadow(0 0 6px ${color}66)`, transition: 'all 0.8s cubic-bezier(.4,0,.2,1)' }} />
-          )}
-
-          {/* Needle dot at fill end */}
-          {pct > 0 && pct < 100 && (
-            <circle cx={fillEnd.x} cy={fillEnd.y} r={5} fill={color}
-              style={{ filter: `drop-shadow(0 0 5px ${color})` }} />
-          )}
-
-          {/* Center value */}
-          <text x={cx} y={cy - 6} textAnchor="middle" fill="#FAFAFA"
-            style={{ fontSize: 28, fontWeight: 900, fontFamily: 'Inter, sans-serif', letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}>
-            {pct.toFixed(1)}%
-          </text>
-          <text x={cx} y={cy + 14} textAnchor="middle" fill={color}
-            style={{ fontSize: 10, fontWeight: 700, fontFamily: 'Inter, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            CONFIDENCE
-          </text>
-
-          {/* Min/Max labels */}
+          {fillD && <path d={fillD} fill="none" stroke={`url(#${gradId})`} strokeWidth={12} strokeLinecap="round" style={{ filter: `drop-shadow(0 0 6px ${color}66)`, transition: 'all 0.8s cubic-bezier(.4,0,.2,1)' }} />}
+          {pct > 0 && pct < 100 && <circle cx={fillEnd.x} cy={fillEnd.y} r={5} fill={color} style={{ filter: `drop-shadow(0 0 5px ${color})` }} />}
+          <text x={cx} y={cy - 6} textAnchor="middle" fill="#FAFAFA" style={{ fontSize: 28, fontWeight: 900, fontFamily: 'Inter, sans-serif', letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}>{pct.toFixed(1)}%</text>
+          <text x={cx} y={cy + 14} textAnchor="middle" fill={color} style={{ fontSize: 10, fontWeight: 700, fontFamily: 'Inter, sans-serif', letterSpacing: '0.1em', textTransform: 'uppercase' }}>CONFIDENCE</text>
           <text x={14} y={H + 18} fill="rgba(255,255,255,0.25)" style={{ fontSize: 10, fontFamily: 'Inter, sans-serif' }}>0%</text>
           <text x={W - 28} y={H + 18} fill="rgba(255,255,255,0.25)" style={{ fontSize: 10, fontFamily: 'Inter, sans-serif' }}>100%</text>
         </svg>
       </div>
-
-      {/* Stats row */}
       <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
-        {[
-          { label: 'True Positive',  value: `${pct.toFixed(1)}%`,           color: '#34d399' },
-          { label: 'False Positive', value: `${(100 - pct).toFixed(1)}%`,   color: '#f87171' },
-        ].map(s => (
+        {[{ label: 'True Positive', value: `${pct.toFixed(1)}%`, color: '#34d399' }, { label: 'False Positive', value: `${(100 - pct).toFixed(1)}%`, color: '#f87171' }].map(s => (
           <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px', textAlign: 'center' }}>
             <div style={{ color: s.color, fontSize: 17, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
             <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5, marginTop: 2 }}>{s.label}</div>
@@ -204,8 +150,7 @@ function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit,
           </div>
           <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, lineHeight: 1.6, maxWidth: 220 }}>Connect your YouTube channel to start your free trial.</p>
           <button onClick={onConnectYouTube} className="ref-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-            Connect YouTube
+            <YTIcon size={14} /> Connect YouTube
           </button>
         </div>
       </div>
@@ -310,21 +255,130 @@ function YTIcon({ color = '#f87171', size = 14 }: { color?: string; size?: numbe
   );
 }
 
+/* ── CONNECT YOUTUBE BANNER ── */
+function ConnectYouTubeBanner({ onConnect }: { onConnect: () => void }) {
+  return (
+    <div style={{
+      background: 'rgba(16,16,22,0.95)', border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 20, overflow: 'hidden', marginBottom: 14,
+      display: 'flex', gap: 0, minHeight: 200,
+    }}>
+      {/* Left: visual */}
+      <div style={{
+        width: 220, flexShrink: 0, background: 'rgba(255,255,255,0.02)',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
+        padding: '24px 20px',
+      }}>
+        <div style={{
+          width: 72, height: 72, borderRadius: 20,
+          background: 'linear-gradient(135deg,rgba(248,113,113,0.18),rgba(248,113,113,0.06))',
+          border: '1px solid rgba(248,113,113,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 32px rgba(248,113,113,0.12)',
+        }}>
+          <YTIcon color="#f87171" size={34} />
+        </div>
+        <div style={{ display: 'flex', gap: 5 }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: i === 1 ? '#F59E0B' : 'rgba(255,255,255,0.12)', boxShadow: i === 1 ? '0 0 8px rgba(245,158,11,0.6)' : 'none' }} />
+          ))}
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5, fontWeight: 500, letterSpacing: '0.04em' }}>Awaiting connection · OAuth 2.0</div>
+      </div>
+
+      {/* Right: content */}
+      <div style={{ flex: 1, padding: '28px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F59E0B', boxShadow: '0 0 8px rgba(245,158,11,0.7)', animation: 'pulse 1.8s infinite' }} />
+            <span style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Ready to Connect</span>
+          </div>
+          <h2 style={{ color: '#FAFAFA', fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: 8 }}>
+            Connect your <span style={{ color: '#f87171' }}>YouTube</span> channel
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 13, lineHeight: 1.7, maxWidth: 480 }}>
+            Grant secure OAuth access and ModerateAI starts protecting your community in seconds — hiding toxic comments, replying to fans, and surfacing insights in real time.
+          </p>
+        </div>
+
+        {/* Feature pills */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {[
+            { icon: Shield, label: 'Connect securely' },
+            { icon: Activity, label: 'Realtime moderation' },
+            { icon: BarChart2, label: 'Instant analytics' },
+            { icon: Bot, label: 'Auto replies' },
+          ].map(f => (
+            <div key={f.label} style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 9, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)',
+            }}>
+              <f.icon size={12} color="rgba(255,255,255,0.4)" strokeWidth={2} />
+              {f.label}
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={onConnect} className="ref-btn-primary" style={{ gap: 8 }}>
+            <YTIcon color="#08080A" size={14} />
+            Connect YouTube
+            <span style={{ fontSize: 11, opacity: 0.7 }}>↗</span>
+          </button>
+          <Link href="/demo" className="ref-btn-ghost" style={{ fontSize: 13 }}>View demo dashboard</Link>
+          <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, marginLeft: 4 }}>Uses read-only + moderation scopes. Revoke anytime.</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── STATUS PILLS ── */
+function StatusPills({ youtubeConnected }: { youtubeConnected: boolean }) {
+  if (!youtubeConnected) return null;
+  return (
+    <div style={{ display: 'flex', gap: 8 }}>
+      {[
+        { label: 'Online', color: '#22c55e', dot: true },
+        { label: 'Scanning', color: '#60a5fa', icon: Activity },
+        { label: 'Protected', color: '#34d399', icon: Shield },
+      ].map(p => (
+        <div key={p.label} style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          background: `rgba(${p.color === '#22c55e' ? '34,197,94' : p.color === '#60a5fa' ? '96,165,250' : '52,211,153'},0.08)`,
+          border: `1px solid rgba(${p.color === '#22c55e' ? '34,197,94' : p.color === '#60a5fa' ? '96,165,250' : '52,211,153'},0.18)`,
+          borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600, color: p.color,
+        }}>
+          {p.dot
+            ? <div style={{ width: 5, height: 5, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} />
+            : p.icon && <p.icon size={11} strokeWidth={2.2} />
+          }
+          {p.label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const BOTTOM_NAV = [
   { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
-  { label: 'Analytics',  icon: BarChart2,        href: '/analytics'  },
-  { label: 'Automation', icon: Zap,              href: '/automation' },
-  { label: 'Alerts',     icon: Bell,             href: '/alerts'     },
-  { label: 'Settings',   icon: Settings,         href: '/settings'   },
+  { label: 'Live Feed',   icon: Rss,             href: '/live-feed'  },
+  { label: 'Automation',  icon: Zap,             href: '/automation' },
+  { label: 'Alerts',      icon: Bell,            href: '/alerts'     },
+  { label: 'Settings',    icon: Settings,        href: '/settings'   },
 ];
 
 const SIDEBAR_NAV = [
   { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
-  { label: 'Analytics',  icon: BarChart2,        href: '/analytics'  },
-  { label: 'Automation', icon: Zap,              href: '/automation' },
-  { label: 'Alerts',     icon: Bell,             href: '/alerts'     },
-  { label: 'Settings',   icon: Settings,         href: '/settings'   },
-  { label: 'Billing',    icon: CreditCard,       href: '/billing'    },
+  { label: 'Live Feed',   icon: Rss,             href: '/live-feed'  },
+  { label: 'Analytics',   icon: BarChart2,       href: '/analytics'  },
+  { label: 'Automations', icon: Zap,             href: '/automation' },
+  { label: 'Alerts',      icon: Bell,            href: '/alerts'     },
+  { label: 'Channels',    icon: Globe,           href: '/channels'   },
+  { label: 'Settings',    icon: Settings,        href: '/settings'   },
 ];
 
 /* ══════════════════════════════════════
@@ -557,7 +611,7 @@ export default function Dashboard() {
           color:rgba(255,255,255,0.3);background:none;border:none;cursor:pointer;width:100%;transition:all 0.18s;}
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
-        /* BOTTOM NAV — phone only */
+        /* BOTTOM NAV */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(24px);
           padding:8px 4px env(safe-area-inset-bottom,8px);}
@@ -569,7 +623,7 @@ export default function Dashboard() {
         .r-bnav-icon{width:40px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background 0.18s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(245,158,11,0.12);}
 
-        /* RESPONSIVE */
+        /* CONNECT BANNER — hide left panel on small screens */
         @media(max-width:767px){
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}
@@ -580,6 +634,8 @@ export default function Dashboard() {
           .r-topbar{padding:0 14px;}
           .r-topbar-search,.r-topbar-status{display:none!important;}
           .r-stat-value,.r-stat-zero{font-size:28px;}
+          .r-connect-left{display:none!important;}
+          .r-connect-right{border-radius:18px!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
           .r-bottom-nav{display:none!important;}
@@ -600,7 +656,7 @@ export default function Dashboard() {
               <div className="r-logo-mark"><Shield size={18} color="white" strokeWidth={2.2} /></div>
               <div>
                 <div style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 15.5, letterSpacing: '-0.025em' }}>ModerateAI</div>
-                <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 10, fontWeight: 500, marginTop: 1 }}>AI Moderation Platform</div>
+                <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 10, fontWeight: 500, marginTop: 1 }}>Enterprise · v2</div>
               </div>
             </div>
           </div>
@@ -627,6 +683,20 @@ export default function Dashboard() {
             </div>
           )}
           <div className="r-sidebar-bottom">
+            {/* Protection status */}
+            <div style={{ padding: '10px 13px', marginBottom: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Shield size={11} color="#34d399" />
+                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600 }}>Protection</span>
+                </div>
+                <span style={{ color: '#34d399', fontSize: 10, fontWeight: 700 }}>Active</span>
+              </div>
+              <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: '86%', background: 'linear-gradient(90deg,#34d399,#F59E0B)', borderRadius: 4 }} />
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, marginTop: 4 }}>86% coverage · 1.2k rules</div>
+            </div>
             <button onClick={handleLogout} className="r-btn-logout">
               <LogOut size={14} strokeWidth={1.8} /> Logout
             </button>
@@ -645,7 +715,7 @@ export default function Dashboard() {
             <div style={{ flex: 1 }} />
             {!youtubeConnected && (
               <button onClick={handleYouTubeConnect} className="r-yt-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                <YTIcon color="#08080A" size={14} />
                 Connect YouTube
               </button>
             )}
@@ -672,16 +742,22 @@ export default function Dashboard() {
 
           <div className="r-content">
             {/* Page header */}
-            <div style={{ marginBottom: 26 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.6)', animation: 'pulse 2s infinite' }} />
-                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  {youtubeConnected ? 'Live · Protected' : 'Ready to connect'}
-                </span>
+            <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.6)', animation: 'pulse 2s infinite' }} />
+                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    {youtubeConnected ? 'Live · Protected' : 'Ready to connect'}
+                  </span>
+                </div>
+                <h1 style={{ fontSize: 32, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 4 }}>Overview</h1>
+                <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 13 }}>Your AI moderator is active. Here's what's happening across your channels right now.</p>
               </div>
-              <h1 style={{ fontSize: 32, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 4 }}>Overview</h1>
-              <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 13 }}>Here's what's happening across your channels right now.</p>
+              <StatusPills youtubeConnected={youtubeConnected} />
             </div>
+
+            {/* CONNECT BANNER — only when not connected */}
+            {!youtubeConnected && <ConnectYouTubeBanner onConnect={handleYouTubeConnect} />}
 
             {/* STAT CARDS */}
             <div className="r-stats">
@@ -721,7 +797,6 @@ export default function Dashboard() {
               <MonthlyUsageCard plan={plan} youtubeConnected={youtubeConnected} commentsUsed={commentsUsed}
                 commentsLimit={commentsLimit} trialDaysLeft={trialDaysLeft} onConnectYouTube={handleYouTubeConnect} />
 
-              {/* Moderation Accuracy — SEMICIRCLE GAUGE */}
               <div className="ref-card">
                 <div className="ref-card-top">
                   <div>
@@ -732,7 +807,6 @@ export default function Dashboard() {
                 <SemicircleGauge accuracy={moderationAcc} />
               </div>
 
-              {/* System Health */}
               <div className="ref-card">
                 <div className="ref-card-top" style={{ alignItems: 'center' }}>
                   <div><div className="ref-card-title">System Health</div><div className="ref-card-sub">Live infra status</div></div>
@@ -752,7 +826,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* BOTTOM NAV — phone only, icons only */}
+        {/* BOTTOM NAV */}
         <nav className="r-bottom-nav">
           {BOTTOM_NAV.map(item => {
             const isActive = currentPath === item.href;

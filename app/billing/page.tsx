@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { DashboardSidebar, DashboardBottomNav } from "@/components/DashboardLayout";
+import { DashboardSidebar, DashboardBottomNav } from "../components/DashboardLayout";
 
 const PLANS = [
   {

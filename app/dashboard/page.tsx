@@ -500,34 +500,22 @@ export default function Dashboard() {
         ═══════════════════════════════ */
         .r-sidebar{
           width:228px;min-width:228px;
-          background:linear-gradient(
-            180deg,
-            rgba(13,11,20,0.88) 0%,
-            rgba(11,10,18,0.90) 40%,
-            rgba(12,10,19,0.88) 100%
-          );
-          backdrop-filter:blur(40px) saturate(1.5);
-          border-right:1px solid rgba(245,158,11,0.09);
+          background:
+            radial-gradient(ellipse 140% 60% at 0% 40%, rgba(120,60,0,0.38) 0%, rgba(80,35,0,0.18) 30%, transparent 60%),
+            radial-gradient(ellipse 120% 40% at 0% 80%, rgba(100,50,0,0.22) 0%, transparent 50%),
+            radial-gradient(ellipse 100% 30% at 0% 10%, rgba(130,65,0,0.18) 0%, transparent 45%),
+            linear-gradient(180deg, rgba(10,8,14,0.97) 0%, rgba(9,7,13,0.98) 100%);
+          border-right:1px solid rgba(245,158,11,0.12);
           display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
           box-shadow:
-            inset -1px 0 0 rgba(245,158,11,0.05),
-            inset 1px 0 32px rgba(245,158,11,0.015),
-            4px 0 80px rgba(0,0,0,0.7),
-            12px 0 60px rgba(245,158,11,0.028),
-            24px 0 120px rgba(245,158,11,0.012);
+            4px 0 40px rgba(0,0,0,0.6),
+            8px 0 80px rgba(180,90,0,0.08),
+            16px 0 120px rgba(245,158,11,0.05);
         }
 
-        /* Ambient orange halo — bleeds softly into dashboard */
-        .r-sidebar-glow{
-          position:fixed;left:0;top:0;width:100vw;height:100vh;
-          pointer-events:none;z-index:0;
-          background:
-            radial-gradient(ellipse 38% 65% at 0% 35%, rgba(245,158,11,0.16) 0%, rgba(200,100,0,0.05) 35%, transparent 60%),
-            radial-gradient(ellipse 22% 45% at 0% 78%, rgba(245,158,11,0.09) 0%, transparent 50%),
-            radial-gradient(ellipse 18% 30% at 0% 10%, rgba(251,191,36,0.09) 0%, transparent 45%);
-          animation:sidebarGlow 5s ease-in-out infinite;
-        }
+        /* Glow div — no longer needed, glow is baked into sidebar background */
+        .r-sidebar-glow{ display:none; }
 
         /* Amber spine — the single bright accent line */
         .r-sidebar::before{
@@ -549,15 +537,15 @@ export default function Dashboard() {
             0 0 48px rgba(245,158,11,0.12);
         }
 
-        /* Subtle inner edge highlight */
+        /* Subtle right-edge amber line */
         .r-sidebar::after{
           content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
           background:linear-gradient(
             180deg,
             transparent,
-            rgba(245,158,11,0.08) 30%,
-            rgba(245,158,11,0.12) 50%,
-            rgba(245,158,11,0.08) 70%,
+            rgba(245,158,11,0.10) 30%,
+            rgba(245,158,11,0.18) 50%,
+            rgba(245,158,11,0.10) 70%,
             transparent
           );
           pointer-events:none;

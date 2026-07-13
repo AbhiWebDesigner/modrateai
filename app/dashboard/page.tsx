@@ -384,6 +384,7 @@ export default function Dashboard() {
   const [userData, setUserData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const unsubDocRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -861,10 +862,54 @@ export default function Dashboard() {
                 Connect YouTube
               </button>
             )}
-            <button className="r-icon-btn">
-              <Bell size={14} color="rgba(255,255,255,0.48)" strokeWidth={1.8} />
-              <span style={{ position: 'absolute', top: 8, right: 8, width: 5, height: 5, background: '#F59E0B', borderRadius: '50%', border: '1.5px solid #0a0a0f' }} />
-            </button>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
+                <Bell size={14} color={notifOpen ? '#F59E0B' : 'rgba(255,255,255,0.48)'} strokeWidth={1.8} />
+                <span style={{ position: 'absolute', top: 8, right: 8, width: 5, height: 5, background: '#F59E0B', borderRadius: '50%', border: '1.5px solid #0a0a0f' }} />
+              </button>
+              {notifOpen && (
+                <>
+                  <div onClick={() => setNotifOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />
+                  <div style={{
+                    position: 'absolute', top: 'calc(100% + 10px)', right: 0, zIndex: 60,
+                    width: 300, background: 'rgba(14,13,20,0.98)', border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 16, boxShadow: '0 8px 40px rgba(0,0,0,0.6)', backdropFilter: 'blur(24px)',
+                    animation: 'fadeIn 0.18s ease', overflow: 'hidden',
+                  }}>
+                    <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 13 }}>Notifications</span>
+                      <span style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.22)', color: '#F59E0B', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6 }}>1 new</span>
+                    </div>
+                    {[
+                      { icon: Shield, color: '#34d399', title: 'Moderation active', sub: 'AI moderator is protecting your channel', time: 'Just now', dot: true },
+                      { icon: Bell, color: '#60a5fa', title: 'System operational', sub: 'All services running normally', time: '2m ago', dot: false },
+                      { icon: Zap, color: '#F59E0B', title: 'Upgrade available', sub: 'Unlock unlimited scans with Pro', time: '1h ago', dot: false },
+                    ].map((n, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'background 0.15s' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        <div style={{ width: 32, height: 32, borderRadius: 10, background: `${n.color}14`, border: `1px solid ${n.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <n.icon size={14} color={n.color} strokeWidth={1.8} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                            <span style={{ color: 'rgba(255,255,255,0.88)', fontSize: 12.5, fontWeight: 600 }}>{n.title}</span>
+                            {n.dot && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', flexShrink: 0 }} />}
+                          </div>
+                          <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5, lineHeight: 1.4 }}>{n.sub}</div>
+                        </div>
+                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5, flexShrink: 0, marginTop: 2 }}>{n.time}</span>
+                      </div>
+                    ))}
+                    <div style={{ padding: '10px 16px' }}>
+                      <button onClick={() => setNotifOpen(false)} style={{ width: '100%', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 12, cursor: 'pointer', fontWeight: 600, padding: '4px 0' }}>
+                        Mark all as read
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <div className="r-avatar" onClick={() => router.push('/settings')}>
               {user?.photoURL
                 ? <img src={user.photoURL} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
@@ -886,14 +931,29 @@ export default function Dashboard() {
             {/* Page header */}
             <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.6)', animation: 'pulse 2s infinite' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    {youtubeConnected ? 'Live · Protected' : 'Ready to connect'}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
+                  <span style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5, fontWeight: 600, letterSpacing: '0.09em', textTransform: 'uppercase' }}>
+                    {youtubeConnected ? 'Live · Protected' : 'Dashboard'}
                   </span>
                 </div>
-                <h1 style={{ fontSize: 32, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: 4 }}>Overview</h1>
-                <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 13 }}>Your AI moderator is active. Here's what's happening across your channels right now.</p>
+                {/* Welcome greeting */}
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
+                  <h1 style={{ fontSize: 30, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.15 }}>
+                    Welcome back,{' '}
+                    <span style={{
+                      background: 'linear-gradient(90deg,#F59E0B,#FBBF24)',
+                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}>{firstName}</span>
+                    <span style={{ color: '#F59E0B' }}>.</span>
+                  </h1>
+                </div>
+                <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 13 }}>
+                  {youtubeConnected
+                    ? 'Your AI moderator is active and protecting your community.'
+                    : 'Connect your channel to start AI moderation.'}
+                </p>
               </div>
               <StatusPills youtubeConnected={youtubeConnected} />
             </div>

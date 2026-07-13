@@ -357,14 +357,16 @@ function StatusPills({ youtubeConnected }: { youtubeConnected: boolean }) {
   );
 }
 
+/* ── BOTTOM NAV ITEMS ── */
 const BOTTOM_NAV = [
-  { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
-  { label: 'Live Feed',   icon: Rss,             href: '/live-feed'  },
-  { label: 'Automation',  icon: Zap,             href: '/automation' },
-  { label: 'Alerts',      icon: Bell,            href: '/alerts'     },
-  { label: 'Settings',    icon: Settings,        href: '/settings'   },
+  { label: 'Overview',   icon: LayoutDashboard, href: '/dashboard'  },
+  { label: 'Automation', icon: Zap,             href: '/automation' },
+  { label: 'Live Feed',  icon: Rss,             href: '/live-feed'  },
+  { label: 'Analytics',  icon: BarChart2,       href: '/analytics'  },
+  { label: 'Alerts',     icon: Bell,            href: '/alerts'     },
 ];
 
+/* ── SIDEBAR NAV ITEMS ── */
 const SIDEBAR_NAV = [
   { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
   { label: 'Live Feed',   icon: Rss,             href: '/live-feed'  },
@@ -481,7 +483,6 @@ export default function Dashboard() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
         @keyframes indPulse{0%,100%{box-shadow:0 0 8px rgba(245,158,11,0.5)}50%{box-shadow:0 0 18px rgba(245,158,11,0.2)}}
-        @keyframes sidebarGlow{0%,100%{opacity:0.7}50%{opacity:1}}
         ::-webkit-scrollbar{width:3px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
@@ -495,9 +496,6 @@ export default function Dashboard() {
           background-image:linear-gradient(rgba(255,255,255,0.014) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.014) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        /* ═══════════════════════════════
-           SIDEBAR — PREMIUM UPGRADE
-        ═══════════════════════════════ */
         .r-sidebar{
           width:228px;min-width:228px;
           background:
@@ -508,74 +506,28 @@ export default function Dashboard() {
           border-right:1px solid rgba(245,158,11,0.12);
           display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
-          box-shadow:
-            4px 0 40px rgba(0,0,0,0.6),
-            8px 0 80px rgba(180,90,0,0.08),
-            16px 0 120px rgba(245,158,11,0.05);
+          box-shadow:4px 0 40px rgba(0,0,0,0.6),8px 0 80px rgba(180,90,0,0.08),16px 0 120px rgba(245,158,11,0.05);
         }
-
-        /* Glow div — no longer needed, glow is baked into sidebar background */
-        .r-sidebar-glow{ display:none; }
-
-        /* Amber spine — the single bright accent line */
         .r-sidebar::before{
           content:'';position:absolute;left:0;top:18%;bottom:18%;width:2px;
           border-radius:0 3px 3px 0;z-index:10;
-          background:linear-gradient(
-            180deg,
-            transparent 0%,
-            rgba(245,158,11,0.3) 15%,
-            rgba(251,191,36,0.95) 45%,
-            rgba(245,158,11,1) 50%,
-            rgba(251,191,36,0.95) 55%,
-            rgba(245,158,11,0.3) 85%,
-            transparent 100%
-          );
-          box-shadow:
-            0 0 8px rgba(245,158,11,0.7),
-            0 0 20px rgba(245,158,11,0.35),
-            0 0 48px rgba(245,158,11,0.12);
+          background:linear-gradient(180deg,transparent 0%,rgba(245,158,11,0.3) 15%,rgba(251,191,36,0.95) 45%,rgba(245,158,11,1) 50%,rgba(251,191,36,0.95) 55%,rgba(245,158,11,0.3) 85%,transparent 100%);
+          box-shadow:0 0 8px rgba(245,158,11,0.7),0 0 20px rgba(245,158,11,0.35),0 0 48px rgba(245,158,11,0.12);
         }
-
-        /* Subtle right-edge amber line */
         .r-sidebar::after{
           content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
-          background:linear-gradient(
-            180deg,
-            transparent,
-            rgba(245,158,11,0.10) 30%,
-            rgba(245,158,11,0.18) 50%,
-            rgba(245,158,11,0.10) 70%,
-            transparent
-          );
+          background:linear-gradient(180deg,transparent,rgba(245,158,11,0.10) 30%,rgba(245,158,11,0.18) 50%,rgba(245,158,11,0.10) 70%,transparent);
           pointer-events:none;
         }
-
         .r-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,0.04);}
-
-        /* Logo mark — richer gradient + multi-layer glow */
         .r-logo-mark{
           width:38px;height:38px;border-radius:12px;flex-shrink:0;
           background:linear-gradient(135deg,#F59E0B 0%,#D97706 40%,#7C3AED 100%);
           display:flex;align-items:center;justify-content:center;
-          box-shadow:
-            0 2px 16px rgba(245,158,11,0.4),
-            0 0 0 1px rgba(245,158,11,0.2),
-            0 4px 32px rgba(245,158,11,0.15),
-            inset 0 1px 0 rgba(255,255,255,0.2);
+          box-shadow:0 2px 16px rgba(245,158,11,0.4),0 0 0 1px rgba(245,158,11,0.2),0 4px 32px rgba(245,158,11,0.15),inset 0 1px 0 rgba(255,255,255,0.2);
           transition:box-shadow 0.3s ease;
         }
-        .r-logo-mark:hover{
-          box-shadow:
-            0 2px 20px rgba(245,158,11,0.55),
-            0 0 0 1px rgba(245,158,11,0.3),
-            0 4px 40px rgba(245,158,11,0.22),
-            inset 0 1px 0 rgba(255,255,255,0.25);
-        }
-
         .r-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
-
-        /* Nav item — refined hover with warm tint + smooth slide */
         .r-nav-item{
           display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:12px;
           font-size:13.5px;font-weight:500;text-decoration:none;
@@ -584,40 +536,15 @@ export default function Dashboard() {
           border:1px solid transparent;
           position:relative;overflow:hidden;
         }
-        .r-nav-item::before{
-          content:'';position:absolute;inset:0;border-radius:12px;
-          background:linear-gradient(90deg,rgba(245,158,11,0.0),transparent);
-          opacity:0;transition:opacity 0.22s ease;pointer-events:none;
-        }
         .r-nav-item:hover{
-          background:rgba(245,158,11,0.055);
-          color:rgba(240,220,190,0.88);
-          transform:translateX(3px);
-          border-color:rgba(245,158,11,0.08);
-          box-shadow:inset 0 0 20px rgba(245,158,11,0.03);
+          background:rgba(245,158,11,0.055);color:rgba(240,220,190,0.88);
+          transform:translateX(3px);border-color:rgba(245,158,11,0.08);
         }
-        .r-nav-item:hover::before{opacity:1;}
-
-        /* Active nav item — premium layered glow */
         .r-nav-item.active{
-          background:linear-gradient(
-            135deg,
-            rgba(245,158,11,0.2) 0%,
-            rgba(245,158,11,0.10) 50%,
-            rgba(245,158,11,0.06) 100%
-          );
-          color:#FBBF24;
-          border-color:rgba(245,158,11,0.25);
-          font-weight:700;
-          box-shadow:
-            0 0 0 1px rgba(245,158,11,0.12),
-            0 2px 20px rgba(245,158,11,0.10),
-            inset 0 1px 0 rgba(245,158,11,0.18),
-            inset 0 0 28px rgba(245,158,11,0.06);
-          transform:translateX(0);
+          background:linear-gradient(135deg,rgba(245,158,11,0.2) 0%,rgba(245,158,11,0.10) 50%,rgba(245,158,11,0.06) 100%);
+          color:#FBBF24;border-color:rgba(245,158,11,0.25);font-weight:700;
+          box-shadow:0 0 0 1px rgba(245,158,11,0.12),0 2px 20px rgba(245,158,11,0.10),inset 0 1px 0 rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.06);
         }
-
-        /* Active left accent bar */
         .r-nav-item.active::before{
           content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
           width:3px;height:22px;border-radius:0 3px 3px 0;
@@ -625,40 +552,20 @@ export default function Dashboard() {
           box-shadow:0 0 10px rgba(245,158,11,0.8),0 0 24px rgba(245,158,11,0.3);
           opacity:1;
         }
-
-        /* Active inner radial bloom */
-        .r-nav-item.active::after{
-          content:'';position:absolute;inset:0;border-radius:12px;
-          background:radial-gradient(ellipse 90% 70% at 8% 50%,rgba(245,158,11,0.12) 0%,transparent 65%);
-          pointer-events:none;
-        }
-
-        /* Live badge */
         .r-live-badge{
           display:inline-flex;align-items:center;gap:4px;
-          background:rgba(245,158,11,0.12);
-          border:1px solid rgba(245,158,11,0.22);
-          border-radius:7px;padding:2px 8px;
-          font-size:9px;font-weight:700;color:#F59E0B;
+          background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.22);
+          border-radius:7px;padding:2px 8px;font-size:9px;font-weight:700;color:#F59E0B;
           margin-left:auto;letter-spacing:0.05em;text-transform:uppercase;
-          box-shadow:0 0 10px rgba(245,158,11,0.12);
         }
-        .r-live-dot{width:4px;height:4px;border-radius:50%;background:#F59E0B;animation:pulse 1.8s infinite;flex-shrink:0;
-          box-shadow:0 0 5px rgba(245,158,11,0.7);}
-
+        .r-live-dot{width:4px;height:4px;border-radius:50%;background:#F59E0B;animation:pulse 1.8s infinite;flex-shrink:0;}
         .r-upgrade{
           margin:0 10px 10px;
           background:linear-gradient(135deg,rgba(245,158,11,0.07) 0%,rgba(245,158,11,0.04) 100%);
-          border:1px solid rgba(245,158,11,0.14);
-          border-radius:14px;padding:15px;
-          box-shadow:inset 0 1px 0 rgba(245,158,11,0.1),0 0 20px rgba(245,158,11,0.04);
+          border:1px solid rgba(245,158,11,0.14);border-radius:14px;padding:15px;
         }
         .r-sidebar-bottom{padding:8px 10px 22px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:4px;}
-
-        /* MAIN */
         .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
-
-        /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.88);backdrop-filter:blur(28px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 28px;height:60px;
           display:flex;align-items:center;gap:14px;
@@ -681,11 +588,7 @@ export default function Dashboard() {
         .r-avatar{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:11px;padding:4px 11px 4px 4px;cursor:pointer;transition:all 0.2s;}
         .r-avatar:hover{border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);}
-
-        /* CONTENT */
         .r-content{padding:28px;flex:1;animation:fadeIn 0.35s ease;}
-
-        /* STAT CARDS */
         .r-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
         .r-stat{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:20px 22px;
           transition:all 0.22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;backdrop-filter:blur(16px);position:relative;overflow:hidden;}
@@ -704,8 +607,6 @@ export default function Dashboard() {
         .r-stat-value{font-size:34px;font-weight:900;color:#FAFAFA;letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
         .r-stat-zero{font-size:34px;font-weight:900;color:rgba(255,255,255,0.4);letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
         .r-stat-empty{font-size:34px;font-weight:900;color:rgba(255,255,255,0.14);letter-spacing:-0.05em;line-height:1;}
-
-        /* CARDS */
         .ref-card{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:18px;backdrop-filter:blur(16px);
           transition:border-color 0.2s;display:flex;flex-direction:column;overflow:hidden;}
         .ref-card:hover{border-color:rgba(255,255,255,0.11);}
@@ -719,8 +620,6 @@ export default function Dashboard() {
         .r-health-badge{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#34d399;
           background:rgba(34,197,94,0.09);border:1px solid rgba(34,197,94,0.18);border-radius:7px;padding:3px 9px;white-space:nowrap;}
         .r-bottom{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:12px;}
-
-        /* BUTTONS */
         .ref-btn-primary{background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#08080A;font-weight:700;font-size:13px;
           padding:10px 18px;border-radius:10px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
           transition:all 0.2s;text-decoration:none;white-space:nowrap;box-shadow:0 2px 12px rgba(245,158,11,0.28);}
@@ -737,22 +636,35 @@ export default function Dashboard() {
           color:rgba(255,255,255,0.3);background:none;border:none;cursor:pointer;width:100%;transition:all 0.18s;}
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
-        /* BOTTOM NAV */
-        .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
-          background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(24px);
-          padding:8px 4px env(safe-area-inset-bottom,8px);}
-        .r-bnav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;
-          flex:1;padding:6px 4px;text-decoration:none;color:rgba(255,255,255,0.38);
-          border:none;background:none;cursor:pointer;transition:color 0.18s;-webkit-tap-highlight-color:transparent;}
+        /* ── BOTTOM NAV ── */
+        .r-bottom-nav{
+          display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
+          background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);
+          backdrop-filter:blur(24px);
+          padding:8px 4px env(safe-area-inset-bottom,8px);
+        }
+        .r-bnav-item{
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          flex:1;padding:6px 2px;text-decoration:none;
+          color:rgba(255,255,255,0.38);border:none;background:none;cursor:pointer;
+          transition:color 0.18s;-webkit-tap-highlight-color:transparent;
+          position:relative;
+        }
         .r-bnav-item.active{color:#F59E0B;}
-        .r-bnav-item:hover{color:rgba(255,255,255,0.75);}
-        .r-bnav-icon{width:40px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background 0.18s;}
+        .r-bnav-item.active::before{
+          content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+          width:28px;height:2px;border-radius:0 0 3px 3px;
+          background:linear-gradient(90deg,#F59E0B,#FBBF24);
+        }
+        .r-bnav-icon{
+          width:40px;height:32px;display:flex;align-items:center;justify-content:center;
+          border-radius:10px;transition:background 0.18s;
+        }
         .r-bnav-item.active .r-bnav-icon{background:rgba(245,158,11,0.12);}
 
-        /* CONNECT BANNER — hide left panel on small screens */
+        /* ── RESPONSIVE ── */
         @media(max-width:767px){
           .r-sidebar{display:none!important;}
-          .r-sidebar-glow{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}
           .r-bottom-nav{display:flex!important;}
           .r-stats{grid-template-columns:1fr 1fr;gap:10px;}
@@ -762,22 +674,22 @@ export default function Dashboard() {
           .r-topbar-search,.r-topbar-status{display:none!important;}
           .r-stat-value,.r-stat-zero{font-size:28px;}
           .r-connect-left{display:none!important;}
-          .r-connect-right{border-radius:18px!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
-          .r-bottom-nav{display:none!important;}
+          .r-sidebar{display:none!important;}
+          .r-main{margin-left:0!important;padding-bottom:72px;}
+          .r-bottom-nav{display:flex!important;}
           .r-stats{grid-template-columns:1fr 1fr;}
           .r-bottom{grid-template-columns:1fr 1fr;}
           .r-content{padding:20px;}
           .r-topbar{padding:0 20px;}
         }
-        @media(min-width:1024px){.r-bottom-nav{display:none!important;}}
+        @media(min-width:1024px){
+          .r-bottom-nav{display:none!important;}
+        }
       `}</style>
 
       <div className="r-bg" style={{ display: 'flex' }}>
-
-        {/* AMBIENT SIDEBAR GLOW — bleeds into dashboard */}
-        <div className="r-sidebar-glow" />
 
         {/* SIDEBAR */}
         <aside className="r-sidebar">
@@ -872,7 +784,6 @@ export default function Dashboard() {
               <StatusPills youtubeConnected={youtubeConnected} />
             </div>
 
-            {/* CONNECT BANNER */}
             {!youtubeConnected && <ConnectYouTubeBanner onConnect={handleYouTubeConnect} />}
 
             {/* STAT CARDS */}
@@ -912,7 +823,6 @@ export default function Dashboard() {
             <div className="r-bottom">
               <MonthlyUsageCard plan={plan} youtubeConnected={youtubeConnected} commentsUsed={commentsUsed}
                 commentsLimit={commentsLimit} trialDaysLeft={trialDaysLeft} onConnectYouTube={handleYouTubeConnect} />
-
               <div className="ref-card">
                 <div className="ref-card-top">
                   <div>
@@ -922,7 +832,6 @@ export default function Dashboard() {
                 </div>
                 <SemicircleGauge accuracy={moderationAcc} />
               </div>
-
               <div className="ref-card">
                 <div className="ref-card-top" style={{ alignItems: 'center' }}>
                   <div><div className="ref-card-title">System Health</div><div className="ref-card-sub">Live infra status</div></div>
@@ -942,7 +851,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* BOTTOM NAV */}
+        {/* ── BOTTOM NAV ── */}
         <nav className="r-bottom-nav">
           {BOTTOM_NAV.map(item => {
             const isActive = currentPath === item.href;
@@ -959,7 +868,7 @@ export default function Dashboard() {
           </button>
         </nav>
 
-        {/* MORE DRAWER */}
+        {/* ── MORE DRAWER ── */}
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }} />
@@ -968,9 +877,12 @@ export default function Dashboard() {
               background: 'rgba(14,14,20,0.98)', border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: 20, padding: '8px 8px 12px',
               boxShadow: '0 -8px 48px rgba(0,0,0,0.7)', backdropFilter: 'blur(28px)',
-              animation: 'slideUp 0.2s ease'
+              animation: 'slideUp 0.2s ease',
             }}>
+              {/* Handle */}
               <div style={{ width: 34, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
+
+              {/* User info */}
               <div style={{ padding: '0 12px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {user?.photoURL
@@ -983,25 +895,32 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* More nav items */}
               {[
-                { icon: CreditCard, label: 'Billing',  href: '/billing',  color: '#F59E0B' },
-                { icon: Layers,     label: 'Channels', href: '/channels', color: '#60a5fa' },
+                { icon: CreditCard, label: 'Billing',     href: '/billing',      color: '#F59E0B' },
+                { icon: Settings,   label: 'Settings',    href: '/settings',     color: '#94a3b8' },
+                { icon: Bot,        label: 'Comment Bot', href: '/comment-bot',  color: '#a78bfa' },
+                { icon: Layers,     label: 'Channels',    href: '/channels',     color: '#60a5fa' },
+                { icon: Bell,       label: 'Notifications', href: '/alerts',     color: '#34d399' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14, transition: 'background 0.15s' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '11px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14, transition: 'background 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${item.color}15`, border: `1px solid ${item.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `${item.color}15`, border: `1px solid ${item.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <item.icon size={16} color={item.color} strokeWidth={1.8} />
                   </div>
                   {item.label}
                 </Link>
               ))}
+
+              {/* Logout */}
               <div style={{ margin: '8px 16px 0', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 14, width: '100%' }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(248,113,113,0.09)', border: '1px solid rgba(248,113,113,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '11px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 14, width: '100%' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(248,113,113,0.09)', border: '1px solid rgba(248,113,113,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <LogOut size={16} color="#f87171" strokeWidth={1.8} />
                   </div>
                   Logout

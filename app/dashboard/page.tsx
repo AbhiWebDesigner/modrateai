@@ -518,11 +518,20 @@ export default function Dashboard() {
           font-size:13.5px;font-weight:500;text-decoration:none;color:rgba(255,255,255,0.36);
           transition:all 0.2s cubic-bezier(.4,0,.2,1);border:1px solid transparent;position:relative;overflow:hidden;}
         .r-nav-item:hover{background:rgba(255,255,255,0.045);color:rgba(255,255,255,0.8);transform:translateX(2px);}
-        .r-nav-item.active{background:rgba(245,158,11,0.09);color:#F5A623;border-color:rgba(245,158,11,0.2);font-weight:650;}
+        .r-nav-item.active{
+          background:linear-gradient(135deg,rgba(245,158,11,0.18) 0%,rgba(245,158,11,0.08) 100%);
+          color:#F5A623;
+          border-color:rgba(245,158,11,0.28);
+          font-weight:700;
+          box-shadow:0 0 18px rgba(245,158,11,0.12),inset 0 1px 0 rgba(245,158,11,0.15);
+        }
         .r-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
           width:3px;height:20px;border-radius:0 3px 3px 0;
-          background:linear-gradient(180deg,#F59E0B,#ec4899,#7C3AED);
-          animation:indPulse 2.5s ease-in-out infinite;}
+          background:linear-gradient(180deg,#F59E0B,#FBBF24);
+          box-shadow:0 0 8px rgba(245,158,11,0.7);}
+        .r-nav-item.active::after{content:'';position:absolute;inset:0;border-radius:12px;
+          background:radial-gradient(ellipse 80% 60% at 10% 50%,rgba(245,158,11,0.10) 0%,transparent 70%);
+          pointer-events:none;}
         .r-live-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,0.1);
           border:1px solid rgba(245,158,11,0.2);border-radius:7px;padding:2px 7px;
           font-size:9px;font-weight:700;color:#F59E0B;margin-left:auto;letter-spacing:0.05em;text-transform:uppercase;}
@@ -684,20 +693,6 @@ export default function Dashboard() {
             </div>
           )}
           <div className="r-sidebar-bottom">
-            {/* Protection status */}
-            <div style={{ padding: '10px 13px', marginBottom: 4 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Shield size={11} color="#34d399" />
-                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600 }}>Protection</span>
-                </div>
-                <span style={{ color: '#34d399', fontSize: 10, fontWeight: 700 }}>Active</span>
-              </div>
-              <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: '86%', background: 'linear-gradient(90deg,#34d399,#F59E0B)', borderRadius: 4 }} />
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, marginTop: 4 }}>86% coverage · 1.2k rules</div>
-            </div>
             <button onClick={handleLogout} className="r-btn-logout">
               <LogOut size={14} strokeWidth={1.8} /> Logout
             </button>

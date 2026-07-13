@@ -362,7 +362,6 @@ const BOTTOM_NAV = [
   { label: 'Live Feed',   icon: Rss,             href: '/live-feed'  },
   { label: 'Automation',  icon: Zap,             href: '/automation' },
   { label: 'Alerts',      icon: Bell,            href: '/alerts'     },
-  { label: 'Settings',    icon: Settings,        href: '/settings'   },
 ];
 
 const SIDEBAR_NAV = [
@@ -1070,8 +1069,12 @@ export default function Dashboard() {
                 </div>
               </div>
               {[
-                { icon: CreditCard, label: 'Billing',  href: '/billing',  color: '#F59E0B' },
-                { icon: Layers,     label: 'Channels', href: '/channels', color: '#60a5fa' },
+              { icon: CreditCard, label: 'Billing',     href: '/billing',       color: '#F59E0B' },
+              { icon: Layers,     label: 'Channels',    href: '/channels',      color: '#60a5fa' },
+              { icon: BarChart2,  label: 'Analytics',   href: '/analytics',     color: '#34d399' },
+              { icon: Bot,        label: 'Comment Bot', href: '/comment-bot',   color: '#a78bfa' },
+              { icon: Bell,       label: 'Notifications', href: '/notifications', color: '#60a5fa' },
+              { icon: Settings,   label: 'Settings',    href: '/settings',      color: '#94a3b8' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14, transition: 'background 0.15s' }}

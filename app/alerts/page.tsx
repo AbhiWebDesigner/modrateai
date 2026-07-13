@@ -12,7 +12,6 @@ const navItems = [
   { href: '/analytics', icon: BarChart2, label: 'Analytics' },
   { href: '/automation', icon: Zap, label: 'Automation' },
   { href: '/alerts', icon: Bell, label: 'Alerts' },
-  { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 const moreItems = [

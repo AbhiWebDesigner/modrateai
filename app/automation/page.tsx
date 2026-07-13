@@ -10,8 +10,6 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type Video = {
   id: string;
   title: string;
@@ -35,14 +33,12 @@ type Rule = {
   createdAt?: any;
 };
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const NAV_LINKS = [
   { href: "/dashboard",  label: "Overview",   icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>) },
   { href: "/live-feed",  label: "Live Feed",  icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/></svg>) },
   { href: "/automation", label: "Automation", icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>) },
   { href: "/alerts",     label: "Alerts",     icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>) },
-]; 
+];
 
 const STEPS = ["Select Video", "Keywords", "Auto Reply", "Advanced"];
 
@@ -52,23 +48,9 @@ const SAMPLE_VIDEOS: Video[] = [
   { id: "3", title: "Telugu Tech Tips #42",      date: "Jun 18, 2026", views: "22.7K", comments: 489, thumb: "📹" },
 ];
 
-// ─── Helper — ensures automations/{uid} parent doc exists ─────────────────────
-// Uses setDoc with merge:true so existing fields are never overwritten.
 async function ensureParentDoc(uid: string) {
   const parentRef = doc(db, "automations", uid);
-  await setDoc(
-    parentRef,
-    {
-      // Only set defaults if fields are missing (merge:true handles this)
-      totalRules:       0,
-      activeRules:      0,
-      totalRepliesSent: 0,
-      moderationMode:   "auto",
-      notifications:    true,
-      schedule:         { enabled: false },
-    },
-    { merge: true }
-  );
+  await setDoc(parentRef, { totalRules: 0, activeRules: 0, totalRepliesSent: 0, moderationMode: "auto", notifications: true, schedule: { enabled: false } }, { merge: true });
 }
 
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
@@ -77,145 +59,27 @@ function Sidebar({ pathname }: { pathname: string }) {
   return (
     <>
       <style>{`
-        @keyframes sidebarPulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.55; }
-        }
+        @keyframes sidebarPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
         @keyframes activeGlow {
           0%, 100% { box-shadow: 0 0 0 1px rgba(255,159,26,.55), 0 0 18px rgba(255,159,26,.28), 0 0 40px rgba(255,159,26,.14), 0 0 70px rgba(255,159,26,.07); }
           50%       { box-shadow: 0 0 0 1px rgba(255,159,26,.75), 0 0 24px rgba(255,159,26,.42), 0 0 52px rgba(255,159,26,.22), 0 0 88px rgba(255,159,26,.10); }
         }
-
-        .snav-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 9px 13px;
-          border-radius: 12px;
-          text-decoration: none;
-          font-size: 13.5px;
-          font-weight: 500;
-          color: rgba(255,255,255,0.38);
-          border: 1px solid transparent;
-          position: relative;
-          transition: background 0.22s, color 0.22s, border-color 0.22s, transform 0.22s, box-shadow 0.22s;
-          letter-spacing: -0.01em;
-          cursor: pointer;
-        }
-        .snav-item:hover {
-          background: rgba(255,255,255,0.04);
-          color: rgba(255,255,255,0.75);
-          transform: translateX(2px);
-          border-color: rgba(255,255,255,0.05);
-        }
-
-        /* ── PREMIUM ACTIVE ITEM ── */
-        .snav-item.active {
-          background: linear-gradient(90deg, rgba(255,159,26,.18) 0%, rgba(255,159,26,.08) 100%);
-          color: #F9A825;
-          font-weight: 650;
-          border-color: rgba(255,159,26,.32);
-          border-radius: 14px;
-          animation: activeGlow 3s ease-in-out infinite;
-          backdrop-filter: blur(18px);
-          -webkit-backdrop-filter: blur(18px);
-          transform: none;
-        }
-
-        /* Large radial glow behind active item */
-        .snav-item.active::before {
-          content: '';
-          position: absolute;
-          inset: -16px -20px;
-          background: radial-gradient(circle, rgba(255,159,26,.35) 0%, rgba(255,159,26,.15) 40%, transparent 75%);
-          filter: blur(32px);
-          border-radius: 50%;
-          pointer-events: none;
-          z-index: -1;
-        }
-
-        /* Gradient left edge indicator */
-        .snav-item.active::after {
-          content: '';
-          position: absolute;
-          left: -10px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 3px;
-          height: 22px;
-          border-radius: 0 3px 3px 0;
-          background: linear-gradient(180deg, #F59E0B, #EC4899, #7C3AED);
-          box-shadow: 0 0 10px rgba(245,158,11,.7), 0 0 24px rgba(236,72,153,.35);
-        }
-
-        /* LIVE badge */
-        .snav-live {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          margin-left: auto;
-          padding: 2px 8px;
-          border-radius: 10px;
-          font-size: 9px;
-          font-weight: 700;
-          letter-spacing: .05em;
-          color: #F9A825;
-          background: rgba(255,159,26,.12);
-          border: 1px solid rgba(255,159,26,.35);
-          box-shadow: 0 0 8px rgba(255,159,26,.25), inset 0 0 6px rgba(255,159,26,.08);
-          backdrop-filter: blur(8px);
-        }
-        .snav-live-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: #F59E0B;
-          box-shadow: 0 0 6px rgba(245,158,11,.9);
-          animation: sidebarPulse 1.6s ease-in-out infinite;
-        }
+        .snav-item { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-radius: 12px; text-decoration: none; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,0.38); border: 1px solid transparent; position: relative; transition: background 0.22s, color 0.22s, border-color 0.22s, transform 0.22s, box-shadow 0.22s; letter-spacing: -0.01em; cursor: pointer; }
+        .snav-item:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.75); transform: translateX(2px); border-color: rgba(255,255,255,0.05); }
+        .snav-item.active { background: linear-gradient(90deg, rgba(255,159,26,.18) 0%, rgba(255,159,26,.08) 100%); color: #F9A825; font-weight: 650; border-color: rgba(255,159,26,.32); border-radius: 14px; animation: activeGlow 3s ease-in-out infinite; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); transform: none; }
+        .snav-item.active::before { content: ''; position: absolute; inset: -16px -20px; background: radial-gradient(circle, rgba(255,159,26,.35) 0%, rgba(255,159,26,.15) 40%, transparent 75%); filter: blur(32px); border-radius: 50%; pointer-events: none; z-index: -1; }
+        .snav-item.active::after { content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, #F59E0B, #EC4899, #7C3AED); box-shadow: 0 0 10px rgba(245,158,11,.7), 0 0 24px rgba(236,72,153,.35); }
+        .snav-live { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 700; letter-spacing: .05em; color: #F9A825; background: rgba(255,159,26,.12); border: 1px solid rgba(255,159,26,.35); box-shadow: 0 0 8px rgba(255,159,26,.25), inset 0 0 6px rgba(255,159,26,.08); backdrop-filter: blur(8px); }
+        .snav-live-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; box-shadow: 0 0 6px rgba(245,158,11,.9); animation: sidebarPulse 1.6s ease-in-out infinite; }
       `}</style>
-
-      <div style={{
-        background: "rgba(10,10,14,0.92)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        borderRight: "1px solid rgba(255,255,255,0.055)",
-        width: 228,
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        padding: "22px 10px 20px",
-        position: "fixed",
-        left: 0,
-        top: 0,
-        zIndex: 20,
-        boxShadow: "4px 0 40px rgba(0,0,0,0.45), inset -1px 0 0 rgba(255,255,255,0.03)",
-      }}>
-        {/* Ambient left edge glow */}
-        <div style={{
-          position: "absolute", left: 0, top: "18%", bottom: "18%",
-          width: 2, borderRadius: 2,
-          background: "linear-gradient(180deg, transparent, rgba(245,158,11,.55), rgba(220,80,130,.65), rgba(124,58,237,.45), transparent)",
-          boxShadow: "0 0 12px rgba(245,158,11,.4), 0 0 28px rgba(245,158,11,.12)",
-          pointerEvents: "none",
-        }} />
-
-        {/* Logo */}
+      <div style={{ background: "rgba(10,10,14,0.92)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,0.055)", width: 228, minHeight: "100vh", display: "flex", flexDirection: "column", padding: "22px 10px 20px", position: "fixed", left: 0, top: 0, zIndex: 20, boxShadow: "4px 0 40px rgba(0,0,0,0.45), inset -1px 0 0 rgba(255,255,255,0.03)" }}>
+        <div style={{ position: "absolute", left: 0, top: "18%", bottom: "18%", width: 2, borderRadius: 2, background: "linear-gradient(180deg, transparent, rgba(245,158,11,.55), rgba(220,80,130,.65), rgba(124,58,237,.45), transparent)", boxShadow: "0 0 12px rgba(245,158,11,.4), 0 0 28px rgba(245,158,11,.12)", pointerEvents: "none" }} />
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 28, paddingLeft: 4 }}>
-          <div style={{
-            background: "linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)",
-            borderRadius: 10, width: 34, height: 34,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 16px rgba(245,158,11,.28)", flexShrink: 0,
-          }}>
-            <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
+          <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)", borderRadius: 10, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(245,158,11,.28)", flexShrink: 0 }}>
+            <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <span style={{ color: "#FAFAFA", fontWeight: 800, fontSize: 15, letterSpacing: "-0.025em" }}>ModrateAI</span>
         </Link>
-
-        {/* Nav */}
         <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
           {NAV_LINKS.map(link => {
             const active = pathname === link.href;
@@ -223,35 +87,15 @@ function Sidebar({ pathname }: { pathname: string }) {
               <Link key={link.href} href={link.href} className={`snav-item${active ? " active" : ""}`}>
                 {link.icon}
                 {link.label}
-                {active && (
-                  <span className="snav-live">
-                    <span className="snav-live-dot" />
-                    live
-                  </span>
-                )}
+                {active && (<span className="snav-live"><span className="snav-live-dot" />live</span>)}
               </Link>
             );
           })}
         </nav>
-
-        {/* Upgrade card */}
-        <div style={{
-          background: "rgba(124,58,237,.1)",
-          border: "1px solid rgba(124,58,237,.22)",
-          borderRadius: 14, padding: "14px 14px", marginTop: 12,
-          backdropFilter: "blur(10px)",
-        }}>
+        <div style={{ background: "rgba(124,58,237,.1)", border: "1px solid rgba(124,58,237,.22)", borderRadius: 14, padding: "14px 14px", marginTop: 12, backdropFilter: "blur(10px)" }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#FAFAFA", marginBottom: 4 }}>Upgrade to Pro 🚀</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,.42)", marginBottom: 10 }}>5,000 comments + live chat</div>
-          <button style={{
-            background: "linear-gradient(135deg,#F59E0B,#FBBF24)",
-            borderRadius: 9, width: "100%", fontSize: 11.5,
-            padding: "8px 0", fontWeight: 700, color: "#080808",
-            border: "none", cursor: "pointer",
-            boxShadow: "0 2px 12px rgba(245,158,11,.22)",
-          }}>
-            Upgrade — ₹349/mo
-          </button>
+          <button style={{ background: "linear-gradient(135deg,#F59E0B,#FBBF24)", borderRadius: 9, width: "100%", fontSize: 11.5, padding: "8px 0", fontWeight: 700, color: "#080808", border: "none", cursor: "pointer", boxShadow: "0 2px 12px rgba(245,158,11,.22)" }}>Upgrade — ₹349/mo</button>
         </div>
       </div>
     </>
@@ -260,42 +104,27 @@ function Sidebar({ pathname }: { pathname: string }) {
 
 // ─── Bottom Nav ───────────────────────────────────────────────────────────────
 
-function BottomNav({ pathname }: { pathname: string }) {
+function BottomNav({ pathname, moreOpen, setMoreOpen }: { pathname: string; moreOpen: boolean; setMoreOpen: (v: any) => void }) {
   return (
-    <div style={{
-      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-      background: "rgba(9,9,11,.97)",
-      borderTop: "1px solid rgba(255,255,255,.055)",
-      display: "flex",
-      backdropFilter: "blur(28px)",
-      WebkitBackdropFilter: "blur(28px)",
-      paddingBottom: "env(safe-area-inset-bottom, 0px)",
-    }}>
+    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: "rgba(9,9,11,.97)", borderTop: "1px solid rgba(255,255,255,.055)", display: "flex", backdropFilter: "blur(28px)", WebkitBackdropFilter: "blur(28px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {NAV_LINKS.map(link => {
         const active = pathname === link.href;
         return (
-          <Link key={link.href} href={link.href} style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            padding: "10px 4px 12px",
-            textDecoration: "none",
-            color: active ? "#F59E0B" : "rgba(255,255,255,.3)",
-            transition: "color 0.18s",
-          }}>
-            {/* Icon wrapper — amber pill bg when active */}
-            <div style={{
-              width: 40, height: 32,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              borderRadius: 10,
-              background: active ? "rgba(245,158,11,0.11)" : "transparent",
-              transition: "background 0.18s",
-            }}>
+          <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px 12px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,.3)", transition: "color 0.18s" }}>
+            <div style={{ width: 40, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, background: active ? "rgba(245,158,11,0.11)" : "transparent", transition: "background 0.18s" }}>
               {link.icon}
             </div>
-            {/* No label — icons only */}
           </Link>
         );
       })}
+      {/* More button */}
+      <button onClick={() => setMoreOpen((v: boolean) => !v)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px 12px", background: "none", border: "none", cursor: "pointer", color: moreOpen ? "#F59E0B" : "rgba(255,255,255,.3)" }}>
+        <div style={{ width: 40, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, background: moreOpen ? "rgba(245,158,11,0.11)" : "transparent", transition: "background 0.18s" }}>
+          <svg width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
+            <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
+          </svg>
+        </div>
+      </button>
     </div>
   );
 }
@@ -306,17 +135,12 @@ export default function AutomationPage() {
   const pathname = usePathname();
   const router   = useRouter();
 
-  // Auth
   const [user,        setUser]        = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-
-  // Rules
   const [rules,        setRules]        = useState<Rule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
   const [saving,       setSaving]       = useState(false);
   const [deleting,     setDeleting]     = useState<string | null>(null);
-
-  // Builder
   const [showBuilder,       setShowBuilder]       = useState(false);
   const [currentStep,       setCurrentStep]       = useState(0);
   const [showVideoSelector, setShowVideoSelector] = useState(false);
@@ -331,8 +155,8 @@ export default function AutomationPage() {
   const [publicReply,       setPublicReply]       = useState(true);
   const [replyDelay,        setReplyDelay]        = useState(20);
   const [ruleActive,        setRuleActive]        = useState(true);
+  const [moreOpen,          setMoreOpen]          = useState(false);
 
-  // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) { router.push("/login"); return; }
@@ -342,7 +166,6 @@ export default function AutomationPage() {
     return () => unsub();
   }, [router]);
 
-  // ── Load rules (real-time) ──────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     const rulesRef = collection(db, "automations", user.uid, "rules");
@@ -354,67 +177,27 @@ export default function AutomationPage() {
     return () => unsub();
   }, [user]);
 
-  // ── Reset builder ───────────────────────────────────────────────────────────
   const resetBuilder = () => {
-    setCurrentStep(0);
-    setRuleName("");
-    setSelectedVideo(null);
-    setKeywords([]);
-    setKeywordInput("");
-    setAiDetection(false);
-    setReplyMode("random");
-    setReplies(["", "", ""]);
-    setAiInstruction("");
-    setPublicReply(true);
-    setReplyDelay(20);
-    setRuleActive(true);
-    setShowBuilder(false);
+    setCurrentStep(0); setRuleName(""); setSelectedVideo(null); setKeywords([]);
+    setKeywordInput(""); setAiDetection(false); setReplyMode("random");
+    setReplies(["", "", ""]); setAiInstruction(""); setPublicReply(true);
+    setReplyDelay(20); setRuleActive(true); setShowBuilder(false);
   };
 
-  // ── Add keyword ─────────────────────────────────────────────────────────────
   const addKeyword = () => {
     const trimmed = keywordInput.trim();
-    if (trimmed && !keywords.includes(trimmed)) {
-      setKeywords(prev => [...prev, trimmed]);
-      setKeywordInput("");
-    }
+    if (trimmed && !keywords.includes(trimmed)) { setKeywords(prev => [...prev, trimmed]); setKeywordInput(""); }
   };
 
-  // ── Save rule ──────────────────────────────────────────────────────────────
-  // Ensures parent doc exists (setDoc merge) before incrementing counters.
   const goLive = async () => {
     if (!ruleName || !selectedVideo || !user) return;
     setSaving(true);
     try {
-      // 1. Guarantee parent doc exists with all required fields
       await ensureParentDoc(user.uid);
-
-      // 2. Add the rule into the sub-collection
       const rulesRef = collection(db, "automations", user.uid, "rules");
-      await addDoc(rulesRef, {
-        name:          ruleName,
-        video:         selectedVideo,
-        keywords,
-        replyMode,
-        replies,
-        aiInstruction,
-        publicReply,
-        replyDelay,
-        active:        ruleActive,
-        createdAt:     serverTimestamp(),
-      });
-
-      // 3. Increment counters on the now-guaranteed parent doc
+      await addDoc(rulesRef, { name: ruleName, video: selectedVideo, keywords, replyMode, replies, aiInstruction, publicReply, replyDelay, active: ruleActive, createdAt: serverTimestamp() });
       const parentRef = doc(db, "automations", user.uid);
-      await setDoc(
-        parentRef,
-        {
-          totalRules:  increment(1),
-          activeRules: increment(ruleActive ? 1 : 0),
-        },
-        { merge: true }
-      );
-
+      await setDoc(parentRef, { totalRules: increment(1), activeRules: increment(ruleActive ? 1 : 0) }, { merge: true });
       resetBuilder();
     } catch (err) {
       console.error("Failed to save rule:", err);
@@ -423,24 +206,14 @@ export default function AutomationPage() {
     }
   };
 
-  // ── Delete rule ─────────────────────────────────────────────────────────────
   const deleteRule = async (ruleId: string, wasActive: boolean) => {
     if (!user) return;
     setDeleting(ruleId);
     try {
       await deleteDoc(doc(db, "automations", user.uid, "rules", ruleId));
-
-      // ensureParentDoc guards against the doc not existing (edge case)
       await ensureParentDoc(user.uid);
       const parentRef = doc(db, "automations", user.uid);
-      await setDoc(
-        parentRef,
-        {
-          totalRules:  increment(-1),
-          activeRules: increment(wasActive ? -1 : 0),
-        },
-        { merge: true }
-      );
+      await setDoc(parentRef, { totalRules: increment(-1), activeRules: increment(wasActive ? -1 : 0) }, { merge: true });
     } catch (err) {
       console.error("Failed to delete rule:", err);
     } finally {
@@ -448,31 +221,19 @@ export default function AutomationPage() {
     }
   };
 
-  // ── Toggle rule active ──────────────────────────────────────────────────────
   const toggleRule = async (rule: Rule) => {
     if (!user) return;
     const newActive = !rule.active;
     try {
-      // Update the rule itself
-      await updateDoc(
-        doc(db, "automations", user.uid, "rules", rule.id),
-        { active: newActive }
-      );
-
-      // Safely update parent counter
+      await updateDoc(doc(db, "automations", user.uid, "rules", rule.id), { active: newActive });
       await ensureParentDoc(user.uid);
       const parentRef = doc(db, "automations", user.uid);
-      await setDoc(
-        parentRef,
-        { activeRules: increment(newActive ? 1 : -1) },
-        { merge: true }
-      );
+      await setDoc(parentRef, { activeRules: increment(newActive ? 1 : -1) }, { merge: true });
     } catch (err) {
       console.error("Failed to toggle rule:", err);
     }
   };
 
-  // ── Loading ─────────────────────────────────────────────────────────────────
   if (authLoading) {
     return (
       <div style={{ minHeight: "100vh", background: "#07030F", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -482,23 +243,15 @@ export default function AutomationPage() {
     );
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        *, *::before, *::after {
-          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-          letter-spacing: -0.015em;
-          box-sizing: border-box; margin: 0; padding: 0;
-        }
+        *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.015em; box-sizing: border-box; margin: 0; padding: 0; }
         html, body { background: #07030F; color: white; }
-        /* Mobile (≤1023px): bottom nav shown, sidebar hidden */
         .desktop-sidebar { display: none !important; }
         .bottom-nav      { display: flex !important; }
         .main-content    { margin-left: 0 !important; padding: 20px 16px 72px !important; }
-
-        /* Desktop (≥1024px): left sidebar shown, bottom nav hidden */
         @media (min-width: 1024px) {
           .desktop-sidebar { display: flex !important; }
           .bottom-nav      { display: none !important; }
@@ -508,10 +261,10 @@ export default function AutomationPage() {
         input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.25); }
         @keyframes spin    { to { transform: rotate(360deg); } }
         @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
         .rule-card { animation: fadeIn 0.2s ease; }
       `}</style>
 
-      {/* Background */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, background: `radial-gradient(ellipse 55% 50% at 5% 15%, rgba(245,158,11,0.10) 0%, transparent 60%), radial-gradient(ellipse 60% 55% at 5% 95%, rgba(109,40,217,0.18) 0%, transparent 62%), #07030F` }} />
 
       <div className="desktop-sidebar" style={{ flexDirection: "column" }}>
@@ -519,14 +272,12 @@ export default function AutomationPage() {
       </div>
 
       <div className="bottom-nav">
-        <BottomNav pathname={pathname} />
+        <BottomNav pathname={pathname} moreOpen={moreOpen} setMoreOpen={setMoreOpen} />
       </div>
 
       <main className="main-content" style={{ position: "relative", zIndex: 10, minHeight: "100vh" }}>
-
         {!showBuilder ? (
           <>
-            {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
               <div>
                 <h1 style={{ fontSize: 22, fontWeight: 800, color: "#FAFAFA", marginBottom: 4 }}>Automation Rules</h1>
@@ -538,7 +289,6 @@ export default function AutomationPage() {
               </button>
             </div>
 
-            {/* Rules list */}
             {rulesLoading ? (
               <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
                 <div style={{ width: 32, height: 32, border: "2px solid #F59E0B", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -560,9 +310,7 @@ export default function AutomationPage() {
                       <div style={{ background: "rgba(245,158,11,0.12)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>⚡</div>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 14 }}>{rule.name}</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginTop: 2 }}>
-                          {rule.video?.title} • {rule.keywords?.length ?? 0} keywords
-                        </div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginTop: 2 }}>{rule.video?.title} • {rule.keywords?.length ?? 0} keywords</div>
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -579,11 +327,8 @@ export default function AutomationPage() {
             )}
           </>
         ) : (
-          /* ── Builder ── */
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-
-              {/* Builder header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <button onClick={resetBuilder} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", fontSize: 14 }}>←</button>
@@ -595,14 +340,11 @@ export default function AutomationPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", borderRadius: 20, padding: "4px 12px", fontSize: 11 }}>● Live Preview</span>
                   <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "9px 20px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                    {saving
-                      ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>)
-                      : "🚀 Go Live"}
+                    {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live"}
                   </button>
                 </div>
               </div>
 
-              {/* Steps */}
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 24, overflowX: "auto", paddingBottom: 4 }}>
                 {STEPS.map((step, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
@@ -617,18 +359,14 @@ export default function AutomationPage() {
                 ))}
               </div>
 
-              {/* Step card */}
               <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "24px" }}>
-
-                {/* Step 1 — Select Video */}
                 {currentStep === 0 && (
                   <div>
                     <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Select YouTube Video</h2>
                     <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 24 }}>Choose which video to monitor for comments</p>
                     <div style={{ marginBottom: 20 }}>
                       <label style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", display: "block", marginBottom: 8 }}>Rule Name</label>
-                      <input value={ruleName} onChange={e => setRuleName(e.target.value)} placeholder="e.g. Spam Filter Rule"
-                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14 }} />
+                      <input value={ruleName} onChange={e => setRuleName(e.target.value)} placeholder="e.g. Spam Filter Rule" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14 }} />
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
                       <button onClick={() => setShowVideoSelector(true)} style={{ background: selectedVideo ? "rgba(245,158,11,0.10)" : "rgba(255,255,255,0.04)", border: `1px solid ${selectedVideo ? "rgba(245,158,11,0.35)" : "rgba(255,255,255,0.08)"}`, borderRadius: 14, padding: 16, textAlign: "left", cursor: "pointer", color: "white" }}>
@@ -644,13 +382,10 @@ export default function AutomationPage() {
                         </div>
                       ))}
                     </div>
-                    <button onClick={() => setCurrentStep(1)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", width: "100%" }}>
-                      Next — Set Keywords →
-                    </button>
+                    <button onClick={() => setCurrentStep(1)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", width: "100%" }}>Next — Set Keywords →</button>
                   </div>
                 )}
 
-                {/* Step 2 — Keywords */}
                 {currentStep === 1 && (
                   <div>
                     <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Keyword Triggers</h2>
@@ -665,8 +400,7 @@ export default function AutomationPage() {
                       </button>
                     </div>
                     <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                      <input value={keywordInput} onChange={e => setKeywordInput(e.target.value)} onKeyDown={e => e.key === "Enter" && addKeyword()} placeholder="Type keyword and press Enter"
-                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", flex: 1, padding: "10px 14px", fontSize: 14 }} />
+                      <input value={keywordInput} onChange={e => setKeywordInput(e.target.value)} onKeyDown={e => e.key === "Enter" && addKeyword()} placeholder="Type keyword and press Enter" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", flex: 1, padding: "10px 14px", fontSize: 14 }} />
                       <button onClick={addKeyword} style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "10px 16px", fontSize: 13, fontWeight: 600, color: "#F59E0B", cursor: "pointer" }}>+ Add</button>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24, minHeight: 32 }}>
@@ -685,7 +419,6 @@ export default function AutomationPage() {
                   </div>
                 )}
 
-                {/* Step 3 — Auto Reply */}
                 {currentStep === 2 && (
                   <div>
                     <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Auto Reply Settings</h2>
@@ -702,8 +435,7 @@ export default function AutomationPage() {
                         {replies.map((r, i) => (
                           <div key={i}>
                             <label style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", display: "block", marginBottom: 6 }}>Reply {i + 1}</label>
-                            <input value={r} onChange={e => { const arr = [...replies]; arr[i] = e.target.value; setReplies(arr); }} placeholder={`Template reply ${i + 1}...`}
-                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14 }} />
+                            <input value={r} onChange={e => { const arr = [...replies]; arr[i] = e.target.value; setReplies(arr); }} placeholder={`Template reply ${i + 1}...`} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14 }} />
                           </div>
                         ))}
                         <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>Use {"{{username}}"} to mention the commenter</div>
@@ -711,8 +443,7 @@ export default function AutomationPage() {
                     ) : (
                       <div style={{ marginBottom: 24 }}>
                         <label style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", display: "block", marginBottom: 6 }}>AI Instruction</label>
-                        <textarea value={aiInstruction} onChange={e => setAiInstruction(e.target.value)} placeholder="e.g. Reply politely in Telugu, thank them for watching and invite them to subscribe..." rows={4}
-                          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14, resize: "none" }} />
+                        <textarea value={aiInstruction} onChange={e => setAiInstruction(e.target.value)} placeholder="e.g. Reply politely in Telugu, thank them for watching..." rows={4} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14, resize: "none" }} />
                       </div>
                     )}
                     <div style={{ display: "flex", gap: 10 }}>
@@ -722,7 +453,6 @@ export default function AutomationPage() {
                   </div>
                 )}
 
-                {/* Step 4 — Advanced */}
                 {currentStep === 3 && (
                   <div>
                     <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Advanced Settings</h2>
@@ -754,9 +484,7 @@ export default function AutomationPage() {
                     <div style={{ display: "flex", gap: 10 }}>
                       <button onClick={() => setCurrentStep(2)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
                       <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                        {saving
-                          ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>)
-                          : "🚀 Go Live!"}
+                        {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live!"}
                       </button>
                     </div>
                   </div>
@@ -764,7 +492,6 @@ export default function AutomationPage() {
               </div>
             </div>
 
-            {/* Preview panel — desktop only */}
             <div style={{ width: 260, flexShrink: 0, display: "none" }} className="preview-panel">
               <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 20, position: "sticky", top: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>📱 Live Preview</div>
@@ -821,9 +548,37 @@ export default function AutomationPage() {
         </div>
       )}
 
-      <style>{`
-        @media (min-width: 1024px) { .preview-panel { display: block !important; } }
-      `}</style>
+      {/* More Drawer */}
+      {moreOpen && (
+        <>
+          <div onClick={() => setMoreOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 55, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }} />
+          <div style={{ position: "fixed", bottom: 70, left: 12, right: 12, zIndex: 60, background: "rgba(14,14,20,0.98)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "8px 8px 12px", boxShadow: "0 -8px 48px rgba(0,0,0,0.7)", backdropFilter: "blur(28px)", animation: "slideUp 0.2s ease" }}>
+            <div style={{ width: 34, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 4, margin: "6px auto 14px" }} />
+            {[
+              { icon: "💳", label: "Billing",          href: "/billing"       },
+              { icon: "🌐", label: "Channels",         href: "/channels"      },
+              { icon: "📊", label: "Analytics",        href: "/analytics"     },
+              { icon: "🤖", label: "Human-AI Replys",  href: "/human-ai-replys" },
+              { icon: "🔔", label: "Notifications",    href: "/notifications" },
+              { icon: "⚙️", label: "Settings",         href: "/settings"      },
+            ].map(item => (
+              <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
+                style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 12, textDecoration: "none", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 14 }}>
+                <span style={{ fontSize: 20 }}>{item.icon}</span>
+                {item.label}
+              </Link>
+            ))}
+            <div style={{ margin: "8px 16px 0", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 8 }}>
+              <button onClick={() => { setMoreOpen(false); router.push("/login"); }}
+                style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", background: "none", border: "none", cursor: "pointer", color: "#f87171", fontWeight: 600, fontSize: 14, width: "100%" }}>
+                <span style={{ fontSize: 20 }}>🚪</span> Logout
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      <style>{`@media (min-width: 1024px) { .preview-panel { display: block !important; } }`}</style>
     </>
   );
 }

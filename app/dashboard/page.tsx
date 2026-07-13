@@ -502,9 +502,9 @@ export default function Dashboard() {
           width:228px;min-width:228px;
           background:linear-gradient(
             180deg,
-            rgba(13,11,20,0.98) 0%,
-            rgba(11,10,18,0.99) 40%,
-            rgba(12,10,19,0.98) 100%
+            rgba(13,11,20,0.88) 0%,
+            rgba(11,10,18,0.90) 40%,
+            rgba(12,10,19,0.88) 100%
           );
           backdrop-filter:blur(40px) saturate(1.5);
           border-right:1px solid rgba(245,158,11,0.09);
@@ -520,13 +520,13 @@ export default function Dashboard() {
 
         /* Ambient orange halo — bleeds softly into dashboard */
         .r-sidebar-glow{
-          position:fixed;left:0;top:0;bottom:0;width:500px;
-          pointer-events:none;z-index:1;
+          position:fixed;left:0;top:0;width:100vw;height:100vh;
+          pointer-events:none;z-index:0;
           background:
-            radial-gradient(ellipse 55% 70% at 0% 30%, rgba(245,158,11,0.055) 0%, rgba(200,100,0,0.015) 40%, transparent 65%),
-            radial-gradient(ellipse 40% 50% at 0% 75%, rgba(245,158,11,0.03) 0%, transparent 55%);
-          animation:sidebarGlow 4s ease-in-out infinite;
-          filter:blur(1px);
+            radial-gradient(ellipse 38% 65% at 0% 35%, rgba(245,158,11,0.16) 0%, rgba(200,100,0,0.05) 35%, transparent 60%),
+            radial-gradient(ellipse 22% 45% at 0% 78%, rgba(245,158,11,0.09) 0%, transparent 50%),
+            radial-gradient(ellipse 18% 30% at 0% 10%, rgba(251,191,36,0.09) 0%, transparent 45%);
+          animation:sidebarGlow 5s ease-in-out infinite;
         }
 
         /* Amber spine — the single bright accent line */
@@ -668,7 +668,7 @@ export default function Dashboard() {
         .r-sidebar-bottom{padding:8px 10px 22px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:4px;}
 
         /* MAIN */
-        .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:2;}
+        .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
 
         /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.88);backdrop-filter:blur(28px);

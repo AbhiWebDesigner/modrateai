@@ -1072,7 +1072,7 @@ export default function Dashboard() {
               { icon: CreditCard, label: 'Billing',     href: '/billing',       color: '#F59E0B' },
               { icon: Layers,     label: 'Channels',    href: '/channels',      color: '#60a5fa' },
               { icon: BarChart2,  label: 'Analytics',   href: '/analytics',     color: '#34d399' },
-              { icon: Bot,        label: 'Comment Bot', href: '/comment-bot',   color: '#a78bfa' },
+              { icon: Bot,        label: 'Human-AI replys', href: '/Human-AI replys',   color: '#a78bfa' },
               { icon: Bell,       label: 'Notifications', href: '/notifications', color: '#60a5fa' },
               { icon: Settings,   label: 'Settings',    href: '/settings',      color: '#94a3b8' },
               ].map(item => (

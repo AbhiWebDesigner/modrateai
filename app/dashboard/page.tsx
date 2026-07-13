@@ -1035,6 +1035,7 @@ export default function Dashboard() {
                 <span className="r-bnav-icon">
                   <item.icon size={21} strokeWidth={isActive ? 2.2 : 1.7} />
                 </span>
+                <span style={{fontSize:9,fontWeight:isActive?700:500}}>{item.label}</span>
               </Link>
             );
           })}

@@ -1,25 +1,7 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const NAV_LINKS = [
-  { href: "/dashboard", label: "Home", icon: (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-  )},
-  { href: "/analytics", label: "Analytics", icon: (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-  )},
-  { href: "/automation", label: "Automation", icon: (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-  )},
-  { href: "/alerts", label: "Alerts", icon: (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-  )},
-  { href: "/settings", label: "Settings", icon: (
-    <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  )},
-];
+import { DashboardSidebar, DashboardBottomNav } from "@/components/DashboardLayout";
 
 const PLANS = [
   {
@@ -96,57 +78,6 @@ const PLANS = [
   },
 ];
 
-function Sidebar({ pathname }: { pathname: string }) {
-  return (
-    <div style={{
-      background: "rgba(255,255,255,0.025)", borderRight: "1px solid rgba(255,255,255,0.07)",
-      width: 220, minHeight: "100vh", display: "flex", flexDirection: "column",
-      padding: "24px 12px", position: "fixed", left: 0, top: 0, zIndex: 20,
-    }}>
-      <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", marginBottom: 32, paddingLeft: 8 }}>
-        <div style={{ background: "linear-gradient(135deg,#F59E0B 0%,#EA580C 55%,#7C3AED 100%)", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 16px rgba(245,158,11,0.25)" }}>
-          <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <span style={{ color: "#FAFAFA", fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em" }}>ModrateAI</span>
-      </Link>
-      <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
-        {NAV_LINKS.map(link => {
-          const active = pathname === link.href;
-          return (
-            <Link key={link.href} href={link.href} style={{
-              display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10,
-              textDecoration: "none", fontSize: 14, fontWeight: active ? 600 : 400,
-              color: active ? "#F59E0B" : "rgba(255,255,255,0.45)",
-              background: active ? "rgba(245,158,11,0.08)" : "transparent", transition: "all 0.15s",
-            }}>{link.icon}{link.label}</Link>
-          );
-        })}
-      </nav>
-      <div style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.25),rgba(79,70,229,0.20))", border: "1px solid rgba(124,58,237,0.30)", borderRadius: 14, padding: "14px 12px", marginTop: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#FAFAFA", marginBottom: 4 }}>Upgrade to Pro 🚀</div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", marginBottom: 10 }}>5,000 comments + live chat</div>
-        <button style={{ background: "rgba(255,255,255,0.12)", borderRadius: 8, width: "100%", fontSize: 11, padding: "7px 0", fontWeight: 600, color: "#FAFAFA", border: "none", cursor: "pointer" }}>Upgrade — ₹349/mo</button>
-      </div>
-    </div>
-  );
-}
-
-function BottomNav({ pathname }: { pathname: string }) {
-  return (
-    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: "rgba(9,9,11,0.95)", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", backdropFilter: "blur(20px)" }}>
-      {NAV_LINKS.map(link => {
-        const active = pathname === link.href;
-        return (
-          <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 0 12px", textDecoration: "none", gap: 4, color: active ? "#F59E0B" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: active ? 600 : 400 }}>
-            {link.icon}{link.label}
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
-
-// Razorpay test modal
 function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () => void }) {
   const [step, setStep] = useState<"confirm" | "processing" | "done">("confirm");
 
@@ -159,7 +90,6 @@ function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () =
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div style={{ background: "#0D0A1A", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 24, width: "100%", maxWidth: 420, padding: 28, position: "relative" }}>
 
-        {/* Test mode banner */}
         <div style={{ background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.30)", borderRadius: 10, padding: "8px 14px", marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 14 }}>🧪</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: "#eab308" }}>Razorpay TEST MODE — no real payment</span>
@@ -167,7 +97,6 @@ function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () =
 
         {step === "confirm" && (
           <>
-            {/* Razorpay logo */}
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
               <div style={{ background: "#072654", borderRadius: 10, padding: "8px 14px", display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ color: "#3395FF", fontWeight: 900, fontSize: 18 }}>R</span>
@@ -176,24 +105,21 @@ function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () =
               <span style={{ color: "rgba(255,255,255,0.40)", fontSize: 12 }}>Secure Payment</span>
             </div>
 
-            <h3 style={{ fontWeight: 800, fontSize: 20, marginBottom: 4 }}>
-              {plan.name.replace(" ✦", "")}
-            </h3>
+            <h3 style={{ fontWeight: 800, fontSize: 20, marginBottom: 4, color: "#FAFAFA" }}>{plan.name.replace(" ✦", "")}</h3>
             <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, marginBottom: 24 }}>{plan.tagline}</p>
 
             <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "16px 18px", marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                 <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>{plan.name.replace(" ✦", "")} Plan</span>
-                <span style={{ fontWeight: 700, fontSize: 15 }}>{plan.price}/mo</span>
+                <span style={{ fontWeight: 700, fontSize: 15, color: "#FAFAFA" }}>{plan.price}/mo</span>
               </div>
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>GST (18%)</span>
-                <span style={{ fontSize: 14 }}>Included</span>
+                <span style={{ fontSize: 14, color: "#FAFAFA" }}>Included</span>
               </div>
             </div>
 
-            {/* Card input (demo) */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", display: "block", marginBottom: 6 }}>Card Number</label>
               <input defaultValue="4111 1111 1111 1111" readOnly style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "rgba(255,255,255,0.60)", width: "100%", padding: "10px 14px", fontSize: 14, letterSpacing: 2 }} />
@@ -224,7 +150,7 @@ function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () =
         {step === "processing" && (
           <div style={{ textAlign: "center", padding: "32px 0" }}>
             <div style={{ width: 48, height: 48, border: "3px solid rgba(51,149,255,0.20)", borderTop: "3px solid #3395FF", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 20px" }} />
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Processing payment…</div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, color: "#FAFAFA" }}>Processing payment…</div>
             <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 13 }}>Please wait, do not close this window</div>
           </div>
         )}
@@ -247,7 +173,6 @@ function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () =
 }
 
 export default function BillingPage() {
-  const pathname = usePathname();
   const currentPlan = "free";
   const [modalPlan, setModalPlan] = useState<typeof PLANS[0] | null>(null);
 
@@ -256,118 +181,110 @@ export default function BillingPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { background: #07030F; color: white; }
+        html, body { background: #09090B; color: white; }
         .desktop-sidebar { display: none; }
-        .bottom-nav { display: flex; }
+        .bottom-nav-wrap { display: flex; }
         .main-content { margin-left: 0; padding: 20px 16px 100px; }
         @media (min-width: 1024px) {
-          .desktop-sidebar { display: flex !important; }
-          .bottom-nav { display: none !important; }
-          .main-content { margin-left: 220px; padding: 36px 48px; }
+          .desktop-sidebar { display: flex !important; flex-direction: column; }
+          .bottom-nav-wrap { display: none !important; }
+          .main-content { margin-left: 240px; padding: 36px 48px; }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
-      {/* Background */}
-      <div style={{ position: "fixed", inset: 0, zIndex: 0, background: `radial-gradient(ellipse 55% 50% at 5% 15%, rgba(245,158,11,0.10) 0%, transparent 60%), radial-gradient(ellipse 60% 55% at 5% 95%, rgba(109,40,217,0.18) 0%, transparent 62%), #07030F` }} />
+      <div className="premium-bg" />
 
-      <div className="desktop-sidebar" style={{ flexDirection: "column" }}><Sidebar pathname={pathname} /></div>
-      <div className="bottom-nav"><BottomNav pathname={pathname} /></div>
+      <div className="desktop-sidebar"><DashboardSidebar /></div>
+      <div className="bottom-nav-wrap"><DashboardBottomNav /></div>
 
       <main className="main-content" style={{ position: "relative", zIndex: 10 }}>
 
-        {/* ── Subscription Section ── */}
-        <div style={{ marginBottom: 48 }}>
+        {/* Header */}
+        <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: "#FAFAFA", marginBottom: 4 }}>Subscription</h1>
-          <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 8 }}>Your current plan & billing</p>
-
-          {/* Current plan pill */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 14px", marginBottom: 32 }}>
+          <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 12 }}>Your current plan & billing</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 14px" }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
             <span style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>FREE · Trial</span>
           </div>
-
-          {/* Plans grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-            {PLANS.map(plan => {
-              const isCurrentPlan = plan.id === currentPlan;
-              return (
-                <div key={plan.id} style={{
-                  background: plan.color,
-                  border: `1.5px solid ${isCurrentPlan ? "rgba(245,158,11,0.50)" : plan.borderColor}`,
-                  borderRadius: 20, padding: "24px 22px",
-                  position: "relative",
-                  boxShadow: plan.id === "pro" ? "0 0 40px rgba(245,158,11,0.08)" : "none",
-                }}>
-                  {/* Badge */}
-                  {plan.badge && (
-                    <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#F59E0B,#EA580C)", borderRadius: 20, padding: "4px 14px", fontSize: 10, fontWeight: 800, color: "white", whiteSpace: "nowrap", letterSpacing: 0.5 }}>
-                      ✦ {plan.badge}
-                    </div>
-                  )}
-
-                  {/* Current plan badge */}
-                  {isCurrentPlan && (
-                    <div style={{ position: "absolute", top: 16, right: 16, background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.30)", borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 700, color: "#F59E0B" }}>
-                      Current
-                    </div>
-                  )}
-
-                  <div style={{ marginBottom: 6 }}>
-                    <div style={{ fontSize: 16, fontWeight: 800 }}>{plan.name}</div>
-                    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, marginTop: 3 }}>{plan.tagline}</div>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: 4, margin: "16px 0" }}>
-                    <span style={{ fontSize: 32, fontWeight: 900, color: "#FAFAFA" }}>{plan.price}</span>
-                    <span style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, paddingBottom: 5 }}>{plan.period}</span>
-                  </div>
-
-                  {plan.trialNote && (
-                    <div style={{ background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "#FBBF24", fontWeight: 600, marginBottom: 16 }}>
-                      {plan.trialNote}
-                    </div>
-                  )}
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
-                    {plan.features.map(f => (
-                      <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
-                        <span style={{ color: "#F59E0B", fontSize: 13, marginTop: 1, flexShrink: 0 }}>✓</span>
-                        <span style={{ color: "rgba(255,255,255,0.70)", fontSize: 13, lineHeight: 1.4 }}>{f}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => plan.id !== "free" && setModalPlan(plan)}
-                    style={{
-                      ...plan.btnStyle,
-                      width: "100%", padding: "12px", borderRadius: 12,
-                      fontSize: 14, fontWeight: 700, border: "none",
-                      cursor: plan.id === "free" || isCurrentPlan ? "default" : "pointer",
-                      opacity: isCurrentPlan ? 0.6 : 1,
-                    }}
-                  >
-                    {isCurrentPlan ? "Current Plan" : plan.btnLabel}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
         </div>
 
-        {/* ── Billing Section ── */}
+        {/* Plans grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 48 }}>
+          {PLANS.map(plan => {
+            const isCurrentPlan = plan.id === currentPlan;
+            return (
+              <div key={plan.id} style={{
+                background: plan.color,
+                border: `1.5px solid ${isCurrentPlan ? "rgba(245,158,11,0.50)" : plan.borderColor}`,
+                borderRadius: 20, padding: "24px 22px",
+                position: "relative",
+                boxShadow: plan.id === "pro" ? "0 0 40px rgba(245,158,11,0.08)" : "none",
+              }}>
+                {plan.badge && (
+                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#F59E0B,#EA580C)", borderRadius: 20, padding: "4px 14px", fontSize: 10, fontWeight: 800, color: "white", whiteSpace: "nowrap" }}>
+                    ✦ {plan.badge}
+                  </div>
+                )}
+                {isCurrentPlan && (
+                  <div style={{ position: "absolute", top: 16, right: 16, background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.30)", borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 700, color: "#F59E0B" }}>
+                    Current
+                  </div>
+                )}
+
+                <div style={{ fontSize: 16, fontWeight: 800, color: "#FAFAFA", marginBottom: 3 }}>{plan.name}</div>
+                <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, marginBottom: 16 }}>{plan.tagline}</div>
+
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 4, marginBottom: 16 }}>
+                  <span style={{ fontSize: 32, fontWeight: 900, color: "#FAFAFA" }}>{plan.price}</span>
+                  <span style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, paddingBottom: 5 }}>{plan.period}</span>
+                </div>
+
+                {plan.trialNote && (
+                  <div style={{ background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "#FBBF24", fontWeight: 600, marginBottom: 16 }}>
+                    {plan.trialNote}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
+                  {plan.features.map(f => (
+                    <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                      <span style={{ color: "#F59E0B", fontSize: 13, marginTop: 1, flexShrink: 0 }}>✓</span>
+                      <span style={{ color: "rgba(255,255,255,0.70)", fontSize: 13, lineHeight: 1.4 }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => plan.id !== "free" && setModalPlan(plan)}
+                  style={{
+                    ...plan.btnStyle,
+                    width: "100%", padding: "12px", borderRadius: 12,
+                    fontSize: 14, fontWeight: 700, border: "none",
+                    cursor: plan.id === "free" || isCurrentPlan ? "default" : "pointer",
+                    opacity: isCurrentPlan ? 0.6 : 1,
+                  }}
+                >
+                  {isCurrentPlan ? "Current Plan" : plan.btnLabel}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Billing Section */}
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA", marginBottom: 4 }}>Billing</h2>
           <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 20 }}>Payment method & invoices</p>
 
-          {/* Payment method */}
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "20px 22px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid #27272A", borderRadius: 16, padding: "20px 22px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, width: 44, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid #27272A", borderRadius: 10, width: 44, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="20" height="14" viewBox="0 0 24 16" fill="none"><rect width="24" height="16" rx="2" fill="rgba(255,255,255,0.05)"/><rect x="0" y="4" width="24" height="4" fill="rgba(255,255,255,0.15)"/></svg>
               </div>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>No payment method on file</div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: "#FAFAFA" }}>No payment method on file</div>
                 <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginTop: 2 }}>Add a card to upgrade your plan</div>
               </div>
             </div>
@@ -376,11 +293,8 @@ export default function BillingPage() {
             </button>
           </div>
 
-          {/* Invoices */}
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "20px 22px" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>Invoices</div>
-            </div>
+          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid #27272A", borderRadius: 16, padding: "20px 22px" }}>
+            <div style={{ fontWeight: 600, fontSize: 14, color: "#FAFAFA", marginBottom: 16 }}>Invoices</div>
             <div style={{ textAlign: "center", padding: "32px 0" }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>🧾</div>
               <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>No invoices yet</div>
@@ -391,7 +305,6 @@ export default function BillingPage() {
 
       </main>
 
-      {/* Razorpay Modal */}
       {modalPlan && <RazorpayModal plan={modalPlan} onClose={() => setModalPlan(null)} />}
     </>
   );

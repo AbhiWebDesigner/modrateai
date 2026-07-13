@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
-import { Shield, Star, LogOut, CreditCard } from "lucide-react";
+import { Shield, Star, LogOut } from "lucide-react";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Overview", icon: (
@@ -32,11 +32,26 @@ export function DashboardSidebar() {
   const handleLogout = async () => { await signOut(auth); router.push("/"); };
 
   return (
-    <aside style={{ width: 240, background: "rgba(9,9,11,0.8)", borderRight: "1px solid #27272A", display: "flex", flexDirection: "column", position: "fixed", height: "100vh", backdropFilter: "blur(20px)", zIndex: 20 }}>
+    <aside style={{
+      width: 240,
+      background: "rgba(9,9,11,0.85)",
+      borderRight: "1px solid #27272A",
+      display: "flex",
+      flexDirection: "column",
+      position: "fixed",
+      height: "100vh",
+      backdropFilter: "blur(20px)",
+      zIndex: 20,
+    }}>
       {/* Logo */}
       <div style={{ padding: "24px 20px", borderBottom: "1px solid #27272A" }}>
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <div style={{ background: "linear-gradient(135deg,#F59E0B,#7C3AED)", borderRadius: 10, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{
+            background: "linear-gradient(135deg,#F59E0B,#7C3AED)",
+            borderRadius: 10, width: 34, height: 34,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 0 20px rgba(245,158,11,0.30)",
+          }}>
             <Shield size={18} color="white" />
           </div>
           <span style={{ color: "#FAFAFA", fontWeight: 800, fontSize: 17 }}>ModerateAI</span>
@@ -44,32 +59,92 @@ export function DashboardSidebar() {
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: "16px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
+      <nav style={{ flex: 1, padding: "16px 10px", display: "flex", flexDirection: "column", gap: 4 }}>
         {NAV_LINKS.map((link) => {
           const active = pathname === link.href;
           return (
-            <Link key={link.href} href={link.href} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.5)", background: active ? "rgba(245,158,11,0.12)" : "transparent", borderLeft: active ? "2px solid #F59E0B" : "2px solid transparent", transition: "all 0.2s" }}>
-              {link.icon} {link.label}
+            <Link
+              key={link.href}
+              href={link.href}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 14px",
+                borderRadius: 12,
+                textDecoration: "none",
+                fontSize: 14,
+                fontWeight: active ? 600 : 500,
+                color: active ? "#FAFAFA" : "rgba(255,255,255,0.45)",
+                background: active
+                  ? "linear-gradient(135deg, rgba(245,158,11,0.22), rgba(234,88,12,0.16))"
+                  : "transparent",
+                border: active
+                  ? "1px solid rgba(245,158,11,0.28)"
+                  : "1px solid transparent",
+                boxShadow: active
+                  ? "0 0 24px rgba(245,158,11,0.12), inset 0 0 16px rgba(245,158,11,0.06)"
+                  : "none",
+                transition: "all 0.18s ease",
+              }}
+            >
+              {link.icon}
+              {link.label}
+              {active && (
+                <span style={{
+                  marginLeft: "auto",
+                  background: "rgba(245,158,11,0.85)",
+                  color: "#09090B",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "2px 8px",
+                  borderRadius: 20,
+                }}>live</span>
+              )}
             </Link>
           );
         })}
       </nav>
 
       {/* Upgrade + Logout */}
-      <div style={{ padding: "12px 8px", borderTop: "1px solid #27272A", display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 12, padding: 16 }}>
+      <div style={{ padding: "12px 10px", borderTop: "1px solid #27272A", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{
+          background: "rgba(245,158,11,0.08)",
+          border: "1px solid rgba(245,158,11,0.2)",
+          borderRadius: 12,
+          padding: 16,
+        }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
             <Star size={14} color="#F59E0B" />
             <span style={{ color: "#F59E0B", fontWeight: 700, fontSize: 13 }}>Upgrade to Pro</span>
           </div>
-          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>Unlock unlimited hidden comments and Telegram alerts.</p>
+          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>
+            Unlock unlimited hidden comments and Telegram alerts.
+          </p>
           <Link href="/billing">
-            <button style={{ background: "linear-gradient(135deg,#F59E0B,#FBBF24)", color: "#09090B", fontWeight: 700, padding: "10px 16px", borderRadius: 10, border: "none", cursor: "pointer", fontSize: 13, width: "100%" }}>
+            <button style={{
+              background: "linear-gradient(135deg,#F59E0B,#FBBF24)",
+              color: "#09090B", fontWeight: 700,
+              padding: "10px 16px", borderRadius: 10,
+              border: "none", cursor: "pointer",
+              fontSize: 13, width: "100%",
+            }}>
               Upgrade — ₹349/mo
             </button>
           </Link>
         </div>
-        <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10, fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", width: "100%", transition: "all 0.2s" }}>
+        <button
+          onClick={handleLogout}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "10px 12px", borderRadius: 10,
+            fontSize: 14, fontWeight: 500,
+            color: "rgba(255,255,255,0.4)",
+            background: "none", border: "none",
+            cursor: "pointer", width: "100%",
+            transition: "all 0.2s",
+          }}
+        >
           <LogOut size={16} /> Logout
         </button>
       </div>
@@ -83,17 +158,59 @@ export function DashboardBottomNav() {
   const handleLogout = async () => { await signOut(auth); router.push("/"); };
 
   return (
-    <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: "rgba(9,9,11,0.95)", borderTop: "1px solid #27272A", backdropFilter: "blur(20px)", padding: "8px 0 env(safe-area-inset-bottom, 8px)", display: "flex" }}>
+    <nav style={{
+      position: "fixed", bottom: 0, left: 0, right: 0,
+      zIndex: 50,
+      background: "rgba(9,9,11,0.95)",
+      borderTop: "1px solid #27272A",
+      backdropFilter: "blur(20px)",
+      padding: "8px 0 env(safe-area-inset-bottom, 8px)",
+      display: "flex",
+    }}>
       {NAV_LINKS.map((link) => {
         const active = pathname === link.href;
         return (
-          <Link key={link.href} href={link.href} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, flex: 1, padding: "6px 4px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: active ? 600 : 500, transition: "all 0.2s" }}>
+          <Link
+            key={link.href}
+            href={link.href}
+            style={{
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              gap: 3, flex: 1, padding: "6px 2px",
+              textDecoration: "none",
+              color: active ? "#F59E0B" : "rgba(255,255,255,0.4)",
+              fontSize: 9, fontWeight: active ? 600 : 500,
+              transition: "all 0.2s",
+              position: "relative",
+            }}
+          >
+            {active && (
+              <span style={{
+                position: "absolute",
+                top: 0, left: "50%",
+                transform: "translateX(-50%)",
+                width: 28, height: 2,
+                background: "linear-gradient(90deg,#F59E0B,#EA580C)",
+                borderRadius: "0 0 4px 4px",
+              }} />
+            )}
             {link.icon}
             <span>{link.label}</span>
           </Link>
         );
       })}
-      <button onClick={handleLogout} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, flex: 1, padding: "6px 4px", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 500 }}>
+      <button
+        onClick={handleLogout}
+        style={{
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          gap: 3, flex: 1, padding: "6px 2px",
+          background: "none", border: "none",
+          cursor: "pointer",
+          color: "rgba(255,255,255,0.4)",
+          fontSize: 9, fontWeight: 500,
+        }}
+      >
         <LogOut size={20} />
         <span>Logout</span>
       </button>

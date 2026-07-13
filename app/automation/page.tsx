@@ -6,7 +6,8 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import {
   collection, doc, addDoc, deleteDoc, updateDoc,
-  onSnapshot, increment, query, orderBy, serverTimestamp
+  onSnapshot, increment, query, orderBy, serverTimestamp,
+  setDoc,
 } from "firebase/firestore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -37,59 +38,249 @@ type Rule = {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Home", icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>) },
-  { href: "/analytics", label: "Analytics", icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>) },
-  { href: "/automation", label: "Automation", icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>) },
-  { href: "/alerts", label: "Alerts", icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>) },
-  { href: "/settings", label: "Settings", icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>) },
+  { href: "/dashboard",  label: "Home",       icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>) },
+  { href: "/analytics",  label: "Analytics",  icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>) },
+  { href: "/automation", label: "Automation", icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>) },
+  { href: "/alerts",     label: "Alerts",     icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>) },
+  { href: "/settings",   label: "Settings",   icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>) },
 ];
 
 const STEPS = ["Select Video", "Keywords", "Auto Reply", "Advanced"];
 
 const SAMPLE_VIDEOS: Video[] = [
-  { id: "1", title: "My Latest YouTube Video", date: "Jul 1, 2026", views: "12.4K", comments: 234, thumb: "🎬" },
-  { id: "2", title: "How I Built ModrateAI", date: "Jun 25, 2026", views: "8.1K", comments: 156, thumb: "🎥" },
-  { id: "3", title: "Telugu Tech Tips #42", date: "Jun 18, 2026", views: "22.7K", comments: 489, thumb: "📹" },
+  { id: "1", title: "My Latest YouTube Video",  date: "Jul 1, 2026",  views: "12.4K", comments: 234, thumb: "🎬" },
+  { id: "2", title: "How I Built ModrateAI",    date: "Jun 25, 2026", views: "8.1K",  comments: 156, thumb: "🎥" },
+  { id: "3", title: "Telugu Tech Tips #42",      date: "Jun 18, 2026", views: "22.7K", comments: 489, thumb: "📹" },
 ];
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
-
-function Sidebar({ pathname }: { pathname: string }) {
-  return (
-    <div style={{ background: "rgba(255,255,255,0.025)", borderRight: "1px solid rgba(255,255,255,0.07)", width: 220, minHeight: "100vh", display: "flex", flexDirection: "column", padding: "24px 12px", position: "fixed", left: 0, top: 0, zIndex: 20 }}>
-      <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", marginBottom: 32, paddingLeft: 8 }}>
-        <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 16px rgba(245,158,11,0.25)" }}>
-          <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <span style={{ color: "#FAFAFA", fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em" }}>ModrateAI</span>
-      </Link>
-      <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
-        {NAV_LINKS.map(link => {
-          const active = pathname === link.href;
-          return (
-            <Link key={link.href} href={link.href} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: active ? 600 : 400, color: active ? "#F59E0B" : "rgba(255,255,255,0.45)", background: active ? "rgba(245,158,11,0.08)" : "transparent", transition: "all 0.15s" }}>
-              {link.icon}{link.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <div style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.25), rgba(79,70,229,0.20))", border: "1px solid rgba(124,58,237,0.30)", borderRadius: 14, padding: "14px 12px", marginTop: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#FAFAFA", marginBottom: 4 }}>Upgrade to Pro 🚀</div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.50)", marginBottom: 10 }}>5,000 comments + live chat</div>
-        <button style={{ background: "rgba(255,255,255,0.12)", borderRadius: 8, width: "100%", fontSize: 11, padding: "7px 0", fontWeight: 600, color: "#FAFAFA", border: "none", cursor: "pointer" }}>Upgrade — ₹349/mo</button>
-      </div>
-    </div>
+// ─── Helper — ensures automations/{uid} parent doc exists ─────────────────────
+// Uses setDoc with merge:true so existing fields are never overwritten.
+async function ensureParentDoc(uid: string) {
+  const parentRef = doc(db, "automations", uid);
+  await setDoc(
+    parentRef,
+    {
+      // Only set defaults if fields are missing (merge:true handles this)
+      totalRules:       0,
+      activeRules:      0,
+      totalRepliesSent: 0,
+      moderationMode:   "auto",
+      notifications:    true,
+      schedule:         { enabled: false },
+    },
+    { merge: true }
   );
 }
 
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+
+function Sidebar({ pathname }: { pathname: string }) {
+  return (
+    <>
+      <style>{`
+        @keyframes sidebarPulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.55; }
+        }
+        @keyframes activeGlow {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(255,159,26,.55), 0 0 18px rgba(255,159,26,.28), 0 0 40px rgba(255,159,26,.14), 0 0 70px rgba(255,159,26,.07); }
+          50%       { box-shadow: 0 0 0 1px rgba(255,159,26,.75), 0 0 24px rgba(255,159,26,.42), 0 0 52px rgba(255,159,26,.22), 0 0 88px rgba(255,159,26,.10); }
+        }
+
+        .snav-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 9px 13px;
+          border-radius: 12px;
+          text-decoration: none;
+          font-size: 13.5px;
+          font-weight: 500;
+          color: rgba(255,255,255,0.38);
+          border: 1px solid transparent;
+          position: relative;
+          transition: background 0.22s, color 0.22s, border-color 0.22s, transform 0.22s, box-shadow 0.22s;
+          letter-spacing: -0.01em;
+          cursor: pointer;
+        }
+        .snav-item:hover {
+          background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.75);
+          transform: translateX(2px);
+          border-color: rgba(255,255,255,0.05);
+        }
+
+        /* ── PREMIUM ACTIVE ITEM ── */
+        .snav-item.active {
+          background: linear-gradient(90deg, rgba(255,159,26,.18) 0%, rgba(255,159,26,.08) 100%);
+          color: #F9A825;
+          font-weight: 650;
+          border-color: rgba(255,159,26,.32);
+          border-radius: 14px;
+          animation: activeGlow 3s ease-in-out infinite;
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+          transform: none;
+        }
+
+        /* Large radial glow behind active item */
+        .snav-item.active::before {
+          content: '';
+          position: absolute;
+          inset: -16px -20px;
+          background: radial-gradient(circle, rgba(255,159,26,.35) 0%, rgba(255,159,26,.15) 40%, transparent 75%);
+          filter: blur(32px);
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: -1;
+        }
+
+        /* Gradient left edge indicator */
+        .snav-item.active::after {
+          content: '';
+          position: absolute;
+          left: -10px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 22px;
+          border-radius: 0 3px 3px 0;
+          background: linear-gradient(180deg, #F59E0B, #EC4899, #7C3AED);
+          box-shadow: 0 0 10px rgba(245,158,11,.7), 0 0 24px rgba(236,72,153,.35);
+        }
+
+        /* LIVE badge */
+        .snav-live {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          margin-left: auto;
+          padding: 2px 8px;
+          border-radius: 10px;
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: .05em;
+          color: #F9A825;
+          background: rgba(255,159,26,.12);
+          border: 1px solid rgba(255,159,26,.35);
+          box-shadow: 0 0 8px rgba(255,159,26,.25), inset 0 0 6px rgba(255,159,26,.08);
+          backdrop-filter: blur(8px);
+        }
+        .snav-live-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #F59E0B;
+          box-shadow: 0 0 6px rgba(245,158,11,.9);
+          animation: sidebarPulse 1.6s ease-in-out infinite;
+        }
+      `}</style>
+
+      <div style={{
+        background: "rgba(10,10,14,0.92)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        borderRight: "1px solid rgba(255,255,255,0.055)",
+        width: 228,
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        padding: "22px 10px 20px",
+        position: "fixed",
+        left: 0,
+        top: 0,
+        zIndex: 20,
+        boxShadow: "4px 0 40px rgba(0,0,0,0.45), inset -1px 0 0 rgba(255,255,255,0.03)",
+      }}>
+        {/* Ambient left edge glow */}
+        <div style={{
+          position: "absolute", left: 0, top: "18%", bottom: "18%",
+          width: 2, borderRadius: 2,
+          background: "linear-gradient(180deg, transparent, rgba(245,158,11,.55), rgba(220,80,130,.65), rgba(124,58,237,.45), transparent)",
+          boxShadow: "0 0 12px rgba(245,158,11,.4), 0 0 28px rgba(245,158,11,.12)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Logo */}
+        <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 28, paddingLeft: 4 }}>
+          <div style={{
+            background: "linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)",
+            borderRadius: 10, width: 34, height: 34,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 16px rgba(245,158,11,.28)", flexShrink: 0,
+          }}>
+            <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <span style={{ color: "#FAFAFA", fontWeight: 800, fontSize: 15, letterSpacing: "-0.025em" }}>ModrateAI</span>
+        </Link>
+
+        {/* Nav */}
+        <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
+          {NAV_LINKS.map(link => {
+            const active = pathname === link.href;
+            return (
+              <Link key={link.href} href={link.href} className={`snav-item${active ? " active" : ""}`}>
+                {link.icon}
+                {link.label}
+                {active && (
+                  <span className="snav-live">
+                    <span className="snav-live-dot" />
+                    live
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Upgrade card */}
+        <div style={{
+          background: "rgba(124,58,237,.1)",
+          border: "1px solid rgba(124,58,237,.22)",
+          borderRadius: 14, padding: "14px 14px", marginTop: 12,
+          backdropFilter: "blur(10px)",
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#FAFAFA", marginBottom: 4 }}>Upgrade to Pro 🚀</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,.42)", marginBottom: 10 }}>5,000 comments + live chat</div>
+          <button style={{
+            background: "linear-gradient(135deg,#F59E0B,#FBBF24)",
+            borderRadius: 9, width: "100%", fontSize: 11.5,
+            padding: "8px 0", fontWeight: 700, color: "#080808",
+            border: "none", cursor: "pointer",
+            boxShadow: "0 2px 12px rgba(245,158,11,.22)",
+          }}>
+            Upgrade — ₹349/mo
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Bottom Nav ───────────────────────────────────────────────────────────────
+
 function BottomNav({ pathname }: { pathname: string }) {
   return (
-    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: "rgba(9,9,11,0.95)", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", backdropFilter: "blur(20px)" }}>
+    <div style={{
+      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+      background: "rgba(9,9,11,.96)",
+      borderTop: "1px solid rgba(255,255,255,.06)",
+      display: "flex",
+      backdropFilter: "blur(24px)",
+    }}>
       {NAV_LINKS.map(link => {
         const active = pathname === link.href;
         return (
-          <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 0 12px", textDecoration: "none", gap: 4, color: active ? "#F59E0B" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: active ? 600 : 400 }}>
-            {link.icon}{link.label}
+          <Link key={link.href} href={link.href} style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", padding: "10px 0 12px",
+            textDecoration: "none", gap: 3,
+            color: active ? "#F59E0B" : "rgba(255,255,255,.32)",
+            fontSize: 10, fontWeight: active ? 600 : 400,
+          }}>
+            {link.icon}
           </Link>
         );
       })}
@@ -101,33 +292,33 @@ function BottomNav({ pathname }: { pathname: string }) {
 
 export default function AutomationPage() {
   const pathname = usePathname();
-  const router = useRouter();
+  const router   = useRouter();
 
   // Auth
-  const [user, setUser] = useState<User | null>(null);
+  const [user,        setUser]        = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Rules from Firestore
-  const [rules, setRules] = useState<Rule[]>([]);
+  // Rules
+  const [rules,        setRules]        = useState<Rule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [saving,       setSaving]       = useState(false);
+  const [deleting,     setDeleting]     = useState<string | null>(null);
 
-  // Builder state
-  const [showBuilder, setShowBuilder] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  // Builder
+  const [showBuilder,       setShowBuilder]       = useState(false);
+  const [currentStep,       setCurrentStep]       = useState(0);
   const [showVideoSelector, setShowVideoSelector] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [ruleName, setRuleName] = useState("");
-  const [keywords, setKeywords] = useState<string[]>([]);
-  const [keywordInput, setKeywordInput] = useState("");
-  const [aiDetection, setAiDetection] = useState(false);
-  const [replyMode, setReplyMode] = useState<"random" | "ai">("random");
-  const [replies, setReplies] = useState(["", "", ""]);
-  const [aiInstruction, setAiInstruction] = useState("");
-  const [publicReply, setPublicReply] = useState(true);
-  const [replyDelay, setReplyDelay] = useState(20);
-  const [ruleActive, setRuleActive] = useState(true);
+  const [selectedVideo,     setSelectedVideo]     = useState<Video | null>(null);
+  const [ruleName,          setRuleName]          = useState("");
+  const [keywords,          setKeywords]          = useState<string[]>([]);
+  const [keywordInput,      setKeywordInput]      = useState("");
+  const [aiDetection,       setAiDetection]       = useState(false);
+  const [replyMode,         setReplyMode]         = useState<"random" | "ai">("random");
+  const [replies,           setReplies]           = useState(["", "", ""]);
+  const [aiInstruction,     setAiInstruction]     = useState("");
+  const [publicReply,       setPublicReply]       = useState(true);
+  const [replyDelay,        setReplyDelay]        = useState(20);
+  const [ruleActive,        setRuleActive]        = useState(true);
 
   // ── Auth guard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -139,22 +330,15 @@ export default function AutomationPage() {
     return () => unsub();
   }, [router]);
 
-  // ── Load rules from Firestore ───────────────────────────────────────────────
+  // ── Load rules (real-time) ──────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
-
     const rulesRef = collection(db, "automations", user.uid, "rules");
-    const q = query(rulesRef, orderBy("createdAt", "desc"));
-
-    const unsub = onSnapshot(q, (snap) => {
-      const loaded: Rule[] = snap.docs.map((d) => ({
-        id: d.id,
-        ...(d.data() as Omit<Rule, "id">),
-      }));
-      setRules(loaded);
+    const q        = query(rulesRef, orderBy("createdAt", "desc"));
+    const unsub    = onSnapshot(q, (snap) => {
+      setRules(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Rule, "id">) })));
       setRulesLoading(false);
     });
-
     return () => unsub();
   }, [user]);
 
@@ -179,36 +363,45 @@ export default function AutomationPage() {
   const addKeyword = () => {
     const trimmed = keywordInput.trim();
     if (trimmed && !keywords.includes(trimmed)) {
-      setKeywords([...keywords, trimmed]);
+      setKeywords(prev => [...prev, trimmed]);
       setKeywordInput("");
     }
   };
 
-  // ── Save rule to Firestore ──────────────────────────────────────────────────
+  // ── Save rule ──────────────────────────────────────────────────────────────
+  // Ensures parent doc exists (setDoc merge) before incrementing counters.
   const goLive = async () => {
     if (!ruleName || !selectedVideo || !user) return;
     setSaving(true);
     try {
+      // 1. Guarantee parent doc exists with all required fields
+      await ensureParentDoc(user.uid);
+
+      // 2. Add the rule into the sub-collection
       const rulesRef = collection(db, "automations", user.uid, "rules");
       await addDoc(rulesRef, {
-        name: ruleName,
-        video: selectedVideo,
+        name:          ruleName,
+        video:         selectedVideo,
         keywords,
         replyMode,
         replies,
         aiInstruction,
         publicReply,
         replyDelay,
-        active: ruleActive,
-        createdAt: serverTimestamp(),
+        active:        ruleActive,
+        createdAt:     serverTimestamp(),
       });
 
-      // Update stats on parent doc
+      // 3. Increment counters on the now-guaranteed parent doc
       const parentRef = doc(db, "automations", user.uid);
-      await updateDoc(parentRef, {
-        totalRules: increment(1),
-        activeRules: increment(ruleActive ? 1 : 0),
-      });
+      await setDoc(
+        parentRef,
+        {
+          totalRules:  increment(1),
+          activeRules: increment(ruleActive ? 1 : 0),
+        },
+        { merge: true }
+      );
 
       resetBuilder();
     } catch (err) {
@@ -218,18 +411,24 @@ export default function AutomationPage() {
     }
   };
 
-  // ── Delete rule from Firestore ──────────────────────────────────────────────
+  // ── Delete rule ─────────────────────────────────────────────────────────────
   const deleteRule = async (ruleId: string, wasActive: boolean) => {
     if (!user) return;
     setDeleting(ruleId);
     try {
       await deleteDoc(doc(db, "automations", user.uid, "rules", ruleId));
 
+      // ensureParentDoc guards against the doc not existing (edge case)
+      await ensureParentDoc(user.uid);
       const parentRef = doc(db, "automations", user.uid);
-      await updateDoc(parentRef, {
-        totalRules: increment(-1),
-        activeRules: increment(wasActive ? -1 : 0),
-      });
+      await setDoc(
+        parentRef,
+        {
+          totalRules:  increment(-1),
+          activeRules: increment(wasActive ? -1 : 0),
+        },
+        { merge: true }
+      );
     } catch (err) {
       console.error("Failed to delete rule:", err);
     } finally {
@@ -242,9 +441,20 @@ export default function AutomationPage() {
     if (!user) return;
     const newActive = !rule.active;
     try {
-      await updateDoc(doc(db, "automations", user.uid, "rules", rule.id), { active: newActive });
+      // Update the rule itself
+      await updateDoc(
+        doc(db, "automations", user.uid, "rules", rule.id),
+        { active: newActive }
+      );
+
+      // Safely update parent counter
+      await ensureParentDoc(user.uid);
       const parentRef = doc(db, "automations", user.uid);
-      await updateDoc(parentRef, { activeRules: increment(newActive ? 1 : -1) });
+      await setDoc(
+        parentRef,
+        { activeRules: increment(newActive ? 1 : -1) },
+        { merge: true }
+      );
     } catch (err) {
       console.error("Failed to toggle rule:", err);
     }
@@ -260,29 +470,34 @@ export default function AutomationPage() {
     );
   }
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after {
+          font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+          letter-spacing: -0.015em;
+          box-sizing: border-box; margin: 0; padding: 0;
+        }
         html, body { background: #07030F; color: white; }
         .desktop-sidebar { display: none; }
-        .bottom-nav { display: flex; }
-        .main-content { margin-left: 0; padding: 20px 16px 90px; }
+        .bottom-nav      { display: flex; }
+        .main-content    { margin-left: 0; padding: 20px 16px 90px; }
         @media (min-width: 1024px) {
           .desktop-sidebar { display: flex !important; }
-          .bottom-nav { display: none !important; }
-          .main-content { margin-left: 220px; padding: 32px 40px; }
+          .bottom-nav      { display: none !important; }
+          .main-content    { margin-left: 228px; padding: 32px 40px; }
         }
         input:focus, textarea:focus { border-color: rgba(245,158,11,0.5) !important; outline: none; }
         input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.25); }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .rule-card { animation: fadeIn 0.2s ease; }
       `}</style>
 
       {/* Background */}
-      <div style={{ position: "fixed", inset: 0, zIndex: 0, background: `radial-gradient(ellipse 55% 50% at 5% 15%, rgba(245,158,11,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 55% at 5% 95%, rgba(109,40,217,0.20) 0%, transparent 62%), #07030F` }} />
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, background: `radial-gradient(ellipse 55% 50% at 5% 15%, rgba(245,158,11,0.10) 0%, transparent 60%), radial-gradient(ellipse 60% 55% at 5% 95%, rgba(109,40,217,0.18) 0%, transparent 62%), #07030F` }} />
 
       <div className="desktop-sidebar" style={{ flexDirection: "column" }}>
         <Sidebar pathname={pathname} />
@@ -336,16 +551,10 @@ export default function AutomationPage() {
                       </div>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      {/* Toggle active */}
                       <button onClick={() => toggleRule(rule)} style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "3px 12px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer" }}>
                         {rule.active ? "● Active" : "○ Inactive"}
                       </button>
-                      {/* Delete */}
-                      <button
-                        onClick={() => deleteRule(rule.id, rule.active)}
-                        disabled={deleting === rule.id}
-                        style={{ color: "rgba(255,100,100,0.55)", background: "none", border: "none", cursor: "pointer", fontSize: 16, opacity: deleting === rule.id ? 0.4 : 1 }}
-                      >
+                      <button onClick={() => deleteRule(rule.id, rule.active)} disabled={deleting === rule.id} style={{ color: "rgba(255,100,100,0.55)", background: "none", border: "none", cursor: "pointer", fontSize: 16, opacity: deleting === rule.id ? 0.4 : 1 }}>
                         {deleting === rule.id ? "⏳" : "🗑️"}
                       </button>
                     </div>
@@ -355,9 +564,10 @@ export default function AutomationPage() {
             )}
           </>
         ) : (
-          /* Builder */
+          /* ── Builder ── */
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
+
               {/* Builder header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -370,7 +580,9 @@ export default function AutomationPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", borderRadius: 20, padding: "4px 12px", fontSize: 11 }}>● Live Preview</span>
                   <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "9px 20px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                    {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live"}
+                    {saving
+                      ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>)
+                      : "🚀 Go Live"}
                   </button>
                 </div>
               </div>
@@ -503,7 +715,7 @@ export default function AutomationPage() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
                       {[
                         { label: "Public Reply", sub: "Reply visible to everyone on the video", val: publicReply, set: setPublicReply, green: false },
-                        { label: "Rule Status", sub: ruleActive ? "● Active" : "○ Inactive", val: ruleActive, set: setRuleActive, green: true },
+                        { label: "Rule Status",  sub: ruleActive ? "● Active" : "○ Inactive",   val: ruleActive,  set: setRuleActive,  green: true  },
                       ].map(item => (
                         <div key={item.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
                           <div>
@@ -527,7 +739,9 @@ export default function AutomationPage() {
                     <div style={{ display: "flex", gap: 10 }}>
                       <button onClick={() => setCurrentStep(2)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
                       <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                        {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live!"}
+                        {saving
+                          ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>)
+                          : "🚀 Go Live!"}
                       </button>
                     </div>
                   </div>

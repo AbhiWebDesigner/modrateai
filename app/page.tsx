@@ -1,232 +1,227 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
   Shield, Zap, Globe, Lock, BarChart3, MessageSquare,
-  ChevronDown, Check, ArrowRight, Play, Eye, EyeOff,
-  AlertTriangle, CheckCircle, Clock, Languages, Cpu,
-  TrendingUp, Filter, Bell, Star, X, Menu
+  ChevronDown, Check, ArrowRight, Eye, EyeOff,
+  CheckCircle, Languages, Cpu,
+  TrendingUp, Filter, Bell, X, Menu, Sparkles
 } from 'lucide-react';
 
-/* ─── COMMENT FEED SIMULATION ─── */
-const DEMO_COMMENTS = [
-  { id: 1, author: 'Alex_Gaming99', text: 'This is absolute trash content, go delete yourself', verdict: 'TOXIC', badge: 'toxic', avatar: 'A' },
-  { id: 2, author: 'SarahCreates', text: 'Amazing tutorial! I learned so much from this video 🙌', verdict: 'SAFE', badge: 'safe', avatar: 'S' },
-  { id: 3, author: 'SpamBot_4921', text: 'FREE ROBUX → click my profile link NOW!!!', verdict: 'SPAM', badge: 'spam', avatar: '?' },
-  { id: 4, author: 'Rahul_K', text: 'यह वीडियो बहुत अच्छी है, धन्यवाद भाई', verdict: 'SAFE', badge: 'safe', avatar: 'R' },
-  { id: 5, author: 'h8r_2024', text: 'Nobody asked for your stupid opinion lmao', verdict: 'TOXIC', badge: 'toxic', avatar: 'H' },
-  { id: 6, author: 'TechFanatic', text: 'What software do you use for editing? Subscribed!', verdict: 'SAFE', badge: 'safe', avatar: 'T' },
-  { id: 7, author: 'PromoKing', text: 'Earn $500/day from home - DM me NOW', verdict: 'SPAM', badge: 'spam', avatar: 'P' },
-  { id: 8, author: 'María_ES', text: 'Increíble contenido, sigue así campeón 🔥', verdict: 'SAFE', badge: 'safe', avatar: 'M' },
-];
+/* ── FADE IN WRAPPER — aggressive threshold so mobile triggers fast ── */
+function FadeIn({ children, delay = 0, className = '', style = {} }: {
+  children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: '0px 0px -40px 0px' });
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      style={style}
+      initial={{ opacity: 0, y: 18 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
+      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
-const BADGE_STYLES: Record<string, { bg: string; color: string; label: string }> = {
-  toxic: { bg: 'rgba(239,68,68,0.15)', color: '#f87171', label: 'Hidden' },
-  spam: { bg: 'rgba(249,115,22,0.15)', color: '#fb923c', label: 'Blocked' },
-  safe: { bg: 'rgba(16,185,129,0.15)', color: '#34d399', label: 'Approved' },
+/* ── COUNTER ── */
+function Counter({ to, suffix = '', prefix = '' }: { to: number; suffix?: string; prefix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: '0px 0px -20px 0px' });
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let v = 0;
+    const dur = 1600;
+    const step = 16;
+    const inc = to / (dur / step);
+    const t = setInterval(() => {
+      v += inc;
+      if (v >= to) { setVal(to); clearInterval(t); }
+      else setVal(Math.floor(v));
+    }, step);
+    return () => clearInterval(t);
+  }, [inView, to]);
+  return <span ref={ref}>{prefix}{val.toLocaleString()}{suffix}</span>;
+}
+
+/* ── LIVE FEED ── */
+const COMMENTS = [
+  { id: 1, author: 'Alex_Gaming99', text: 'This is absolute trash content, go delete yourself', badge: 'toxic', avatar: 'A' },
+  { id: 2, author: 'SarahCreates', text: 'Amazing tutorial! I learned so much from this 🙌', badge: 'safe', avatar: 'S' },
+  { id: 3, author: 'SpamBot_4921', text: 'FREE ROBUX → click my profile link NOW!!!', badge: 'spam', avatar: '?' },
+  { id: 4, author: 'Rahul_K', text: 'यह वीडियो बहुत अच्छी है, धन्यवाद भाई', badge: 'safe', avatar: 'R' },
+  { id: 5, author: 'h8r_2024', text: 'Nobody asked for your stupid opinion lmao', badge: 'toxic', avatar: 'H' },
+  { id: 6, author: 'María_ES', text: 'Increíble contenido, sigue así campeón 🔥', badge: 'safe', avatar: 'M' },
+  { id: 7, author: 'PromoKing', text: 'Earn $500/day from home - DM me NOW', badge: 'spam', avatar: 'P' },
+];
+const BADGE: Record<string, { bg: string; color: string; label: string }> = {
+  toxic: { bg: 'rgba(239,68,68,0.12)', color: '#f87171', label: 'Hidden' },
+  spam:  { bg: 'rgba(249,115,22,0.12)', color: '#fb923c', label: 'Blocked' },
+  safe:  { bg: 'rgba(16,185,129,0.12)', color: '#34d399', label: 'Approved' },
 };
 
-function CommentFeed() {
-  const [visible, setVisible] = useState<typeof DEMO_COMMENTS>([]);
-  const [scanning, setScanning] = useState<number | null>(null);
+function LiveFeed() {
+  const [items, setItems] = useState<typeof COMMENTS>([]);
+  const [scanning, setScanning] = useState(false);
   const idx = useRef(0);
-
   useEffect(() => {
-    const add = () => {
-      const comment = DEMO_COMMENTS[idx.current % DEMO_COMMENTS.length];
-      idx.current++;
-      setScanning(comment.id);
+    const tick = () => {
+      setScanning(true);
       setTimeout(() => {
-        setVisible(prev => [comment, ...prev].slice(0, 5));
-        setScanning(null);
+        const c = COMMENTS[idx.current % COMMENTS.length];
+        idx.current++;
+        setItems(prev => [c, ...prev].slice(0, 4));
+        setScanning(false);
       }, 900);
     };
-    add();
-    const t = setInterval(add, 2800);
+    tick();
+    const t = setInterval(tick, 3000);
     return () => clearInterval(t);
   }, []);
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* scanning indicator */}
-      {scanning && (
-        <div style={{
-          background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)',
-          borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10,
-          animation: 'fadeSlideIn 0.3s ease'
-        }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B', animation: 'pulse 1s infinite' }} />
-          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>AI scanning comment…</span>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
-            {[0,1,2].map(i => (
-              <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: '#F59E0B', opacity: 0.6, animation: `bounce 0.9s ${i * 0.2}s infinite` }} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {visible.map((c, i) => {
-        const b = BADGE_STYLES[c.badge];
-        return (
-          <div key={`${c.id}-${i}`} style={{
-            background: c.badge === 'toxic' || c.badge === 'spam'
-              ? 'rgba(239,68,68,0.04)' : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${c.badge === 'safe' ? 'rgba(255,255,255,0.06)' : 'rgba(239,68,68,0.12)'}`,
-            borderRadius: 10, padding: '10px 14px',
-            display: 'flex', alignItems: 'flex-start', gap: 10,
-            animation: 'fadeSlideIn 0.35s ease',
-            opacity: i > 2 ? 0.5 - i * 0.05 : 1,
-          }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-              background: c.badge === 'safe' ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: c.badge === 'safe' ? '#34d399' : '#f87171', fontSize: 11, fontWeight: 700
-            }}>{c.avatar}</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600 }}>{c.author}</span>
-                <span style={{
-                  background: b.bg, color: b.color,
-                  fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
-                  letterSpacing: '0.05em'
-                }}>{b.label}</span>
-              </div>
-              <p style={{
-                color: c.badge === 'safe' ? 'rgba(255,255,255,0.5)' : 'rgba(255,100,100,0.5)',
-                fontSize: 12, margin: 0, lineHeight: 1.4,
-                textDecoration: c.badge !== 'safe' ? 'line-through' : 'none',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-              }}>{c.text}</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <AnimatePresence>
+        {scanning && (
+          <motion.div key="sc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 8, padding: '7px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', animation: 'lp-pulse 1s infinite' }} />
+            <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11 }}>AI scanning…</span>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
+              {[0,1,2].map(i => <div key={i} style={{ width: 3, height: 3, borderRadius: '50%', background: '#F59E0B', opacity: 0.5, animation: `lp-bounce 0.8s ${i*0.18}s infinite` }} />)}
             </div>
-            {c.badge !== 'safe' && <EyeOff size={14} color="rgba(239,68,68,0.5)" style={{ flexShrink: 0, marginTop: 2 }} />}
-            {c.badge === 'safe' && <Eye size={14} color="rgba(16,185,129,0.5)" style={{ flexShrink: 0, marginTop: 2 }} />}
-          </div>
-        );
-      })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {items.map((c, i) => {
+          const b = BADGE[c.badge];
+          return (
+            <motion.div key={`${c.id}-${i}`}
+              initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1 - i * 0.2, y: 0 }} transition={{ duration: 0.28 }}
+              style={{ background: c.badge === 'safe' ? 'rgba(255,255,255,0.02)' : 'rgba(239,68,68,0.03)', border: `1px solid ${c.badge === 'safe' ? 'rgba(255,255,255,0.05)' : 'rgba(239,68,68,0.1)'}`, borderRadius: 8, padding: '8px 11px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: c.badge === 'safe' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.badge === 'safe' ? '#34d399' : '#f87171', fontSize: 9, fontWeight: 700 }}>{c.avatar}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10.5, fontWeight: 600 }}>{c.author}</span>
+                  <span style={{ background: b.bg, color: b.color, fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 3 }}>{b.label}</span>
+                </div>
+                <p style={{ color: c.badge === 'safe' ? 'rgba(255,255,255,0.3)' : 'rgba(255,80,80,0.35)', fontSize: 10.5, margin: 0, textDecoration: c.badge !== 'safe' ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.text}</p>
+              </div>
+              {c.badge !== 'safe' ? <EyeOff size={11} color="rgba(239,68,68,0.4)" /> : <Eye size={11} color="rgba(16,185,129,0.4)" />}
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
     </div>
   );
 }
 
-/* ─── BROWSER WINDOW MOCK ─── */
-function BrowserWindow() {
+/* ── PRODUCT PREVIEW ── */
+function ProductPreview() {
   return (
-    <div style={{
-      background: '#0D0D0D', border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 16, overflow: 'hidden',
-      boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)',
-    }}>
-      {/* Browser chrome */}
-      <div style={{ background: '#161616', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#FF5F57' }} />
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#FFBD2E' }} />
-          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#28C840' }} />
+    <div style={{ background: '#0A0A0A', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)' }}>
+      <div style={{ background: '#141414', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 5 }}>
+          {['#FF5F57','#FFBD2E','#28C840'].map(c => <div key={c} style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />)}
         </div>
-        <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 6, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Lock size={10} color="rgba(255,255,255,0.3)" />
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>app.moderateai.site/dashboard</span>
+        <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Lock size={9} color="rgba(255,255,255,0.25)" />
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>app.moderateai.site/dashboard</span>
         </div>
+        <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
+        </span>
       </div>
-
-      {/* Dashboard header */}
-      <div style={{ background: '#0F0F0F', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 7, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Shield size={12} color="white" />
+      <div style={{ background: '#0D0D0D', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 6, width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield size={10} color="white" />
           </div>
-          <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 13 }}>ModerateAI</span>
+          <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 11 }}>ModerateAI</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-            Live
-          </span>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {['Overview','Analytics','Settings'].map((t, i) => <span key={t} style={{ color: i===0 ? '#F59E0B' : 'rgba(255,255,255,0.28)', fontSize: 9.5, fontWeight: i===0 ? 600 : 400 }}>{t}</span>)}
         </div>
       </div>
-
-      {/* Stats row */}
-      <div style={{ background: '#0A0A0A', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-        {[
-          { label: 'Scanned', value: '12,847', color: '#F59E0B' },
-          { label: 'Hidden', value: '1,203', color: '#f87171' },
-          { label: 'Replied', value: '847', color: '#60a5fa' },
-        ].map(s => (
-          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '10px 12px' }}>
-            <div style={{ color: s.color, fontWeight: 800, fontSize: 16, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, marginTop: 2 }}>{s.label}</div>
+      <div style={{ background: '#080808', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+        {[{ label:'Scanned', value:'12,847', color:'#F59E0B' }, { label:'Hidden', value:'1,203', color:'#f87171' }, { label:'Replied', value:'847', color:'#60a5fa' }].map(s => (
+          <div key={s.label} style={{ background: 'rgba(255,255,255,0.025)', borderRadius: 7, padding: '8px 10px' }}>
+            <div style={{ color: s.color, fontWeight: 800, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+            <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 9, marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
       </div>
-
-      {/* Live comment feed */}
-      <div style={{ padding: '14px 20px', background: '#080808' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Live Comment Feed</span>
-          <span style={{ color: '#F59E0B', fontSize: 10, fontWeight: 600 }}>AI Active</span>
+      <div style={{ background: '#060606', padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'flex-end', gap: 3, height: 46 }}>
+        {[18,28,22,38,30,45,36,52,40,58,44,62].map((h, i) => (
+          <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 2, background: i > 9 ? 'rgba(245,158,11,0.65)' : 'rgba(255,255,255,0.07)' }} />
+        ))}
+      </div>
+      <div style={{ padding: '11px 16px', background: '#060606' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 }}>
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Live Feed</span>
+          <span style={{ color: '#F59E0B', fontSize: 9, fontWeight: 600 }}>AI Active</span>
         </div>
-        <CommentFeed />
+        <LiveFeed />
       </div>
     </div>
   );
 }
 
-/* ─── SECTION REVEAL HOOK ─── */
-function useReveal() {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.1 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-  return { ref, visible };
-}
-
-/* ─── FAQ DATA ─── */
-const FAQS = [
-  { q: 'How does ModerateAI connect to YouTube?', a: 'You authorize ModerateAI through YouTube\'s official OAuth flow. We never store your password — only a revocable access token scoped to comment management.' },
-  { q: 'Which languages does the AI understand?', a: 'ModerateAI detects intent and toxicity in 100+ languages including Hindi, Tamil, Arabic, Spanish, Portuguese, French, German, Japanese, Korean, and more — with no extra setup required.' },
-  { q: 'Will the AI accidentally hide genuine comments?', a: 'Our false-positive rate is under 0.3%. The AI scores context, not just keywords. You can review every hidden comment and restore with one click from your dashboard.' },
-  { q: 'How long does setup take?', a: 'Under 2 minutes. Connect your YouTube account, choose a sensitivity level, and the AI starts scanning immediately. No code, no plugins.' },
-  { q: 'Can I customize what gets hidden?', a: 'Yes. You can set keyword rules, sensitivity thresholds, language filters, and safe-lists — or let the AI handle everything automatically.' },
-  { q: 'Is my channel data secure?', a: 'All data is encrypted at rest with AES-256 and in transit with TLS 1.3. We are hosted on Cloudflare\'s edge network and never sell or share your data.' },
-];
-
-/* ─── PRICING ─── */
-const PLANS = [
-  {
-    name: 'Free', price: { monthly: 0, annual: 0 }, priceLabel: '₹0',
-    description: 'For creators just starting out.',
-    features: ['1,500 comments/month', 'Basic spam detection', 'English & Hindi', 'Email alerts', '—', '—'],
-    cta: 'Start Free', ctaStyle: 'secondary', highlight: false,
-  },
-  {
-    name: 'Pro', price: { monthly: 349, annual: 299 }, priceLabel: '₹349',
-    description: 'For creators who take community seriously.',
-    features: ['25,000 comments/month', 'AI toxicity detection', '100+ languages', 'AI auto-replies', 'Telegram alerts', 'Priority support'],
-    cta: 'Start 19-Day Trial', ctaStyle: 'primary', highlight: true,
-  },
-  {
-    name: 'Agency', price: { monthly: 999, annual: 849 }, priceLabel: '₹999',
-    description: 'For teams managing multiple channels.',
-    features: ['Unlimited comments', 'Multi-channel dashboard', '100+ languages', 'AI auto-replies', 'Webhook integrations', 'Dedicated support'],
-    cta: 'Contact Us', ctaStyle: 'secondary', highlight: false,
-  },
-];
-
-/* ─── HOW IT WORKS ─── */
+/* ── DATA ── */
 const STEPS = [
-  { icon: Shield, label: 'Connect YouTube', detail: 'Authorize in one click via YouTube OAuth — read-only comment access.' },
-  { icon: Cpu, label: 'AI scans comments', detail: 'Every new comment is sent to our moderation model in under 200ms.' },
-  { icon: Languages, label: 'Language detected', detail: 'The model identifies language and switches context rules automatically.' },
-  { icon: AlertTriangle, label: 'Intent analyzed', detail: 'Toxicity, spam, and manipulation signals are scored independently.' },
-  { icon: EyeOff, label: 'Harmful content hidden', detail: 'Comments above your threshold are hidden before anyone else sees them.' },
-  { icon: MessageSquare, label: 'AI reply generated', detail: 'Genuine comments receive a contextual AI reply in the comment\'s language.' },
-  { icon: BarChart3, label: 'Analytics updated', detail: 'Every action is logged to your dashboard in real time.' },
+  { icon: Shield, label: 'Connect YouTube', detail: 'One-click OAuth — read-only comment access, revocable anytime.' },
+  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment reaches our model in under 200ms, before anyone sees it.' },
+  { icon: Languages, label: 'Language auto-detected', detail: 'The model identifies language and applies culturally-aware rules automatically.' },
+  { icon: EyeOff, label: 'Harmful content hidden', detail: 'Toxic and spam comments are hidden instantly — never permanently deleted.' },
+  { icon: MessageSquare, label: 'AI replies naturally', detail: 'Genuine comments receive contextual replies in the commenter\'s own language.' },
+  { icon: BarChart3, label: 'Analytics updated', detail: 'Every moderation event is logged to your dashboard in real time.' },
+];
+const FEATURES = [
+  { icon: Cpu, color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', title: 'Context-Aware AI', body: 'Reads intent, not just keywords. Sarcasm, mixed-language attacks — caught before anyone sees them.' },
+  { icon: Languages, color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', title: '100+ Languages', body: 'Hindi, Tamil, Arabic, Spanish, Korean — auto-detected. No manual language setup ever needed.' },
+  { icon: MessageSquare, color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', title: 'AI Auto-Replies', body: 'Genuine comments get a human-sounding reply in the commenter\'s own language. No templates.' },
+  { icon: Bell, color: '#fb923c', bg: 'rgba(251,146,60,0.1)', title: 'Instant Alerts', body: 'Telegram notification the moment a coordinated spam attack begins on your channel.' },
+  { icon: TrendingUp, color: '#34d399', bg: 'rgba(16,185,129,0.1)', title: 'Engagement Analytics', body: 'Comment volume, toxicity trends, reply performance — one dashboard, real time.' },
+  { icon: Filter, color: '#f87171', bg: 'rgba(239,68,68,0.1)', title: 'Custom Rules', body: 'Keyword blocklists, sensitivity thresholds, safe-lists, language filters — fully configurable.' },
+];
+const SEC = [
+  { icon: Lock, color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', title: 'AES-256 Encryption', body: 'All credentials encrypted at rest — the same standard used by banks.' },
+  { icon: Shield, color: '#10B981', bg: 'rgba(16,185,129,0.08)', title: 'OAuth 2.0 Only', body: 'Your password is never stored. Authentication uses YouTube\'s official OAuth with scoped tokens.' },
+  { icon: Globe, color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', title: 'Cloudflare Edge', body: 'DDoS protection, rate limiting, and TLS 1.3 on every request — globally.' },
+  { icon: Eye, color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', title: 'Zero Data Selling', body: 'Your comment data is never sold, shared, or used to train third-party models.' },
+  { icon: Zap, color: '#fb923c', bg: 'rgba(251,146,60,0.08)', title: 'Session Control', body: 'Every active session is visible in your dashboard. Revoke any device at any time.' },
+  { icon: Filter, color: '#f87171', bg: 'rgba(239,68,68,0.08)', title: 'Rate Limiting', body: 'All endpoints are rate-limited. Abuse patterns trigger automatic account protection.' },
+];
+const LANGS = [
+  { flag: '🇮🇳', name: 'Hindi' }, { flag: '🇮🇳', name: 'Tamil' }, { flag: '🇮🇳', name: 'Telugu' },
+  { flag: '🇮🇳', name: 'Kannada' }, { flag: '🇮🇳', name: 'Bengali' }, { flag: '🇮🇳', name: 'Marathi' },
+  { flag: '🇺🇸', name: 'English' }, { flag: '🇪🇸', name: 'Spanish' }, { flag: '🇵🇹', name: 'Portuguese' },
+  { flag: '🇫🇷', name: 'French' }, { flag: '🇩🇪', name: 'German' }, { flag: '🇯🇵', name: 'Japanese' },
+  { flag: '🇰🇷', name: 'Korean' }, { flag: '🇸🇦', name: 'Arabic' }, { flag: '🇷🇺', name: 'Russian' },
+  { flag: '🇮🇩', name: 'Indonesian' }, { flag: '🇹🇷', name: 'Turkish' }, { flag: '🇨🇳', name: 'Chinese' },
+  { flag: '🇮🇹', name: 'Italian' }, { flag: '🌍', name: '+80 more' },
+];
+const PLANS = [
+  { name: 'Free', monthly: 0, annual: 0, desc: 'For creators just starting out.', features: ['1,500 comments/month','Basic spam detection','English & Hindi','Email alerts'], missing: ['AI auto-replies','Telegram alerts'], cta: 'Start Free', primary: false, hl: false, badge: null },
+  { name: 'Pro', monthly: 349, annual: 299, desc: 'For creators who care about community.', features: ['25,000 comments/month','AI toxicity detection','100+ languages','AI auto-replies','Telegram alerts','Priority support'], missing: [], cta: 'Start 19-Day Trial', primary: true, hl: true, badge: 'Most Popular' },
+  { name: 'Agency', monthly: 999, annual: 849, desc: 'For teams managing multiple channels.', features: ['Unlimited comments','Multi-channel','100+ languages','AI auto-replies','Webhook integrations','Dedicated support'], missing: [], cta: 'Contact Us', primary: false, hl: false, badge: null },
+];
+const FAQS = [
+  { q: 'How does ModerateAI connect to YouTube?', a: 'You authorize via YouTube\'s official OAuth flow. We never store your password — only a revocable, scoped access token.' },
+  { q: 'Which languages does the AI understand?', a: 'ModerateAI detects intent in 100+ languages — Hindi, Tamil, Arabic, Spanish, Korean, and more — with no extra configuration.' },
+  { q: 'Will the AI accidentally hide genuine comments?', a: 'Our false-positive rate is under 0.3%. The model reads context, not just keywords. Every hidden comment is reviewable and restorable.' },
+  { q: 'How long does setup take?', a: 'Under 2 minutes. Connect YouTube, choose your sensitivity level, done. No code, no plugins.' },
+  { q: 'Can I customize what gets hidden?', a: 'Yes. Keyword rules, sensitivity thresholds, language filters, and safe-lists — or let the AI handle everything automatically.' },
+  { q: 'Is my channel data secure?', a: 'AES-256 at rest, TLS 1.3 in transit, hosted on Cloudflare\'s edge. Your data is never sold or shared.' },
 ];
 
-/* ─── MAIN PAGE ─── */
+/* ══════════════════════════════════════════ MAIN ══════════════════════════════════════════ */
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [annual, setAnnual] = useState(false);
@@ -234,673 +229,501 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const fn = () => setScrolled(window.scrollY > 36);
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
   }, []);
-
-  const heroReveal = useReveal();
-  const statsReveal = useReveal();
-  const howReveal = useReveal();
-  const featReveal = useReveal();
-  const secReveal = useReveal();
-  const pricingReveal = useReveal();
-  const faqReveal = useReveal();
-  const ctaReveal = useReveal();
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .lp { font-family: 'Inter', -apple-system, sans-serif; background: #090909; color: #FAFAFA; overflow-x: hidden; }
+        .lp {
+          font-family: 'Inter', -apple-system, sans-serif;
+          background: #080808; color: #F0F0F0;
+          overflow-x: hidden; -webkit-font-smoothing: antialiased;
+        }
 
-        /* NAVBAR */
+        @keyframes lp-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        @keyframes lp-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+        @keyframes lp-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes lp-grad { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+        .serif { font-family: 'Playfair Display', Georgia, serif; }
+
+        .grad-text {
+          background: linear-gradient(135deg, #F59E0B 0%, #EC4899 50%, #8B5CF6 100%);
+          background-size: 200% 200%;
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+          background-clip: text; animation: lp-grad 5s ease infinite;
+        }
+
+        /* ── NAV ── */
         .lp-nav {
-          position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-          z-index: 100; width: calc(100% - 48px); max-width: 1160px;
-          background: rgba(9,9,11,0.72); border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 16px; padding: 0 20px;
-          backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-          display: flex; align-items: center; height: 56px; gap: 8px;
-          transition: box-shadow 0.3s, border-color 0.3s;
+          position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+          z-index: 200; width: calc(100% - 32px); max-width: 1120px;
+          background: rgba(8,8,8,0.75); border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 14px; padding: 0 18px;
+          backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+          display: flex; align-items: center; height: 52px;
+          transition: all 0.35s ease;
         }
-        .lp-nav.scrolled {
-          box-shadow: 0 8px 40px rgba(0,0,0,0.5);
-          border-color: rgba(255,255,255,0.10);
+        .lp-nav.scrolled { height: 48px; box-shadow: 0 4px 28px rgba(0,0,0,0.55); border-color: rgba(255,255,255,0.09); }
+        .n-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
+        .n-mark { background: linear-gradient(135deg,#F59E0B,#7C3AED); border-radius: 8px; width: 27px; height: 27px; display: flex; align-items: center; justify-content: center; }
+        .n-name { color: #F0F0F0; font-weight: 800; font-size: 14.5px; letter-spacing: -0.025em; }
+        .n-links { display: flex; align-items: center; margin: 0 auto; }
+        .n-link { color: rgba(255,255,255,0.42); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 10px; border-radius: 7px; transition: color 0.2s, background 0.2s; }
+        .n-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+        .n-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .n-login { color: rgba(255,255,255,0.48); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 10px; transition: color 0.2s; }
+        .n-login:hover { color: rgba(255,255,255,0.85); }
+        .n-cta { background: #F59E0B; color: #080808; font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 8px; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+        .n-cta:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.35); }
+        .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; margin-left: auto; }
+        @media (max-width: 800px) { .n-links, .n-login { display: none !important; } .n-burger { display: flex; } }
+
+        /* ── MOBILE MENU ── */
+        .mob-menu {
+          position: fixed; top: 72px; left: 14px; right: 14px; z-index: 199;
+          background: rgba(10,10,12,0.97); border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 14px; padding: 12px; backdrop-filter: blur(28px);
+          display: flex; flex-direction: column; gap: 3;
         }
-        .nav-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; flex-shrink: 0; }
-        .nav-logo-icon { background: linear-gradient(135deg,#F59E0B,#7C3AED); border-radius: 9px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; }
-        .nav-logo-text { color: #FAFAFA; font-weight: 800; font-size: 15px; letter-spacing: -0.02em; }
-        .nav-links { display: flex; align-items: center; gap: 2px; margin: 0 auto; }
-        .nav-link { color: rgba(255,255,255,0.55); font-size: 13.5px; font-weight: 500; text-decoration: none; padding: 6px 12px; border-radius: 8px; transition: color 0.2s, background 0.2s; }
-        .nav-link:hover { color: #FAFAFA; background: rgba(255,255,255,0.05); }
-        .nav-cta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .nav-login { color: rgba(255,255,255,0.6); font-size: 13.5px; font-weight: 500; text-decoration: none; padding: 6px 14px; border-radius: 8px; transition: color 0.2s; }
-        .nav-login:hover { color: #FAFAFA; }
-        .nav-trial { background: #F59E0B; color: #09090B; font-size: 13px; font-weight: 700; padding: 7px 16px; border-radius: 9px; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
-        .nav-trial:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.35); }
-        .nav-hamburger { display: none; background: none; border: none; cursor: pointer; padding: 6px; color: rgba(255,255,255,0.7); margin-left: auto; }
-        @media (max-width: 860px) {
-          .nav-links, .nav-login { display: none !important; }
-          .nav-hamburger { display: flex; }
-          .lp-nav { width: calc(100% - 32px); }
-        }
+        .mob-a { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 14px; border-radius: 9px; transition: all 0.18s; display: block; }
+        .mob-a:hover { background: rgba(255,255,255,0.04); color: #F0F0F0; }
 
-        /* MOBILE MENU */
-        .mobile-menu {
-          position: fixed; top: 82px; left: 16px; right: 16px; z-index: 99;
-          background: rgba(13,13,15,0.97); border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 16px; padding: 16px; backdrop-filter: blur(24px);
-          display: flex; flex-direction: column; gap: 4px;
-        }
-        .mobile-link { color: rgba(255,255,255,0.7); font-size: 15px; font-weight: 500; text-decoration: none; padding: 12px 16px; border-radius: 10px; transition: all 0.2s; }
-        .mobile-link:hover { background: rgba(255,255,255,0.05); color: #FAFAFA; }
-
-        /* SECTIONS */
-        .section { position: relative; }
-
-        /* REVEAL */
-        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.65s ease, transform 0.65s ease; }
-        .reveal.shown { opacity: 1; transform: none; }
-        .reveal-delay-1 { transition-delay: 0.1s; }
-        .reveal-delay-2 { transition-delay: 0.2s; }
-        .reveal-delay-3 { transition-delay: 0.3s; }
-        .reveal-delay-4 { transition-delay: 0.4s; }
-
-        /* ANIMATIONS */
-        @keyframes fadeSlideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-        @keyframes bounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
-        @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        @keyframes gradientShift { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
-        @keyframes marqueeX { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
-        @keyframes lineGrow { from { height:0; } to { height:100%; } }
-
-        /* HERO SECTION */
-        .hero-section {
-          min-height: 100vh;
-          padding: 120px 24px 80px;
+        /* ── HERO ── */
+        .hero {
+          padding: 112px 24px 72px;
           position: relative;
-          display: flex; align-items: center; justify-content: center;
           overflow: hidden;
-        }
-        .hero-bg {
-          position: absolute; inset: 0;
           background:
-            radial-gradient(ellipse 70% 60% at 20% 20%, rgba(245,158,11,0.12) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 60% at 80% 80%, rgba(124,58,237,0.14) 0%, transparent 60%);
+            radial-gradient(ellipse 70% 55% at 15% 20%, rgba(245,158,11,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 55% 55% at 85% 80%, rgba(139,92,246,0.1) 0%, transparent 60%),
+            #080808;
         }
         .hero-grid {
-          position: absolute; inset: 0;
-          background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-          background-size: 48px 48px;
-          mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 20%, transparent 80%);
-          -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 20%, transparent 80%);
+          position: absolute; inset: 0; pointer-events: none;
+          background-image: linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+          background-size: 52px 52px;
+          mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
+          -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
         }
-        .hero-inner { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; max-width: 1160px; width: 100%; }
-        .hero-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 20px; padding: 5px 14px 5px 10px; margin-bottom: 28px; }
-        .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #F59E0B; animation: pulse 2s infinite; }
-        .hero-badge-text { color: #F59E0B; font-size: 12.5px; font-weight: 600; letter-spacing: 0.02em; }
-        .hero-h1 { font-size: clamp(38px, 5vw, 62px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.08; color: #FAFAFA; margin-bottom: 22px; }
-        .hero-accent {
-          background: linear-gradient(135deg, #F59E0B, #7C3AED);
-          background-size: 200% 200%;
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-          animation: gradientShift 5s ease infinite;
+        .hero-inner {
+          position: relative; z-index: 2;
+          max-width: 1120px; margin: 0 auto;
+          display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
         }
-        .hero-desc { color: rgba(255,255,255,0.5); font-size: 17px; line-height: 1.65; max-width: 480px; margin-bottom: 36px; }
-        .hero-buttons { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 36px; }
-        .btn-hero-primary {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: #F59E0B; color: #09090B; font-weight: 700; font-size: 15px;
-          padding: 13px 24px; border-radius: 12px; text-decoration: none; border: none; cursor: pointer;
-          transition: all 0.2s; white-space: nowrap;
-        }
-        .btn-hero-primary:hover { background: #FBBF24; box-shadow: 0 0 30px rgba(245,158,11,0.4); transform: translateY(-1px); }
-        .btn-hero-secondary {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);
-          color: #FAFAFA; font-weight: 600; font-size: 15px;
-          padding: 13px 24px; border-radius: 12px; text-decoration: none; cursor: pointer;
-          transition: all 0.2s; white-space: nowrap;
-        }
-        .btn-hero-secondary:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.18); }
-        .hero-trust { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-        .hero-trust-item { display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.4); font-size: 13px; }
-        .hero-trust-check { color: #10B981; }
-        .hero-right { animation: float 6s ease-in-out infinite; }
+        .h-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 5px 14px 5px 10px; margin-bottom: 28px; }
+        .h-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; animation: lp-pulse 2s infinite; }
+        .h-badge-text { color: rgba(245,158,11,0.88); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+        .h1 { font-size: clamp(34px, 4.5vw, 58px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.08; color: #F0F0F0; margin-bottom: 22px; }
+        .h-desc { color: rgba(255,255,255,0.4); font-size: 16px; line-height: 1.7; max-width: 450px; margin-bottom: 36px; font-weight: 400; }
+        .h-btns { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+        .btn-p { display: inline-flex; align-items: center; gap: 7px; background: #F59E0B; color: #080808; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 10px; text-decoration: none; border: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
+        .btn-p:hover { background: #FBBF24; box-shadow: 0 0 28px rgba(245,158,11,0.35); transform: translateY(-1px); }
+        .btn-g { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); color: rgba(255,255,255,0.78); font-weight: 600; font-size: 14px; padding: 12px 22px; border-radius: 10px; text-decoration: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
+        .btn-g:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); }
+        .h-trust { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+        .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
+        .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
-        @media (max-width: 900px) {
-          .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+        @media (max-width: 820px) {
+          .hero-inner { grid-template-columns: 1fr; gap: 44px; }
+          .hero { padding: 96px 20px 56px; }
           .hero-right { animation: none; }
-          .hero-section { padding: 100px 20px 60px; }
         }
 
-        /* STATS STRIP */
-        .stats-strip {
-          background: #111111; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);
-          padding: 40px 24px; overflow: hidden;
-        }
-        .stats-inner { display: flex; align-items: center; justify-content: center; gap: 0; max-width: 1160px; margin: 0 auto; flex-wrap: wrap; }
-        .stat-item { display: flex; flex-direction: column; align-items: center; padding: 0 48px; position: relative; }
-        .stat-item + .stat-item::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1px; height: 32px; background: rgba(255,255,255,0.08); }
-        .stat-num { font-size: 32px; font-weight: 900; color: #FAFAFA; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
-        .stat-label { color: rgba(255,255,255,0.35); font-size: 12.5px; font-weight: 500; margin-top: 5px; letter-spacing: 0.03em; text-transform: uppercase; }
-        @media (max-width: 640px) { .stat-item { padding: 16px 24px; } .stat-item + .stat-item::before { display: none; } }
-
-        /* HOW IT WORKS */
-        .how-section { background: linear-gradient(180deg, #0E0E0E 0%, #111111 100%); padding: 100px 24px; }
-        .section-label { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.35); font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px; }
-        .section-title { font-size: clamp(28px,4vw,46px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px; }
-        .section-sub { color: rgba(255,255,255,0.45); font-size: 16px; line-height: 1.6; max-width: 520px; }
-        .timeline { position: relative; margin-top: 60px; }
-        .timeline-line { position: absolute; left: 23px; top: 0; bottom: 0; width: 1px; background: linear-gradient(180deg, #F59E0B 0%, rgba(124,58,237,0.3) 100%); }
-        .timeline-item { display: flex; gap: 24px; padding-bottom: 40px; position: relative; }
-        .timeline-item:last-child { padding-bottom: 0; }
-        .timeline-dot { width: 46px; height: 46px; border-radius: 14px; background: #171717; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; z-index: 1; transition: all 0.3s; }
-        .timeline-item:hover .timeline-dot { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); }
-        .timeline-content { padding-top: 10px; }
-        .timeline-content h3 { font-size: 16px; font-weight: 700; color: #FAFAFA; margin-bottom: 5px; }
-        .timeline-content p { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.55; }
-        @media (min-width: 860px) {
-          .how-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
-          .timeline-line { left: 23px; }
+        /* ── STATS ── */
+        .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
+        .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; }
+        .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
+        .s-cell + .s-cell::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:1px; height:26px; background:rgba(255,255,255,0.07); }
+        .s-num { font-size: 28px; font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+        .s-lbl { color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500; margin-top: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+        @media (max-width: 580px) {
+          .stats-row { display: grid; grid-template-columns: 1fr 1fr; }
+          .s-cell { padding: 16px 20px; }
+          .s-cell + .s-cell::before { display: none; }
+          .s-cell:nth-child(odd):not(:first-child) { border-top: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(even) { border-left: 1px solid rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.05); }
         }
 
-        /* FEATURES BENTO */
-        .feat-section { background: #0D0D0D; padding: 100px 24px; }
-        .bento-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto; gap: 16px; margin-top: 60px; }
-        .bento-card {
-          background: #131313; border: 1px solid rgba(255,255,255,0.06); border-radius: 20px;
-          padding: 32px; transition: all 0.3s; position: relative; overflow: hidden;
-        }
-        .bento-card::before {
-          content: ''; position: absolute; inset: 0; border-radius: 20px;
-          background: radial-gradient(ellipse 60% 60% at 20% 20%, rgba(245,158,11,0.04) 0%, transparent 70%);
-          opacity: 0; transition: opacity 0.3s;
-        }
-        .bento-card:hover { border-color: rgba(245,158,11,0.15); transform: translateY(-2px); }
-        .bento-card:hover::before { opacity: 1; }
-        .bento-large { grid-column: span 2; padding: 40px; }
-        .bento-icon { width: 44px; height: 44px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-        .bento-card h3 { font-size: 19px; font-weight: 800; color: #FAFAFA; margin-bottom: 10px; letter-spacing: -0.02em; }
-        .bento-card p { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.6; }
-        @media (max-width: 640px) { .bento-grid { grid-template-columns: 1fr; } .bento-large { grid-column: span 1; } }
+        /* ── SECTIONS ── */
+        .section { padding: 96px 24px; }
+        .section-sm { padding: 80px 24px; }
+        .con { max-width: 1120px; margin: 0 auto; }
+        .eyebrow { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.28); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
+        .eyebrow-dark { display: inline-flex; align-items: center; gap: 5px; color: rgba(0,0,0,0.3); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
+        .sh { font-size: clamp(24px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; }
+        .sh-dark { font-size: clamp(24px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; color: #0A0A0A; }
+        .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; font-weight: 400; }
+        .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; font-weight: 400; }
 
-        /* LANGUAGE */
-        .lang-section { background: linear-gradient(180deg, #111111 0%, #0C0C0C 100%); padding: 100px 24px; }
-        .lang-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 40px; }
-        .lang-chip {
-          background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 30px; padding: 8px 18px; font-size: 13.5px; font-weight: 500;
-          color: rgba(255,255,255,0.55); cursor: default; transition: all 0.2s;
-          display: flex; align-items: center; gap: 8px;
-        }
-        .lang-chip:hover { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.25); color: #FAFAFA; }
-        .lang-flag { font-size: 16px; line-height: 1; }
+        /* ── HOW ── */
+        .how-bg { background: linear-gradient(180deg, #0C0C0C 0%, #0F0F0F 100%); }
+        .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+        .tl { position: relative; margin-top: 48px; }
+        .tl-line { position: absolute; left: 19px; top: 6px; bottom: 6px; width: 1px; background: linear-gradient(180deg, rgba(245,158,11,0.6) 0%, rgba(139,92,246,0.18) 100%); }
+        .tl-row { display: flex; gap: 18px; padding-bottom: 32px; }
+        .tl-row:last-child { padding-bottom: 0; }
+        .tl-dot { width: 38px; height: 38px; border-radius: 10px; background: #131313; border: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; z-index: 1; transition: all 0.28s; }
+        .tl-row:hover .tl-dot { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.26); }
+        .tl-body { padding-top: 7px; }
+        .tl-body h3 { font-size: 14.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .tl-body p { font-size: 13px; color: rgba(255,255,255,0.33); line-height: 1.55; }
+        @media (max-width: 780px) { .how-grid { grid-template-columns: 1fr; gap: 40px; } }
 
-        /* SECURITY */
-        .sec-section { background: #FFFFFF; padding: 100px 24px; }
-        .sec-section .section-label { color: rgba(0,0,0,0.35); }
-        .sec-section .section-title { color: #0A0A0A; }
-        .sec-section .section-sub { color: rgba(0,0,0,0.5); }
-        .sec-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; }
-        .sec-card {
-          background: #F9F9F9; border: 1px solid rgba(0,0,0,0.07); border-radius: 16px;
-          padding: 28px; transition: all 0.2s;
-        }
-        .sec-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.08); transform: translateY(-2px); }
-        .sec-card-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-        .sec-card h3 { font-size: 15px; font-weight: 700; color: #0A0A0A; margin-bottom: 6px; }
-        .sec-card p { font-size: 13.5px; color: rgba(0,0,0,0.45); line-height: 1.55; }
-        @media (max-width: 860px) { .sec-cards { grid-template-columns: repeat(2,1fr); } }
-        @media (max-width: 500px) { .sec-cards { grid-template-columns: 1fr; } }
+        /* ── FEATURES ── */
+        .feat-bg { background: #090909; }
+        .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
+        .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 26px; transition: all 0.3s cubic-bezier(0.22,1,0.36,1); position: relative; overflow: hidden; }
+        .f-card::after { content:''; position:absolute; inset:0; border-radius:16px; background: radial-gradient(ellipse 70% 70% at 0% 0%, rgba(245,158,11,0.045) 0%, transparent 70%); opacity:0; transition:opacity 0.3s; }
+        .f-card:hover { border-color: rgba(245,158,11,0.13); transform: translateY(-2px); box-shadow: 0 18px 50px rgba(0,0,0,0.45); }
+        .f-card:hover::after { opacity: 1; }
+        .f-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+        .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; letter-spacing: -0.02em; }
+        .f-card p { font-size: 13px; color: rgba(255,255,255,0.36); line-height: 1.6; }
+        @media (max-width: 780px) { .feat-grid { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 480px) { .feat-grid { grid-template-columns: 1fr; } }
 
-        /* PRICING */
-        .pricing-section { background: #F7F7F5; padding: 100px 24px; }
-        .pricing-section .section-label { color: rgba(0,0,0,0.35); }
-        .pricing-section .section-title { color: #0A0A0A; }
-        .pricing-section .section-sub { color: rgba(0,0,0,0.5); }
-        .pricing-toggle { display: inline-flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.06); border-radius: 12px; padding: 4px; margin: 32px auto 0; }
-        .pricing-toggle-btn { padding: 8px 20px; border-radius: 9px; font-size: 13.5px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
-        .pricing-toggle-btn.active { background: #0A0A0A; color: #FAFAFA; }
-        .pricing-toggle-btn:not(.active) { background: transparent; color: rgba(0,0,0,0.45); }
-        .pricing-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 48px; }
-        .pricing-card {
-          background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 20px;
-          padding: 32px; position: relative; transition: all 0.3s;
-        }
-        .pricing-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.1); transform: translateY(-3px); }
-        .pricing-card.highlighted { background: #0A0A0A; border-color: rgba(245,158,11,0.4); }
-        .pricing-card.highlighted:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 40px rgba(245,158,11,0.12); }
-        .pricing-badge { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #0A0A0A; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 0 0 9px 9px; letter-spacing: 0.04em; white-space: nowrap; }
-        .pricing-name { font-size: 14px; font-weight: 600; color: rgba(0,0,0,0.4); margin-bottom: 8px; }
-        .pricing-card.highlighted .pricing-name { color: rgba(255,255,255,0.4); }
-        .pricing-price { font-size: 40px; font-weight: 900; color: #0A0A0A; letter-spacing: -0.03em; line-height: 1; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
-        .pricing-card.highlighted .pricing-price { color: #FAFAFA; }
-        .pricing-desc { font-size: 13.5px; color: rgba(0,0,0,0.45); margin-bottom: 28px; }
-        .pricing-card.highlighted .pricing-desc { color: rgba(255,255,255,0.35); }
-        .pricing-features { display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
-        .pricing-feat { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: rgba(0,0,0,0.65); }
-        .pricing-card.highlighted .pricing-feat { color: rgba(255,255,255,0.7); }
-        .pricing-feat-x { color: rgba(0,0,0,0.2); }
-        .pricing-cta-primary { width: 100%; background: #F59E0B; color: #0A0A0A; font-weight: 700; font-size: 14px; padding: 13px; border-radius: 11px; border: none; cursor: pointer; transition: all 0.2s; text-align: center; display: block; text-decoration: none; }
-        .pricing-cta-primary:hover { background: #FBBF24; box-shadow: 0 0 24px rgba(245,158,11,0.3); }
-        .pricing-cta-secondary { width: 100%; background: rgba(0,0,0,0.06); color: #0A0A0A; font-weight: 700; font-size: 14px; padding: 13px; border-radius: 11px; border: 1px solid rgba(0,0,0,0.08); cursor: pointer; transition: all 0.2s; text-align: center; display: block; text-decoration: none; }
-        .pricing-cta-secondary:hover { background: rgba(0,0,0,0.09); }
-        @media (max-width: 860px) { .pricing-cards { grid-template-columns: 1fr; max-width: 400px; margin-left: auto; margin-right: auto; } }
+        /* ── LANG ── */
+        .lang-bg { background: linear-gradient(180deg, #0D0D0D 0%, #0A0A0A 100%); }
+        .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
+        .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 7px 15px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
+        .l-chip:hover { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.2); color: rgba(255,255,255,0.82); }
 
-        /* FAQ */
-        .faq-section { background: #FFFFFF; padding: 100px 24px; }
-        .faq-section .section-label { color: rgba(0,0,0,0.35); }
-        .faq-section .section-title { color: #0A0A0A; }
-        .faq-list { margin-top: 56px; display: flex; flex-direction: column; }
-        .faq-item { border-bottom: 1px solid rgba(0,0,0,0.07); }
-        .faq-q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 0; background: none; border: none; cursor: pointer; text-align: left; }
-        .faq-q-text { font-size: 16.5px; font-weight: 700; color: #0A0A0A; }
-        .faq-chevron { color: rgba(0,0,0,0.3); transition: transform 0.3s; flex-shrink: 0; }
-        .faq-chevron.open { transform: rotate(180deg); color: #F59E0B; }
-        .faq-a { font-size: 15px; color: rgba(0,0,0,0.55); line-height: 1.7; padding-bottom: 24px; max-width: 680px; }
+        /* ── SECURITY ── */
+        .sec-bg { background: #FAFAFA; }
+        .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
+        .s-card { background: #F2F2F0; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 24px; transition: all 0.22s; }
+        .s-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.07); transform: translateY(-2px); }
+        .s-ico { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+        .s-card h3 { font-size: 14px; font-weight: 700; color: #0A0A0A; margin-bottom: 5px; }
+        .s-card p { font-size: 12.5px; color: rgba(0,0,0,0.42); line-height: 1.55; }
+        @media (max-width: 780px) { .sec-grid { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 460px) { .sec-grid { grid-template-columns: 1fr; } }
 
-        /* CTA */
-        .cta-section {
-          background: #090909; padding: 120px 24px;
-          position: relative; overflow: hidden;
-        }
-        .cta-bg {
-          position: absolute; inset: 0;
-          background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(124,58,237,0.12) 0%, transparent 70%);
-        }
-        .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 680px; margin: 0 auto; }
-        .cta-title { font-size: clamp(32px,5vw,56px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.08; margin-bottom: 20px; }
-        .cta-sub { color: rgba(255,255,255,0.45); font-size: 17px; line-height: 1.6; margin-bottom: 36px; }
-        .cta-buttons { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+        /* ── PRICING ── */
+        .price-bg { background: #F5F5F3; }
+        .p-toggle { display: inline-flex; background: rgba(0,0,0,0.06); border-radius: 9px; padding: 3px; margin: 24px auto 0; }
+        .pt-btn { padding: 6px 17px; border-radius: 7px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; }
+        .pt-btn.on { background: #0A0A0A; color: #FAFAFA; }
+        .pt-btn:not(.on) { background: transparent; color: rgba(0,0,0,0.38); }
+        .price-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+        .p-card { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 18px; padding: 28px; position: relative; transition: all 0.28s; }
+        .p-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .p-card.hl { background: #0A0A0A; border-color: rgba(245,158,11,0.32); }
+        .p-card.hl:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 40px rgba(245,158,11,0.09); }
+        .p-badge { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #080808; font-size: 9.5px; font-weight: 700; padding: 3px 12px; border-radius: 0 0 7px 7px; letter-spacing: 0.05em; white-space: nowrap; }
+        .p-name { font-size: 12.5px; font-weight: 600; color: rgba(0,0,0,0.36); margin-bottom: 6px; }
+        .hl .p-name { color: rgba(255,255,255,0.36); }
+        .p-amt { font-size: 36px; font-weight: 900; color: #0A0A0A; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+        .hl .p-amt { color: #FAFAFA; }
+        .p-per { font-size: 12.5px; font-weight: 500; color: rgba(0,0,0,0.28); }
+        .hl .p-per { color: rgba(255,255,255,0.28); }
+        .p-desc { font-size: 12.5px; color: rgba(0,0,0,0.4); margin: 14px 0 20px; line-height: 1.5; }
+        .hl .p-desc { color: rgba(255,255,255,0.33); }
+        .p-feats { display: flex; flex-direction: column; gap: 9px; margin-bottom: 22px; }
+        .p-feat { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(0,0,0,0.58); }
+        .hl .p-feat { color: rgba(255,255,255,0.62); }
+        .p-miss { color: rgba(0,0,0,0.2) !important; }
+        .hl .p-miss { color: rgba(255,255,255,0.17) !important; }
+        .cta-p { display:block; width:100%; background:#F59E0B; color:#080808; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:none; cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
+        .cta-p:hover { background:#FBBF24; box-shadow: 0 0 22px rgba(245,158,11,0.25); }
+        .cta-gl { display:block; width:100%; background:rgba(0,0,0,0.05); color:#0A0A0A; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:1px solid rgba(0,0,0,0.07); cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
+        .cta-gl:hover { background:rgba(0,0,0,0.08); }
+        .cta-dgl { display:block; width:100%; background:rgba(255,255,255,0.07); color:#FAFAFA; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
+        .cta-dgl:hover { background:rgba(255,255,255,0.1); }
+        @media (max-width: 780px) { .price-cards { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
 
-        /* FOOTER */
-        .footer { background: #000000; border-top: 1px solid rgba(255,255,255,0.05); padding: 60px 24px 32px; }
-        .footer-inner { max-width: 1160px; margin: 0 auto; }
-        .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
-        .footer-brand p { color: rgba(255,255,255,0.35); font-size: 13.5px; line-height: 1.6; margin-top: 14px; max-width: 260px; }
-        .footer-col h4 { color: rgba(255,255,255,0.5); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px; }
-        .footer-link { display: block; color: rgba(255,255,255,0.4); font-size: 13.5px; text-decoration: none; margin-bottom: 10px; transition: color 0.2s; }
-        .footer-link:hover { color: rgba(255,255,255,0.8); }
-        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .footer-copy { color: rgba(255,255,255,0.25); font-size: 13px; }
-        .footer-tagline { color: rgba(255,255,255,0.2); font-size: 12.5px; }
-        @media (max-width: 860px) { .footer-top { grid-template-columns: 1fr 1fr; } }
-        @media (max-width: 500px) { .footer-top { grid-template-columns: 1fr; } }
+        /* ── FAQ ── */
+        .faq-bg { background: #FFFFFF; }
+        .faq-list { margin-top: 48px; }
+        .faq-item { border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .faq-btn { width:100%; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:20px 0; background:none; border:none; cursor:pointer; text-align:left; }
+        .faq-q { font-size: 15.5px; font-weight: 700; color: #0A0A0A; letter-spacing: -0.02em; }
+        .faq-ico { color: rgba(0,0,0,0.27); transition: transform 0.28s, color 0.28s; flex-shrink: 0; }
+        .faq-ico.open { transform: rotate(180deg); color: #F59E0B; }
+        .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
-        .container { max-width: 1160px; margin: 0 auto; }
+        /* ── CTA ── */
+        .cta-wrap { background: #080808; padding: 120px 24px; position: relative; overflow: hidden; }
+        .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.09) 0%, transparent 70%); }
+        .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
+        .cta-h { font-size: clamp(28px,4.8vw,52px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.08; margin-bottom: 16px; }
+        .cta-sub { color: rgba(255,255,255,0.37); font-size: 15.5px; line-height: 1.65; margin-bottom: 32px; font-weight: 400; }
+        .cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.17); border-radius:20px; padding:4px 13px; margin-bottom:24px; }
+        .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
-        /* Scrollbar for landing */
-        .lp ::-webkit-scrollbar { width: 4px; }
-        .lp ::-webkit-scrollbar-track { background: #090909; }
-        .lp ::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
+        /* ── FOOTER ── */
+        .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 24px 26px; }
+        .foot-in { max-width: 1120px; margin: 0 auto; }
+        .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        .foot-brand p { color: rgba(255,255,255,0.26); font-size: 13px; line-height: 1.65; margin-top: 12px; max-width: 230px; }
+        .foot-col h4 { color: rgba(255,255,255,0.38); font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 13px; }
+        .foot-a { display:block; color:rgba(255,255,255,0.33); font-size:13px; text-decoration:none; margin-bottom:8px; transition:color 0.18s; }
+        .foot-a:hover { color:rgba(255,255,255,0.72); }
+        .foot-bot { border-top:1px solid rgba(255,255,255,0.04); padding-top:22px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+        .foot-copy { color:rgba(255,255,255,0.2); font-size:12px; }
+        .foot-tag { color:rgba(255,255,255,0.15); font-size:12px; }
+        @media (max-width: 780px) { .foot-top { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 440px) { .foot-top { grid-template-columns: 1fr; } }
+
+        .centered { text-align: center; }
       `}</style>
 
       <div className="lp">
 
         {/* ── NAVBAR ── */}
         <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
-          <Link href="/" className="nav-logo">
-            <div className="nav-logo-icon"><Shield size={15} color="white" /></div>
-            <span className="nav-logo-text">ModerateAI</span>
+          <Link href="/" className="n-logo">
+            <div className="n-mark"><Shield size={13} color="white" /></div>
+            <span className="n-name">ModerateAI</span>
           </Link>
-
-          <div className="nav-links">
+          <div className="n-links">
             {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
-              <a key={item} href={`#${item.toLowerCase().replace(/\s+/g,'-')}`} className="nav-link">{item}</a>
+              <a key={item} href={`#${item.toLowerCase().replace(/\s+/g,'-')}`} className="n-link">{item}</a>
             ))}
           </div>
-
-          <div className="nav-cta">
-            <Link href="/login" className="nav-login">Login</Link>
-            <Link href="/login" className="nav-trial">Start Free Trial</Link>
+          <div className="n-right">
+            <Link href="/login" className="n-login">Login</Link>
+            <Link href="/login" className="n-cta">Start Free Trial</Link>
           </div>
-
-          <button className="nav-hamburger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          <button className="n-burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+            {menuOpen ? <X size={19} /> : <Menu size={19} />}
           </button>
         </nav>
 
-        {menuOpen && (
-          <div className="mobile-menu">
-            {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
-              <a key={item} href={`#${item.toLowerCase().replace(/\s+/g,'-')}`} className="mobile-link" onClick={() => setMenuOpen(false)}>{item}</a>
-            ))}
-            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 0' }} />
-            <Link href="/login" className="mobile-link">Login</Link>
-            <Link href="/login" style={{ background: '#F59E0B', color: '#090909', fontWeight: 700, fontSize: 15, padding: '13px 16px', borderRadius: 10, textDecoration: 'none', textAlign: 'center', display: 'block', marginTop: 4 }}>Start Free Trial →</Link>
-          </div>
-        )}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div className="mob-menu" initial={{ opacity:0,y:-8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0,y:-8 }} transition={{ duration:0.18 }}>
+              {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
+                <a key={item} href={`#${item.toLowerCase().replace(/\s+/g,'-')}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
+              ))}
+              <div style={{ height:1, background:'rgba(255,255,255,0.05)', margin:'7px 0' }} />
+              <Link href="/login" className="mob-a">Login</Link>
+              <Link href="/login" style={{ display:'block', background:'#F59E0B', color:'#080808', fontWeight:700, fontSize:14, padding:'11px 14px', borderRadius:8, textDecoration:'none', textAlign:'center', marginTop:4 }}>Start Free Trial →</Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── HERO ── */}
-        <section className="hero-section" id="features">
-          <div className="hero-bg" />
+        <section className="hero" id="features">
           <div className="hero-grid" />
-
-          <div className="hero-inner" ref={heroReveal.ref}>
-            {/* Left */}
+          <div className="hero-inner">
             <div>
-              <div className={`reveal${heroReveal.visible ? ' shown' : ''}`}>
-                <div className="hero-badge">
-                  <div className="hero-badge-dot" />
-                  <span className="hero-badge-text">GPT-4 Powered Moderation</span>
+              <motion.div initial={{ opacity:0,y:16 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.05 }}>
+                <div className="h-badge">
+                  <div className="h-badge-dot" />
+                  <span className="h-badge-text">GPT-4 Powered Moderation</span>
                 </div>
-              </div>
-
-              <h1 className={`hero-h1 reveal${heroReveal.visible ? ' shown' : ''} reveal-delay-1`}>
-                Protect your YouTube community before{' '}
-                <span className="hero-accent">toxicity spreads.</span>
-              </h1>
-
-              <p className={`hero-desc reveal${heroReveal.visible ? ' shown' : ''} reveal-delay-2`}>
+              </motion.div>
+              <motion.h1 className="h1 serif" initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.7,delay:0.12,ease:[0.22,1,0.36,1] }}>
+                Protect your YouTube<br />community before{' '}
+                <span className="grad-text">toxicity spreads.</span>
+              </motion.h1>
+              <motion.p className="h-desc" initial={{ opacity:0,y:14 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.22 }}>
                 ModerateAI scans every comment in real time — detecting spam, toxicity, and manipulation across 100+ languages — and hides harmful content before your audience ever sees it.
-              </p>
-
-              <div className={`hero-buttons reveal${heroReveal.visible ? ' shown' : ''} reveal-delay-3`}>
-                <Link href="/login" className="btn-hero-primary">
-                  Start Free Trial <ArrowRight size={16} />
-                </Link>
-                <a href="#how-it-works" className="btn-hero-secondary">
-                  <Play size={15} /> See How It Works
-                </a>
-              </div>
-
-              <div className={`hero-trust reveal${heroReveal.visible ? ' shown' : ''} reveal-delay-4`}>
-                {['19-Day Free Trial', 'No Credit Card', 'Setup under 2 minutes'].map(t => (
-                  <div key={t} className="hero-trust-item">
-                    <CheckCircle size={14} className="hero-trust-check" style={{ color: '#10B981', flexShrink: 0 }} />
-                    <span>{t}</span>
+              </motion.p>
+              <motion.div className="h-btns" initial={{ opacity:0,y:12 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.55,delay:0.32 }}>
+                <Link href="/login" className="btn-p">Start Free Trial <ArrowRight size={14} /></Link>
+                <a href="#how-it-works" className="btn-g">See How It Works</a>
+              </motion.div>
+              <motion.div className="h-trust" initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.5,delay:0.44 }}>
+                {['No Credit Card','19-Day Free Trial','Setup in 2 minutes'].map(t => (
+                  <div key={t} className="h-trust-item">
+                    <CheckCircle size={13} style={{ color:'#10B981',flexShrink:0 }} /><span>{t}</span>
                   </div>
                 ))}
-              </div>
+              </motion.div>
             </div>
 
-            {/* Right — live browser window */}
-            <div className={`hero-right reveal${heroReveal.visible ? ' shown' : ''} reveal-delay-2`}>
-              <BrowserWindow />
-            </div>
+            <motion.div className="hero-right"
+              initial={{ opacity:0,y:24,scale:0.97 }} animate={{ opacity:1,y:0,scale:1 }}
+              transition={{ duration:0.85,delay:0.18,ease:[0.22,1,0.36,1] }}>
+              <ProductPreview />
+            </motion.div>
           </div>
         </section>
 
-        {/* ── STATS STRIP ── */}
-        <div className="stats-strip" ref={statsReveal.ref}>
-          <div className="stats-inner">
+        {/* ── STATS ── */}
+        <div className="stats">
+          <div className="stats-row">
             {[
-              { num: '100+', label: 'Languages' },
-              { num: '24/7', label: 'Live Protection' },
-              { num: '<200ms', label: 'Response Time' },
-              { num: '99.7%', label: 'Accuracy Rate' },
-              { num: '0', label: 'Setup Code' },
+              { display: <><Counter to={100} suffix="+" /></>, label: 'Languages' },
+              { display: '24/7', label: 'Live Protection' },
+              { display: '<200ms', label: 'Response Time' },
+              { display: <><Counter to={99.7} suffix="%" /></>, label: 'Detection Accuracy' },
+              { display: '0', label: 'Lines of Code to Setup' },
             ].map((s, i) => (
-              <div
-                key={s.label}
-                className={`stat-item reveal${statsReveal.visible ? ' shown' : ''}`}
-                style={{ transitionDelay: `${i * 0.07}s` }}
-              >
-                <span className="stat-num">{s.num}</span>
-                <span className="stat-label">{s.label}</span>
-              </div>
+              <FadeIn key={i} delay={i * 0.06}>
+                <div className="s-cell">
+                  <span className="s-num">{s.display}</span>
+                  <span className="s-lbl">{s.label}</span>
+                </div>
+              </FadeIn>
             ))}
           </div>
         </div>
 
         {/* ── HOW IT WORKS ── */}
-        <section className="how-section" id="how-it-works" ref={howReveal.ref}>
-          <div className="container">
-            <div className="how-inner">
-              <div>
-                <div className={`reveal${howReveal.visible ? ' shown' : ''}`}>
-                  <div className="section-label">
-                    <Zap size={12} /> Process
-                  </div>
-                  <h2 className="section-title">
-                    From comment posted<br />
-                    <span className="hero-accent">to threat removed</span><br />
-                    in under a second.
-                  </h2>
-                  <p className="section-sub">
-                    Seven stages of AI analysis happen invisibly before any viewer sees a harmful comment. No manual review. No plugins.
-                  </p>
-                </div>
-              </div>
-
-              <div className={`reveal${howReveal.visible ? ' shown' : ''} reveal-delay-2`}>
-                <div className="timeline">
-                  <div className="timeline-line" />
-                  {STEPS.map((step, i) => (
-                    <div key={step.label} className="timeline-item" style={{ transitionDelay: `${i * 0.06}s` }}>
-                      <div className="timeline-dot">
-                        <step.icon size={18} color="rgba(245,158,11,0.8)" />
-                      </div>
-                      <div className="timeline-content">
-                        <h3>{step.label}</h3>
-                        <p>{step.detail}</p>
-                      </div>
+        <section className="section how-bg" id="how-it-works">
+          <div className="con">
+            <div className="how-grid">
+              <FadeIn>
+                <div className="eyebrow"><Zap size={11} /> Process</div>
+                <h2 className="sh serif">
+                  From posted<br />to <span className="grad-text">protected</span><br />in under a second.
+                </h2>
+                <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review.</p>
+              </FadeIn>
+              <div className="tl">
+                <div className="tl-line" />
+                {STEPS.map((s, i) => (
+                  <FadeIn key={s.label} delay={i * 0.07}>
+                    <div className="tl-row">
+                      <div className="tl-dot"><s.icon size={15} color="rgba(245,158,11,0.75)" /></div>
+                      <div className="tl-body"><h3>{s.label}</h3><p>{s.detail}</p></div>
                     </div>
-                  ))}
-                </div>
+                  </FadeIn>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── FEATURES BENTO ── */}
-        <section className="feat-section" ref={featReveal.ref}>
-          <div className="container">
-            <div className={`reveal${featReveal.visible ? ' shown' : ''}`}>
-              <div className="section-label"><Star size={12} /> Features</div>
-              <h2 className="section-title">Everything your channel<br />needs to stay protected.</h2>
-            </div>
-
-            <div className="bento-grid">
-              {/* Large card */}
-              <div className={`bento-card bento-large reveal${featReveal.visible ? ' shown' : ''} reveal-delay-1`}
-                style={{ background: 'linear-gradient(135deg, #131313 0%, #0D0D0D 100%)', border: '1px solid rgba(245,158,11,0.12)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
-                  <div>
-                    <div className="bento-icon" style={{ background: 'rgba(245,158,11,0.12)' }}>
-                      <Cpu size={22} color="#F59E0B" />
-                    </div>
-                    <h3 style={{ fontSize: 22 }}>AI Context Detection</h3>
-                    <p style={{ fontSize: 15 }}>
-                      Unlike keyword filters, ModerateAI reads intent. Sarcasm, dog-whistles, mixed-language attacks — the model catches what rules miss, with a false-positive rate under 0.3%.
-                    </p>
+        {/* ── FEATURES ── */}
+        <section className="section feat-bg" id="features-detail">
+          <div className="con">
+            <FadeIn>
+              <div className="eyebrow"><Sparkles size={11} /> Features</div>
+              <h2 className="sh serif">Everything your channel<br />needs to stay clean.</h2>
+            </FadeIn>
+            <div className="feat-grid">
+              {FEATURES.map((f, i) => (
+                <FadeIn key={f.title} delay={i * 0.06}>
+                  <div className="f-card">
+                    <div className="f-icon" style={{ background: f.bg }}><f.icon size={18} color={f.color} /></div>
+                    <h3>{f.title}</h3>
+                    <p>{f.body}</p>
                   </div>
-                  <div style={{ background: '#0A0A0A', borderRadius: 14, padding: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
-                    {[
-                      { text: 'great video bro keep it up 👍', score: 2, label: 'SAFE' },
-                      { text: 'go kys nobody likes you here', score: 97, label: 'TOXIC' },
-                      { text: 'FREE SUBS → click profile NOW', score: 99, label: 'SPAM' },
-                    ].map(row => (
-                      <div key={row.text} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.4)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.text}</span>
-                        <span style={{
-                          fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
-                          background: row.label === 'SAFE' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                          color: row.label === 'SAFE' ? '#34d399' : '#f87171',
-                          flexShrink: 0
-                        }}>{row.label} {row.score}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* 4 smaller cards */}
-              {[
-                {
-                  icon: Languages, iconBg: 'rgba(96,165,250,0.12)', iconColor: '#60a5fa',
-                  title: '100+ Languages', body: 'Hindi, Tamil, Arabic, Spanish, Korean — the AI switches context rules per language automatically.'
-                },
-                {
-                  icon: MessageSquare, iconBg: 'rgba(167,139,250,0.12)', iconColor: '#a78bfa',
-                  title: 'AI Auto-Replies', body: 'Genuine comments get a human-sounding reply in the commenter\'s own language. No templates.'
-                },
-                {
-                  icon: Bell, iconBg: 'rgba(251,146,60,0.12)', iconColor: '#fb923c',
-                  title: 'Instant Alerts', body: 'Get notified via Telegram the moment a coordinated spam attack or hate campaign begins.'
-                },
-                {
-                  icon: TrendingUp, iconBg: 'rgba(16,185,129,0.12)', iconColor: '#34d399',
-                  title: 'Engagement Analytics', body: 'Track comment volume, toxicity trends, and reply performance over time on a single dashboard.'
-                },
-              ].map((card, i) => (
-                <div
-                  key={card.title}
-                  className={`bento-card reveal${featReveal.visible ? ' shown' : ''}`}
-                  style={{ transitionDelay: `${0.2 + i * 0.08}s` }}
-                >
-                  <div className="bento-icon" style={{ background: card.iconBg }}>
-                    <card.icon size={20} color={card.iconColor} />
-                  </div>
-                  <h3>{card.title}</h3>
-                  <p>{card.body}</p>
-                </div>
+                </FadeIn>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── LANGUAGE SUPPORT ── */}
-        <section className="lang-section" id="language-support" ref={howReveal.ref}>
-          <div className="container">
-            <div style={{ textAlign: 'center', marginBottom: 0 }}>
-              <div className="section-label" style={{ justifyContent: 'center' }}><Globe size={12} /> Language Support</div>
-              <h2 className="section-title">Your community speaks<br /><span className="hero-accent">every language.</span><br />So does the AI.</h2>
-              <p className="section-sub" style={{ margin: '0 auto' }}>ModerateAI detects the language of each comment automatically and applies culturally-aware moderation rules — no manual configuration needed.</p>
-            </div>
-
-            <div className="lang-chips">
-              {[
-                { flag: '🇮🇳', name: 'Hindi' }, { flag: '🇮🇳', name: 'Tamil' }, { flag: '🇮🇳', name: 'Telugu' },
-                { flag: '🇮🇳', name: 'Bengali' }, { flag: '🇮🇳', name: 'Marathi' }, { flag: '🇮🇳', name: 'Kannada' },
-                { flag: '🇺🇸', name: 'English' }, { flag: '🇪🇸', name: 'Spanish' }, { flag: '🇵🇹', name: 'Portuguese' },
-                { flag: '🇫🇷', name: 'French' }, { flag: '🇩🇪', name: 'German' }, { flag: '🇯🇵', name: 'Japanese' },
-                { flag: '🇰🇷', name: 'Korean' }, { flag: '🇨🇳', name: 'Chinese' }, { flag: '🇸🇦', name: 'Arabic' },
-                { flag: '🇷🇺', name: 'Russian' }, { flag: '🇮🇩', name: 'Indonesian' }, { flag: '🇹🇷', name: 'Turkish' },
-                { flag: '🇮🇹', name: 'Italian' }, { flag: '🇵🇱', name: 'Polish' },
-                { flag: '🌍', name: '+80 more' },
-              ].map(l => (
-                <div key={l.name} className="lang-chip">
-                  <span className="lang-flag">{l.flag}</span>
-                  {l.name}
-                </div>
-              ))}
-            </div>
+        {/* ── LANGUAGES ── */}
+        <section className="section lang-bg">
+          <div className="con centered">
+            <FadeIn>
+              <div className="eyebrow" style={{ justifyContent:'center' }}><Globe size={11} /> Language Support</div>
+              <h2 className="sh serif">Your community speaks<br /><span className="grad-text">every language.</span><br />So does the AI.</h2>
+              <p className="sub" style={{ margin:'0 auto' }}>Language is detected per comment automatically — no configuration needed.</p>
+            </FadeIn>
+            <FadeIn delay={0.1}>
+              <div className="lang-chips" style={{ justifyContent:'center' }}>
+                {LANGS.map(l => (
+                  <div key={l.name} className="l-chip"><span style={{ fontSize:14 }}>{l.flag}</span>{l.name}</div>
+                ))}
+              </div>
+            </FadeIn>
           </div>
         </section>
 
         {/* ── SECURITY ── */}
-        <section className="sec-section" id="security" ref={secReveal.ref}>
-          <div className="container">
-            <div className={`reveal${secReveal.visible ? ' shown' : ''}`}>
-              <div className="section-label"><Lock size={12} /> Security</div>
-              <h2 className="section-title">Built for channels that<br />can't afford a breach.</h2>
-              <p className="section-sub">Enterprise-grade security, applied to every creator account. No exceptions.</p>
-            </div>
-
-            <div className="sec-cards">
-              {[
-                { icon: Lock, iconBg: 'rgba(245,158,11,0.1)', iconColor: '#F59E0B', title: 'AES-256 Encryption', body: 'All tokens, user data, and channel credentials are encrypted at rest with AES-256 — the same standard used by banks.' },
-                { icon: Shield, iconBg: 'rgba(16,185,129,0.1)', iconColor: '#10B981', title: 'OAuth 2.0 Only', body: 'We never see your Google password. Authentication goes through YouTube\'s official OAuth 2.0 flow with scoped, revocable tokens.' },
-                { icon: Globe, iconBg: 'rgba(96,165,250,0.1)', iconColor: '#60a5fa', title: 'Cloudflare Edge', body: 'Hosted behind Cloudflare\'s global CDN with DDoS protection, rate limiting, and TLS 1.3 on every request.' },
-                { icon: Eye, iconBg: 'rgba(167,139,250,0.1)', iconColor: '#a78bfa', title: 'Zero Data Selling', body: 'Your comment data, channel stats, and audience information are never sold, shared, or used to train third-party models.' },
-                { icon: Clock, iconBg: 'rgba(251,146,60,0.1)', iconColor: '#fb923c', title: 'Session Management', body: 'Every active session is logged and visible in your dashboard. Revoke access from any device at any time.' },
-                { icon: Filter, iconBg: 'rgba(239,68,68,0.1)', iconColor: '#f87171', title: 'Rate Limiting', body: 'All API endpoints are rate-limited and monitored. Abuse patterns trigger automatic account protection.' },
-              ].map((card, i) => (
-                <div
-                  key={card.title}
-                  className={`sec-card reveal${secReveal.visible ? ' shown' : ''}`}
-                  style={{ transitionDelay: `${i * 0.07}s` }}
-                >
-                  <div className="sec-card-icon" style={{ background: card.iconBg }}>
-                    <card.icon size={18} color={card.iconColor} />
+        <section className="section sec-bg" id="security">
+          <div className="con">
+            <FadeIn>
+              <div className="eyebrow-dark"><Lock size={11} /> Security</div>
+              <h2 className="sh-dark">Built for channels that<br />can't afford a breach.</h2>
+              <p className="sub-dark">Enterprise-grade security on every creator account. No exceptions.</p>
+            </FadeIn>
+            <div className="sec-grid">
+              {SEC.map((s, i) => (
+                <FadeIn key={s.title} delay={i * 0.06}>
+                  <div className="s-card">
+                    <div className="s-ico" style={{ background: s.bg }}><s.icon size={16} color={s.color} /></div>
+                    <h3>{s.title}</h3>
+                    <p>{s.body}</p>
                   </div>
-                  <h3>{card.title}</h3>
-                  <p>{card.body}</p>
-                </div>
+                </FadeIn>
               ))}
             </div>
           </div>
         </section>
 
         {/* ── PRICING ── */}
-        <section className="pricing-section" id="pricing" ref={pricingReveal.ref}>
-          <div className="container">
-            <div className={`reveal${pricingReveal.visible ? ' shown' : ''}`} style={{ textAlign: 'center' }}>
-              <div className="section-label" style={{ justifyContent: 'center' }}><Zap size={12} /> Pricing</div>
-              <h2 className="section-title">Transparent pricing.<br />No surprises.</h2>
-              <p className="section-sub" style={{ margin: '0 auto' }}>Start free. Upgrade when you're ready. Cancel anytime.</p>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <div className="pricing-toggle">
-                  <button className={`pricing-toggle-btn${!annual ? ' active' : ''}`} onClick={() => setAnnual(false)}>Monthly</button>
-                  <button className={`pricing-toggle-btn${annual ? ' active' : ''}`} onClick={() => setAnnual(true)}>
-                    Annual <span style={{ background: '#F59E0B', color: '#0A0A0A', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 5, marginLeft: 4 }}>-14%</span>
+        <section className="section price-bg" id="pricing">
+          <div className="con centered">
+            <FadeIn>
+              <div className="eyebrow-dark" style={{ justifyContent:'center' }}><Zap size={11} /> Pricing</div>
+              <h2 className="sh-dark">Transparent pricing.<br />No surprises.</h2>
+              <p className="sub-dark" style={{ margin:'0 auto' }}>Start free. Upgrade when you're ready. Cancel anytime.</p>
+              <div style={{ display:'flex', justifyContent:'center' }}>
+                <div className="p-toggle">
+                  <button className={`pt-btn${!annual?' on':''}`} onClick={() => setAnnual(false)}>Monthly</button>
+                  <button className={`pt-btn${annual?' on':''}`} onClick={() => setAnnual(true)}>
+                    Annual <span style={{ background:'#F59E0B', color:'#080808', fontSize:9, fontWeight:700, padding:'1px 5px', borderRadius:3, marginLeft:4 }}>−14%</span>
                   </button>
                 </div>
               </div>
-            </div>
-
-            <div className="pricing-cards">
-              {PLANS.map((plan, i) => (
-                <div
-                  key={plan.name}
-                  className={`pricing-card${plan.highlight ? ' highlighted' : ''} reveal${pricingReveal.visible ? ' shown' : ''}`}
-                  style={{ transitionDelay: `${i * 0.1}s` }}
-                >
-                  {plan.highlight && <div className="pricing-badge">MOST POPULAR</div>}
-                  <div className="pricing-name">{plan.name}</div>
-                  <div className="pricing-price">
-                    {plan.name === 'Free' ? '₹0' : `₹${annual ? plan.price.annual : plan.price.monthly}`}
-                    {plan.name !== 'Free' && <span style={{ fontSize: 14, fontWeight: 500, color: plan.highlight ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)' }}>/mo</span>}
+            </FadeIn>
+            <div className="price-cards">
+              {PLANS.map((p, i) => (
+                <FadeIn key={p.name} delay={i * 0.09}>
+                  <div className={`p-card${p.hl?' hl':''}`}>
+                    {p.badge && <div className="p-badge">{p.badge}</div>}
+                    <div className="p-name">{p.name}</div>
+                    <div className="p-amt">
+                      {p.monthly === 0 ? '₹0' : `₹${annual ? p.annual : p.monthly}`}
+                      {p.monthly > 0 && <span className="p-per">/mo</span>}
+                    </div>
+                    <div className="p-desc">{p.desc}</div>
+                    <div className="p-feats">
+                      {p.features.map(f => (
+                        <div key={f} className="p-feat"><Check size={12} style={{ color:'#10B981',flexShrink:0 }} />{f}</div>
+                      ))}
+                      {p.missing.map(f => (
+                        <div key={f} className={`p-feat p-miss${p.hl?' hl':''}`}><X size={12} style={{ color: p.hl ? 'rgba(255,255,255,0.17)' : 'rgba(0,0,0,0.17)', flexShrink:0 }} />{f}</div>
+                      ))}
+                    </div>
+                    <Link href="/login" className={p.primary ? 'cta-p' : p.hl ? 'cta-dgl' : 'cta-gl'}>{p.cta}</Link>
                   </div>
-                  <div className="pricing-desc">{plan.description}</div>
-                  <div className="pricing-features">
-                    {plan.features.map(f => (
-                      <div key={f} className="pricing-feat">
-                        {f === '—'
-                          ? <X size={14} className="pricing-feat-x" style={{ color: plan.highlight ? 'rgba(255,255,255,0.2)' : undefined, flexShrink: 0 }} />
-                          : <Check size={14} style={{ color: '#10B981', flexShrink: 0 }} />
-                        }
-                        <span style={{ color: f === '—' ? (plan.highlight ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)') : undefined }}>{f === '—' ? 'Not included' : f}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <Link
-                    href="/login"
-                    className={plan.ctaStyle === 'primary' ? 'pricing-cta-primary' : 'pricing-cta-secondary'}
-                    style={plan.highlight && plan.ctaStyle !== 'primary' ? { background: 'rgba(255,255,255,0.08)', color: '#FAFAFA', border: '1px solid rgba(255,255,255,0.12)' } : {}}
-                  >
-                    {plan.cta}
-                  </Link>
-                </div>
+                </FadeIn>
               ))}
             </div>
           </div>
         </section>
 
         {/* ── FAQ ── */}
-        <section className="faq-section" ref={faqReveal.ref}>
-          <div className="container" style={{ maxWidth: 760 }}>
-            <div className={`reveal${faqReveal.visible ? ' shown' : ''}`} style={{ textAlign: 'center' }}>
-              <div className="section-label" style={{ justifyContent: 'center' }}>FAQ</div>
-              <h2 className="section-title">Common questions</h2>
-            </div>
-
-            <div className={`faq-list reveal${faqReveal.visible ? ' shown' : ''} reveal-delay-1`}>
-              {FAQS.map((faq, i) => (
+        <section className="section faq-bg">
+          <div className="con centered" style={{ maxWidth: 700 }}>
+            <FadeIn>
+              <div className="eyebrow-dark" style={{ justifyContent:'center' }}>FAQ</div>
+              <h2 className="sh-dark">Common questions</h2>
+            </FadeIn>
+            <div className="faq-list" style={{ textAlign:'left' }}>
+              {FAQS.map((f, i) => (
                 <div key={i} className="faq-item">
-                  <button className="faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
-                    <span className="faq-q-text">{faq.q}</span>
-                    <ChevronDown size={18} className={`faq-chevron${openFaq === i ? ' open' : ''}`} />
+                  <button className="faq-btn" onClick={() => setOpenFaq(openFaq===i?null:i)}>
+                    <span className="faq-q">{f.q}</span>
+                    <ChevronDown size={16} className={`faq-ico${openFaq===i?' open':''}`} />
                   </button>
-                  {openFaq === i && <p className="faq-a">{faq.a}</p>}
+                  <AnimatePresence>
+                    {openFaq===i && (
+                      <motion.p className="faq-a"
+                        initial={{ opacity:0,height:0 }} animate={{ opacity:1,height:'auto' }}
+                        exit={{ opacity:0,height:0 }} transition={{ duration:0.25 }}>
+                        {f.a}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </div>
@@ -908,70 +731,59 @@ export default function LandingPage() {
         </section>
 
         {/* ── CTA ── */}
-        <section className="cta-section" ref={ctaReveal.ref}>
-          <div className="cta-bg" />
-          <div className={`cta-inner reveal${ctaReveal.visible ? ' shown' : ''}`}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 20, padding: '5px 16px', marginBottom: 28 }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F59E0B', animation: 'pulse 2s infinite' }} />
-              <span style={{ color: '#F59E0B', fontSize: 12.5, fontWeight: 600 }}>19-day free trial · no card needed</span>
+        <section className="cta-wrap">
+          <div className="cta-ambient" />
+          <FadeIn>
+            <div className="cta-inner">
+              <div className="cta-pill">
+                <div style={{ width:5,height:5,borderRadius:'50%',background:'#F59E0B',animation:'lp-pulse 2s infinite' }} />
+                <span style={{ color:'rgba(245,158,11,0.88)',fontSize:12,fontWeight:600 }}>19-day free trial · no card needed</span>
+              </div>
+              <h2 className="cta-h serif">
+                Ready to protect<br /><span className="grad-text">your community?</span>
+              </h2>
+              <p className="cta-sub">Join creators who stopped losing subscribers to toxic comments. Setup takes less than 2 minutes.</p>
+              <div className="cta-btns">
+                <Link href="/login" className="btn-p">Start Free Trial <ArrowRight size={14} /></Link>
+                <a href="#how-it-works" className="btn-g">See how it works</a>
+              </div>
             </div>
-            <h2 className="cta-title">
-              Ready to protect<br />
-              <span className="hero-accent">your community?</span>
-            </h2>
-            <p className="cta-sub">
-              Join creators who stopped losing subscribers to toxic comments. Set up takes less than 2 minutes.
-            </p>
-            <div className="cta-buttons">
-              <Link href="/login" className="btn-hero-primary">
-                Start Free Trial <ArrowRight size={16} />
-              </Link>
-              <a href="#how-it-works" className="btn-hero-secondary">See how it works</a>
-            </div>
-          </div>
+          </FadeIn>
         </section>
 
         {/* ── FOOTER ── */}
-        <footer className="footer">
-          <div className="footer-inner">
-            <div className="footer-top">
-              <div className="footer-brand">
-                <Link href="/" className="nav-logo" style={{ display: 'inline-flex' }}>
-                  <div className="nav-logo-icon"><Shield size={14} color="white" /></div>
-                  <span className="nav-logo-text">ModerateAI</span>
+        <footer className="foot">
+          <div className="foot-in">
+            <div className="foot-top">
+              <div className="foot-brand">
+                <Link href="/" className="n-logo" style={{ display:'inline-flex' }}>
+                  <div className="n-mark"><Shield size={12} color="white" /></div>
+                  <span className="n-name">ModerateAI</span>
                 </Link>
                 <p>AI-powered YouTube comment moderation. Protect your community before toxicity spreads.</p>
               </div>
-
-              <div className="footer-col">
+              <div className="foot-col">
                 <h4>Product</h4>
-                <a href="#features" className="footer-link">Features</a>
-                <a href="#pricing" className="footer-link">Pricing</a>
-                <a href="#security" className="footer-link">Security</a>
-                <a href="#" className="footer-link">Documentation</a>
-                <a href="#" className="footer-link">Status</a>
+                {['Features','Pricing','Security','Documentation','Status'].map(t => <a key={t} href={`#${t.toLowerCase()}`} className="foot-a">{t}</a>)}
               </div>
-
-              <div className="footer-col">
+              <div className="foot-col">
                 <h4>Support</h4>
-                <a href="#" className="footer-link">Help Center</a>
-                <a href="mailto:support@moderateai.site" className="footer-link">Contact</a>
-                <Link href="/privacy" className="footer-link">Privacy Policy</Link>
-                <Link href="/terms" className="footer-link">Terms of Service</Link>
+                <a href="#" className="foot-a">Help Center</a>
+                <a href="mailto:support@moderateai.site" className="foot-a">Contact</a>
+                <Link href="/privacy" className="foot-a">Privacy Policy</Link>
+                <Link href="/terms" className="foot-a">Terms</Link>
               </div>
-
-              <div className="footer-col">
+              <div className="foot-col">
                 <h4>Connect</h4>
-                <a href="https://github.com" target="_blank" rel="noreferrer" className="footer-link">GitHub</a>
-                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="footer-link">LinkedIn</a>
-                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="footer-link">YouTube</a>
-                <a href="mailto:support@moderateai.site" className="footer-link">support@moderateai.site</a>
+                <a href="https://github.com" target="_blank" rel="noreferrer" className="foot-a">GitHub</a>
+                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="foot-a">LinkedIn</a>
+                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="foot-a">YouTube</a>
+                <a href="mailto:support@moderateai.site" className="foot-a">support@moderateai.site</a>
               </div>
             </div>
-
-            <div className="footer-bottom">
-              <span className="footer-copy">© 2026 ModerateAI. All rights reserved.</span>
-              <span className="footer-tagline">Built for YouTube creators.</span>
+            <div className="foot-bot">
+              <span className="foot-copy">© 2026 ModerateAI. All rights reserved.</span>
+              <span className="foot-tag">Built for YouTube creators.</span>
             </div>
           </div>
         </footer>

@@ -487,7 +487,8 @@ export default function Dashboard() {
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
 
-        .r-bg{min-height:100vh;background:#0a0a0f;position:relative;}
+        .r-bg{background:#0a0a0f;position:relative;}
+        @media(max-width:1023px){.r-bg{min-height:100dvh;}}
         .r-bg::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
           background:
             radial-gradient(ellipse 55% 45% at -5% 0%,rgba(245,158,11,0.07) 0%,transparent 60%),
@@ -657,19 +658,20 @@ export default function Dashboard() {
           background:linear-gradient(90deg,#F59E0B,#FBBF24);
         }
         .r-bnav-icon{
-          width:40px;height:32px;display:flex;align-items:center;justify-content:center;
+          width:40px;height:28px;display:flex;align-items:center;justify-content:center;
           border-radius:10px;transition:background 0.18s;
         }
         .r-bnav-item.active .r-bnav-icon{background:rgba(245,158,11,0.12);}
+        .r-bnav-label{font-size:9px;font-weight:600;margin-top:2px;letter-spacing:0.01em;}
 
         /* ── RESPONSIVE ── */
         @media(max-width:767px){
           .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;padding-bottom:72px;}
+          .r-main{margin-left:0!important;}
           .r-bottom-nav{display:flex!important;}
           .r-stats{grid-template-columns:1fr 1fr;gap:10px;}
           .r-bottom{grid-template-columns:1fr;}
-          .r-content{padding:14px;}
+          .r-content{padding:14px 14px 80px;}
           .r-topbar{padding:0 14px;}
           .r-topbar-search,.r-topbar-status{display:none!important;}
           .r-stat-value,.r-stat-zero{font-size:28px;}
@@ -677,15 +679,16 @@ export default function Dashboard() {
         }
         @media(min-width:768px) and (max-width:1023px){
           .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;padding-bottom:72px;}
+          .r-main{margin-left:0!important;}
           .r-bottom-nav{display:flex!important;}
           .r-stats{grid-template-columns:1fr 1fr;}
           .r-bottom{grid-template-columns:1fr 1fr;}
-          .r-content{padding:20px;}
+          .r-content{padding:20px 20px 80px;}
           .r-topbar{padding:0 20px;}
         }
         @media(min-width:1024px){
           .r-bottom-nav{display:none!important;}
+          .r-mobile-welcome{display:none!important;}
         }
       `}</style>
 
@@ -769,6 +772,19 @@ export default function Dashboard() {
           </header>
 
           <div className="r-content">
+            {/* Mobile welcome banner */}
+            <div className="r-mobile-welcome" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.12)', borderRadius: 14, padding: '12px 14px' }}>
+              {user?.photoURL
+                ? <img src={user.photoURL} style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} alt="av" />
+                : <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>{initials}</div>
+              }
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 500 }}>Welcome back 👋</div>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.displayName || user?.email?.split('@')[0] || 'User'}</div>
+              </div>
+              <span style={{ marginLeft: 'auto', background: plan === 'free' ? 'rgba(245,158,11,0.12)' : 'rgba(52,211,153,0.12)', color: plan === 'free' ? '#F59E0B' : '#34d399', fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 6, letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>{plan === 'free' ? 'FREE' : plan.toUpperCase()}</span>
+            </div>
+
             {/* Page header */}
             <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div>
@@ -858,13 +874,15 @@ export default function Dashboard() {
             return (
               <Link key={item.href} href={item.href} className={`r-bnav-item${isActive ? ' active' : ''}`} title={item.label}>
                 <span className="r-bnav-icon">
-                  <item.icon size={21} strokeWidth={isActive ? 2.2 : 1.7} />
+                  <item.icon size={20} strokeWidth={isActive ? 2.2 : 1.7} />
                 </span>
+                <span className="r-bnav-label">{item.label}</span>
               </Link>
             );
           })}
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)} title="More">
-            <span className="r-bnav-icon"><MoreHorizontal size={21} strokeWidth={1.7} /></span>
+            <span className="r-bnav-icon"><MoreHorizontal size={20} strokeWidth={1.7} /></span>
+            <span className="r-bnav-label">More</span>
           </button>
         </nav>
 

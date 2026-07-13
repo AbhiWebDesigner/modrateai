@@ -501,10 +501,10 @@ export default function Dashboard() {
         .r-sidebar{
           width:228px;min-width:228px;
           background:
-            radial-gradient(ellipse 180% 55% at -10% 15%, rgba(160,75,0,0.72) 0%, rgba(120,55,0,0.35) 25%, transparent 55%),
-            radial-gradient(ellipse 150% 50% at 0% 50%, rgba(130,60,0,0.42) 0%, rgba(90,40,0,0.18) 35%, transparent 60%),
-            radial-gradient(ellipse 120% 35% at 0% 85%, rgba(110,50,0,0.28) 0%, transparent 50%),
-            linear-gradient(160deg, rgba(28,14,4,0.98) 0%, rgba(14,10,6,0.99) 40%, rgba(9,7,12,1) 70%, rgba(8,7,12,1) 100%);
+            radial-gradient(ellipse 200% 60% at -5% 12%, rgba(175,82,0,0.82) 0%, rgba(140,62,0,0.42) 22%, transparent 52%),
+            radial-gradient(ellipse 160% 55% at 0% 52%, rgba(145,65,0,0.50) 0%, rgba(100,44,0,0.22) 32%, transparent 58%),
+            radial-gradient(ellipse 130% 38% at 0% 88%, rgba(120,54,0,0.32) 0%, transparent 48%),
+            linear-gradient(160deg, rgba(32,16,4,0.99) 0%, rgba(18,11,5,0.99) 35%, rgba(10,8,13,1) 65%, rgba(8,7,12,1) 100%);
           border-right:1px solid rgba(245,158,11,0.12);
           display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
@@ -579,7 +579,7 @@ export default function Dashboard() {
         .r-nav-item{
           display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:12px;
           font-size:13.5px;font-weight:500;text-decoration:none;
-          color:rgba(255,255,255,0.32);
+          color:rgba(220,195,165,0.52);
           transition:all 0.22s cubic-bezier(.4,0,.2,1);
           border:1px solid transparent;
           position:relative;overflow:hidden;
@@ -591,7 +591,7 @@ export default function Dashboard() {
         }
         .r-nav-item:hover{
           background:rgba(245,158,11,0.055);
-          color:rgba(255,255,255,0.82);
+          color:rgba(240,220,190,0.88);
           transform:translateX(3px);
           border-color:rgba(245,158,11,0.08);
           box-shadow:inset 0 0 20px rgba(245,158,11,0.03);

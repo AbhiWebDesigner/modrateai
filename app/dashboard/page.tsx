@@ -775,7 +775,7 @@ export default function Dashboard() {
         .r-bnav-item.active .r-bnav-icon{background:rgba(245,158,11,0.12);}
 
         /* CONNECT BANNER — hide left panel on small screens */
-        @media(max-width:767px){
+        @media(max-width:1023px){
           .r-sidebar{display:none!important;}
           .r-sidebar-glow{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}

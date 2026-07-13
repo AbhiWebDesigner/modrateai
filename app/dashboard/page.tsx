@@ -261,49 +261,50 @@ function ConnectYouTubeBanner({ onConnect }: { onConnect: () => void }) {
     <div style={{
       background: 'rgba(16,16,22,0.95)', border: '1px solid rgba(255,255,255,0.08)',
       borderRadius: 20, overflow: 'hidden', marginBottom: 14,
-      display: 'flex', gap: 0, minHeight: 200,
+      display: 'flex', gap: 0,
     }}>
-      {/* Left: visual */}
-      <div style={{
-        width: 220, flexShrink: 0, background: 'rgba(255,255,255,0.02)',
+      {/* Left: visual — fixed narrow panel */}
+      <div className="r-connect-left" style={{
+        width: 160, flexShrink: 0,
+        background: 'rgba(255,255,255,0.015)',
         borderRight: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
-        padding: '24px 20px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
+        padding: '28px 16px',
       }}>
         <div style={{
-          width: 72, height: 72, borderRadius: 20,
-          background: 'linear-gradient(135deg,rgba(248,113,113,0.18),rgba(248,113,113,0.06))',
-          border: '1px solid rgba(248,113,113,0.2)',
+          width: 64, height: 64, borderRadius: 18,
+          background: 'linear-gradient(135deg,rgba(248,113,113,0.15),rgba(10,10,15,0.8))',
+          border: '1px solid rgba(248,113,113,0.18)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 32px rgba(248,113,113,0.12)',
+          boxShadow: '0 0 28px rgba(248,113,113,0.10)',
         }}>
-          <YTIcon color="#f87171" size={34} />
+          <YTIcon color="#f87171" size={30} />
         </div>
         <div style={{ display: 'flex', gap: 5 }}>
           {[0, 1, 2].map(i => (
-            <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: i === 1 ? '#F59E0B' : 'rgba(255,255,255,0.12)', boxShadow: i === 1 ? '0 0 8px rgba(245,158,11,0.6)' : 'none' }} />
+            <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: i === 1 ? '#F59E0B' : 'rgba(255,255,255,0.1)', boxShadow: i === 1 ? '0 0 6px rgba(245,158,11,0.5)' : 'none' }} />
           ))}
         </div>
-        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5, fontWeight: 500, letterSpacing: '0.04em' }}>Awaiting connection · OAuth 2.0</div>
+        <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10, fontWeight: 500, textAlign: 'center', letterSpacing: '0.03em' }}>Awaiting connection · OAuth 2.0</div>
       </div>
 
-      {/* Right: content */}
-      <div style={{ flex: 1, padding: '28px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16 }}>
+      {/* Right: content — takes all remaining space */}
+      <div style={{ flex: 1, minWidth: 0, padding: '28px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#F59E0B', boxShadow: '0 0 8px rgba(245,158,11,0.7)', animation: 'pulse 1.8s infinite' }} />
             <span style={{ color: '#F59E0B', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Ready to Connect</span>
           </div>
-          <h2 style={{ color: '#FAFAFA', fontSize: 22, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: 8 }}>
-            Connect your <span style={{ color: '#f87171' }}>YouTube</span> channel
+          <h2 style={{ color: '#FAFAFA', fontSize: 24, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.2, marginBottom: 8 }}>
+            Connect your <span style={{ color: '#F59E0B' }}>YouTube</span> channel
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 13, lineHeight: 1.7, maxWidth: 480 }}>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, lineHeight: 1.65 }}>
             Grant secure OAuth access and ModerateAI starts protecting your community in seconds — hiding toxic comments, replying to fans, and surfacing insights in real time.
           </p>
         </div>
 
         {/* Feature pills */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
           {[
             { icon: Shield, label: 'Connect securely' },
             { icon: Activity, label: 'Realtime moderation' },
@@ -313,23 +314,23 @@ function ConnectYouTubeBanner({ onConnect }: { onConnect: () => void }) {
             <div key={f.label} style={{
               display: 'flex', alignItems: 'center', gap: 6,
               background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 9, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)',
+              borderRadius: 8, padding: '5px 11px', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.55)',
             }}>
-              <f.icon size={12} color="rgba(255,255,255,0.4)" strokeWidth={2} />
+              <f.icon size={11} color="rgba(255,255,255,0.35)" strokeWidth={2} />
               {f.label}
             </div>
           ))}
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={onConnect} className="ref-btn-primary" style={{ gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <button onClick={onConnect} className="ref-btn-primary">
             <YTIcon color="#08080A" size={14} />
             Connect YouTube
-            <span style={{ fontSize: 11, opacity: 0.7 }}>↗</span>
+            <span style={{ fontSize: 12 }}>↗</span>
           </button>
-          <Link href="/demo" className="ref-btn-ghost" style={{ fontSize: 13 }}>View demo dashboard</Link>
-          <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, marginLeft: 4 }}>Uses read-only + moderation scopes. Revoke anytime.</span>
+          <Link href="/demo" className="ref-btn-ghost">View demo dashboard</Link>
+          <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 11 }}>Uses read-only + moderation scopes. Revoke anytime.</span>
         </div>
       </div>
     </div>

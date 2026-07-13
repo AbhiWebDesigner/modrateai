@@ -501,10 +501,10 @@ export default function Dashboard() {
         .r-sidebar{
           width:228px;min-width:228px;
           background:
-            radial-gradient(ellipse 140% 60% at 0% 40%, rgba(120,60,0,0.38) 0%, rgba(80,35,0,0.18) 30%, transparent 60%),
-            radial-gradient(ellipse 120% 40% at 0% 80%, rgba(100,50,0,0.22) 0%, transparent 50%),
-            radial-gradient(ellipse 100% 30% at 0% 10%, rgba(130,65,0,0.18) 0%, transparent 45%),
-            linear-gradient(180deg, rgba(10,8,14,0.97) 0%, rgba(9,7,13,0.98) 100%);
+            radial-gradient(ellipse 180% 55% at -10% 15%, rgba(160,75,0,0.72) 0%, rgba(120,55,0,0.35) 25%, transparent 55%),
+            radial-gradient(ellipse 150% 50% at 0% 50%, rgba(130,60,0,0.42) 0%, rgba(90,40,0,0.18) 35%, transparent 60%),
+            radial-gradient(ellipse 120% 35% at 0% 85%, rgba(110,50,0,0.28) 0%, transparent 50%),
+            linear-gradient(160deg, rgba(28,14,4,0.98) 0%, rgba(14,10,6,0.99) 40%, rgba(9,7,12,1) 70%, rgba(8,7,12,1) 100%);
           border-right:1px solid rgba(245,158,11,0.12);
           display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;

@@ -11,7 +11,6 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
-/* ── SPARKLINE ── */
 function Sparkline({ color, up = true, width = 80, height = 36 }: { color: string; up?: boolean; width?: number; height?: number }) {
   const points = up
     ? [28, 22, 32, 24, 36, 28, 42, 34, 48, 38, 56, 44, 62]
@@ -37,7 +36,6 @@ function Sparkline({ color, up = true, width = 80, height = 36 }: { color: strin
   );
 }
 
-/* ── CIRCULAR PROGRESS ── */
 function CircularProgress({ pct }: { pct: number }) {
   const r = 44, circ = 2 * Math.PI * r;
   const filled = (Math.min(pct, 100) / 100) * circ;
@@ -60,7 +58,6 @@ function CircularProgress({ pct }: { pct: number }) {
   );
 }
 
-/* ── ACCURACY RING ── */
 function AccuracyRing({ accuracy }: { accuracy: number | null }) {
   if (accuracy === null) {
     return (
@@ -108,7 +105,6 @@ function AccuracyRing({ accuracy }: { accuracy: number | null }) {
   );
 }
 
-/* ── MONTHLY USAGE CARD ── */
 function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit, trialDaysLeft, onConnectYouTube }:
   { plan: string; youtubeConnected: boolean; commentsUsed: number; commentsLimit: number; trialDaysLeft: number | null; onConnectYouTube: () => void }) {
   const usagePct = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
@@ -120,19 +116,14 @@ function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit,
     return (
       <div className="ref-card">
         <div className="ref-card-top">
-          <div>
-            <div className="ref-card-title">Monthly Usage</div>
-            <div className="ref-card-sub">Comment scan quota</div>
-          </div>
+          <div><div className="ref-card-title">Monthly Usage</div><div className="ref-card-sub">Comment scan quota</div></div>
           <span className="ref-badge ref-badge-amber"><Zap size={9} /> Free Trial</span>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '28px 20px', textAlign: 'center' }}>
           <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Zap size={24} color="#F59E0B" />
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, lineHeight: 1.6, maxWidth: 220 }}>
-            Connect your YouTube channel to start your free trial.
-          </p>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, lineHeight: 1.6, maxWidth: 220 }}>Connect your YouTube channel to start your free trial.</p>
           <button onClick={onConnectYouTube} className="ref-btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
             Connect YouTube
@@ -169,8 +160,7 @@ function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit,
     <div className="ref-card">
       <div className="ref-card-top">
         <div><div className="ref-card-title">Monthly Usage</div><div className="ref-card-sub">Comment scan quota</div></div>
-        {isFree
-          ? <span className="ref-badge ref-badge-amber"><Zap size={9} /> Free Trial</span>
+        {isFree ? <span className="ref-badge ref-badge-amber"><Zap size={9} /> Free Trial</span>
           : <span className="ref-badge ref-badge-green"><CheckCircle size={9} /> Pro</span>}
       </div>
       <div style={{ padding: '20px' }}>
@@ -181,14 +171,9 @@ function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit,
               <span style={{ color: '#FAFAFA', fontSize: 32, fontWeight: 900, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{commentsUsed.toLocaleString()}</span>
               <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 14 }}>/ {quotaDisplay}</span>
             </div>
-            {[
-              { label: 'Used', val: commentsUsed.toLocaleString() },
-              { label: 'Remaining', val: remaining.toLocaleString() },
-              { label: 'Quota', val: quotaDisplay },
-            ].map(r => (
+            {[{ label: 'Used', val: commentsUsed.toLocaleString() }, { label: 'Remaining', val: remaining.toLocaleString() }, { label: 'Quota', val: quotaDisplay }].map(r => (
               <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'rgba(255,255,255,0.32)', marginBottom: 4 }}>
-                <span>{r.label}</span>
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{r.val}</span>
+                <span>{r.label}</span><span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{r.val}</span>
               </div>
             ))}
           </div>
@@ -199,9 +184,7 @@ function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit,
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255,255,255,0.28)', marginBottom: 16 }}>
           <span>{usagePct.toFixed(0)}% used</span>
           {isFree && trialDaysLeft !== null && (
-            <span style={{ color: trialDaysLeft <= 3 ? '#f87171' : '#F59E0B', fontWeight: 700 }}>
-              {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left
-            </span>
+            <span style={{ color: trialDaysLeft <= 3 ? '#f87171' : '#F59E0B', fontWeight: 700 }}>{trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left</span>
           )}
         </div>
         {isFree
@@ -216,7 +199,6 @@ function MonthlyUsageCard({ plan, youtubeConnected, commentsUsed, commentsLimit,
   );
 }
 
-/* ── HEALTH ROW ── */
 function HealthRow({ icon: Icon, label, sub, value, color = '#34d399', dot = 'green' }:
   { icon: any; label: string; sub: string; value?: string; color?: string; dot?: 'green' | 'amber' | 'red' }) {
   const dotColor = { green: '#22c55e', amber: '#F59E0B', red: '#f87171' }[dot];
@@ -248,12 +230,12 @@ function YTIcon({ color = '#f87171', size = 14 }: { color?: string; size?: numbe
 }
 
 const NAV_ITEMS = [
-  { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard',  active: true  },
-  { label: 'Analytics',  icon: BarChart2,        href: '/analytics',  active: false },
-  { label: 'Automation', icon: Zap,              href: '/automation', active: false },
-  { label: 'Alerts',     icon: Bell,             href: '/alerts',     active: false },
-  { label: 'Settings',   icon: Settings,         href: '/settings',   active: false },
-  { label: 'Billing',    icon: CreditCard,       href: '/billing',    active: false },
+  { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
+  { label: 'Analytics',  icon: BarChart2,        href: '/analytics'  },
+  { label: 'Automation', icon: Zap,              href: '/automation' },
+  { label: 'Alerts',     icon: Bell,             href: '/alerts'     },
+  { label: 'Settings',   icon: Settings,         href: '/settings'   },
+  { label: 'Billing',    icon: CreditCard,       href: '/billing'    },
 ];
 
 export default function Dashboard() {
@@ -302,7 +284,7 @@ export default function Dashboard() {
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
   const channelName     = (userData?.youtube_channel_name as string) || (userData?.channel_name as string) || null;
   const channelHandle   = (userData?.youtube_channel_handle as string) || (userData?.channel_handle as string) || null;
-  const aiModel         = (userData?.ai_model         as string) || null;
+  const aiModel         = (userData?.ai_model as string) || null;
   const webhookPct      = (userData?.webhook_delivery_percent as number) ?? null;
   const webhookAge      = (userData?.webhook_last_delivery_age as string) ?? null;
 
@@ -344,6 +326,8 @@ export default function Dashboard() {
   });
   if (aiModel) healthRows.push({ key: 'model', icon: Cpu, label: 'AI Model', sub: aiModel, color: '#a78bfa', dot: 'green' });
 
+  const currentPath = '/dashboard';
+
   return (
     <>
       <style>{`
@@ -358,7 +342,6 @@ export default function Dashboard() {
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
 
-        /* BG */
         .r-bg{min-height:100vh;background:#0a0a0f;position:relative;}
         .r-bg::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
           background:radial-gradient(ellipse 55% 45% at -5% 0%,rgba(245,158,11,0.07) 0%,transparent 60%),
@@ -368,20 +351,18 @@ export default function Dashboard() {
           background-size:44px 44px;}
 
         /* SIDEBAR */
-        .r-sidebar{width:228px;min-width:228px;background:rgba(10,10,15,0.88);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+        .r-sidebar{width:228px;min-width:228px;background:rgba(10,10,15,0.92);backdrop-filter:blur(32px);
           border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
           box-shadow:inset -1px 0 0 rgba(255,255,255,0.02),4px 0 48px rgba(0,0,0,0.45);}
         .r-sidebar::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:2px;border-radius:0 2px 2px 0;
           background:linear-gradient(180deg,transparent,rgba(245,158,11,0.6),rgba(245,158,11,0.95),rgba(245,158,11,0.6),transparent);
           box-shadow:0 0 16px rgba(245,158,11,0.4),0 0 36px rgba(245,158,11,0.1);}
-
         .r-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,0.05);}
         .r-logo-mark{width:38px;height:38px;border-radius:12px;flex-shrink:0;
           background:linear-gradient(135deg,#F59E0B 0%,#7C3AED 100%);
           display:flex;align-items:center;justify-content:center;
           box-shadow:0 2px 14px rgba(245,158,11,0.32),0 1px 4px rgba(0,0,0,0.4);}
-
         .r-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
         .r-nav-item{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:12px;
           font-size:13.5px;font-weight:500;text-decoration:none;color:rgba(255,255,255,0.36);
@@ -396,7 +377,6 @@ export default function Dashboard() {
           border:1px solid rgba(245,158,11,0.2);border-radius:7px;padding:2px 7px;
           font-size:9px;font-weight:700;color:#F59E0B;margin-left:auto;letter-spacing:0.05em;text-transform:uppercase;}
         .r-live-dot{width:4px;height:4px;border-radius:50%;background:#F59E0B;animation:pulse 1.8s infinite;flex-shrink:0;}
-
         .r-upgrade{margin:0 10px 10px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.13);border-radius:14px;padding:15px;}
         .r-sidebar-bottom{padding:8px 10px 22px;border-top:1px solid rgba(255,255,255,0.045);display:flex;flex-direction:column;gap:4px;}
 
@@ -404,7 +384,7 @@ export default function Dashboard() {
         .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
 
         /* TOPBAR */
-        .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.85);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+        .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.88);backdrop-filter:blur(28px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 28px;height:60px;
           display:flex;align-items:center;gap:14px;
           box-shadow:0 1px 0 rgba(255,255,255,0.02),0 4px 32px rgba(0,0,0,0.3);}
@@ -430,15 +410,10 @@ export default function Dashboard() {
         /* CONTENT */
         .r-content{padding:28px;flex:1;animation:fadeIn 0.35s ease;}
 
-        /* WELCOME */
-        .r-welcome{color:rgba(255,255,255,0.42);font-size:14px;font-weight:500;margin-bottom:4px;letter-spacing:0.01em;}
-        .r-page-title{font-size:32px;font-weight:900;color:#FAFAFA;letter-spacing:-0.04em;line-height:1.1;margin-bottom:2px;}
-        .r-page-sub{color:rgba(255,255,255,0.28);font-size:13px;font-weight:400;}
-
-        /* STAT CARDS — reference style */
+        /* STAT CARDS */
         .r-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
         .r-stat{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:20px 22px;
-          transition:all 0.22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;gap:0;backdrop-filter:blur(16px);position:relative;overflow:hidden;}
+          transition:all 0.22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;backdrop-filter:blur(16px);position:relative;overflow:hidden;}
         .r-stat::before{content:'';position:absolute;inset:0;border-radius:18px;
           background:linear-gradient(135deg,rgba(255,255,255,0.018) 0%,transparent 60%);pointer-events:none;}
         .r-stat:hover{border-color:rgba(255,255,255,0.12);transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,0,0,0.32);}
@@ -466,11 +441,8 @@ export default function Dashboard() {
         .ref-badge-amber{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.22);color:#F59E0B;}
         .ref-badge-green{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.22);color:#34d399;}
         .ref-badge-purple{background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.28);color:#a78bfa;}
-
         .r-health-badge{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:#34d399;
           background:rgba(34,197,94,0.09);border:1px solid rgba(34,197,94,0.18);border-radius:7px;padding:3px 9px;white-space:nowrap;}
-
-        /* BOTTOM GRID */
         .r-bottom{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:12px;}
 
         /* BUTTONS */
@@ -511,13 +483,9 @@ export default function Dashboard() {
           .r-topbar{padding:0 14px;}
           .r-topbar-search,.r-topbar-status{display:none!important;}
           .r-page-title{font-size:26px;}
-          .r-welcome{font-size:13px;}
-          .r-stat-value{font-size:28px;}
-          .r-stat-zero{font-size:28px;}
+          .r-stat-value,.r-stat-zero{font-size:28px;}
         }
-        @media(min-width:1024px){
-          .r-bottom-nav{display:none!important;}
-        }
+        @media(min-width:1024px){.r-bottom-nav{display:none!important;}}
       `}</style>
 
       <div className="r-bg" style={{ display:'flex' }}>
@@ -535,13 +503,16 @@ export default function Dashboard() {
           </div>
 
           <nav className="r-nav">
-            {NAV_ITEMS.map(item => (
-              <Link key={item.href} href={item.href} className={`r-nav-item${item.active ? ' active' : ''}`}>
-                <item.icon size={15} strokeWidth={item.active ? 2.2 : 1.8} />
-                <span style={{ flex:1 }}>{item.label}</span>
-                {item.active && <span className="r-live-badge"><span className="r-live-dot" />live</span>}
-              </Link>
-            ))}
+            {NAV_ITEMS.map(item => {
+              const isActive = currentPath === item.href;
+              return (
+                <Link key={item.href} href={item.href} className={`r-nav-item${isActive ? ' active' : ''}`}>
+                  <item.icon size={15} strokeWidth={isActive ? 2.2 : 1.8} />
+                  <span style={{ flex:1 }}>{item.label}</span>
+                  {isActive && <span className="r-live-badge"><span className="r-live-dot" />live</span>}
+                </Link>
+              );
+            })}
           </nav>
 
           {plan === 'free' && (
@@ -550,9 +521,7 @@ export default function Dashboard() {
                 <Zap size={12} color="#F59E0B" />
                 <span style={{ color:'#F59E0B', fontWeight:700, fontSize:12 }}>Upgrade to Pro</span>
               </div>
-              <p style={{ color:'rgba(255,255,255,0.28)', fontSize:11, lineHeight:1.65, marginBottom:11 }}>
-                Unlock unlimited moderation and Telegram alerts.
-              </p>
+              <p style={{ color:'rgba(255,255,255,0.28)', fontSize:11, lineHeight:1.65, marginBottom:11 }}>Unlock unlimited moderation and Telegram alerts.</p>
               <Link href="/billing" className="r-btn-upgrade">Upgrade to Pro</Link>
             </div>
           )}
@@ -566,8 +535,6 @@ export default function Dashboard() {
 
         {/* MAIN */}
         <div className="r-main">
-
-          {/* TOPBAR */}
           <header className="r-topbar">
             <div style={{ position:'relative', flex:1, maxWidth:460 }} className="r-topbar-search">
               <Search size={13} color="rgba(255,255,255,0.2)" style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }} />
@@ -603,22 +570,24 @@ export default function Dashboard() {
             </div>
           </header>
 
-          {/* CONTENT */}
           <div className="r-content">
-
-            {/* HEADER */}
+            {/* Header */}
             <div style={{ marginBottom:26 }}>
-              <p className="r-welcome">Welcome back, {firstName}! 👋</p>
-              <h1 className="r-page-title">Overview</h1>
-              <p className="r-page-sub">Here's what's happening across your channels right now.</p>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 8px rgba(34,197,94,0.6)', animation:'pulse 2s infinite' }} />
+                <span style={{ color:'rgba(255,255,255,0.35)', fontSize:12, fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase' }}>
+                  {youtubeConnected ? 'Live · Protected' : 'Ready to connect'}
+                </span>
+              </div>
+              <h1 style={{ fontSize:32, fontWeight:900, color:'#FAFAFA', letterSpacing:'-0.04em', lineHeight:1.1, marginBottom:4 }}>Overview</h1>
+              <p style={{ color:'rgba(255,255,255,0.28)', fontSize:13 }}>Here's what's happening across your channels right now.</p>
             </div>
 
-            {/* STAT CARDS — reference style */}
+            {/* STAT CARDS */}
             <div className="r-stats">
               {statCards.map((s) => {
                 const isNull  = s.fmtValue === null;
                 const hasReal = !isNull && s.raw !== null && (s.raw as number) > 0;
-                const isUp    = s.up;
                 return (
                   <div key={s.label} className="r-stat">
                     <div className="r-stat-header">
@@ -629,7 +598,7 @@ export default function Dashboard() {
                         <span className="r-stat-label">{s.label}</span>
                       </div>
                       {hasReal && (
-                        isUp
+                        s.up
                           ? <span className="r-stat-pct-up"><TrendingUp size={10} />{s.pct}</span>
                           : <span className="r-stat-pct-down"><TrendingDown size={10} />{s.pct}</span>
                       )}
@@ -678,14 +647,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* BOTTOM NAV — mobile */}
+        {/* BOTTOM NAV */}
         <nav className="r-bottom-nav">
-          {NAV_ITEMS.map(item => (
-            <Link key={item.href} href={item.href} className={`r-bnav-item${item.active ? ' active' : ''}`}>
-              <item.icon size={20} strokeWidth={item.active ? 2.2 : 1.7} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {NAV_ITEMS.map(item => {
+            const isActive = currentPath === item.href;
+            return (
+              <Link key={item.href} href={item.href} className={`r-bnav-item${isActive ? ' active' : ''}`}>
+                <item.icon size={20} strokeWidth={isActive ? 2.2 : 1.7} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
           <button className="r-bnav-item" onClick={handleLogout}>
             <LogOut size={20} strokeWidth={1.7} /><span>Logout</span>
           </button>

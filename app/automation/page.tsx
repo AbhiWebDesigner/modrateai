@@ -265,22 +265,35 @@ function BottomNav({ pathname }: { pathname: string }) {
   return (
     <div style={{
       position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-      background: "rgba(9,9,11,.96)",
-      borderTop: "1px solid rgba(255,255,255,.06)",
+      background: "rgba(9,9,11,.97)",
+      borderTop: "1px solid rgba(255,255,255,.055)",
       display: "flex",
-      backdropFilter: "blur(24px)",
+      backdropFilter: "blur(28px)",
+      WebkitBackdropFilter: "blur(28px)",
+      paddingBottom: "env(safe-area-inset-bottom, 0px)",
     }}>
       {NAV_LINKS.map(link => {
         const active = pathname === link.href;
         return (
           <Link key={link.href} href={link.href} style={{
             flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", padding: "10px 0 12px",
-            textDecoration: "none", gap: 3,
-            color: active ? "#F59E0B" : "rgba(255,255,255,.32)",
-            fontSize: 10, fontWeight: active ? 600 : 400,
+            alignItems: "center", justifyContent: "center",
+            padding: "10px 4px 12px",
+            textDecoration: "none",
+            color: active ? "#F59E0B" : "rgba(255,255,255,.3)",
+            transition: "color 0.18s",
           }}>
-            {link.icon}
+            {/* Icon wrapper — amber pill bg when active */}
+            <div style={{
+              width: 40, height: 32,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: 10,
+              background: active ? "rgba(245,158,11,0.11)" : "transparent",
+              transition: "background 0.18s",
+            }}>
+              {link.icon}
+            </div>
+            {/* No label — icons only */}
           </Link>
         );
       })}
@@ -481,13 +494,16 @@ export default function AutomationPage() {
           box-sizing: border-box; margin: 0; padding: 0;
         }
         html, body { background: #07030F; color: white; }
-        .desktop-sidebar { display: none; }
-        .bottom-nav      { display: flex; }
-        .main-content    { margin-left: 0; padding: 20px 16px 90px; }
+        /* Mobile (≤1023px): bottom nav shown, sidebar hidden */
+        .desktop-sidebar { display: none !important; }
+        .bottom-nav      { display: flex !important; }
+        .main-content    { margin-left: 0 !important; padding: 20px 16px 72px !important; }
+
+        /* Desktop (≥1024px): left sidebar shown, bottom nav hidden */
         @media (min-width: 1024px) {
           .desktop-sidebar { display: flex !important; }
           .bottom-nav      { display: none !important; }
-          .main-content    { margin-left: 228px; padding: 32px 40px; }
+          .main-content    { margin-left: 228px !important; padding: 32px 40px !important; }
         }
         input:focus, textarea:focus { border-color: rgba(245,158,11,0.5) !important; outline: none; }
         input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.25); }

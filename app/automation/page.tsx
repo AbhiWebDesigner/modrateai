@@ -85,6 +85,30 @@ function Sidebar({ pathname }: { pathname: string }) {
         width: 228, minHeight: "100vh", display: "flex", flexDirection: "column",
         padding: "0 10px 20px", position: "fixed", left: 0, top: 0, zIndex: 20
       }}>
+       <div style={{
+       position: "absolute",
+       top: "-60px",
+       left: "-80px",
+       width: "340px",
+       height: "340px",
+       borderRadius: "50%",
+       background: "radial-gradient(circle, rgba(200,90,0,0.55) 0%, rgba(160,65,0,0.28) 35%, transparent 70%)",
+       pointerEvents: "none",
+        zIndex: 0,
+       filter: "blur(18px)",
+}} />
+        <div style={{
+         position: "absolute",
+         top: "160px",
+         left: "-60px",
+         width: "220px",
+         height: "220px",
+         borderRadius: "50%",
+         background: "radial-gradient(circle, rgba(180,75,0,0.30) 0%, rgba(130,55,0,0.12) 40%, transparent 70%)",
+         pointerEvents: "none",
+         zIndex: 0,
+      filter: "blur(22px)",
+}} />
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", padding: "22px 8px 18px", borderBottom: "1px solid rgba(255,255,255,0.04)", marginBottom: 14 }}>
           <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 40%, #7C3AED 100%)", borderRadius: 12, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 16px rgba(245,158,11,0.4), 0 0 0 1px rgba(245,158,11,0.2)", flexShrink: 0 }}>
             <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>

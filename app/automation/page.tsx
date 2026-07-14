@@ -69,21 +69,32 @@ function Sidebar({ pathname }: { pathname: string }) {
     <>
       <style>{`
         @keyframes sidebarPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-        .snav-item { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-radius: 12px; text-decoration: none; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,0.38); border: 1px solid transparent; position: relative; transition: all 0.22s; cursor: pointer; }
-        .snav-item:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.75); transform: translateX(2px); }
+        .snav-item { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 12px; text-decoration: none; font-size: 13.5px; font-weight: 500; color: rgba(220,195,165,0.52); border: 1px solid transparent; position: relative; transition: all 0.22s; cursor: pointer; overflow: hidden; }
+        .snav-item:hover { background: rgba(245,158,11,0.055); color: rgba(240,220,190,0.88); transform: translateX(3px); border-color: rgba(245,158,11,0.08); }
         .snav-item.active { background: linear-gradient(135deg, rgba(245,158,11,0.20) 0%, rgba(245,158,11,0.10) 50%, rgba(245,158,11,0.06) 100%); color: #FBBF24; font-weight: 700; border-color: rgba(245,158,11,0.25); box-shadow: 0 0 0 1px rgba(245,158,11,0.12), 0 2px 20px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.18), inset 0 0 28px rgba(245,158,11,0.06); }
-        .snav-item.active::after { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, #FBBF24, #F59E0B, #D97706); box-shadow: 0 0 10px rgba(245,158,11,0.8), 0 0 24px rgba(245,158,11,0.3); }
+        .snav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, #FBBF24, #F59E0B, #D97706); box-shadow: 0 0 10px rgba(245,158,11,0.8), 0 0 24px rgba(245,158,11,0.3); }
         .snav-live { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 700; color: #F9A825; background: rgba(255,159,26,.12); border: 1px solid rgba(255,159,26,.35); }
         .snav-live-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; animation: sidebarPulse 1.6s ease-in-out infinite; }
       `}</style>
-       <div style={{ background: "radial-gradient(ellipse 80% 40% at -10% 0%, rgba(180,90,0,0.35) 0%, transparent 60%), radial-gradient(ellipse 60% 30% at -5% 30%, rgba(150,70,0,0.20) 0%, transparent 55%), #0c0a0e", backdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,0.055)", boxShadow: "4px 0 40px rgba(0,0,0,0.6), 8px 0 80px rgba(180,90,0,0.06)", width: 228, minHeight: "100vh", display: "flex", flexDirection: "column", padding: "22px 10px 20px", position: "fixed", left: 0, top: 0, zIndex: 20 }}>
-        <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 28, paddingLeft: 4 }}>
-          <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)", borderRadius: 10, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(245,158,11,.28)", flexShrink: 0 }}>
+      
+      <div style={{
+        background: "radial-gradient(ellipse 80% 40% at -10% 0%, rgba(180,90,0,0.35) 0%, transparent 60%), radial-gradient(ellipse 60% 30% at -5% 30%, rgba(150,70,0,0.20) 0%, transparent 55%), #0c0a0e",
+        backdropFilter: "blur(24px)",
+        borderRight: "1px solid rgba(245,158,11,0.12)",
+        boxShadow: "4px 0 40px rgba(0,0,0,0.6), 8px 0 80px rgba(180,90,0,0.06)",
+        width: 228, minHeight: "100vh", display: "flex", flexDirection: "column",
+        padding: "0 10px 20px", position: "fixed", left: 0, top: 0, zIndex: 20
+      }}>
+        <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 11, textDecoration: "none", padding: "22px 8px 18px", borderBottom: "1px solid rgba(255,255,255,0.04)", marginBottom: 14 }}>
+          <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 40%, #7C3AED 100%)", borderRadius: 12, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 16px rgba(245,158,11,0.4), 0 0 0 1px rgba(245,158,11,0.2)", flexShrink: 0 }}>
             <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
-          <span style={{ color: "#FAFAFA", fontWeight: 800, fontSize: 15, letterSpacing: "-0.025em" }}>ModerateAI</span>
+          <div>
+            <div style={{ color: "#FAFAFA", fontWeight: 800, fontSize: 15.5, letterSpacing: "-0.025em" }}>ModerateAI</div>
+            <div style={{ color: "rgba(255,255,255,0.26)", fontSize: 10, fontWeight: 500, marginTop: 1 }}>Enterprise · v2</div>
+          </div>
         </Link>
-       <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, paddingTop: 8 }}>
+        <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
           {SIDEBAR_LINKS.map(link => {
             const active = pathname === link.href;
             return (

@@ -27,10 +27,9 @@ const SIDEBAR_NAV = [
 ];
 
 const MORE_ITEMS = [
-  { href: '/billing',       icon: CreditCard, label: 'Billing',       color: '#F59E0B' },
-  { href: '/channels',      icon: Layers,     label: 'Channels',      color: '#60a5fa' },
-  { href: '/notifications', icon: Bell,       label: 'Notifications', color: '#60a5fa' },
-  { href: '/settings',      icon: Settings,   label: 'Settings',      color: '#94a3b8' },
+  { href: '/billing',  icon: CreditCard, label: 'Billing',  color: '#F59E0B' },
+  { href: '/channels', icon: Layers,     label: 'Channels', color: '#60a5fa' },
+  { href: '/settings', icon: Settings,   label: 'Settings', color: '#94a3b8' },
 ];
 
 const NOTIFICATION_EVENTS = [
@@ -265,14 +264,14 @@ export default function AlertsPage() {
         {/* ══ MAIN ══ */}
         <div className="r-main">
 
-          {/* Topbar */}
+          {/* Topbar — Image 1 style: search left, connect button + user right */}
           <header className="r-topbar">
             <div style={{ position: 'relative', flex: 1, maxWidth: 460 }} className="r-topbar-search">
               <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
                 width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={2} strokeLinecap="round">
                 <circle cx={11} cy={11} r={8}/><path d="m21 21-4.35-4.35"/>
               </svg>
-              <input className="r-search" placeholder="Search comments, videos, users…" />
+              <input className="r-search" placeholder="Search comments, users…" />
             </div>
             <div style={{ flex: 1 }} />
             <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: '4px 11px 4px 4px', textDecoration: 'none' }}>
@@ -287,66 +286,65 @@ export default function AlertsPage() {
           {/* ══ CONTENT ══ */}
           <div className="r-content" style={{ padding: '24px 28px', flex: 1, animation: 'fadeIn 0.3s ease' }}>
 
-            {/* Page header */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
-                <span style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Live</span>
+            {/* Page header — Image 1 style */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <h1 className="a-page-title" style={{ fontSize: 28, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.15 }}>
+                  Alerts
+                </h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 20, padding: '3px 10px' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite' }} />
+                  <span style={{ color: '#22c55e', fontSize: 11, fontWeight: 700, letterSpacing: '0.04em' }}>Live</span>
+                </div>
               </div>
-              <h1 className="a-page-title" style={{ fontSize: 28, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.15, marginBottom: 6 }}>
-                Alerts &{' '}
-                <span style={{ background: 'linear-gradient(90deg,#F59E0B,#FBBF24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Notifications</span>
-              </h1>
               <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Get notified where you already are</p>
             </div>
 
-            {/* Channel cards — stack on mobile */}
-            <div className="a-channel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+            {/* Channel cards */}
+            <div className="a-channel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
 
               {/* Telegram */}
-              <div className="a-card" style={{ padding: 18 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: plan === 'agency' && telegramConnected ? 12 : 0 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(34,158,217,0.12)', border: '1px solid rgba(34,158,217,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Send size={17} color="#229ED9" />
+              <div className="a-card" style={{ padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(34,158,217,0.12)', border: '1px solid rgba(34,158,217,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Send size={18} color="#229ED9" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
-                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14 }}>Telegram</span>
-                      <span style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.22)', color: '#a78bfa', fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 5, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Agency</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
+                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Telegram</span>
+                      <span style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.22)', color: '#a78bfa', fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Agency</span>
                     </div>
-                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5, lineHeight: 1.4 }}>Instant DMs when action is needed</p>
+                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12, lineHeight: 1.4 }}>Instant DMs when action is needed</p>
                   </div>
                 </div>
-                <div style={{ marginTop: 12 }}>
-                  {plan === 'agency'
-                    ? telegramConnected
-                      ? <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                {plan === 'agency'
+                  ? telegramConnected
+                    ? <>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                           <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8 }}>✓ Connected</span>
                           <button onClick={() => setTelegramConnected(false)} style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Manage</button>
                         </div>
-                      : <button onClick={() => setTelegramConnected(true)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600, padding: '9px', borderRadius: 10, cursor: 'pointer' }}>+ Connect</button>
-                    : <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 9, padding: '8px 12px', color: 'rgba(255,255,255,0.22)', fontSize: 12, fontWeight: 500, textAlign: 'center' }}>Agency plan only</div>
-                  }
-                </div>
-                {telegramConnected && plan === 'agency' && (
-                  <div style={{ marginTop: 10, padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
-                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>@{telegramUsername || userEmail.split('@')[0]}</span></p>
-                  </div>
-                )}
+                        <div style={{ padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
+                          <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>@{telegramUsername || userEmail.split('@')[0]}</span></p>
+                        </div>
+                      </>
+                    : <button onClick={() => setTelegramConnected(true)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600, padding: '9px', borderRadius: 10, cursor: 'pointer' }}>+ Connect</button>
+                  : <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 9, padding: '9px 14px', color: 'rgba(255,255,255,0.22)', fontSize: 12.5, fontWeight: 500, textAlign: 'center' }}>Agency plan only</div>
+                }
               </div>
 
               {/* Email */}
-              <div className="a-card" style={{ padding: 18 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Bell size={17} color="#F59E0B" />
+              <div className="a-card" style={{ padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Bell size={18} color="#F59E0B" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14 }}>Email</span>
-                      <span style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', color: '#34d399', fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 5, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Free</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
+                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Email</span>
+                      <span style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', color: '#34d399', fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Free</span>
                     </div>
-                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5, lineHeight: 1.4 }}>Daily digest of moderation activity</p>
+                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12, lineHeight: 1.4 }}>Daily digest of moderation activity</p>
                   </div>
                 </div>
                 {emailConnected
@@ -365,15 +363,15 @@ export default function AlertsPage() {
             </div>
 
             {/* Notification toggles */}
-            <div className="a-card" style={{ padding: '20px', marginBottom: 16 }}>
-              <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Notification Settings</div>
+            <div className="a-card" style={{ padding: '22px 24px', marginBottom: 18 }}>
+              <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15.5, marginBottom: 4 }}>Notification Settings</div>
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Choose which events trigger alerts</div>
               </div>
               {NOTIFICATION_EVENTS.map(({ id, label, desc }, i) => (
-                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0', borderBottom: i < NOTIFICATION_EVENTS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '15px 0', borderBottom: i < NOTIFICATION_EVENTS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>{label}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13.5, fontWeight: 600, marginBottom: 3 }}>{label}</p>
                     <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, lineHeight: 1.4 }}>{desc}</p>
                   </div>
                   <button
@@ -391,10 +389,10 @@ export default function AlertsPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={handleSave} disabled={saving} style={{
                 background: saved ? 'linear-gradient(135deg,#34d399,#10b981)' : 'linear-gradient(135deg,#F59E0B,#FBBF24)',
-                color: '#08080A', fontWeight: 800, fontSize: 13.5, padding: '11px 28px', borderRadius: 12,
+                color: '#08080A', fontWeight: 800, fontSize: 13.5, padding: '12px 32px', borderRadius: 12,
                 border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
                 boxShadow: saved ? '0 2px 14px rgba(52,211,153,0.3)' : '0 2px 14px rgba(245,158,11,0.3)',
-                transition: 'all 0.2s', width: '100%', maxWidth: 220,
+                transition: 'all 0.2s',
               }}>
                 {saving ? 'Saving…' : saved ? '✓ Saved!' : 'Save preferences'}
               </button>
@@ -402,7 +400,7 @@ export default function AlertsPage() {
           </div>
         </div>
 
-        {/* ══ BOTTOM NAV ══ */}
+        {/* ══ BOTTOM NAV (mobile only) ══ */}
         <nav className="r-bnav">
           <div className="r-bnav-inner">
             {BOTTOM_NAV.map(item => {

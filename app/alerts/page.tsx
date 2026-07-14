@@ -115,15 +115,13 @@ export default function AlertsPage() {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-        @keyframes orangeGlow{0%,100%{box-shadow:0 0 18px rgba(245,158,11,0.45),0 0 40px rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.08);}50%{box-shadow:0 0 28px rgba(245,158,11,0.65),0 0 56px rgba(245,158,11,0.28),inset 0 0 36px rgba(245,158,11,0.12);}}
 
-        /* ══ SIDEBAR ══ */
         .r-sidebar{
           width:220px;min-width:220px;background:#0c0a0e;
           border-right:1px solid rgba(245,158,11,0.12);
           display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
-          box-shadow:4px 0 40px rgba(0,0,0,0.6),8px 0 80px rgba(180,90,0,0.06);
+          box-shadow:4px 0 40px rgba(0,0,0,0.6);
           overflow:hidden;
         }
         .r-glow1{position:absolute;top:-60px;left:-80px;width:340px;height:340px;border-radius:50%;
@@ -136,8 +134,6 @@ export default function AlertsPage() {
           border-radius:0 3px 3px 0;z-index:10;
           background:linear-gradient(180deg,transparent 0%,rgba(245,158,11,0.3) 15%,rgba(251,191,36,0.95) 50%,rgba(245,158,11,0.3) 85%,transparent 100%);
           box-shadow:0 0 8px rgba(245,158,11,0.7),0 0 20px rgba(245,158,11,0.35);}
-        .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
-          background:linear-gradient(180deg,transparent,rgba(245,158,11,0.15) 50%,transparent);pointer-events:none;}
         .r-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,0.04);position:relative;z-index:1;}
         .r-logo-mark{width:38px;height:38px;border-radius:12px;flex-shrink:0;
           background:linear-gradient(135deg,#F59E0B 0%,#D97706 40%,#7C3AED 100%);
@@ -149,16 +145,12 @@ export default function AlertsPage() {
           transition:all 0.22s cubic-bezier(.4,0,.2,1);border:1px solid transparent;position:relative;overflow:hidden;}
         .r-nav-item:hover{background:rgba(245,158,11,0.055);color:rgba(240,220,190,0.88);transform:translateX(3px);border-color:rgba(245,158,11,0.08);}
         .r-nav-item.active{
-          background:linear-gradient(135deg,rgba(245,158,11,0.22) 0%,rgba(245,158,11,0.12) 50%,rgba(245,158,11,0.07) 100%);
-          color:#FBBF24;border-color:rgba(245,158,11,0.30);font-weight:700;
-          animation:orangeGlow 2.5s ease-in-out infinite;
+          background:rgba(245,158,11,0.08);
+          color:#FBBF24;border-color:rgba(245,158,11,0.15);font-weight:700;
         }
         .r-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
           width:3px;height:22px;border-radius:0 3px 3px 0;
-          background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);
-          box-shadow:0 0 12px rgba(245,158,11,0.9),0 0 28px rgba(245,158,11,0.4);}
-        .r-nav-item.active::after{content:'';position:absolute;inset:0;border-radius:12px;
-          background:radial-gradient(ellipse 90% 70% at 8% 50%,rgba(245,158,11,0.14) 0%,transparent 65%);pointer-events:none;}
+          background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);}
         .r-upgrade{margin:0 10px 10px;background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(245,158,11,0.04));
           border:1px solid rgba(245,158,11,0.14);border-radius:14px;padding:15px;position:relative;z-index:1;}
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#08080A;font-weight:700;font-size:12.5px;
@@ -168,28 +160,24 @@ export default function AlertsPage() {
           color:rgba(255,255,255,0.3);background:none;border:none;cursor:pointer;width:100%;transition:all 0.18s;}
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
-        /* ══ LAYOUT ══ */
         .r-main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column;}
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.9);backdrop-filter:blur(28px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 28px;height:60px;
           display:flex;align-items:center;gap:14px;box-shadow:0 4px 32px rgba(0,0,0,0.3);}
-        .r-search{flex:1;max-width:380px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
-          border-radius:10px;padding:0 14px 0 36px;height:36px;color:#FAFAFA;font-size:13px;outline:none;}
+        .r-search{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+          border-radius:10px;padding:0 14px 0 36px;height:36px;color:#FAFAFA;font-size:13px;outline:none;width:260px;}
         .r-search::placeholder{color:rgba(255,255,255,0.25);}
         .r-search:focus{border-color:rgba(245,158,11,0.3);}
 
-        /* ══ CARDS ══ */
         .a-card{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:16px;
-          backdrop-filter:blur(16px);overflow:hidden;transition:border-color 0.2s;}
+          backdrop-filter:blur(16px);transition:border-color 0.2s;}
         .a-card:hover{border-color:rgba(255,255,255,0.11);}
 
-        /* ══ TOGGLE ══ */
         .a-toggle{width:44px;height:24px;border-radius:99px;border:none;cursor:pointer;
           position:relative;transition:background 0.2s;flex-shrink:0;}
         .a-knob{position:absolute;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;
           box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left 0.2s cubic-bezier(.4,0,.2,1);}
 
-        /* ══ BOTTOM NAV ══ */
         .r-bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);
           backdrop-filter:blur(24px);padding:6px 0 env(safe-area-inset-bottom,6px);}
@@ -203,7 +191,6 @@ export default function AlertsPage() {
         .r-bnav-label{font-size:9px;font-weight:500;line-height:1;}
         .r-bnav-btn.active .r-bnav-label{font-weight:700;}
 
-        /* ══ RESPONSIVE ══ */
         @media(max-width:1023px){
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}
@@ -212,18 +199,16 @@ export default function AlertsPage() {
           .r-topbar-search{display:none!important;}
           .r-content{padding:16px!important;}
           .a-channel-grid{grid-template-columns:1fr!important;gap:10px!important;}
-          .a-page-title{font-size:22px!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
           .a-channel-grid{grid-template-columns:1fr 1fr!important;}
-          .r-content{padding:20px!important;}
         }
         @media(min-width:1024px){.r-bnav{display:none!important;}}
       `}</style>
 
       <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex' }}>
 
-        {/* ══ SIDEBAR ══ */}
+        {/* SIDEBAR */}
         <aside className="r-sidebar">
           <div className="r-glow1" /><div className="r-glow2" />
           <div className="r-logo">
@@ -261,41 +246,32 @@ export default function AlertsPage() {
           </div>
         </aside>
 
-        {/* ══ MAIN ══ */}
+        {/* MAIN */}
         <div className="r-main">
 
           {/* Topbar */}
           <header className="r-topbar">
-            {/* Page title in topbar (left) */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h1 className="a-page-title" style={{ fontSize: 22, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.03em', lineHeight: 1.15 }}>Alerts</h1>
+              <h1 style={{ fontSize: 22, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.03em' }}>Alerts</h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: '3px 10px' }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.8)', animation: 'pulse 2s infinite' }} />
                 <span style={{ color: '#22c55e', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em' }}>Live</span>
               </div>
             </div>
-
-            {/* Search */}
             <div style={{ position: 'relative' }} className="r-topbar-search">
               <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
                 width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={2} strokeLinecap="round">
                 <circle cx={11} cy={11} r={8}/><path d="m21 21-4.35-4.35"/>
               </svg>
-              <input className="r-search" style={{ width: 260 }} placeholder="Search comments, users…" />
+              <input className="r-search" placeholder="Search comments, users…" />
             </div>
-
-            {/* Bell */}
-            <button style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, position: 'relative' }}>
+            <button style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
               <Bell size={16} color="rgba(255,255,255,0.45)" strokeWidth={1.8} />
             </button>
-
-            {/* Connect YouTube */}
             <button style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg,#F59E0B,#FBBF24)', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', flexShrink: 0 }}>
               <svg width={14} height={14} viewBox="0 0 24 24" fill="#08080A"><polygon points="5,3 19,12 5,21"/></svg>
               <span style={{ color: '#08080A', fontWeight: 700, fontSize: 12.5 }}>Connect YouTube</span>
             </button>
-
-            {/* User */}
             <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: '4px 11px 4px 4px', textDecoration: 'none', flexShrink: 0 }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 11 }}>{initials}</div>
               <div>
@@ -305,64 +281,43 @@ export default function AlertsPage() {
             </Link>
           </header>
 
-          {/* ══ CONTENT ══ */}
-          <div className="r-content" style={{ padding: '24px 28px', flex: 1, animation: 'fadeIn 0.3s ease' }}>
+          {/* CONTENT — full width, no max-width */}
+          <div className="r-content" style={{ padding: '20px 28px', flex: 1, animation: 'fadeIn 0.3s ease', width: '100%' }}>
 
-            {/* Subtitle only (title moved to topbar) */}
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 20 }}>Get notified where you already are</p>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 18 }}>Get notified where you already are</p>
 
-            {/* Channel cards */}
+            {/* Channel cards — full width */}
             <div className="a-channel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
 
               {/* Telegram */}
-              <div className="a-card" style={{ padding: 20 }}>
+              <div className="a-card" style={{ padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(34,158,217,0.12)', border: '1px solid rgba(34,158,217,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Send size={18} color="#229ED9" />
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(34,158,217,0.12)', border: '1px solid rgba(34,158,217,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Send size={17} color="#229ED9" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
-                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Telegram</span>
+                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14.5 }}>Telegram</span>
                       <span style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.22)', color: '#a78bfa', fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Agency</span>
                     </div>
-                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12, lineHeight: 1.4 }}>Instant DMs when action is needed</p>
+                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12 }}>Instant DMs when action is needed</p>
                   </div>
-                  {plan === 'agency'
-                    ? telegramConnected
-                      ? <button onClick={() => setTelegramConnected(false)} style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}>Manage</button>
-                      : null
-                    : <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '5px 12px', color: 'rgba(255,255,255,0.25)', fontSize: 11.5, fontWeight: 500, flexShrink: 0 }}>Agency only</div>
-                  }
+                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '5px 12px', color: 'rgba(255,255,255,0.25)', fontSize: 11.5, fontWeight: 500, flexShrink: 0 }}>Agency only</div>
                 </div>
-                {plan === 'agency' && (
-                  <div style={{ marginTop: 14 }}>
-                    {telegramConnected
-                      ? <>
-                          <div style={{ marginBottom: 10 }}>
-                            <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8 }}>✓ Connected</span>
-                          </div>
-                          <div style={{ padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
-                            <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>@{telegramUsername || userEmail.split('@')[0]}</span></p>
-                          </div>
-                        </>
-                      : <button onClick={() => setTelegramConnected(true)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600, padding: '9px', borderRadius: 10, cursor: 'pointer' }}>+ Connect</button>
-                    }
-                  </div>
-                )}
               </div>
 
               {/* Email */}
-              <div className="a-card" style={{ padding: 20 }}>
+              <div className="a-card" style={{ padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Bell size={18} color="#F59E0B" />
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Bell size={17} color="#F59E0B" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
-                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Email</span>
+                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14.5 }}>Email</span>
                       <span style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', color: '#34d399', fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Free</span>
                     </div>
-                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12, lineHeight: 1.4 }}>Daily digest of moderation activity</p>
+                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12 }}>Daily digest of moderation activity</p>
                   </div>
                   {emailConnected && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
@@ -371,26 +326,25 @@ export default function AlertsPage() {
                     </div>
                   )}
                 </div>
-                {emailConnected
-                  ? <div style={{ marginTop: 14, padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
-                      <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>{userEmail}</span></p>
-                    </div>
-                  : <button onClick={() => setEmailConnected(true)} style={{ marginTop: 14, width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600, padding: '9px', borderRadius: 10, cursor: 'pointer' }}>+ Connect</button>
-                }
+                {emailConnected && (
+                  <div style={{ marginTop: 12, padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
+                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>{userEmail}</span></p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Notification toggles */}
-            <div className="a-card" style={{ padding: '22px 24px', marginBottom: 18 }}>
-              <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15.5, marginBottom: 4 }}>Notification Settings</div>
+            {/* Notification toggles — full width */}
+            <div className="a-card" style={{ padding: '20px 24px', marginBottom: 18, width: '100%' }}>
+              <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Notification Settings</div>
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Choose which events trigger alerts</div>
               </div>
               {NOTIFICATION_EVENTS.map(({ id, label, desc }, i) => (
-                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '15px 0', borderBottom: i < NOTIFICATION_EVENTS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '13px 0', borderBottom: i < NOTIFICATION_EVENTS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13.5, fontWeight: 600, marginBottom: 3 }}>{label}</p>
-                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, lineHeight: 1.4 }}>{desc}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>{label}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>{desc}</p>
                   </div>
                   <button
                     className="a-toggle"
@@ -418,7 +372,7 @@ export default function AlertsPage() {
           </div>
         </div>
 
-        {/* ══ BOTTOM NAV (mobile only — untouched) ══ */}
+        {/* BOTTOM NAV — untouched */}
         <nav className="r-bnav">
           <div className="r-bnav-inner">
             {BOTTOM_NAV.map(item => {
@@ -437,7 +391,7 @@ export default function AlertsPage() {
           </div>
         </nav>
 
-        {/* ══ MORE DRAWER ══ */}
+        {/* MORE DRAWER */}
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />

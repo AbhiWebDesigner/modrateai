@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import {
   Bell, Send, LayoutDashboard, BarChart2, Zap, Settings,
-  MoreHorizontal, CreditCard, Layers, Bot, LogOut, Rss, Shield
+  MoreHorizontal, CreditCard, Layers, LogOut, Rss, Shield
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -50,8 +50,8 @@ export default function AlertsPage() {
   const [user,              setUser]              = useState<any>(null);
   const [userEmail,         setUserEmail]         = useState('');
   const [userPlan,          setUserPlan]          = useState('free');
-  const [telegramConnected, setTelegramConnected] = useState(false);
   const [emailConnected,    setEmailConnected]    = useState(true);
+  const [telegramConnected, setTelegramConnected] = useState(false);
   const [telegramUsername,  setTelegramUsername]  = useState('');
   const [toggles, setToggles] = useState<Record<string, boolean>>(
     Object.fromEntries(NOTIFICATION_EVENTS.map(e => [e.id, e.default]))
@@ -116,6 +116,7 @@ export default function AlertsPage() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 
+        /* SIDEBAR */
         .r-sidebar{
           width:220px;min-width:220px;background:#0c0a0e;
           border-right:1px solid rgba(245,158,11,0.12);
@@ -145,12 +146,14 @@ export default function AlertsPage() {
           transition:all 0.22s cubic-bezier(.4,0,.2,1);border:1px solid transparent;position:relative;overflow:hidden;}
         .r-nav-item:hover{background:rgba(245,158,11,0.055);color:rgba(240,220,190,0.88);transform:translateX(3px);border-color:rgba(245,158,11,0.08);}
         .r-nav-item.active{
-          background:rgba(245,158,11,0.08);
-          color:#FBBF24;border-color:rgba(245,158,11,0.15);font-weight:700;
+          background:linear-gradient(135deg,rgba(245,158,11,0.18) 0%,rgba(245,158,11,0.08) 100%);
+          color:#FBBF24;border-color:rgba(245,158,11,0.22);font-weight:700;
+          box-shadow:0 0 24px rgba(245,158,11,0.25),0 0 48px rgba(245,158,11,0.10),inset 0 0 20px rgba(245,158,11,0.08);
         }
         .r-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
           width:3px;height:22px;border-radius:0 3px 3px 0;
-          background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);}
+          background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);
+          box-shadow:0 0 10px rgba(245,158,11,0.9),0 0 24px rgba(245,158,11,0.4);}
         .r-upgrade{margin:0 10px 10px;background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(245,158,11,0.04));
           border:1px solid rgba(245,158,11,0.14);border-radius:14px;padding:15px;position:relative;z-index:1;}
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#08080A;font-weight:700;font-size:12.5px;
@@ -160,24 +163,28 @@ export default function AlertsPage() {
           color:rgba(255,255,255,0.3);background:none;border:none;cursor:pointer;width:100%;transition:all 0.18s;}
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
+        /* LAYOUT */
         .r-main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column;}
-        .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.9);backdrop-filter:blur(28px);
+        .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(28px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 28px;height:60px;
-          display:flex;align-items:center;gap:14px;box-shadow:0 4px 32px rgba(0,0,0,0.3);}
+          display:flex;align-items:center;gap:12px;box-shadow:0 4px 32px rgba(0,0,0,0.3);}
         .r-search{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
-          border-radius:10px;padding:0 14px 0 36px;height:36px;color:#FAFAFA;font-size:13px;outline:none;width:260px;}
+          border-radius:10px;padding:0 14px 0 36px;height:36px;color:#FAFAFA;font-size:13px;outline:none;width:240px;}
         .r-search::placeholder{color:rgba(255,255,255,0.25);}
         .r-search:focus{border-color:rgba(245,158,11,0.3);}
 
+        /* CARDS */
         .a-card{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:16px;
           backdrop-filter:blur(16px);transition:border-color 0.2s;}
         .a-card:hover{border-color:rgba(255,255,255,0.11);}
 
+        /* TOGGLE */
         .a-toggle{width:44px;height:24px;border-radius:99px;border:none;cursor:pointer;
           position:relative;transition:background 0.2s;flex-shrink:0;}
         .a-knob{position:absolute;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;
           box-shadow:0 1px 4px rgba(0,0,0,0.3);transition:left 0.2s cubic-bezier(.4,0,.2,1);}
 
+        /* BOTTOM NAV */
         .r-bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);
           backdrop-filter:blur(24px);padding:6px 0 env(safe-area-inset-bottom,6px);}
@@ -191,6 +198,7 @@ export default function AlertsPage() {
         .r-bnav-label{font-size:9px;font-weight:500;line-height:1;}
         .r-bnav-btn.active .r-bnav-label{font-weight:700;}
 
+        /* RESPONSIVE */
         @media(max-width:1023px){
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}
@@ -247,9 +255,9 @@ export default function AlertsPage() {
         </aside>
 
         {/* MAIN */}
-        <div className="r-main">
+        <div className="r-main" style={{ width: '100%' }}>
 
-          {/* Topbar */}
+          {/* Topbar — title left, everything else right */}
           <header className="r-topbar">
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
               <h1 style={{ fontSize: 22, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.03em' }}>Alerts</h1>
@@ -258,6 +266,7 @@ export default function AlertsPage() {
                 <span style={{ color: '#22c55e', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em' }}>Live</span>
               </div>
             </div>
+            {/* Search */}
             <div style={{ position: 'relative' }} className="r-topbar-search">
               <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
                 width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={2} strokeLinecap="round">
@@ -265,13 +274,16 @@ export default function AlertsPage() {
               </svg>
               <input className="r-search" placeholder="Search comments, users…" />
             </div>
+            {/* Bell */}
             <button style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
               <Bell size={16} color="rgba(255,255,255,0.45)" strokeWidth={1.8} />
             </button>
+            {/* Connect YouTube */}
             <button style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg,#F59E0B,#FBBF24)', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', flexShrink: 0 }}>
               <svg width={14} height={14} viewBox="0 0 24 24" fill="#08080A"><polygon points="5,3 19,12 5,21"/></svg>
               <span style={{ color: '#08080A', fontWeight: 700, fontSize: 12.5 }}>Connect YouTube</span>
             </button>
+            {/* User */}
             <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: '4px 11px 4px 4px', textDecoration: 'none', flexShrink: 0 }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 11 }}>{initials}</div>
               <div>
@@ -281,16 +293,16 @@ export default function AlertsPage() {
             </Link>
           </header>
 
-          {/* CONTENT — full width, no max-width */}
-          <div className="r-content" style={{ padding: '20px 28px', flex: 1, animation: 'fadeIn 0.3s ease', width: '100%' }}>
+          {/* CONTENT */}
+          <div className="r-content" style={{ padding: '20px 24px', flex: 1, animation: 'fadeIn 0.3s ease' }}>
 
-            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 18 }}>Get notified where you already are</p>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 16 }}>Get notified where you already are</p>
 
-            {/* Channel cards — full width */}
-            <div className="a-channel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            {/* Channel cards — full width grid */}
+            <div className="a-channel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
 
               {/* Telegram */}
-              <div className="a-card" style={{ padding: '18px 20px' }}>
+              <div className="a-card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(34,158,217,0.12)', border: '1px solid rgba(34,158,217,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Send size={17} color="#229ED9" />
@@ -302,12 +314,12 @@ export default function AlertsPage() {
                     </div>
                     <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12 }}>Instant DMs when action is needed</p>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '5px 12px', color: 'rgba(255,255,255,0.25)', fontSize: 11.5, fontWeight: 500, flexShrink: 0 }}>Agency only</div>
+                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '5px 12px', color: 'rgba(255,255,255,0.25)', fontSize: 11.5, fontWeight: 500, flexShrink: 0, whiteSpace: 'nowrap' }}>Agency only</div>
                 </div>
               </div>
 
               {/* Email */}
-              <div className="a-card" style={{ padding: '18px 20px' }}>
+              <div className="a-card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Bell size={17} color="#F59E0B" />
@@ -321,22 +333,22 @@ export default function AlertsPage() {
                   </div>
                   {emailConnected && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                      <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8 }}>✓ Connected</span>
+                      <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8, whiteSpace: 'nowrap' }}>✓ Connected</span>
                       <button style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Manage</button>
                     </div>
                   )}
                 </div>
                 {emailConnected && (
-                  <div style={{ marginTop: 12, padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
+                  <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
                     <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>{userEmail}</span></p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Notification toggles — full width */}
-            <div className="a-card" style={{ padding: '20px 24px', marginBottom: 18, width: '100%' }}>
-              <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            {/* Notification Settings — full width */}
+            <div className="a-card" style={{ padding: '20px 24px', marginBottom: 16 }}>
+              <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Notification Settings</div>
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Choose which events trigger alerts</div>
               </div>
@@ -357,7 +369,7 @@ export default function AlertsPage() {
               ))}
             </div>
 
-            {/* Save */}
+            {/* Save preferences */}
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={handleSave} disabled={saving} style={{
                 background: saved ? 'linear-gradient(135deg,#34d399,#10b981)' : 'linear-gradient(135deg,#F59E0B,#FBBF24)',

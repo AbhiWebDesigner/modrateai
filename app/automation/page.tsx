@@ -35,9 +35,8 @@ type Rule = {
 
 const NAV_LINKS = [
   { href: "/dashboard",  label: "Overview",   icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>) },
-  { href: "/automation", label: "Automation", icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>) },
   { href: "/live-feed",  label: "Live Feed",  icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 4.93a10 10 0 0 0 0 14.14"/></svg>) },
-  { href: "/analytics",  label: "Analytics",  icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>) },
+  { href: "/automation", label: "Automation", icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>) },
   { href: "/alerts",     label: "Alerts",     icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>) },
 ];
 
@@ -45,7 +44,7 @@ const STEPS = ["Select Video", "Keywords", "Auto Reply", "Advanced"];
 
 const SAMPLE_VIDEOS: Video[] = [
   { id: "1", title: "My Latest YouTube Video",  date: "Jul 1, 2026",  views: "12.4K", comments: 234, thumb: "🎬" },
-  { id: "2", title: "How I Built ModrateAI",    date: "Jun 25, 2026", views: "8.1K",  comments: 156, thumb: "🎥" },
+  { id: "2", title: "How I Built ModerateAI",   date: "Jun 25, 2026", views: "8.1K",  comments: 156, thumb: "🎥" },
   { id: "3", title: "Telugu Tech Tips #42",      date: "Jun 18, 2026", views: "22.7K", comments: 489, thumb: "📹" },
 ];
 
@@ -54,27 +53,19 @@ async function ensureParentDoc(uid: string) {
   await setDoc(parentRef, { totalRules: 0, activeRules: 0, totalRepliesSent: 0, moderationMode: "auto", notifications: true, schedule: { enabled: false } }, { merge: true });
 }
 
-// ─── Sidebar ─────────────────────────────────────────────────────────────────
-
 function Sidebar({ pathname }: { pathname: string }) {
   return (
     <>
       <style>{`
         @keyframes sidebarPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-        @keyframes activeGlow {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(255,159,26,.55), 0 0 18px rgba(255,159,26,.28), 0 0 40px rgba(255,159,26,.14), 0 0 70px rgba(255,159,26,.07); }
-          50%       { box-shadow: 0 0 0 1px rgba(255,159,26,.75), 0 0 24px rgba(255,159,26,.42), 0 0 52px rgba(255,159,26,.22), 0 0 88px rgba(255,159,26,.10); }
-        }
-        .snav-item { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-radius: 12px; text-decoration: none; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,0.38); border: 1px solid transparent; position: relative; transition: background 0.22s, color 0.22s, border-color 0.22s, transform 0.22s, box-shadow 0.22s; letter-spacing: -0.01em; cursor: pointer; }
-        .snav-item:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.75); transform: translateX(2px); border-color: rgba(255,255,255,0.05); }
-        .snav-item.active { background: linear-gradient(90deg, rgba(255,159,26,.18) 0%, rgba(255,159,26,.08) 100%); color: #F9A825; font-weight: 650; border-color: rgba(255,159,26,.32); border-radius: 14px; animation: activeGlow 3s ease-in-out infinite; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); transform: none; }
-        .snav-item.active::before { content: ''; position: absolute; inset: -16px -20px; background: radial-gradient(circle, rgba(255,159,26,.35) 0%, rgba(255,159,26,.15) 40%, transparent 75%); filter: blur(32px); border-radius: 50%; pointer-events: none; z-index: -1; }
-        .snav-item.active::after { content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, #F59E0B, #EC4899, #7C3AED); box-shadow: 0 0 10px rgba(245,158,11,.7), 0 0 24px rgba(236,72,153,.35); }
-        .snav-live { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 700; letter-spacing: .05em; color: #F9A825; background: rgba(255,159,26,.12); border: 1px solid rgba(255,159,26,.35); box-shadow: 0 0 8px rgba(255,159,26,.25), inset 0 0 6px rgba(255,159,26,.08); backdrop-filter: blur(8px); }
-        .snav-live-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; box-shadow: 0 0 6px rgba(245,158,11,.9); animation: sidebarPulse 1.6s ease-in-out infinite; }
+        .snav-item { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-radius: 12px; text-decoration: none; font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,0.38); border: 1px solid transparent; position: relative; transition: all 0.22s; cursor: pointer; }
+        .snav-item:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.75); transform: translateX(2px); }
+        .snav-item.active { background: linear-gradient(90deg, rgba(255,159,26,.18), rgba(255,159,26,.08)); color: #F9A825; font-weight: 650; border-color: rgba(255,159,26,.32); }
+        .snav-item.active::after { content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, #F59E0B, #EC4899, #7C3AED); }
+        .snav-live { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 700; color: #F9A825; background: rgba(255,159,26,.12); border: 1px solid rgba(255,159,26,.35); }
+        .snav-live-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; animation: sidebarPulse 1.6s ease-in-out infinite; }
       `}</style>
-      <div style={{ background: "rgba(10,10,14,0.92)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,0.055)", width: 228, minHeight: "100vh", display: "flex", flexDirection: "column", padding: "22px 10px 20px", position: "fixed", left: 0, top: 0, zIndex: 20, boxShadow: "4px 0 40px rgba(0,0,0,0.45), inset -1px 0 0 rgba(255,255,255,0.03)" }}>
-        <div style={{ position: "absolute", left: 0, top: "18%", bottom: "18%", width: 2, borderRadius: 2, background: "linear-gradient(180deg, transparent, rgba(245,158,11,.55), rgba(220,80,130,.65), rgba(124,58,237,.45), transparent)", boxShadow: "0 0 12px rgba(245,158,11,.4), 0 0 28px rgba(245,158,11,.12)", pointerEvents: "none" }} />
+      <div style={{ background: "rgba(10,10,14,0.92)", backdropFilter: "blur(24px)", borderRight: "1px solid rgba(255,255,255,0.055)", width: 228, minHeight: "100vh", display: "flex", flexDirection: "column", padding: "22px 10px 20px", position: "fixed", left: 0, top: 0, zIndex: 20 }}>
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 28, paddingLeft: 4 }}>
           <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)", borderRadius: 10, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(245,158,11,.28)", flexShrink: 0 }}>
             <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -93,48 +84,37 @@ function Sidebar({ pathname }: { pathname: string }) {
             );
           })}
         </nav>
-        <div style={{ background: "rgba(124,58,237,.1)", border: "1px solid rgba(124,58,237,.22)", borderRadius: 14, padding: "14px 14px", marginTop: 12, backdropFilter: "blur(10px)" }}>
+        <div style={{ background: "rgba(124,58,237,.1)", border: "1px solid rgba(124,58,237,.22)", borderRadius: 14, padding: "14px", marginTop: 12 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#FAFAFA", marginBottom: 4 }}>Upgrade to Pro 🚀</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,.42)", marginBottom: 10 }}>5,000 comments + live chat</div>
-          <button style={{ background: "linear-gradient(135deg,#F59E0B,#FBBF24)", borderRadius: 9, width: "100%", fontSize: 11.5, padding: "8px 0", fontWeight: 700, color: "#080808", border: "none", cursor: "pointer", boxShadow: "0 2px 12px rgba(245,158,11,.22)" }}>Upgrade — ₹349/mo</button>
+          <button style={{ background: "linear-gradient(135deg,#F59E0B,#FBBF24)", borderRadius: 9, width: "100%", fontSize: 11.5, padding: "8px 0", fontWeight: 700, color: "#080808", border: "none", cursor: "pointer" }}>Upgrade — ₹349/mo</button>
         </div>
       </div>
     </>
   );
 }
 
-// ─── Bottom Nav ───────────────────────────────────────────────────────────────
-
 function BottomNav({ pathname, moreOpen, setMoreOpen }: { pathname: string; moreOpen: boolean; setMoreOpen: (v: any) => void }) {
   return (
-    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: "rgba(9,9,11,.97)", borderTop: "1px solid rgba(255,255,255,.055)", display: "flex", backdropFilter: "blur(28px)", WebkitBackdropFilter: "blur(28px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: "rgba(9,9,11,.97)", borderTop: "1px solid rgba(255,255,255,.055)", display: "flex", backdropFilter: "blur(28px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {NAV_LINKS.map(link => {
         const active = pathname === link.href;
         return (
           <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,.35)", transition: "color 0.18s", position: "relative" }}>
-            {active && (
-              <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />
-            )}
+            {active && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
             {link.icon}
             <span style={{ fontSize: 9, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
           </Link>
         );
       })}
-      {/* More button */}
       <button onClick={() => setMoreOpen((v: boolean) => !v)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", background: "none", border: "none", cursor: "pointer", color: moreOpen ? "#F59E0B" : "rgba(255,255,255,.35)", position: "relative" }}>
-        {moreOpen && (
-          <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />
-        )}
-        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
-          <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
-        </svg>
+        {moreOpen && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
+        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
         <span style={{ fontSize: 9, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
       </button>
     </div>
   );
 }
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AutomationPage() {
   const pathname = usePathname();
@@ -390,7 +370,6 @@ export default function AutomationPage() {
                     <button onClick={() => setCurrentStep(1)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", width: "100%" }}>Next — Set Keywords →</button>
                   </div>
                 )}
-
                 {currentStep === 1 && (
                   <div>
                     <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Keyword Triggers</h2>
@@ -423,7 +402,6 @@ export default function AutomationPage() {
                     </div>
                   </div>
                 )}
-
                 {currentStep === 2 && (
                   <div>
                     <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Auto Reply Settings</h2>
@@ -457,7 +435,6 @@ export default function AutomationPage() {
                     </div>
                   </div>
                 )}
-
                 {currentStep === 3 && (
                   <div>
                     <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Advanced Settings</h2>
@@ -496,7 +473,6 @@ export default function AutomationPage() {
                 )}
               </div>
             </div>
-
             <div style={{ width: 260, flexShrink: 0, display: "none" }} className="preview-panel">
               <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 20, position: "sticky", top: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>📱 Live Preview</div>
@@ -525,7 +501,6 @@ export default function AutomationPage() {
         )}
       </main>
 
-      {/* Video Selector Modal */}
       {showVideoSelector && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
           <div style={{ background: "#0D0A1A", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 20, width: "100%", maxWidth: 480, maxHeight: "85vh", overflow: "auto", padding: 24 }}>
@@ -553,17 +528,16 @@ export default function AutomationPage() {
         </div>
       )}
 
-      {/* More Drawer */}
       {moreOpen && (
         <>
           <div onClick={() => setMoreOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 55, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }} />
           <div style={{ position: "fixed", bottom: 70, left: 12, right: 12, zIndex: 60, background: "rgba(14,14,20,0.98)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "8px 8px 12px", boxShadow: "0 -8px 48px rgba(0,0,0,0.7)", backdropFilter: "blur(28px)", animation: "slideUp 0.2s ease" }}>
             <div style={{ width: 34, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 4, margin: "6px auto 14px" }} />
             {[
-              { icon: "💳", label: "Billing",          href: "/billing"       },
-              { icon: "🌐", label: "Channels",         href: "/channels"      },
-              { icon: "🔔", label: "Notifications",    href: "/notifications" },
-              { icon: "⚙️", label: "Settings",         href: "/settings"      },
+              { icon: "💳", label: "Billing",       href: "/billing"       },
+              { icon: "🌐", label: "Channels",      href: "/channels"      },
+              { icon: "🔔", label: "Notifications", href: "/notifications" },
+              { icon: "⚙️", label: "Settings",      href: "/settings"      },
             ].map(item => (
               <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                 style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 12, textDecoration: "none", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 14 }}>

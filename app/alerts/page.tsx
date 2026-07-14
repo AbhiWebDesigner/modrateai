@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import {
   Bell, Send, LayoutDashboard, BarChart2, Zap, Settings,
-  MoreHorizontal, CreditCard, Layers, Bot, LogOut, Rss, Shield,
-  ChevronDown, TrendingUp, AlertTriangle, CheckCircle2, Clock
+  MoreHorizontal, CreditCard, Layers, Bot, LogOut, Rss, Shield
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -27,12 +26,6 @@ const SIDEBAR_NAV = [
   { href: '/human-ai-replys', icon: Bot,             label: 'Human-AI Replys' },
 ];
 
-const SIDEBAR_MORE = [
-  { href: '/billing',  icon: CreditCard, label: 'Billing',  color: '#F59E0B' },
-  { href: '/channels', icon: Layers,     label: 'Channels', color: '#60a5fa' },
-  { href: '/settings', icon: Settings,   label: 'Settings', color: '#94a3b8' },
-];
-
 const MORE_ITEMS = [
   { href: '/billing',       icon: CreditCard, label: 'Billing',       color: '#F59E0B' },
   { href: '/channels',      icon: Layers,     label: 'Channels',      color: '#60a5fa' },
@@ -49,13 +42,6 @@ const NOTIFICATION_EVENTS = [
   { id: 'weekly_report',   label: 'Weekly analytics report',  desc: 'Every Monday with trends and insights',  default: true  },
 ];
 
-const RECENT_ALERTS = [
-  { icon: AlertTriangle, color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.2)', label: 'Repeat offender detected', desc: '@toxic_user123 — 14 toxic comments', time: '2m ago' },
-  { icon: CheckCircle2,  color: '#34d399', bg: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.15)', label: 'Toxic comment hidden',    desc: '"go kys" auto-hidden on video #482', time: '8m ago' },
-  { icon: Clock,         color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.18)', label: 'User timeout applied',   desc: '@spammer99 — 24hr timeout',          time: '31m ago' },
-  { icon: TrendingUp,    color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.15)', label: 'Daily summary sent',     desc: '47 comments moderated yesterday',    time: '9h ago'  },
-];
-
 export default function AlertsPage() {
   const router   = useRouter();
   const pathname = usePathname();
@@ -64,7 +50,6 @@ export default function AlertsPage() {
   const [saving,            setSaving]            = useState(false);
   const [saved,             setSaved]             = useState(false);
   const [moreOpen,          setMoreOpen]          = useState(false);
-  const [sideMoreOpen,      setSideMoreOpen]      = useState(false);
   const [user,              setUser]              = useState<any>(null);
   const [userEmail,         setUserEmail]         = useState('');
   const [userPlan,          setUserPlan]          = useState('free');
@@ -116,8 +101,6 @@ export default function AlertsPage() {
   const plan      = userPlan;
   const planLabel = plan === 'agency' ? 'Agency plan' : plan === 'pro' ? 'Pro plan' : 'Free plan';
 
-  const isSideMoreActive = MORE_ITEMS.some(i => pathname === i.href);
-
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: 36, height: 36, border: '2.5px solid rgba(245,158,11,0.2)', borderTopColor: '#F59E0B', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
@@ -135,7 +118,6 @@ export default function AlertsPage() {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-        @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
         /* ══ SIDEBAR ══ */
         .r-sidebar{
@@ -178,30 +160,6 @@ export default function AlertsPage() {
           box-shadow:0 0 10px rgba(245,158,11,0.8),0 0 24px rgba(245,158,11,0.3);}
         .r-nav-item.active::after{content:'';position:absolute;inset:0;border-radius:12px;
           background:radial-gradient(ellipse 90% 70% at 8% 50%,rgba(245,158,11,0.12) 0%,transparent 65%);pointer-events:none;}
-
-        /* ══ SIDEBAR MORE SECTION ══ */
-        .r-nav-divider{padding:8px 13px 4px;font-size:9.5px;font-weight:700;letter-spacing:0.1em;
-          text-transform:uppercase;color:rgba(255,255,255,0.15);position:relative;z-index:1;}
-        .r-nav-item-more{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:10px;
-          font-size:12.5px;font-weight:500;text-decoration:none;color:rgba(200,175,145,0.42);
-          transition:all 0.18s;border:1px solid transparent;}
-        .r-nav-item-more:hover{background:rgba(255,255,255,0.04);color:rgba(220,200,170,0.72);transform:translateX(2px);}
-        .r-nav-item-more.active{color:rgba(245,158,11,0.85);background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.12);}
-
-        /* More toggle button */
-        .r-more-btn{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:12px;
-          font-size:13.5px;font-weight:500;color:rgba(220,195,165,0.52);
-          background:none;border:1px solid transparent;cursor:pointer;width:100%;
-          transition:all 0.22s;position:relative;z-index:1;}
-        .r-more-btn:hover{background:rgba(245,158,11,0.055);color:rgba(240,220,190,0.88);transform:translateX(3px);border-color:rgba(245,158,11,0.08);}
-        .r-more-btn.active{color:#FBBF24;background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.12);}
-        .r-more-items{display:flex;flex-direction:column;gap:1px;margin-top:2px;animation:slideDown 0.18s ease;}
-        .r-more-sub{display:flex;align-items:center;gap:10px;padding:8px 13px 8px 36px;border-radius:10px;
-          font-size:12.5px;font-weight:500;text-decoration:none;color:rgba(200,175,145,0.45);
-          transition:all 0.15s;border:1px solid transparent;}
-        .r-more-sub:hover{background:rgba(255,255,255,0.04);color:rgba(220,200,170,0.75);}
-        .r-more-sub.active{color:rgba(245,158,11,0.9);background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.12);}
-
         .r-upgrade{margin:0 10px 10px;background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(245,158,11,0.04));
           border:1px solid rgba(245,158,11,0.14);border-radius:14px;padding:15px;position:relative;z-index:1;}
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#08080A;font-weight:700;font-size:12.5px;
@@ -257,6 +215,10 @@ export default function AlertsPage() {
           .a-channel-grid{grid-template-columns:1fr!important;gap:10px!important;}
           .a-page-title{font-size:22px!important;}
         }
+        @media(min-width:768px) and (max-width:1023px){
+          .a-channel-grid{grid-template-columns:1fr 1fr!important;}
+          .r-content{padding:20px!important;}
+        }
         @media(min-width:1024px){.r-bnav{display:none!important;}}
       `}</style>
 
@@ -284,32 +246,7 @@ export default function AlertsPage() {
                 </Link>
               );
             })}
-
-            {/* ── More expandable ── */}
-            <button
-              className={`r-more-btn${(sideMoreOpen || isSideMoreActive) ? ' active' : ''}`}
-              onClick={() => setSideMoreOpen(v => !v)}
-            >
-              <MoreHorizontal size={15} strokeWidth={1.8} />
-              <span style={{ flex: 1 }}>More</span>
-              <ChevronDown size={13} strokeWidth={2} style={{ transition: 'transform 0.2s', transform: sideMoreOpen ? 'rotate(180deg)' : 'rotate(0deg)', opacity: 0.4 }} />
-            </button>
-
-            {sideMoreOpen && (
-              <div className="r-more-items">
-                {MORE_ITEMS.map(item => {
-                  const active = pathname === item.href;
-                  return (
-                    <Link key={item.href} href={item.href} className={`r-more-sub${active ? ' active' : ''}`}>
-                      <item.icon size={13} color={active ? item.color : 'rgba(200,175,145,0.4)'} strokeWidth={1.8} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
           </nav>
-
           {plan === 'free' && (
             <div className="r-upgrade">
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 7 }}>
@@ -363,7 +300,7 @@ export default function AlertsPage() {
               <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Get notified where you already are</p>
             </div>
 
-            {/* Channel cards */}
+            {/* Channel cards — stack on mobile */}
             <div className="a-channel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
 
               {/* Telegram */}
@@ -428,7 +365,7 @@ export default function AlertsPage() {
             </div>
 
             {/* Notification toggles */}
-            <div className="a-card" style={{ padding: '20px', marginBottom: 12 }}>
+            <div className="a-card" style={{ padding: '20px', marginBottom: 16 }}>
               <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Notification Settings</div>
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Choose which events trigger alerts</div>
@@ -448,46 +385,6 @@ export default function AlertsPage() {
                   </button>
                 </div>
               ))}
-            </div>
-
-            {/* Recent Alerts */}
-            <div className="a-card" style={{ padding: '20px', marginBottom: 12 }}>
-              <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Recent Alerts</div>
-                  <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Last triggered events</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontWeight: 600 }}>Live</span>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {RECENT_ALERTS.map((alert, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 12px', background: alert.bg, border: `1px solid ${alert.border}`, borderRadius: 11 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 9, background: `${alert.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                      <alert.icon size={14} color={alert.color} strokeWidth={2} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 12.5, fontWeight: 600, marginBottom: 2 }}>{alert.label}</p>
-                      <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5 }}>{alert.desc}</p>
-                    </div>
-                    <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5, fontWeight: 500, flexShrink: 0, marginTop: 2 }}>{alert.time}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                {[
-                  { label: 'Today',     value: '12',  color: '#F59E0B' },
-                  { label: 'This week', value: '84',  color: '#60a5fa' },
-                  { label: 'Resolved',  value: '97%', color: '#34d399' },
-                ].map(stat => (
-                  <div key={stat.label} style={{ textAlign: 'center', padding: '8px 4px', background: 'rgba(255,255,255,0.02)', borderRadius: 9, border: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ color: stat.color, fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em' }}>{stat.value}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5, marginTop: 2, fontWeight: 500 }}>{stat.label}</div>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Save */}
@@ -524,7 +421,7 @@ export default function AlertsPage() {
           </div>
         </nav>
 
-        {/* ══ MORE DRAWER (mobile only) ══ */}
+        {/* ══ MORE DRAWER ══ */}
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />

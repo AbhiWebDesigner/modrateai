@@ -83,7 +83,7 @@ function Sidebar({ pathname }: { pathname: string }) {
           </div>
           <span style={{ color: "#FAFAFA", fontWeight: 800, fontSize: 15, letterSpacing: "-0.025em" }}>ModerateAI</span>
         </Link>
-        <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
+       <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, paddingTop: 8 }}>
           {SIDEBAR_LINKS.map(link => {
             const active = pathname === link.href;
             return (

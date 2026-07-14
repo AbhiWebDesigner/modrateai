@@ -294,7 +294,7 @@ export default function AlertsPage() {
           </header>
 
           {/* CONTENT */}
-          <div className="r-content" style={{ padding: '20px 24px', flex: 1, animation: 'fadeIn 0.3s ease', maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+          <div className="r-content" style={{ padding: '20px 32px', flex: 1, animation: 'fadeIn 0.3s ease', maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
 
             <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 16 }}>Get notified where you already are</p>
 

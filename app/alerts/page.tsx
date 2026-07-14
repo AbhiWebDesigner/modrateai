@@ -264,23 +264,22 @@ export default function AlertsPage() {
         {/* ══ MAIN ══ */}
         <div className="r-main">
 
-          {/* Topbar — search left, empty middle, bell + connect youtube + user right */}
-          <header className="r-topbar">
-            <div style={{ position: 'relative', width: 280 }} className="r-topbar-search">
+          {/* Topbar — image 2 style: search + bell + connect youtube + user all right */}
+          <header className="r-topbar" style={{ justifyContent: 'flex-end' }}>
+            <div style={{ position: 'relative' }} className="r-topbar-search">
               <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
                 width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={2} strokeLinecap="round">
                 <circle cx={11} cy={11} r={8}/><path d="m21 21-4.35-4.35"/>
               </svg>
-              <input className="r-search" style={{ width: '100%' }} placeholder="Search comments, users…" />
+              <input className="r-search" style={{ width: 280 }} placeholder="Search comments, users…" />
             </div>
-            <div style={{ flex: 1 }} />
             {/* Bell */}
             <button style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
               <Bell size={16} color="rgba(255,255,255,0.45)" strokeWidth={1.8} />
             </button>
             {/* Connect YouTube */}
             <button style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg,#F59E0B,#FBBF24)', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', flexShrink: 0 }}>
-              <svg width={14} height={14} viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="#08080A"><polygon points="5,3 19,12 5,21"/></svg>
               <span style={{ color: '#08080A', fontWeight: 700, fontSize: 12.5 }}>Connect YouTube</span>
             </button>
             {/* User */}

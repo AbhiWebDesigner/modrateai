@@ -7,7 +7,7 @@ export default function PrivacyPage() {
       <div className="border-b border-white/10 py-6 px-6">
         <div className="max-w-4xl mx-auto">
           <Link href="/" className="text-[#ff6b00] font-bold text-xl hover:opacity-80 transition">
-            ← ModrateAI
+            ← ModerateAI
           </Link>
         </div>
       </div>
@@ -29,14 +29,14 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">1. Introduction</h2>
             <p>
-              Welcome to ModrateAI. We are an AI-powered YouTube comment moderation platform available at{" "}
+              Welcome to ModerateAI. We are an AI-powered YouTube comment moderation platform available at{" "}
               <a href="https://moderateai.site" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
                 https://moderateai.site
               </a>
               , designed to help Indian YouTube creators protect their communities 24/7.
             </p>
             <p className="mt-2">
-              This Privacy Policy explains how we collect, use, store, share, and protect your personal information when you use our Service. By using ModrateAI, you agree to the practices described here.
+              This Privacy Policy explains how we collect, use, store, share, and protect your personal information when you use our Service. By using ModerateAI, you agree to the practices described here.
             </p>
             <p className="mt-2">
               Our use of information received from Google APIs adheres to the{" "}
@@ -150,7 +150,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">4. Google User Data — Limited Use Policy</h2>
             <p className="mb-3">
-              ModrateAI&apos;s use of data from Google APIs follows the{" "}
+              ModerateAI&apos;s use of data from Google APIs follows the{" "}
               <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
                 Google API Services User Data Policy
               </a>
@@ -171,7 +171,7 @@ export default function PrivacyPage() {
               ))}
             </ul>
             <p className="mt-4">
-              You may revoke ModrateAI&apos;s access to your YouTube data at any time by visiting:{" "}
+              You may revoke ModerateAI&apos;s access to your YouTube data at any time by visiting:{" "}
               <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
                 https://myaccount.google.com/permissions
               </a>
@@ -205,7 +205,7 @@ export default function PrivacyPage() {
 
             <h3 className="font-semibold text-[#ff6b00] mb-2 mt-5">5.2 Legal Requirements</h3>
             <p>
-              We may disclose your data if required by law, court order, or government authority, or to protect the rights, safety, or property of ModrateAI, our users, or the public.
+              We may disclose your data if required by law, court order, or government authority, or to protect the rights, safety, or property of ModerateAI, our users, or the public.
             </p>
 
             <h3 className="font-semibold text-[#ff6b00] mb-2 mt-5">5.3 Business Transfers</h3>
@@ -300,7 +300,7 @@ export default function PrivacyPage() {
           {/* 9 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">9. Cookies and Tracking Technologies</h2>
-            <p className="mb-3">ModrateAI uses cookies to:</p>
+            <p className="mb-3">ModerateAI uses cookies to:</p>
             <ul className="space-y-2">
               {[
                 "Maintain your login session",
@@ -324,7 +324,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">10. Children&apos;s Privacy</h2>
             <p>
-              ModrateAI is not intended for use by individuals under the age of 18. We do not knowingly collect personal data from minors. If you believe we have collected such data inadvertently, please contact us immediately and we will delete it promptly.
+              ModerateAI is not intended for use by individuals under the age of 18. We do not knowingly collect personal data from minors. If you believe we have collected such data inadvertently, please contact us immediately and we will delete it promptly.
             </p>
           </section>
 
@@ -375,7 +375,7 @@ export default function PrivacyPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
-                <span>Grievance Officer: ModrateAI Data Privacy Team</span>
+                <span>Grievance Officer: ModerateAI Data Privacy Team</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
@@ -388,7 +388,7 @@ export default function PrivacyPage() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
-          © 2026 ModrateAI. Made in India 🇮🇳. All rights reserved.
+          © 2026 ModerateAI. Made in India 🇮🇳. All rights reserved.
         </div>
       </div>
     </div>

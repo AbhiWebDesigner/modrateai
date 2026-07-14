@@ -7,7 +7,7 @@ export default function TermsPage() {
       <div className="border-b border-white/10 py-6 px-6">
         <div className="max-w-4xl mx-auto">
           <Link href="/" className="text-[#ff6b00] font-bold text-xl hover:opacity-80 transition">
-            ← ModrateAI
+            ← ModerateAI
           </Link>
         </div>
       </div>
@@ -29,7 +29,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">1. Acceptance of Terms</h2>
             <p>
-              By accessing or using ModrateAI available at{" "}
+              By accessing or using ModerateAI available at{" "}
               <a href="https://moderateai.site" className="text-[#ff6b00] hover:underline" target="_blank" rel="noopener noreferrer">
                 https://moderateai.site
               </a>
@@ -46,7 +46,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">2. Description of Service</h2>
             <p className="mb-3">
-              ModrateAI is an AI-powered YouTube comment moderation and management tool designed for Indian YouTube creators. Our Service provides:
+              ModerateAI is an AI-powered YouTube comment moderation and management tool designed for Indian YouTube creators. Our Service provides:
             </p>
             <ul className="space-y-2">
               {[
@@ -72,7 +72,7 @@ export default function TermsPage() {
           {/* 3 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">3. Eligibility</h2>
-            <p className="mb-3">To use ModrateAI, you must:</p>
+            <p className="mb-3">To use ModerateAI, you must:</p>
             <ul className="space-y-2">
               {[
                 "Be at least 18 years of age, or have parental/guardian consent",
@@ -101,7 +101,7 @@ export default function TermsPage() {
               if you suspect unauthorized access.
             </p>
             <p className="mt-2">
-              ModrateAI reserves the right to terminate accounts that violate these Terms, provide false information, or engage in fraudulent activity.
+              ModerateAI reserves the right to terminate accounts that violate these Terms, provide false information, or engage in fraudulent activity.
             </p>
           </section>
 
@@ -185,7 +185,7 @@ export default function TermsPage() {
             ))}
 
             <p className="mt-4 text-sm">
-              Prices are in Indian Rupees (INR). ModrateAI reserves the right to modify pricing with 30 days&apos; advance notice to existing subscribers.
+              Prices are in Indian Rupees (INR). ModerateAI reserves the right to modify pricing with 30 days&apos; advance notice to existing subscribers.
             </p>
           </section>
 
@@ -195,7 +195,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">6. Payment and Billing</h2>
             <p className="mb-3">
-              By subscribing to a paid plan, you authorize ModrateAI to charge your chosen payment method on a recurring monthly basis.
+              By subscribing to a paid plan, you authorize ModerateAI to charge your chosen payment method on a recurring monthly basis.
             </p>
             <ul className="space-y-2">
               {[
@@ -221,7 +221,7 @@ export default function TermsPage() {
               Free trials are offered to new users only. One free trial per user/email/channel is permitted. After the free trial ends, your account will transition to a paid plan or access will be restricted.
             </p>
             <p className="mt-2">
-              ModrateAI reserves the right to modify or discontinue free trial offers at any time without prior notice.
+              ModerateAI reserves the right to modify or discontinue free trial offers at any time without prior notice.
             </p>
           </section>
 
@@ -230,7 +230,7 @@ export default function TermsPage() {
           {/* 8 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">8. YouTube API and Google Compliance</h2>
-            <p className="mb-3">Our Service integrates with the YouTube Data API. By using ModrateAI, you also agree to:</p>
+            <p className="mb-3">Our Service integrates with the YouTube Data API. By using ModerateAI, you also agree to:</p>
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
@@ -261,7 +261,7 @@ export default function TermsPage() {
               </li>
             </ul>
             <p className="mt-3">
-              You grant ModrateAI limited access to your YouTube channel data solely for providing moderation and reply services. We will not use your YouTube data for any other purpose without explicit consent.
+              You grant ModerateAI limited access to your YouTube channel data solely for providing moderation and reply services. We will not use your YouTube data for any other purpose without explicit consent.
             </p>
           </section>
 
@@ -270,7 +270,7 @@ export default function TermsPage() {
           {/* 9 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">9. Acceptable Use Policy</h2>
-            <p className="mb-3">You agree NOT to use ModrateAI to:</p>
+            <p className="mb-3">You agree NOT to use ModerateAI to:</p>
             <ul className="space-y-2">
               {[
                 "Violate YouTube's Community Guidelines or Terms of Service",
@@ -295,10 +295,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">10. Intellectual Property</h2>
             <p>
-              All content, software, trademarks, logos, and branding associated with ModrateAI are the exclusive intellectual property of ModrateAI and its licensors. You may not copy, reproduce, or distribute without prior written permission.
+              All content, software, trademarks, logos, and branding associated with ModerateAI are the exclusive intellectual property of ModerateAI and its licensors. You may not copy, reproduce, or distribute without prior written permission.
             </p>
             <p className="mt-2">
-              AI-generated replies produced on your behalf are provided for use on your YouTube channel. ModrateAI retains no ownership over such outputs once delivered.
+              AI-generated replies produced on your behalf are provided for use on your YouTube channel. ModerateAI retains no ownership over such outputs once delivered.
             </p>
           </section>
 
@@ -308,7 +308,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">11. Privacy and Data Protection</h2>
             <p>
-              Your use of ModrateAI is governed by our{" "}
+              Your use of ModerateAI is governed by our{" "}
               <Link href="/privacy" className="text-[#ff6b00] hover:underline">
                 Privacy Policy
               </Link>
@@ -321,7 +321,7 @@ export default function TermsPage() {
           {/* 12 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">12. Limitation of Liability</h2>
-            <p className="mb-3">To the maximum extent permitted by law, ModrateAI shall not be liable for:</p>
+            <p className="mb-3">To the maximum extent permitted by law, ModerateAI shall not be liable for:</p>
             <ul className="space-y-2">
               {[
                 "Any indirect, incidental, or consequential damages from your use of the Service",
@@ -347,7 +347,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">13. Disclaimer of Warranties</h2>
             <p className="mb-3">
-              ModrateAI is provided on an &quot;as is&quot; and &quot;as available&quot; basis. We do not guarantee that:
+              ModerateAI is provided on an &quot;as is&quot; and &quot;as available&quot; basis. We do not guarantee that:
             </p>
             <ul className="space-y-2">
               {[
@@ -370,7 +370,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">14. Termination</h2>
             <p>
-              Either party may terminate this agreement at any time. ModrateAI reserves the right to suspend or terminate your account immediately if you violate these Terms. Upon termination, your access will cease and data may be deleted per our Privacy Policy.
+              Either party may terminate this agreement at any time. ModerateAI reserves the right to suspend or terminate your account immediately if you violate these Terms. Upon termination, your access will cease and data may be deleted per our Privacy Policy.
             </p>
           </section>
 
@@ -436,7 +436,7 @@ export default function TermsPage() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
-          © 2026 ModrateAI. Made in India 🇮🇳. All rights reserved.
+          © 2026 ModerateAI. Made in India 🇮🇳. All rights reserved.
         </div>
       </div>
     </div>

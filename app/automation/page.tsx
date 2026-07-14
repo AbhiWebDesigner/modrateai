@@ -34,10 +34,11 @@ type Rule = {
 };
 
 const NAV_LINKS = [
-  { href: "/dashboard",  label: "Overview",   icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>) },
-  { href: "/live-feed",  label: "Live Feed",  icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/></svg>) },
-  { href: "/automation", label: "Automation", icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>) },
-  { href: "/alerts",     label: "Alerts",     icon: (<svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>) },
+  { href: "/dashboard",  label: "Overview",   icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>) },
+  { href: "/automation", label: "Automation", icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>) },
+  { href: "/live-feed",  label: "Live Feed",  icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 4.93a10 10 0 0 0 0 14.14"/></svg>) },
+  { href: "/analytics",  label: "Analytics",  icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>) },
+  { href: "/alerts",     label: "Alerts",     icon: (<svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>) },
 ];
 
 const STEPS = ["Select Video", "Keywords", "Auto Reply", "Advanced"];
@@ -78,7 +79,7 @@ function Sidebar({ pathname }: { pathname: string }) {
           <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #EA580C 55%, #7C3AED 100%)", borderRadius: 10, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(245,158,11,.28)", flexShrink: 0 }}>
             <svg width="15" height="15" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
-          <span style={{ color: "#FAFAFA", fontWeight: 800, fontSize: 15, letterSpacing: "-0.025em" }}>ModrateAI</span>
+          <span style={{ color: "#FAFAFA", fontWeight: 800, fontSize: 15, letterSpacing: "-0.025em" }}>ModerateAI</span>
         </Link>
         <nav style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
           {NAV_LINKS.map(link => {
@@ -110,20 +111,24 @@ function BottomNav({ pathname, moreOpen, setMoreOpen }: { pathname: string; more
       {NAV_LINKS.map(link => {
         const active = pathname === link.href;
         return (
-          <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px 12px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,.3)", transition: "color 0.18s" }}>
-            <div style={{ width: 40, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, background: active ? "rgba(245,158,11,0.11)" : "transparent", transition: "background 0.18s" }}>
-              {link.icon}
-            </div>
+          <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,.35)", transition: "color 0.18s", position: "relative" }}>
+            {active && (
+              <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />
+            )}
+            {link.icon}
+            <span style={{ fontSize: 9, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
           </Link>
         );
       })}
       {/* More button */}
-      <button onClick={() => setMoreOpen((v: boolean) => !v)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px 12px", background: "none", border: "none", cursor: "pointer", color: moreOpen ? "#F59E0B" : "rgba(255,255,255,.3)" }}>
-        <div style={{ width: 40, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10, background: moreOpen ? "rgba(245,158,11,0.11)" : "transparent", transition: "background 0.18s" }}>
-          <svg width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
-            <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
-          </svg>
-        </div>
+      <button onClick={() => setMoreOpen((v: boolean) => !v)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", background: "none", border: "none", cursor: "pointer", color: moreOpen ? "#F59E0B" : "rgba(255,255,255,.35)", position: "relative" }}>
+        {moreOpen && (
+          <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />
+        )}
+        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
+          <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
+        </svg>
+        <span style={{ fontSize: 9, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
       </button>
     </div>
   );
@@ -251,7 +256,7 @@ export default function AutomationPage() {
         html, body { background: #07030F; color: white; }
         .desktop-sidebar { display: none !important; }
         .bottom-nav      { display: flex !important; }
-        .main-content    { margin-left: 0 !important; padding: 20px 16px 72px !important; }
+        .main-content    { margin-left: 0 !important; padding: 20px 16px 80px !important; }
         @media (min-width: 1024px) {
           .desktop-sidebar { display: flex !important; }
           .bottom-nav      { display: none !important; }
@@ -508,7 +513,7 @@ export default function AutomationPage() {
                     </div>
                     {keywords.length > 0 && (
                       <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: 8, padding: "8px 10px" }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: "#F59E0B", marginBottom: 4 }}>🤖 ModrateAI</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: "#F59E0B", marginBottom: 4 }}>🤖 ModerateAI</div>
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)" }}>{replies[0] || "Auto reply will appear here..."}</div>
                       </div>
                     )}
@@ -557,8 +562,6 @@ export default function AutomationPage() {
             {[
               { icon: "💳", label: "Billing",          href: "/billing"       },
               { icon: "🌐", label: "Channels",         href: "/channels"      },
-              { icon: "📊", label: "Analytics",        href: "/analytics"     },
-              { icon: "🤖", label: "Human-AI Replys",  href: "/human-ai-replys" },
               { icon: "🔔", label: "Notifications",    href: "/notifications" },
               { icon: "⚙️", label: "Settings",         href: "/settings"      },
             ].map(item => (

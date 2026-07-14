@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import {
   Bell, Send, LayoutDashboard, BarChart2, Zap, Settings,
-  MoreHorizontal, CreditCard, Layers, LogOut, Rss, Shield
-} from 'lucide-react';
+MoreHorizontal, CreditCard, Layers, LogOut, Rss, Shield, MessageSquare} 
+from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -25,9 +25,13 @@ const SIDEBAR_NAV = [
 ];
 
 const MORE_ITEMS = [
-  { href: '/billing',  icon: CreditCard, label: 'Billing',  color: '#F59E0B' },
-  { href: '/channels', icon: Layers,     label: 'Channels', color: '#60a5fa' },
-  { href: '/settings', icon: Settings,   label: 'Settings', color: '#94a3b8' },
+
+  { href: '/billing',         icon: CreditCard, label: 'Billing',          color: '#F59E0B' },
+  { href: '/channels',        icon: Layers,     label: 'Channels',         color: '#60a5fa' },
+  { href: '/analytics',       icon: BarChart2,  label: 'Analytics',        color: '#a78bfa' },
+  { href: '/human-ai-replies',icon: MessageSquare, label: 'Human-AI Replies', color: '#34d399' },
+  { href: '/notifications',   icon: Bell,       label: 'Notifications',    color: '#f87171' },
+  { href: '/settings',        icon: Settings,   label: 'Settings',         color: '#94a3b8' },
 ];
 
 const NOTIFICATION_EVENTS = [

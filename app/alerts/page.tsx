@@ -353,7 +353,7 @@ export default function AlertsPage() {
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Choose which events trigger alerts</div>
               </div>
               {NOTIFICATION_EVENTS.map(({ id, label, desc }, i) => (
-                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '13px 0', borderBottom: i < NOTIFICATION_EVENTS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '9px 0', borderBottom: i < NOTIFICATION_EVENTS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>{label}</p>
                     <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>{desc}</p>

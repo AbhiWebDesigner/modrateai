@@ -108,7 +108,7 @@ export default function DemoPage() {
         <div className="flex items-center gap-4">
           <Link href="/" className="text-gray-400 hover:text-gray-600"><ArrowLeft className="w-5 h-5" /></Link>
           <div className="flex items-center gap-2 font-black text-lg text-blue-600">
-            <Shield className="w-5 h-5" /> ModrateAI
+            <Shield className="w-5 h-5" /> ModerateAI
           </div>
           <span className="text-gray-300">|</span>
           <span className="text-gray-600 font-bold">Live Demo</span>
@@ -132,7 +132,7 @@ export default function DemoPage() {
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
             Test any comment in any language
           </div>
-          <h1 className="text-4xl font-black text-gray-900 mb-3">See ModrateAI in action</h1>
+          <h1 className="text-4xl font-black text-gray-900 mb-3">See ModerateAI in action</h1>
           <p className="text-gray-500 text-lg">Type any comment in Telugu, Hindi, Tamil, English or any language. AI judges instantly.</p>
         </div>
 

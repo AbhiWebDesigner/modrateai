@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     description: "Stop toxic comments automatically in every language.",
   },
   icons: {
-    icon: "/icon.png.png",
+    icon: "/icon.svg.svg",
   },
 };
 

@@ -18,12 +18,10 @@ const BOTTOM_NAV = [
 ];
 
 const SIDEBAR_NAV = [
-  { href: '/dashboard',       icon: LayoutDashboard, label: 'Overview'        },
-  { href: '/live-feed',       icon: Rss,             label: 'Live Feed'       },
-  { href: '/analytics',       icon: BarChart2,       label: 'Analytics'       },
-  { href: '/automation',      icon: Zap,             label: 'Automation'      },
-  { href: '/alerts',          icon: Bell,            label: 'Alerts'          },
-  { href: '/human-ai-replys', icon: Bot,             label: 'Human-AI Replys' },
+  { href: '/dashboard',  icon: LayoutDashboard, label: 'Overview'   },
+  { href: '/analytics',  icon: BarChart2,       label: 'Analytics'  },
+  { href: '/automation', icon: Zap,             label: 'Automation' },
+  { href: '/alerts',     icon: Bell,            label: 'Alerts'     },
 ];
 
 const MORE_ITEMS = [
@@ -35,9 +33,9 @@ const MORE_ITEMS = [
 const NOTIFICATION_EVENTS = [
   { id: 'toxic_hidden',    label: 'Toxic comment hidden',     desc: 'Every time a comment is auto-hidden',    default: false },
   { id: 'auto_reply',      label: 'Auto-reply sent',          desc: 'When ModerateAI replies on your behalf', default: false },
-  { id: 'user_timeout',    label: 'User timeout / ban',       desc: 'When a user hits a timeout tier',        default: true  },
+  { id: 'user_timeout',    label: 'User timeout / ban',       desc: 'When a user hits a timeout tier',        default: false },
   { id: 'repeat_offender', label: 'Repeat offender detected', desc: '10+ toxic messages from same user',      default: true  },
-  { id: 'daily_summary',   label: 'Daily summary',            desc: 'Once-a-day overview at 9 AM IST',        default: true  },
+  { id: 'daily_summary',   label: 'Daily summary',            desc: 'Once-a-day overview at 9 AM IST',        default: false },
   { id: 'weekly_report',   label: 'Weekly analytics report',  desc: 'Every Monday with trends and insights',  default: true  },
 ];
 
@@ -117,10 +115,11 @@ export default function AlertsPage() {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+        @keyframes orangeGlow{0%,100%{box-shadow:0 0 18px rgba(245,158,11,0.45),0 0 40px rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.08);}50%{box-shadow:0 0 28px rgba(245,158,11,0.65),0 0 56px rgba(245,158,11,0.28),inset 0 0 36px rgba(245,158,11,0.12);}}
 
         /* ══ SIDEBAR ══ */
         .r-sidebar{
-          width:228px;min-width:228px;background:#0c0a0e;
+          width:220px;min-width:220px;background:#0c0a0e;
           border-right:1px solid rgba(245,158,11,0.12);
           display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
@@ -150,15 +149,16 @@ export default function AlertsPage() {
           transition:all 0.22s cubic-bezier(.4,0,.2,1);border:1px solid transparent;position:relative;overflow:hidden;}
         .r-nav-item:hover{background:rgba(245,158,11,0.055);color:rgba(240,220,190,0.88);transform:translateX(3px);border-color:rgba(245,158,11,0.08);}
         .r-nav-item.active{
-          background:linear-gradient(135deg,rgba(245,158,11,0.2) 0%,rgba(245,158,11,0.10) 50%,rgba(245,158,11,0.06) 100%);
-          color:#FBBF24;border-color:rgba(245,158,11,0.25);font-weight:700;
-          box-shadow:0 0 0 1px rgba(245,158,11,0.12),0 2px 20px rgba(245,158,11,0.10),inset 0 1px 0 rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.06);}
+          background:linear-gradient(135deg,rgba(245,158,11,0.22) 0%,rgba(245,158,11,0.12) 50%,rgba(245,158,11,0.07) 100%);
+          color:#FBBF24;border-color:rgba(245,158,11,0.30);font-weight:700;
+          animation:orangeGlow 2.5s ease-in-out infinite;
+        }
         .r-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
           width:3px;height:22px;border-radius:0 3px 3px 0;
           background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);
-          box-shadow:0 0 10px rgba(245,158,11,0.8),0 0 24px rgba(245,158,11,0.3);}
+          box-shadow:0 0 12px rgba(245,158,11,0.9),0 0 28px rgba(245,158,11,0.4);}
         .r-nav-item.active::after{content:'';position:absolute;inset:0;border-radius:12px;
-          background:radial-gradient(ellipse 90% 70% at 8% 50%,rgba(245,158,11,0.12) 0%,transparent 65%);pointer-events:none;}
+          background:radial-gradient(ellipse 90% 70% at 8% 50%,rgba(245,158,11,0.14) 0%,transparent 65%);pointer-events:none;}
         .r-upgrade{margin:0 10px 10px;background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(245,158,11,0.04));
           border:1px solid rgba(245,158,11,0.14);border-radius:14px;padding:15px;position:relative;z-index:1;}
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#08080A;font-weight:700;font-size:12.5px;
@@ -169,13 +169,13 @@ export default function AlertsPage() {
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
         /* ══ LAYOUT ══ */
-        .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;}
+        .r-main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column;}
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.9);backdrop-filter:blur(28px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 28px;height:60px;
           display:flex;align-items:center;gap:14px;box-shadow:0 4px 32px rgba(0,0,0,0.3);}
-        .r-search{flex:1;max-width:460px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+        .r-search{flex:1;max-width:380px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:10px;padding:0 14px 0 36px;height:36px;color:#FAFAFA;font-size:13px;outline:none;}
-        .r-search::placeholder{color:rgba(255,255,255,0.2);}
+        .r-search::placeholder{color:rgba(255,255,255,0.25);}
         .r-search:focus{border-color:rgba(245,158,11,0.3);}
 
         /* ══ CARDS ══ */
@@ -252,8 +252,8 @@ export default function AlertsPage() {
                 <Zap size={12} color="#F59E0B" />
                 <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 12 }}>Upgrade to Pro</span>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, lineHeight: 1.65, marginBottom: 11 }}>Unlock unlimited moderation and Telegram alerts.</p>
-              <Link href="/billing" className="r-btn-upgrade">Upgrade to Pro</Link>
+              <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, lineHeight: 1.65, marginBottom: 11 }}>Unlock unlimited hidden comments and Telegram alerts.</p>
+              <Link href="/billing" className="r-btn-upgrade">Upgrade</Link>
             </div>
           )}
           <div className="r-sidebar-bottom">
@@ -264,24 +264,37 @@ export default function AlertsPage() {
         {/* ══ MAIN ══ */}
         <div className="r-main">
 
-          {/* Topbar — image 2 style: search + bell + connect youtube + user all right */}
-          <header className="r-topbar" style={{ justifyContent: 'flex-end' }}>
+          {/* Topbar */}
+          <header className="r-topbar">
+            {/* Page title in topbar (left) */}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <h1 className="a-page-title" style={{ fontSize: 22, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.03em', lineHeight: 1.15 }}>Alerts</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: '3px 10px' }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.8)', animation: 'pulse 2s infinite' }} />
+                <span style={{ color: '#22c55e', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em' }}>Live</span>
+              </div>
+            </div>
+
+            {/* Search */}
             <div style={{ position: 'relative' }} className="r-topbar-search">
               <svg style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
                 width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={2} strokeLinecap="round">
                 <circle cx={11} cy={11} r={8}/><path d="m21 21-4.35-4.35"/>
               </svg>
-              <input className="r-search" style={{ width: 280 }} placeholder="Search comments, users…" />
+              <input className="r-search" style={{ width: 260 }} placeholder="Search comments, users…" />
             </div>
+
             {/* Bell */}
-            <button style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+            <button style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, position: 'relative' }}>
               <Bell size={16} color="rgba(255,255,255,0.45)" strokeWidth={1.8} />
             </button>
+
             {/* Connect YouTube */}
             <button style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'linear-gradient(135deg,#F59E0B,#FBBF24)', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', flexShrink: 0 }}>
               <svg width={14} height={14} viewBox="0 0 24 24" fill="#08080A"><polygon points="5,3 19,12 5,21"/></svg>
               <span style={{ color: '#08080A', fontWeight: 700, fontSize: 12.5 }}>Connect YouTube</span>
             </button>
+
             {/* User */}
             <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: '4px 11px 4px 4px', textDecoration: 'none', flexShrink: 0 }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 11 }}>{initials}</div>
@@ -295,24 +308,15 @@ export default function AlertsPage() {
           {/* ══ CONTENT ══ */}
           <div className="r-content" style={{ padding: '24px 28px', flex: 1, animation: 'fadeIn 0.3s ease' }}>
 
-            {/* Page header — exact image style */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                <h1 className="a-page-title" style={{ fontSize: 26, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.03em', lineHeight: 1.15 }}>Alerts</h1>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: '3px 10px' }}>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.8)', animation: 'pulse 2s infinite' }} />
-                  <span style={{ color: '#22c55e', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em' }}>Live</span>
-                </div>
-              </div>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Get notified where you already are</p>
-            </div>
+            {/* Subtitle only (title moved to topbar) */}
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 20 }}>Get notified where you already are</p>
 
             {/* Channel cards */}
             <div className="a-channel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
 
               {/* Telegram */}
               <div className="a-card" style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(34,158,217,0.12)', border: '1px solid rgba(34,158,217,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Send size={18} color="#229ED9" />
                   </div>
@@ -323,26 +327,33 @@ export default function AlertsPage() {
                     </div>
                     <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12, lineHeight: 1.4 }}>Instant DMs when action is needed</p>
                   </div>
+                  {plan === 'agency'
+                    ? telegramConnected
+                      ? <button onClick={() => setTelegramConnected(false)} style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, flexShrink: 0 }}>Manage</button>
+                      : null
+                    : <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '5px 12px', color: 'rgba(255,255,255,0.25)', fontSize: 11.5, fontWeight: 500, flexShrink: 0 }}>Agency only</div>
+                  }
                 </div>
-                {plan === 'agency'
-                  ? telegramConnected
-                    ? <>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                          <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8 }}>✓ Connected</span>
-                          <button onClick={() => setTelegramConnected(false)} style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Manage</button>
-                        </div>
-                        <div style={{ padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
-                          <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>@{telegramUsername || userEmail.split('@')[0]}</span></p>
-                        </div>
-                      </>
-                    : <button onClick={() => setTelegramConnected(true)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600, padding: '9px', borderRadius: 10, cursor: 'pointer' }}>+ Connect</button>
-                  : <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 9, padding: '9px 14px', color: 'rgba(255,255,255,0.22)', fontSize: 12.5, fontWeight: 500, textAlign: 'center' }}>Agency plan only</div>
-                }
+                {plan === 'agency' && (
+                  <div style={{ marginTop: 14 }}>
+                    {telegramConnected
+                      ? <>
+                          <div style={{ marginBottom: 10 }}>
+                            <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8 }}>✓ Connected</span>
+                          </div>
+                          <div style={{ padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
+                            <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>@{telegramUsername || userEmail.split('@')[0]}</span></p>
+                          </div>
+                        </>
+                      : <button onClick={() => setTelegramConnected(true)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600, padding: '9px', borderRadius: 10, cursor: 'pointer' }}>+ Connect</button>
+                    }
+                  </div>
+                )}
               </div>
 
               {/* Email */}
               <div className="a-card" style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Bell size={18} color="#F59E0B" />
                   </div>
@@ -353,18 +364,18 @@ export default function AlertsPage() {
                     </div>
                     <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12, lineHeight: 1.4 }}>Daily digest of moderation activity</p>
                   </div>
+                  {emailConnected && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                      <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8 }}>✓ Connected</span>
+                      <button style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Manage</button>
+                    </div>
+                  )}
                 </div>
                 {emailConnected
-                  ? <>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                        <span style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8 }}>✓ Connected</span>
-                        <button style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Manage</button>
-                      </div>
-                      <div style={{ padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
-                        <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>{userEmail}</span></p>
-                      </div>
-                    </>
-                  : <button onClick={() => setEmailConnected(true)} style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600, padding: '9px', borderRadius: 10, cursor: 'pointer' }}>+ Connect</button>
+                  ? <div style={{ marginTop: 14, padding: '9px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 9 }}>
+                      <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>Sending to <span style={{ color: '#FAFAFA', fontWeight: 600 }}>{userEmail}</span></p>
+                    </div>
+                  : <button onClick={() => setEmailConnected(true)} style={{ marginTop: 14, width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 600, padding: '9px', borderRadius: 10, cursor: 'pointer' }}>+ Connect</button>
                 }
               </div>
             </div>
@@ -383,7 +394,7 @@ export default function AlertsPage() {
                   </div>
                   <button
                     className="a-toggle"
-                    style={{ background: toggles[id] ? '#F59E0B' : 'rgba(255,255,255,0.1)', boxShadow: toggles[id] ? '0 0 10px rgba(245,158,11,0.3)' : 'none' }}
+                    style={{ background: toggles[id] ? '#F59E0B' : 'rgba(255,255,255,0.1)', boxShadow: toggles[id] ? '0 0 10px rgba(245,158,11,0.35)' : 'none' }}
                     onClick={() => setToggles(p => ({ ...p, [id]: !p[id] }))}
                   >
                     <div className="a-knob" style={{ left: toggles[id] ? 22 : 2 }} />
@@ -398,7 +409,7 @@ export default function AlertsPage() {
                 background: saved ? 'linear-gradient(135deg,#34d399,#10b981)' : 'linear-gradient(135deg,#F59E0B,#FBBF24)',
                 color: '#08080A', fontWeight: 800, fontSize: 13.5, padding: '12px 32px', borderRadius: 12,
                 border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
-                boxShadow: saved ? '0 2px 14px rgba(52,211,153,0.3)' : '0 2px 14px rgba(245,158,11,0.3)',
+                boxShadow: saved ? '0 2px 14px rgba(52,211,153,0.3)' : '0 4px 20px rgba(245,158,11,0.4)',
                 transition: 'all 0.2s',
               }}>
                 {saving ? 'Saving…' : saved ? '✓ Saved!' : 'Save preferences'}
@@ -407,7 +418,7 @@ export default function AlertsPage() {
           </div>
         </div>
 
-        {/* ══ BOTTOM NAV (mobile only) ══ */}
+        {/* ══ BOTTOM NAV (mobile only — untouched) ══ */}
         <nav className="r-bnav">
           <div className="r-bnav-inner">
             {BOTTOM_NAV.map(item => {

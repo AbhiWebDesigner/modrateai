@@ -102,7 +102,8 @@ function BottomNav({ pathname, moreOpen, setMoreOpen }: { pathname: string; more
         return (
           <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,.35)", transition: "color 0.18s", position: "relative" }}>
             {active && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
-            {link.icon}
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 30, borderRadius: 10, background: active ? "rgba(245,158,11,0.15)" : "transparent", boxShadow: active ? "0 0 14px rgba(245,158,11,0.4)" : "none", transition: "all 0.2s" }}>{link.icon}</span>
+
             <span style={{ fontSize: 9, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
           </Link>
         );
@@ -534,10 +535,12 @@ export default function AutomationPage() {
           <div style={{ position: "fixed", bottom: 70, left: 12, right: 12, zIndex: 60, background: "rgba(14,14,20,0.98)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: "8px 8px 12px", boxShadow: "0 -8px 48px rgba(0,0,0,0.7)", backdropFilter: "blur(28px)", animation: "slideUp 0.2s ease" }}>
             <div style={{ width: 34, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 4, margin: "6px auto 14px" }} />
             {[
-              { icon: "💳", label: "Billing",       href: "/billing"       },
-              { icon: "🌐", label: "Channels",      href: "/channels"      },
-              { icon: "🔔", label: "Notifications", href: "/notifications" },
-              { icon: "⚙️", label: "Settings",      href: "/settings"      },
+              { icon: "💳", label: "Billing",         href: "/billing"         },
+              { icon: "🌐", label: "Channels",        href: "/channels"        },
+              { icon: "📊", label: "Analytics",       href: "/analytics"       },
+              { icon: "🤖", label: "Human-AI replys", href: "/Human-AI replys" },
+              { icon: "🔔", label: "Notifications",   href: "/notifications"   },
+              { icon: "⚙️", label: "Settings",        href: "/settings"        },
             ].map(item => (
               <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                 style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 12, textDecoration: "none", color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: 14 }}>

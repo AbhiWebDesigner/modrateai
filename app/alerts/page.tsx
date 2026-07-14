@@ -209,7 +209,7 @@ export default function AlertsPage() {
           .r-bnav{display:block!important;}
           .r-topbar{padding:0 14px;height:54px;}
           .r-topbar-search{display:none!important;}
-          .r-content{padding:16px!important;}
+          .r-content{padding:16px!important;max-width:100%!important;margin:0!important;}
           .a-channel-grid{grid-template-columns:1fr!important;gap:10px!important;}
         }
         @media(min-width:768px) and (max-width:1023px){

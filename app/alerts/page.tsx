@@ -17,11 +17,16 @@ const BOTTOM_NAV = [
   { href: '/alerts',     icon: Bell,            label: 'Alerts'     },
 ];
 
-const SIDEBAR_NAV = [
-  { href: '/dashboard',  icon: LayoutDashboard, label: 'Overview'   },
-  { href: '/analytics',  icon: BarChart2,       label: 'Analytics'  },
-  { href: '/automation', icon: Zap,             label: 'Automation' },
-  { href: '/alerts',     icon: Bell,            label: 'Alerts'     },
+
+  const SIDEBAR_NAV = [
+  { href: '/dashboard',        icon: LayoutDashboard, label: 'Overview'        },
+  { href: '/live-feed',        icon: Rss,             label: 'Live Feed'       },
+  { href: '/analytics',        icon: BarChart2,       label: 'Analytics'       },
+  { href: '/automation',       icon: Zap,             label: 'Automation'      },
+  { href: '/alerts',           icon: Bell,            label: 'Alerts'          },
+  { href: '/billing',          icon: CreditCard,      label: 'Billing'         },
+  { href: '/human-ai-replies', icon: MessageSquare,   label: 'Human-AI Replies'},
+  { href: '/settings',         icon: Settings,        label: 'Settings'        },
 ];
 
 const MORE_ITEMS = [

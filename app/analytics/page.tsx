@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -7,7 +6,7 @@ import {
 } from 'recharts';
 import {
   LayoutDashboard, BarChart2, Zap, Bell, Settings,
-  LogOut, Star, Play, Shield, Search, CreditCard
+  LogOut, Star, Play, Shield, Search, CreditCard, MoreHorizontal
 } from 'lucide-react';
 const Youtube = Play;
 import Link from 'next/link';
@@ -58,10 +57,14 @@ const DEFAULT_ANALYTICS: AnalyticsData = {
 };
 
 const NAV_ITEMS = [
-  { label: 'Overview', icon: LayoutDashboard, href: '/dashboard', active: false },
-  { label: 'Analytics', icon: BarChart2, href: '/analytics', active: true },
-  { label: 'Automation', icon: Zap, href: '/automation', active: false },
-  { label: 'Alerts', icon: Bell, href: '/alerts', active: false },
+  { label: 'Overview',        icon: LayoutDashboard, href: '/dashboard',       active: false },
+  { label: 'Live Feed',       icon: BarChart2,       href: '/live-feed',       active: false },
+  { label: 'Analytics',       icon: BarChart2,       href: '/analytics',       active: true  },
+  { label: 'Automation',      icon: Zap,             href: '/automation',      active: false },
+  { label: 'Alerts',          icon: Bell,            href: '/alerts',          active: false },
+  { label: 'Billing',         icon: CreditCard,      href: '/billing',         active: false },
+  { label: 'Human-AI replys', icon: Star,            href: '/human-ai-replys', active: false },
+  { label: 'Settings',        icon: Settings,        href: '/settings',        active: false },
 ];
 
 const ChartTooltip = ({ active, payload, label }: any) => {
@@ -82,6 +85,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AnalyticsData>(DEFAULT_ANALYTICS);
   const [range, setRange] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
+  const [moreOpen, setMoreOpen] = useState(false);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -388,21 +392,57 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* BOTTOM NAV — mobile only */}
-        <nav className="bottom-nav">
-          {NAV_ITEMS.map((item) => (
-            <Link key={item.href} href={item.href} className={`bottom-nav-item${item.active ? ' active' : ''}`}>
-              <item.icon size={20} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-          <button className="bottom-nav-item" onClick={() => signOut(auth).then(() => router.push('/login'))}>
-            <LogOut size={20} />
-            <span>Logout</span>
-          </button>
-        </nav>
+  {/* BOTTOM NAV — mobile only */}
+<nav className="bottom-nav" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(9,9,11,0.97)', borderTop: '1px solid #27272A', backdropFilter: 'blur(20px)', padding: '8px 0 env(safe-area-inset-bottom, 8px)' }}>
+  {[
+    { label: 'Overview',   icon: LayoutDashboard, href: '/dashboard'  },
+    { label: 'Live Feed',  icon: BarChart2,        href: '/live-feed'  },
+    { label: 'Automation', icon: Zap,              href: '/automation' },
+    { label: 'Alerts',     icon: Bell,             href: '/alerts'     },
+  ].map((item) => {
+    const active = item.href === '/analytics' ? false : false;
+    return (
+      <Link key={item.href} href={item.href} className="bottom-nav-item" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '6px 2px', textDecoration: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 500 }}>
+        <item.icon size={20} />
+        <span>{item.label}</span>
+      </Link>
+    );
+  })}
+  <button className="bottom-nav-item" onClick={() => setMoreOpen(v => !v)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '6px 2px', background: 'none', border: 'none', cursor: 'pointer', color: moreOpen ? '#F59E0B' : 'rgba(255,255,255,0.4)', fontSize: 9 }}>
+    <MoreHorizontal size={20} />
+    <span>More</span>
+  </button>
+</nav>
 
-      </main>
+{/* MORE DRAWER */}
+{moreOpen && (
+  <>
+    <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }} />
+    <div style={{ position: 'fixed', bottom: 70, left: 12, right: 12, zIndex: 60, background: 'rgba(14,14,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '8px 8px 12px', boxShadow: '0 -8px 48px rgba(0,0,0,0.7)', backdropFilter: 'blur(28px)' }}>
+      <div style={{ width: 34, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
+      {[
+        { icon: CreditCard, label: 'Billing',         href: '/billing'          },
+        { icon: Star,       label: 'Human-AI replys', href: '/human-ai-replys'  },
+        { icon: Settings,   label: 'Settings',        href: '/settings'         },
+        { icon: BarChart2,  label: 'Channels',        href: '/channels'         },
+        { icon: Bell,       label: 'Notifications',   href: '/notifications'    },
+      ].map(item => (
+        <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
+          style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14 }}>
+          <item.icon size={18} />
+          {item.label}
+        </Link>
+      ))}
+      <div style={{ margin: '8px 16px 0', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+        <button onClick={() => { setMoreOpen(false); signOut(auth).then(() => router.push('/login')); }}
+          style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 14, width: '100%' }}>
+          <LogOut size={18} /> Logout
+        </button>
+      </div>
+    </div>
+  </>
+)}
+  </main>
     </>
   );
 }

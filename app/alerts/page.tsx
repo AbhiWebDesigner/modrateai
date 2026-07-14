@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   Bell, Send, LayoutDashboard, BarChart2, Zap, Settings,
   MoreHorizontal, CreditCard, Layers, Bot, LogOut, Rss, Shield,
-  ChevronRight, TrendingUp, AlertTriangle, CheckCircle2, Clock
+  ChevronDown, TrendingUp, AlertTriangle, CheckCircle2, Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -64,6 +64,7 @@ export default function AlertsPage() {
   const [saving,            setSaving]            = useState(false);
   const [saved,             setSaved]             = useState(false);
   const [moreOpen,          setMoreOpen]          = useState(false);
+  const [sideMoreOpen,      setSideMoreOpen]      = useState(false);
   const [user,              setUser]              = useState<any>(null);
   const [userEmail,         setUserEmail]         = useState('');
   const [userPlan,          setUserPlan]          = useState('free');
@@ -115,6 +116,8 @@ export default function AlertsPage() {
   const plan      = userPlan;
   const planLabel = plan === 'agency' ? 'Agency plan' : plan === 'pro' ? 'Pro plan' : 'Free plan';
 
+  const isSideMoreActive = MORE_ITEMS.some(i => pathname === i.href);
+
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: 36, height: 36, border: '2.5px solid rgba(245,158,11,0.2)', borderTopColor: '#F59E0B', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
@@ -132,6 +135,7 @@ export default function AlertsPage() {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
         /* ══ SIDEBAR ══ */
         .r-sidebar{
@@ -183,6 +187,20 @@ export default function AlertsPage() {
           transition:all 0.18s;border:1px solid transparent;}
         .r-nav-item-more:hover{background:rgba(255,255,255,0.04);color:rgba(220,200,170,0.72);transform:translateX(2px);}
         .r-nav-item-more.active{color:rgba(245,158,11,0.85);background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.12);}
+
+        /* More toggle button */
+        .r-more-btn{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:12px;
+          font-size:13.5px;font-weight:500;color:rgba(220,195,165,0.52);
+          background:none;border:1px solid transparent;cursor:pointer;width:100%;
+          transition:all 0.22s;position:relative;z-index:1;}
+        .r-more-btn:hover{background:rgba(245,158,11,0.055);color:rgba(240,220,190,0.88);transform:translateX(3px);border-color:rgba(245,158,11,0.08);}
+        .r-more-btn.active{color:#FBBF24;background:rgba(245,158,11,0.07);border-color:rgba(245,158,11,0.12);}
+        .r-more-items{display:flex;flex-direction:column;gap:1px;margin-top:2px;animation:slideDown 0.18s ease;}
+        .r-more-sub{display:flex;align-items:center;gap:10px;padding:8px 13px 8px 36px;border-radius:10px;
+          font-size:12.5px;font-weight:500;text-decoration:none;color:rgba(200,175,145,0.45);
+          transition:all 0.15s;border:1px solid transparent;}
+        .r-more-sub:hover{background:rgba(255,255,255,0.04);color:rgba(220,200,170,0.75);}
+        .r-more-sub.active{color:rgba(245,158,11,0.9);background:rgba(245,158,11,0.06);border-color:rgba(245,158,11,0.12);}
 
         .r-upgrade{margin:0 10px 10px;background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(245,158,11,0.04));
           border:1px solid rgba(245,158,11,0.14);border-radius:14px;padding:15px;position:relative;z-index:1;}
@@ -238,11 +256,6 @@ export default function AlertsPage() {
           .r-content{padding:16px!important;}
           .a-channel-grid{grid-template-columns:1fr!important;gap:10px!important;}
           .a-page-title{font-size:22px!important;}
-          .a-recent-grid{grid-template-columns:1fr!important;}
-        }
-        @media(min-width:768px) and (max-width:1023px){
-          .a-channel-grid{grid-template-columns:1fr 1fr!important;}
-          .r-content{padding:20px!important;}
         }
         @media(min-width:1024px){.r-bnav{display:none!important;}}
       `}</style>
@@ -272,20 +285,29 @@ export default function AlertsPage() {
               );
             })}
 
-            {/* ── Desktop More section ── */}
-            <div className="r-nav-divider">More</div>
-            {SIDEBAR_MORE.map(item => {
-              const active = pathname === item.href;
-              return (
-                <Link key={item.href} href={item.href} className={`r-nav-item-more${active ? ' active' : ''}`}>
-                  <div style={{ width: 24, height: 24, borderRadius: 7, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <item.icon size={12} color={active ? item.color : 'rgba(200,175,145,0.5)'} strokeWidth={1.8} />
-                  </div>
-                  <span style={{ flex: 1 }}>{item.label}</span>
-                  <ChevronRight size={11} strokeWidth={2} style={{ opacity: 0.3 }} />
-                </Link>
-              );
-            })}
+            {/* ── More expandable ── */}
+            <button
+              className={`r-more-btn${(sideMoreOpen || isSideMoreActive) ? ' active' : ''}`}
+              onClick={() => setSideMoreOpen(v => !v)}
+            >
+              <MoreHorizontal size={15} strokeWidth={1.8} />
+              <span style={{ flex: 1 }}>More</span>
+              <ChevronDown size={13} strokeWidth={2} style={{ transition: 'transform 0.2s', transform: sideMoreOpen ? 'rotate(180deg)' : 'rotate(0deg)', opacity: 0.4 }} />
+            </button>
+
+            {sideMoreOpen && (
+              <div className="r-more-items">
+                {MORE_ITEMS.map(item => {
+                  const active = pathname === item.href;
+                  return (
+                    <Link key={item.href} href={item.href} className={`r-more-sub${active ? ' active' : ''}`}>
+                      <item.icon size={13} color={active ? item.color : 'rgba(200,175,145,0.4)'} strokeWidth={1.8} />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </nav>
 
           {plan === 'free' && (
@@ -405,72 +427,66 @@ export default function AlertsPage() {
               </div>
             </div>
 
-            {/* ── Two-column bottom section ── */}
-            <div className="a-recent-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-
-              {/* Notification toggles */}
-              <div className="a-card" style={{ padding: '20px' }}>
-                <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Notification Settings</div>
-                  <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Choose which events trigger alerts</div>
+            {/* Notification toggles */}
+            <div className="a-card" style={{ padding: '20px', marginBottom: 12 }}>
+              <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Notification Settings</div>
+                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Choose which events trigger alerts</div>
+              </div>
+              {NOTIFICATION_EVENTS.map(({ id, label, desc }, i) => (
+                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0', borderBottom: i < NOTIFICATION_EVENTS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>{label}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, lineHeight: 1.4 }}>{desc}</p>
+                  </div>
+                  <button
+                    className="a-toggle"
+                    style={{ background: toggles[id] ? '#F59E0B' : 'rgba(255,255,255,0.1)', boxShadow: toggles[id] ? '0 0 10px rgba(245,158,11,0.3)' : 'none' }}
+                    onClick={() => setToggles(p => ({ ...p, [id]: !p[id] }))}
+                  >
+                    <div className="a-knob" style={{ left: toggles[id] ? 22 : 2 }} />
+                  </button>
                 </div>
-                {NOTIFICATION_EVENTS.map(({ id, label, desc }, i) => (
-                  <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '11px 0', borderBottom: i < NOTIFICATION_EVENTS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{label}</p>
-                      <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11.5, lineHeight: 1.4 }}>{desc}</p>
+              ))}
+            </div>
+
+            {/* Recent Alerts */}
+            <div className="a-card" style={{ padding: '20px', marginBottom: 12 }}>
+              <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Recent Alerts</div>
+                  <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Last triggered events</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite' }} />
+                  <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontWeight: 600 }}>Live</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {RECENT_ALERTS.map((alert, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 12px', background: alert.bg, border: `1px solid ${alert.border}`, borderRadius: 11 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 9, background: `${alert.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                      <alert.icon size={14} color={alert.color} strokeWidth={2} />
                     </div>
-                    <button
-                      className="a-toggle"
-                      style={{ background: toggles[id] ? '#F59E0B' : 'rgba(255,255,255,0.1)', boxShadow: toggles[id] ? '0 0 10px rgba(245,158,11,0.3)' : 'none' }}
-                      onClick={() => setToggles(p => ({ ...p, [id]: !p[id] }))}
-                    >
-                      <div className="a-knob" style={{ left: toggles[id] ? 22 : 2 }} />
-                    </button>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 12.5, fontWeight: 600, marginBottom: 2 }}>{alert.label}</p>
+                      <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5 }}>{alert.desc}</p>
+                    </div>
+                    <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5, fontWeight: 500, flexShrink: 0, marginTop: 2 }}>{alert.time}</span>
                   </div>
                 ))}
               </div>
-
-              {/* Recent alerts feed */}
-              <div className="a-card" style={{ padding: '20px' }}>
-                <div style={{ marginBottom: 16, paddingBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Recent Alerts</div>
-                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Last triggered events</div>
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                {[
+                  { label: 'Today',     value: '12',  color: '#F59E0B' },
+                  { label: 'This week', value: '84',  color: '#60a5fa' },
+                  { label: 'Resolved',  value: '97%', color: '#34d399' },
+                ].map(stat => (
+                  <div key={stat.label} style={{ textAlign: 'center', padding: '8px 4px', background: 'rgba(255,255,255,0.02)', borderRadius: 9, border: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div style={{ color: stat.color, fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em' }}>{stat.value}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5, marginTop: 2, fontWeight: 500 }}>{stat.label}</div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite' }} />
-                    <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontWeight: 600 }}>Live</span>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {RECENT_ALERTS.map((alert, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: '11px 12px', background: alert.bg, border: `1px solid ${alert.border}`, borderRadius: 11 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 9, background: `${alert.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-                        <alert.icon size={14} color={alert.color} strokeWidth={2} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 12.5, fontWeight: 600, marginBottom: 2, lineHeight: 1.3 }}>{alert.label}</p>
-                        <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5, lineHeight: 1.4 }}>{alert.desc}</p>
-                      </div>
-                      <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5, fontWeight: 500, flexShrink: 0, marginTop: 2 }}>{alert.time}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Alert stats row */}
-                <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                  {[
-                    { label: 'Today',   value: '12', color: '#F59E0B' },
-                    { label: 'This week', value: '84', color: '#60a5fa' },
-                    { label: 'Resolved', value: '97%', color: '#34d399' },
-                  ].map(stat => (
-                    <div key={stat.label} style={{ textAlign: 'center', padding: '8px 4px', background: 'rgba(255,255,255,0.02)', borderRadius: 9, border: '1px solid rgba(255,255,255,0.04)' }}>
-                      <div style={{ color: stat.color, fontWeight: 800, fontSize: 17, letterSpacing: '-0.03em' }}>{stat.value}</div>
-                      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5, marginTop: 2, fontWeight: 500 }}>{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
+                ))}
               </div>
             </div>
 

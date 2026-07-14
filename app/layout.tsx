@@ -13,22 +13,22 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "ModrateAI — AI YouTube Comment Moderation",
+  title: "ModerateAI — AI YouTube Comment Moderation",
   description: "AI-powered YouTube comment moderation for Telugu, Hindi, Tamil, Kannada, Malayalam, Punjabi and 100+ languages. Bad comments hidden. Live chat timeouts. Auto-replied. 24/7.",
   keywords: "YouTube moderation, AI comment moderation, Telugu moderation, Hindi moderation, toxic comments, auto moderation",
   verification: {
     google: "45B8wJKk9HdcsKO1R8YKiA1es07W_chLwiQrdguuRcc",
   },
   openGraph: {
-    title: "ModrateAI — AI YouTube Comment Moderation",
+    title: "ModerateAI — AI YouTube Comment Moderation",
     description: "Stop toxic comments automatically in every language. 19-day free trial.",
     url: "https://moderateai.site",
-    siteName: "ModrateAI",
+    siteName: "ModerateAI",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ModrateAI — AI YouTube Comment Moderation",
+    title: "ModerateAI — AI YouTube Comment Moderation",
     description: "Stop toxic comments automatically in every language.",
   },
   icons: {

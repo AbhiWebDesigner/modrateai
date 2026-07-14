@@ -7,6 +7,11 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "ModrateAI — AI YouTube Comment Moderation",
   description: "AI-powered YouTube comment moderation for Telugu, Hindi, Tamil, Kannada, Malayalam, Punjabi and 100+ languages. Bad comments hidden. Live chat timeouts. Auto-replied. 24/7.",

@@ -365,13 +365,14 @@ const BOTTOM_NAV = [
 ];
 
 const SIDEBAR_NAV = [
-  { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
-  { label: 'Live Feed',   icon: Rss,             href: '/live-feed'  },
-  { label: 'Analytics',   icon: BarChart2,       href: '/analytics'  },
-  { label: 'Automations', icon: Zap,             href: '/automation' },
-  { label: 'Alerts',      icon: Bell,            href: '/alerts'     },
-  { label: 'Channels',    icon: Globe,           href: '/channels'   },
-  { label: 'Settings',    icon: Settings,        href: '/settings'   },
+  { label: 'Overview',        icon: LayoutDashboard, href: '/dashboard'  },
+  { label: 'Live Feed',       icon: Rss,             href: '/live-feed'  },
+  { label: 'Analytics',       icon: BarChart2,       href: '/analytics'  },
+  { label: 'Automations',     icon: Zap,             href: '/automation' },
+  { label: 'Alerts',          icon: Bell,            href: '/alerts'     },
+  { label: 'Billing',         icon: CreditCard,      href: "/billing"    },
+  { label: 'Human-AI replys', icon: MessageSquare,   href: "/Human-AI replys" },
+  { label: 'Settings',        icon: Settings,        href: '/settings'   },
 ];
 
 /* ══════════════════════════════════════

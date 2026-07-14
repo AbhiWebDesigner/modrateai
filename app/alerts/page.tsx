@@ -347,7 +347,7 @@ export default function AlertsPage() {
             </div>
 
             {/* Notification Settings — full width */}
-            <div className="a-card" style={{ padding: '20px 24px', marginBottom: 16 }}>
+            <div className="a-card" style={{ padding: '20px 24px', marginBottom: 8 }}>
               <div style={{ marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Notification Settings</div>
                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12.5 }}>Choose which events trigger alerts</div>

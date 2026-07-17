@@ -402,7 +402,7 @@ export default function Dashboard() {
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
   const handleYouTubeConnect = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth?uid=${user?.uid}`;
+    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}?uid=${user?.uid}`;
   };
 
   if (loading) return (

@@ -133,7 +133,7 @@ export default function AnalyticsPage() {
   }, [user]);
 
   const handleYouTubeConnect = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth?uid=${user?.uid}`;
+ window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}?uid=${user?.uid}`;
   };
 
   if (loading) return (

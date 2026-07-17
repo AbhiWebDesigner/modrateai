@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Exchange code for tokens
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -26,31 +25,33 @@ export async function GET(request: NextRequest) {
 
     const tokens = await tokenRes.json();
 
-    // Get YouTube channel info
     const channelRes = await fetch(
-      'https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true',
-      { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+      'https://www.googleapis.com/youtube/v3/channels?part=snippet,id&mine=true&maxResults=1',
+      { headers: { Authorization: `Bearer ${tokens.access_token}`, Accept: 'application/json' } }
     );
     const channelData = await channelRes.json();
+    console.log('Channel data:', JSON.stringify(channelData));
     const channel = channelData.items?.[0];
+    const channelName = channel?.snippet?.title || 'My Channel';
+    const channelHandle = channel?.snippet?.customUrl || '';
+    const channelId = channel?.id || '';
 
-    // Save to Firestore via REST API with API Key
-const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${uid}?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`;
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${uid}?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`;
 
-await fetch(firestoreUrl + '&updateMask.fieldPaths=youtube_connected&updateMask.fieldPaths=youtube_access_token&updateMask.fieldPaths=youtube_refresh_token&updateMask.fieldPaths=youtube_channel_id&updateMask.fieldPaths=youtube_channel_name&updateMask.fieldPaths=youtube_channel_handle', {
-  method: 'PATCH',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    fields: {
-      youtube_connected: { booleanValue: true },
-      youtube_access_token: { stringValue: tokens.access_token || '' },
-      youtube_refresh_token: { stringValue: tokens.refresh_token || '' },
-      youtube_channel_id: { stringValue: channel?.id || '' },
-      youtube_channel_name: { stringValue: channel?.snippet?.title || '' },
-      youtube_channel_handle: { stringValue: channel?.snippet?.customUrl || '' },
-    }
-  }),
-});
+    await fetch(firestoreUrl + '&updateMask.fieldPaths=youtube_connected&updateMask.fieldPaths=youtube_access_token&updateMask.fieldPaths=youtube_refresh_token&updateMask.fieldPaths=youtube_channel_id&updateMask.fieldPaths=youtube_channel_name&updateMask.fieldPaths=youtube_channel_handle', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          youtube_connected: { booleanValue: true },
+          youtube_access_token: { stringValue: tokens.access_token || '' },
+          youtube_refresh_token: { stringValue: tokens.refresh_token || '' },
+          youtube_channel_id: { stringValue: channelId },
+          youtube_channel_name: { stringValue: channelName },
+          youtube_channel_handle: { stringValue: channelHandle },
+        }
+      }),
+    });
 
     return NextResponse.redirect('https://moderateai.site/dashboard?connected=true');
   } catch (err) {

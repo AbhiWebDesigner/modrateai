@@ -54,10 +54,12 @@ export default function SettingsPage() {
       try {
         const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (snap.exists()) {
-          const data = snap.data();
-          setUserPlan(data.plan || 'free');
-          if (data.youtubeChannel) setYoutubeChannel(data.youtubeChannel);
-        }
+        const data = snap.data();
+        setUserPlan(data.plan || 'free');
+       const channelName = data.youtube_channel_name || data.youtube_channel_handle || '';
+       const isConnected = data.youtube_connected === true;
+       if (isConnected && channelName) setYoutubeChannel(channelName);
+}
       } catch {}
       setLoading(false);
     });

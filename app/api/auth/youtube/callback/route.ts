@@ -1,18 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
-}
-
-const adminDb = getFirestore();
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -47,14 +33,25 @@ export async function GET(request: NextRequest) {
     const channelData = await channelRes.json();
     const channel = channelData.items?.[0];
 
-    // Save to Firebase
-    await adminDb.collection('users').doc(uid).update({
-      youtube_connected: true,
-      youtube_access_token: tokens.access_token,
-      youtube_refresh_token: tokens.refresh_token,
-      youtube_channel_id: channel?.id || null,
-      youtube_channel_name: channel?.snippet?.title || null,
-      youtube_channel_handle: channel?.snippet?.customUrl || null,
+    // Save to Firestore via REST API
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${uid}`;
+
+    await fetch(firestoreUrl + '?updateMask.fieldPaths=youtube_connected&updateMask.fieldPaths=youtube_access_token&updateMask.fieldPaths=youtube_refresh_token&updateMask.fieldPaths=youtube_channel_id&updateMask.fieldPaths=youtube_channel_name&updateMask.fieldPaths=youtube_channel_handle', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokens.access_token}`,
+      },
+      body: JSON.stringify({
+        fields: {
+          youtube_connected: { booleanValue: true },
+          youtube_access_token: { stringValue: tokens.access_token || '' },
+          youtube_refresh_token: { stringValue: tokens.refresh_token || '' },
+          youtube_channel_id: { stringValue: channel?.id || '' },
+          youtube_channel_name: { stringValue: channel?.snippet?.title || '' },
+          youtube_channel_handle: { stringValue: channel?.snippet?.customUrl || '' },
+        }
+      }),
     });
 
     return NextResponse.redirect('https://moderateai.site/dashboard?connected=true');

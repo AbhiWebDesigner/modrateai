@@ -4,7 +4,8 @@ import {
   Shield, MessageSquare, Eye, Settings, LogOut, CreditCard,
   BarChart2, Bell, Zap, Search, Activity, Wifi, Cpu, Target,
   CheckCircle, LayoutDashboard, TrendingUp, TrendingDown,
-  MoreHorizontal, Layers, Rss, Bot, Globe
+  MoreHorizontal, Layers, Rss, Bot, Users, Video, Play,
+  Eye as EyeIcon, Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -255,6 +256,120 @@ function YTIcon({ color = '#f87171', size = 14 }: { color?: string; size?: numbe
   );
 }
 
+/* ── FORMAT HELPERS ── */
+function fmtCount(n: string | number | null | undefined): string {
+  if (n === null || n === undefined || n === '') return '—';
+  const num = typeof n === 'string' ? parseInt(n, 10) : n;
+  if (isNaN(num)) return '—';
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+  return num.toLocaleString();
+}
+
+/* ── YOUTUBE CHANNEL CARD (connected state) ── */
+function YouTubeChannelCard({
+  channelName, channelHandle, channelThumbnail, subscriberCount, videoCount, viewCount, userPhoto, onDisconnect,
+}: {
+  channelName: string | null; channelHandle: string | null; channelThumbnail: string | null;
+  subscriberCount: string | null; videoCount: string | null; viewCount: string | null;
+  userPhoto: string | null; onDisconnect?: () => void;
+}) {
+  const avatar = channelThumbnail || userPhoto;
+  const handle = channelHandle ? (channelHandle.startsWith('@') ? channelHandle : `@${channelHandle}`) : null;
+
+  const stats = [
+    { icon: Users, label: 'Subscribers', value: fmtCount(subscriberCount), color: '#F59E0B' },
+    { icon: Video, label: 'Videos', value: fmtCount(videoCount), color: '#a78bfa' },
+    { icon: EyeIcon, label: 'Total Views', value: fmtCount(viewCount), color: '#34d399' },
+  ];
+
+  return (
+    <div style={{
+      background: 'rgba(16,16,22,0.95)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 20,
+      overflow: 'hidden',
+      marginBottom: 14,
+      position: 'relative',
+    }}>
+      {/* Top ambient gradient */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 80,
+        background: 'linear-gradient(180deg, rgba(248,113,113,0.07) 0%, transparent 100%)',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{ padding: '22px 24px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', position: 'relative' }}>
+        {/* Avatar */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          {avatar
+            ? <img src={avatar} alt={channelName || 'Channel'} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(248,113,113,0.3)', boxShadow: '0 0 20px rgba(248,113,113,0.15)' }} />
+            : <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg,#f87171,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(248,113,113,0.3)', boxShadow: '0 0 20px rgba(248,113,113,0.15)', fontSize: 24, fontWeight: 900, color: 'white' }}>
+                {(channelName || 'C')[0].toUpperCase()}
+              </div>
+          }
+          {/* Live green dot */}
+          <div style={{ position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 8px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite' }} />
+        </div>
+
+        {/* Channel info */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
+            <h2 style={{ color: '#FAFAFA', fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+              {channelName || 'My Channel'}
+            </h2>
+            {/* Verified-style YT badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.22)', borderRadius: 7, padding: '2px 8px' }}>
+              <YTIcon color="#f87171" size={10} />
+              <span style={{ color: '#f87171', fontSize: 10, fontWeight: 700, letterSpacing: '0.05em' }}>CONNECTED</span>
+            </div>
+          </div>
+          {handle && (
+            <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: 12.5, fontWeight: 500, marginBottom: 6 }}>{handle}</div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite' }} />
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontWeight: 500 }}>AI moderation active · protected</span>
+          </div>
+        </div>
+
+        {/* Disconnect button — top right */}
+        {onDisconnect && (
+          <button onClick={onDisconnect} style={{
+            background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.14)',
+            borderRadius: 9, padding: '6px 13px', color: 'rgba(248,113,113,0.6)', fontSize: 11.5, fontWeight: 600,
+            cursor: 'pointer', transition: 'all 0.18s', flexShrink: 0,
+          }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(248,113,113,0.12)'; (e.currentTarget as HTMLButtonElement).style.color = '#f87171'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(248,113,113,0.06)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(248,113,113,0.6)'; }}
+          >
+            Disconnect
+          </button>
+        )}
+      </div>
+
+      {/* Stats row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        {stats.map((s, i) => (
+          <div key={s.label} style={{
+            padding: '14px 20px',
+            borderRight: i < stats.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+            display: 'flex', flexDirection: 'column', gap: 4,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <s.icon size={11} color={s.color} strokeWidth={2} />
+              <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10.5, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{s.label}</span>
+            </div>
+            <div style={{ color: '#FAFAFA', fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              {s.value}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── CONNECT YOUTUBE BANNER ── */
 function ConnectYouTubeBanner({ onConnect }: { onConnect: () => void }) {
   return (
@@ -402,7 +517,7 @@ export default function Dashboard() {
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
   const handleYouTubeConnect = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}?uid=${user?.uid}`;
+    window.location.href = `/api/auth/youtube?uid=${user?.uid}`;
   };
 
   if (loading) return (
@@ -417,19 +532,21 @@ export default function Dashboard() {
 
   /* ── FIRESTORE DATA ── */
   const plan             = (userData?.plan as string) || 'free';
-  const commentsScanned  = (userData?.comments_scanned as number) ?? (userData?.comments_used as number) ?? null;
-  const hiddenComments   = (userData?.hidden_comments  as number) ?? null;
+  const commentsScanned  = (userData?.comments_scanned as number) ?? null;
+  const hiddenComments   = (userData?.comments_hidden as number) ?? (userData?.hidden_count as number) ?? null;
   const aiReplies        = (userData?.ai_replies       as number) ?? null;
   const avgResponseMs    = (userData?.avg_response_ms  as number) ?? null;
   const moderationAcc    = (userData?.moderation_accuracy as number) ?? null;
   const commentsUsed     = (userData?.comments_used    as number) || 0;
   const commentsLimit    = plan === 'free' ? 1500 : plan === 'pro' ? 200000 : (userData?.comments_limit as number) || 200000;
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
-  const channelName      = (userData?.youtube_channel_name as string) || (userData?.channel_name as string) || null;
-  const channelHandle    = (userData?.youtube_channel_handle as string) || (userData?.channel_handle as string) || null;
-  const aiModel          = (userData?.ai_model as string) || null;
-  const webhookPct       = (userData?.webhook_delivery_percent as number) ?? null;
-  const webhookAge       = (userData?.webhook_last_delivery_age as string) ?? null;
+  const channelName      = (userData?.youtube_channel_name as string) || null;
+  const channelHandle    = (userData?.youtube_channel_handle as string) || null;
+  const channelThumbnail = (userData?.youtube_channel_thumbnail as string) || null;
+  const subscriberCount  = (userData?.youtube_subscriber_count as string) || null;
+  const videoCount       = (userData?.youtube_video_count as string) || null;
+  const viewCount        = (userData?.youtube_view_count as string) || null;
+  const aiModel          = (userData?.current_ai_model as string) || null;
 
   const trialEndsAt   = userData?.trial_ends_at?.toDate?.() as Date | undefined;
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000)) : null;
@@ -437,6 +554,7 @@ export default function Dashboard() {
   const firstName = user?.displayName?.split(' ')[0] || 'there';
   const initials  = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const planLabel = plan === 'free' ? 'Free Trial' : plan === 'pro' ? 'Pro' : plan === 'agency' ? 'Agency' : 'Free Trial';
+  const userPhoto = user?.photoURL || (userData?.photo as string) || null;
 
   const fmt   = (n: number | null) => n === null ? null : n >= 1000 ? n.toLocaleString() : String(n);
   const fmtMs = (ms: number | null) => ms === null ? null : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
@@ -452,15 +570,9 @@ export default function Dashboard() {
   const healthRows: HRow[] = [];
   healthRows.push({
     key: 'api', icon: Wifi, label: 'API Status', sub: 'Operational',
-    value: avgResponseMs !== null ? fmtMs(avgResponseMs)! : undefined,
+    value: avgResponseMs !== null ? fmtMs(avgResponseMs)! : '0ms',
     color: '#34d399',
     dot: avgResponseMs === null ? 'green' : avgResponseMs < 500 ? 'green' : avgResponseMs < 1500 ? 'amber' : 'red',
-  });
-  if (webhookPct !== null) healthRows.push({
-    key: 'webhook', icon: Zap, label: 'Webhook Delivery',
-    sub: webhookAge ? `${webhookPct}% · ${webhookAge}` : `${webhookPct}%`,
-    value: webhookPct === 100 ? 'Live' : `${webhookPct}%`,
-    color: '#60a5fa', dot: webhookPct >= 95 ? 'green' : webhookPct >= 80 ? 'amber' : 'red',
   });
   if (youtubeConnected && channelName) healthRows.push({
     key: 'channel', icon: YTIcon, label: 'Channel',
@@ -481,8 +593,6 @@ export default function Dashboard() {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-        @keyframes indPulse{0%,100%{box-shadow:0 0 8px rgba(245,158,11,0.5)}50%{box-shadow:0 0 18px rgba(245,158,11,0.2)}}
-        @keyframes sidebarGlow{0%,100%{opacity:0.7}50%{opacity:1}}
         ::-webkit-scrollbar{width:3px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
@@ -496,194 +606,89 @@ export default function Dashboard() {
           background-image:linear-gradient(rgba(255,255,255,0.014) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.014) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        /* ═══════════════════════════════
-           SIDEBAR — PREMIUM UPGRADE
-        ═══════════════════════════════ */
         .r-sidebar{
           width:228px;min-width:228px;
-          background: #0c0a0e;
+          background:#0c0a0e;
           border-right:1px solid rgba(245,158,11,0.12);
           display:flex;flex-direction:column;
           position:fixed;height:100vh;left:0;top:0;z-index:40;
-          box-shadow:
-            4px 0 40px rgba(0,0,0,0.6),
-            8px 0 80px rgba(180,90,0,0.06);
+          box-shadow:4px 0 40px rgba(0,0,0,0.6),8px 0 80px rgba(180,90,0,0.06);
           overflow:hidden;
         }
-
-        /* TOP-LEFT ORANGE GLOW — baked inside sidebar */
         .r-sidebar-inner-glow{
-          position:absolute;
-          top:-60px;
-          left:-80px;
-          width:340px;
-          height:340px;
-          border-radius:50%;
+          position:absolute;top:-60px;left:-80px;width:340px;height:340px;border-radius:50%;
           background:radial-gradient(circle, rgba(200,90,0,0.55) 0%, rgba(160,65,0,0.28) 35%, transparent 70%);
-          pointer-events:none;
-          z-index:0;
-          filter:blur(18px);
+          pointer-events:none;z-index:0;filter:blur(18px);
         }
         .r-sidebar-inner-glow2{
-          position:absolute;
-          top:160px;
-          left:-60px;
-          width:220px;
-          height:220px;
-          border-radius:50%;
+          position:absolute;top:160px;left:-60px;width:220px;height:220px;border-radius:50%;
           background:radial-gradient(circle, rgba(180,75,0,0.30) 0%, rgba(130,55,0,0.12) 40%, transparent 70%);
-          pointer-events:none;
-          z-index:0;
-          filter:blur(22px);
+          pointer-events:none;z-index:0;filter:blur(22px);
         }
-        }
-
-        /* Glow div — no longer needed, glow is baked into sidebar background */
-        .r-sidebar-glow{ display:none; }
-
-        /* Amber spine — the single bright accent line */
+        .r-sidebar-glow{display:none;}
         .r-sidebar::before{
           content:'';position:absolute;left:0;top:18%;bottom:18%;width:2px;
           border-radius:0 3px 3px 0;z-index:10;
-          background:linear-gradient(
-            180deg,
-            transparent 0%,
-            rgba(245,158,11,0.3) 15%,
-            rgba(251,191,36,0.95) 45%,
-            rgba(245,158,11,1) 50%,
-            rgba(251,191,36,0.95) 55%,
-            rgba(245,158,11,0.3) 85%,
-            transparent 100%
-          );
-          box-shadow:
-            0 0 8px rgba(245,158,11,0.7),
-            0 0 20px rgba(245,158,11,0.35),
-            0 0 48px rgba(245,158,11,0.12);
+          background:linear-gradient(180deg,transparent 0%,rgba(245,158,11,0.3) 15%,rgba(251,191,36,0.95) 45%,rgba(245,158,11,1) 50%,rgba(251,191,36,0.95) 55%,rgba(245,158,11,0.3) 85%,transparent 100%);
+          box-shadow:0 0 8px rgba(245,158,11,0.7),0 0 20px rgba(245,158,11,0.35),0 0 48px rgba(245,158,11,0.12);
         }
-
-        /* Subtle right-edge amber line */
         .r-sidebar::after{
           content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
-          background:linear-gradient(
-            180deg,
-            transparent,
-            rgba(245,158,11,0.10) 30%,
-            rgba(245,158,11,0.18) 50%,
-            rgba(245,158,11,0.10) 70%,
-            transparent
-          );
+          background:linear-gradient(180deg,transparent,rgba(245,158,11,0.10) 30%,rgba(245,158,11,0.18) 50%,rgba(245,158,11,0.10) 70%,transparent);
           pointer-events:none;
         }
-
         .r-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,0.04);position:relative;z-index:1;}
-
-        /* Logo mark — richer gradient + multi-layer glow */
         .r-logo-mark{
           width:38px;height:38px;border-radius:12px;flex-shrink:0;
           background:linear-gradient(135deg,#F59E0B 0%,#D97706 40%,#7C3AED 100%);
           display:flex;align-items:center;justify-content:center;
-          box-shadow:
-            0 2px 16px rgba(245,158,11,0.4),
-            0 0 0 1px rgba(245,158,11,0.2),
-            0 4px 32px rgba(245,158,11,0.15),
-            inset 0 1px 0 rgba(255,255,255,0.2);
-          transition:box-shadow 0.3s ease;
+          box-shadow:0 2px 16px rgba(245,158,11,0.4),0 0 0 1px rgba(245,158,11,0.2),0 4px 32px rgba(245,158,11,0.15),inset 0 1px 0 rgba(255,255,255,0.2);
         }
-        .r-logo-mark:hover{
-          box-shadow:
-            0 2px 20px rgba(245,158,11,0.55),
-            0 0 0 1px rgba(245,158,11,0.3),
-            0 4px 40px rgba(245,158,11,0.22),
-            inset 0 1px 0 rgba(255,255,255,0.25);
-        }
-
         .r-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;position:relative;z-index:1;}
-
-        /* Nav item — refined hover with warm tint + smooth slide */
         .r-nav-item{
           display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:12px;
           font-size:13.5px;font-weight:500;text-decoration:none;
           color:rgba(220,195,165,0.52);
           transition:all 0.22s cubic-bezier(.4,0,.2,1);
-          border:1px solid transparent;
-          position:relative;overflow:hidden;
-        }
-        .r-nav-item::before{
-          content:'';position:absolute;inset:0;border-radius:12px;
-          background:linear-gradient(90deg,rgba(245,158,11,0.0),transparent);
-          opacity:0;transition:opacity 0.22s ease;pointer-events:none;
+          border:1px solid transparent;position:relative;overflow:hidden;
         }
         .r-nav-item:hover{
-          background:rgba(245,158,11,0.055);
-          color:rgba(240,220,190,0.88);
-          transform:translateX(3px);
-          border-color:rgba(245,158,11,0.08);
-          box-shadow:inset 0 0 20px rgba(245,158,11,0.03);
+          background:rgba(245,158,11,0.055);color:rgba(240,220,190,0.88);
+          transform:translateX(3px);border-color:rgba(245,158,11,0.08);
         }
-        .r-nav-item:hover::before{opacity:1;}
-
-        /* Active nav item — premium layered glow */
         .r-nav-item.active{
-          background:linear-gradient(
-            135deg,
-            rgba(245,158,11,0.2) 0%,
-            rgba(245,158,11,0.10) 50%,
-            rgba(245,158,11,0.06) 100%
-          );
-          color:#FBBF24;
-          border-color:rgba(245,158,11,0.25);
-          font-weight:700;
-          box-shadow:
-            0 0 0 1px rgba(245,158,11,0.12),
-            0 2px 20px rgba(245,158,11,0.10),
-            inset 0 1px 0 rgba(245,158,11,0.18),
-            inset 0 0 28px rgba(245,158,11,0.06);
-          transform:translateX(0);
+          background:linear-gradient(135deg,rgba(245,158,11,0.2) 0%,rgba(245,158,11,0.10) 50%,rgba(245,158,11,0.06) 100%);
+          color:#FBBF24;border-color:rgba(245,158,11,0.25);font-weight:700;
+          box-shadow:0 0 0 1px rgba(245,158,11,0.12),0 2px 20px rgba(245,158,11,0.10),inset 0 1px 0 rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.06);
         }
-
-        /* Active left accent bar */
         .r-nav-item.active::before{
           content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
           width:3px;height:22px;border-radius:0 3px 3px 0;
           background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);
           box-shadow:0 0 10px rgba(245,158,11,0.8),0 0 24px rgba(245,158,11,0.3);
-          opacity:1;
         }
-
-        /* Active inner radial bloom */
         .r-nav-item.active::after{
           content:'';position:absolute;inset:0;border-radius:12px;
           background:radial-gradient(ellipse 90% 70% at 8% 50%,rgba(245,158,11,0.12) 0%,transparent 65%);
           pointer-events:none;
         }
-
-        /* Live badge */
         .r-live-badge{
           display:inline-flex;align-items:center;gap:4px;
-          background:rgba(245,158,11,0.12);
-          border:1px solid rgba(245,158,11,0.22);
-          border-radius:7px;padding:2px 8px;
-          font-size:9px;font-weight:700;color:#F59E0B;
+          background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.22);
+          border-radius:7px;padding:2px 8px;font-size:9px;font-weight:700;color:#F59E0B;
           margin-left:auto;letter-spacing:0.05em;text-transform:uppercase;
-          box-shadow:0 0 10px rgba(245,158,11,0.12);
         }
-        .r-live-dot{width:4px;height:4px;border-radius:50%;background:#F59E0B;animation:pulse 1.8s infinite;flex-shrink:0;
-          box-shadow:0 0 5px rgba(245,158,11,0.7);}
-
+        .r-live-dot{width:4px;height:4px;border-radius:50%;background:#F59E0B;animation:pulse 1.8s infinite;flex-shrink:0;}
         .r-upgrade{
           margin:0 10px 10px;
           background:linear-gradient(135deg,rgba(245,158,11,0.07) 0%,rgba(245,158,11,0.04) 100%);
-          border:1px solid rgba(245,158,11,0.14);
-          border-radius:14px;padding:15px;
-          box-shadow:inset 0 1px 0 rgba(245,158,11,0.1),0 0 20px rgba(245,158,11,0.04);
+          border:1px solid rgba(245,158,11,0.14);border-radius:14px;padding:15px;
           position:relative;z-index:1;
         }
         .r-sidebar-bottom{padding:8px 10px 22px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:4px;position:relative;z-index:1;}
 
-        /* MAIN */
         .r-main{margin-left:228px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
 
-        /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.88);backdrop-filter:blur(28px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 28px;height:60px;
           display:flex;align-items:center;gap:14px;
@@ -707,10 +712,8 @@ export default function Dashboard() {
           border-radius:11px;padding:4px 11px 4px 4px;cursor:pointer;transition:all 0.2s;}
         .r-avatar:hover{border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);}
 
-        /* CONTENT */
         .r-content{padding:28px;flex:1;animation:fadeIn 0.35s ease;}
 
-        /* STAT CARDS */
         .r-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
         .r-stat{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:20px 22px;
           transition:all 0.22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;backdrop-filter:blur(16px);position:relative;overflow:hidden;}
@@ -730,7 +733,6 @@ export default function Dashboard() {
         .r-stat-zero{font-size:34px;font-weight:900;color:rgba(255,255,255,0.4);letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
         .r-stat-empty{font-size:34px;font-weight:900;color:rgba(255,255,255,0.14);letter-spacing:-0.05em;line-height:1;}
 
-        /* CARDS */
         .ref-card{background:rgba(16,16,22,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:18px;backdrop-filter:blur(16px);
           transition:border-color 0.2s;display:flex;flex-direction:column;overflow:hidden;}
         .ref-card:hover{border-color:rgba(255,255,255,0.11);}
@@ -745,7 +747,6 @@ export default function Dashboard() {
           background:rgba(34,197,94,0.09);border:1px solid rgba(34,197,94,0.18);border-radius:7px;padding:3px 9px;white-space:nowrap;}
         .r-bottom{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:12px;}
 
-        /* BUTTONS */
         .ref-btn-primary{background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#08080A;font-weight:700;font-size:13px;
           padding:10px 18px;border-radius:10px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
           transition:all 0.2s;text-decoration:none;white-space:nowrap;box-shadow:0 2px 12px rgba(245,158,11,0.28);}
@@ -756,13 +757,12 @@ export default function Dashboard() {
         .ref-btn-ghost:hover{background:rgba(255,255,255,0.08);color:#FAFAFA;}
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#08080A;font-weight:700;font-size:12.5px;
           padding:10px;border-radius:10px;border:none;cursor:pointer;transition:all 0.2s;text-align:center;
-          text-decoration:none;display:block;box-shadow:0 2px 10px rgba(245,158,11,0.22);}
+          text-decoration:none;display:block;}
         .r-btn-upgrade:hover{opacity:0.9;transform:translateY(-1px);}
         .r-btn-logout{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:10px;font-size:13px;font-weight:500;
           color:rgba(255,255,255,0.3);background:none;border:none;cursor:pointer;width:100%;transition:all 0.18s;}
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
-        /* BOTTOM NAV */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(24px);
           padding:8px 4px env(safe-area-inset-bottom,8px);}
@@ -774,10 +774,8 @@ export default function Dashboard() {
         .r-bnav-icon{width:40px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background 0.18s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(245,158,11,0.12);}
 
-        /* CONNECT BANNER — hide left panel on small screens */
         @media(max-width:1023px){
           .r-sidebar{display:none!important;}
-          .r-sidebar-glow{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}
           .r-bottom-nav{display:flex!important;}
           .r-stats{grid-template-columns:1fr 1fr;gap:10px;}
@@ -787,20 +785,18 @@ export default function Dashboard() {
           .r-topbar-search,.r-topbar-status{display:none!important;}
           .r-stat-value,.r-stat-zero{font-size:28px;}
           .r-connect-left{display:none!important;}
-          .r-connect-right{border-radius:18px!important;}
+          .r-yt-channel-stats{grid-template-columns:1fr 1fr!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
-         .r-stats{grid-template-columns:1fr 1fr;}
+          .r-stats{grid-template-columns:1fr 1fr;}
           .r-bottom{grid-template-columns:1fr 1fr;}
           .r-content{padding:20px;}
           .r-topbar{padding:0 20px;}
-    }
+        }
         @media(min-width:1024px){.r-bottom-nav{display:none!important;}}
       `}</style>
 
       <div className="r-bg" style={{ display: 'flex' }}>
-
-        {/* AMBIENT SIDEBAR GLOW — bleeds into dashboard */}
         <div className="r-sidebar-glow" />
 
         {/* SIDEBAR */}
@@ -910,8 +906,8 @@ export default function Dashboard() {
               )}
             </div>
             <div className="r-avatar" onClick={() => router.push('/settings')}>
-              {user?.photoURL
-                ? <img src={user.photoURL} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
+              {userPhoto
+                ? <img src={userPhoto} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
                 : <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 11, flexShrink: 0 }}>{initials}</div>
               }
               <div>
@@ -936,15 +932,10 @@ export default function Dashboard() {
                     {youtubeConnected ? 'Live · Protected' : 'Dashboard'}
                   </span>
                 </div>
-                {/* Welcome greeting */}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 4 }}>
                   <h1 style={{ fontSize: 30, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.15 }}>
                     Welcome back,{' '}
-                    <span style={{
-                      background: 'linear-gradient(90deg,#F59E0B,#FBBF24)',
-                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text',
-                    }}>{firstName}</span>
+                    <span style={{ background: 'linear-gradient(90deg,#F59E0B,#FBBF24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{firstName}</span>
                     <span style={{ color: '#F59E0B' }}>.</span>
                   </h1>
                 </div>
@@ -957,8 +948,19 @@ export default function Dashboard() {
               <StatusPills youtubeConnected={youtubeConnected} />
             </div>
 
-            {/* CONNECT BANNER */}
-            {!youtubeConnected && <ConnectYouTubeBanner onConnect={handleYouTubeConnect} />}
+            {/* CONNECT BANNER or CHANNEL CARD */}
+            {youtubeConnected
+              ? <YouTubeChannelCard
+                  channelName={channelName}
+                  channelHandle={channelHandle}
+                  channelThumbnail={channelThumbnail}
+                  subscriberCount={subscriberCount}
+                  videoCount={videoCount}
+                  viewCount={viewCount}
+                  userPhoto={userPhoto}
+                />
+              : <ConnectYouTubeBanner onConnect={handleYouTubeConnect} />
+            }
 
             {/* STAT CARDS */}
             <div className="r-stats">
@@ -997,7 +999,6 @@ export default function Dashboard() {
             <div className="r-bottom">
               <MonthlyUsageCard plan={plan} youtubeConnected={youtubeConnected} commentsUsed={commentsUsed}
                 commentsLimit={commentsLimit} trialDaysLeft={trialDaysLeft} onConnectYouTube={handleYouTubeConnect} />
-
               <div className="ref-card">
                 <div className="ref-card-top">
                   <div>
@@ -1007,7 +1008,6 @@ export default function Dashboard() {
                 </div>
                 <SemicircleGauge accuracy={moderationAcc} />
               </div>
-
               <div className="ref-card">
                 <div className="ref-card-top" style={{ alignItems: 'center' }}>
                   <div><div className="ref-card-title">System Health</div><div className="ref-card-sub">Live infra status</div></div>
@@ -1036,7 +1036,7 @@ export default function Dashboard() {
                 <span className="r-bnav-icon">
                   <item.icon size={21} strokeWidth={isActive ? 2.2 : 1.7} />
                 </span>
-                <span style={{fontSize:9,fontWeight:isActive?700:500}}>{item.label}</span>
+                <span style={{ fontSize: 9, fontWeight: isActive ? 700 : 500 }}>{item.label}</span>
               </Link>
             );
           })}
@@ -1059,8 +1059,8 @@ export default function Dashboard() {
               <div style={{ width: 34, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
               <div style={{ padding: '0 12px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  {user?.photoURL
-                    ? <img src={user.photoURL} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
+                  {userPhoto
+                    ? <img src={userPhoto} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
                     : <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>{initials}</div>
                   }
                   <div>
@@ -1070,12 +1070,12 @@ export default function Dashboard() {
                 </div>
               </div>
               {[
-              { icon: CreditCard, label: 'Billing',     href: '/billing',       color: '#F59E0B' },
-              { icon: Layers,     label: 'Channels',    href: '/channels',      color: '#60a5fa' },
-              { icon: BarChart2,  label: 'Analytics',   href: '/analytics',     color: '#34d399' },
-              { icon: Bot,        label: 'Human-AI replys', href: '/Human-AI replys',   color: '#a78bfa' },
-              { icon: Bell,       label: 'Notifications', href: '/notifications', color: '#60a5fa' },
-              { icon: Settings,   label: 'Settings',    href: '/settings',      color: '#94a3b8' },
+                { icon: CreditCard,   label: 'Billing',          href: '/billing',          color: '#F59E0B' },
+                { icon: Layers,       label: 'Channels',         href: '/channels',         color: '#60a5fa' },
+                { icon: BarChart2,    label: 'Analytics',        href: '/analytics',        color: '#34d399' },
+                { icon: Bot,          label: 'Human-AI replys',  href: '/Human-AI replys',  color: '#a78bfa' },
+                { icon: Bell,         label: 'Notifications',    href: '/notifications',    color: '#60a5fa' },
+                { icon: Settings,     label: 'Settings',         href: '/settings',         color: '#94a3b8' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14, transition: 'background 0.15s' }}

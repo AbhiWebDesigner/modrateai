@@ -133,7 +133,7 @@ export default function AnalyticsPage() {
   }, [user]);
 
   const handleYouTubeConnect = () => {
- window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}?uid=${user?.uid}`;
+    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}?uid=${user?.uid}`;
   };
 
   if (loading) return (
@@ -162,7 +162,7 @@ export default function AnalyticsPage() {
         .nav-item:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.9); }
         .nav-item.active { background:rgba(245,158,11,0.12); color:#F59E0B; border-left:2px solid #F59E0B; }
 
-        .bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; z-index:50; background:rgba(9,9,11,0.95); border-top:1px solid #27272A; backdrop-filter:blur(20px); padding:8px 0 env(safe-area-inset-bottom, 8px); }
+        .bottom-nav { display:flex; position:fixed; bottom:0; left:0; right:0; z-index:50; background:rgba(9,9,11,0.97); border-top:1px solid #27272A; backdrop-filter:blur(20px); padding:8px 0 env(safe-area-inset-bottom, 8px); }
         .bottom-nav-item { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; flex:1; padding:6px 4px; text-decoration:none; color:rgba(255,255,255,0.4); font-size:10px; font-weight:500; transition:all 0.2s; border:none; background:none; cursor:pointer; }
         .bottom-nav-item.active { color:#F59E0B; }
         .bottom-nav-item:hover { color:rgba(255,255,255,0.8); }
@@ -184,7 +184,6 @@ export default function AnalyticsPage() {
         @media (max-width: 1023px) {
           .sidebar { display:none !important; }
           .main-content { margin-left:0 !important; padding-bottom:72px; }
-          .bottom-nav { display:flex; }
           .desktop-only { display:none !important; }
           .header-padding { padding: 12px 16px !important; }
           .content-padding { padding: 16px !important; }
@@ -193,6 +192,7 @@ export default function AnalyticsPage() {
         }
 
         @media (min-width: 1024px) {
+          .bottom-nav { display:none !important; }
           .mobile-only { display:none !important; }
         }
       `}</style>
@@ -257,12 +257,10 @@ export default function AnalyticsPage() {
                 <input className="search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search comments, users..." />
               </div>
 
-              {/* Connect YouTube — direct backend navigate */}
               <button className="connect-btn desktop-only" onClick={handleYouTubeConnect}>
                 <Youtube size={16} /> Connect YouTube
               </button>
 
-              {/* Avatar */}
               <button className="desktop-only" onClick={() => router.push('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid #27272A', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
                   {user?.photoURL ? (
@@ -392,57 +390,54 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-  {/* BOTTOM NAV — mobile only */}
-<nav className="bottom-nav" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(9,9,11,0.97)', borderTop: '1px solid #27272A', backdropFilter: 'blur(20px)', padding: '8px 0 env(safe-area-inset-bottom, 8px)' }}>
-  {[
-    { label: 'Overview',   icon: LayoutDashboard, href: '/dashboard'  },
-    { label: 'Live Feed',  icon: BarChart2,        href: '/live-feed'  },
-    { label: 'Automation', icon: Zap,              href: '/automation' },
-    { label: 'Alerts',     icon: Bell,             href: '/alerts'     },
-  ].map((item) => {
-    const active = item.href === '/analytics' ? false : false;
-    return (
-      <Link key={item.href} href={item.href} className="bottom-nav-item" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '6px 2px', textDecoration: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 500 }}>
-        <item.icon size={20} />
-        <span>{item.label}</span>
-      </Link>
-    );
-  })}
-  <button className="bottom-nav-item" onClick={() => setMoreOpen(v => !v)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '6px 2px', background: 'none', border: 'none', cursor: 'pointer', color: moreOpen ? '#F59E0B' : 'rgba(255,255,255,0.4)', fontSize: 9 }}>
-    <MoreHorizontal size={20} />
-    <span>More</span>
-  </button>
-</nav>
+        {/* BOTTOM NAV — mobile only */}
+        <nav className="bottom-nav">
+          {[
+            { label: 'Overview',   icon: LayoutDashboard, href: '/dashboard'  },
+            { label: 'Live Feed',  icon: BarChart2,        href: '/live-feed'  },
+            { label: 'Automation', icon: Zap,              href: '/automation' },
+            { label: 'Alerts',     icon: Bell,             href: '/alerts'     },
+          ].map((item) => (
+            <Link key={item.href} href={item.href} className="bottom-nav-item" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '6px 2px', textDecoration: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 500 }}>
+              <item.icon size={20} />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+          <button className="bottom-nav-item" onClick={() => setMoreOpen(v => !v)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '6px 2px', background: 'none', border: 'none', cursor: 'pointer', color: moreOpen ? '#F59E0B' : 'rgba(255,255,255,0.4)', fontSize: 9 }}>
+            <MoreHorizontal size={20} />
+            <span>More</span>
+          </button>
+        </nav>
 
-{/* MORE DRAWER */}
-{moreOpen && (
-  <>
-    <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }} />
-    <div style={{ position: 'fixed', bottom: 70, left: 12, right: 12, zIndex: 60, background: 'rgba(14,14,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '8px 8px 12px', boxShadow: '0 -8px 48px rgba(0,0,0,0.7)', backdropFilter: 'blur(28px)' }}>
-      <div style={{ width: 34, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
-      {[
-        { icon: CreditCard, label: 'Billing',         href: '/billing'          },
-        { icon: Star,       label: 'Human-AI replys', href: '/human-ai-replys'  },
-        { icon: Settings,   label: 'Settings',        href: '/settings'         },
-        { icon: BarChart2,  label: 'Channels',        href: '/channels'         },
-        { icon: Bell,       label: 'Notifications',   href: '/notifications'    },
-      ].map(item => (
-        <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-          style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14 }}>
-          <item.icon size={18} />
-          {item.label}
-        </Link>
-      ))}
-      <div style={{ margin: '8px 16px 0', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
-        <button onClick={() => { setMoreOpen(false); signOut(auth).then(() => router.push('/login')); }}
-          style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 14, width: '100%' }}>
-          <LogOut size={18} /> Logout
-        </button>
-      </div>
-    </div>
-  </>
-)}
-  </main>
+        {/* MORE DRAWER */}
+        {moreOpen && (
+          <>
+            <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }} />
+            <div style={{ position: 'fixed', bottom: 70, left: 12, right: 12, zIndex: 60, background: 'rgba(14,14,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '8px 8px 12px', boxShadow: '0 -8px 48px rgba(0,0,0,0.7)', backdropFilter: 'blur(28px)' }}>
+              <div style={{ width: 34, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
+              {[
+                { icon: CreditCard, label: 'Billing',         href: '/billing'          },
+                { icon: Star,       label: 'Human-AI replys', href: '/human-ai-replys'  },
+                { icon: Settings,   label: 'Settings',        href: '/settings'         },
+                { icon: BarChart2,  label: 'Channels',        href: '/channels'         },
+                { icon: Bell,       label: 'Notifications',   href: '/notifications'    },
+              ].map(item => (
+                <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14 }}>
+                  <item.icon size={18} />
+                  {item.label}
+                </Link>
+              ))}
+              <div style={{ margin: '8px 16px 0', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
+                <button onClick={() => { setMoreOpen(false); signOut(auth).then(() => router.push('/login')); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 14, width: '100%' }}>
+                  <LogOut size={18} /> Logout
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </main>
     </>
   );
 }

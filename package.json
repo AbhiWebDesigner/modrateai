@@ -12,6 +12,7 @@
   "dependencies": {
     "autoprefixer": "^10.5.2",
     "firebase": "^12.13.0",
+    "firebase-admin": "^14.2.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
     "next": "15.5.2",

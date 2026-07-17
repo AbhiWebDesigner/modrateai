@@ -34,26 +34,23 @@ export async function GET(request: NextRequest) {
     const channelData = await channelRes.json();
     const channel = channelData.items?.[0];
 
-    // Save to Firestore via REST API
-    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${uid}`;
+    // Save to Firestore via REST API with API Key
+const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${uid}?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`;
 
-    await fetch(firestoreUrl + '?updateMask.fieldPaths=youtube_connected&updateMask.fieldPaths=youtube_access_token&updateMask.fieldPaths=youtube_refresh_token&updateMask.fieldPaths=youtube_channel_id&updateMask.fieldPaths=youtube_channel_name&updateMask.fieldPaths=youtube_channel_handle', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${tokens.access_token}`,
-      },
-      body: JSON.stringify({
-        fields: {
-          youtube_connected: { booleanValue: true },
-          youtube_access_token: { stringValue: tokens.access_token || '' },
-          youtube_refresh_token: { stringValue: tokens.refresh_token || '' },
-          youtube_channel_id: { stringValue: channel?.id || '' },
-          youtube_channel_name: { stringValue: channel?.snippet?.title || '' },
-          youtube_channel_handle: { stringValue: channel?.snippet?.customUrl || '' },
-        }
-      }),
-    });
+await fetch(firestoreUrl + '&updateMask.fieldPaths=youtube_connected&updateMask.fieldPaths=youtube_access_token&updateMask.fieldPaths=youtube_refresh_token&updateMask.fieldPaths=youtube_channel_id&updateMask.fieldPaths=youtube_channel_name&updateMask.fieldPaths=youtube_channel_handle', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    fields: {
+      youtube_connected: { booleanValue: true },
+      youtube_access_token: { stringValue: tokens.access_token || '' },
+      youtube_refresh_token: { stringValue: tokens.refresh_token || '' },
+      youtube_channel_id: { stringValue: channel?.id || '' },
+      youtube_channel_name: { stringValue: channel?.snippet?.title || '' },
+      youtube_channel_handle: { stringValue: channel?.snippet?.customUrl || '' },
+    }
+  }),
+});
 
     return NextResponse.redirect('https://moderateai.site/dashboard?connected=true');
   } catch (err) {

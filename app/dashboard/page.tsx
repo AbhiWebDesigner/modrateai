@@ -6,7 +6,7 @@ import {
   CheckCircle, LayoutDashboard, TrendingUp, TrendingDown,
   MoreHorizontal, Rss, Bot, Users,
   Eye as EyeIcon, Sun, ChevronRight, AlertTriangle,
-  ExternalLink, RefreshCw, Hash, Plus,
+  ExternalLink, RefreshCw, Hash,
   Clock, Cpu
 } from 'lucide-react';
 import Link from 'next/link';
@@ -235,17 +235,16 @@ const SIDEBAR_NAV = [
   { label: 'Settings',   icon: Settings,        href: '/settings'   },
 ];
 
-/* ── BOTTOM NAV items (no duplicate Comments) ── */
+/* FIX 4: Correct bottom nav items */
 const BOTTOM_NAV = [
-  { label: 'Overview',  icon: LayoutDashboard, href: '/dashboard' },
-  { label: 'Live Feed', icon: Rss,             href: '/live-feed' },
-  // CENTER = Automation FAB
-  { label: 'Comments',  icon: MessageSquare,   href: '/comments'  },
-  { label: 'More',      icon: MoreHorizontal,  href: null         },
+  { label: 'Overview',   icon: LayoutDashboard, href: '/dashboard'  },
+  { label: 'Live Feed',  icon: Rss,             href: '/live-feed'  },
+  { label: 'Automation', icon: Zap,             href: '/automation' },
+  { label: 'Alerts',     icon: Bell,            href: '/alerts'     },
 ];
 
 /* ══════════════════════════════════════
-   MAIN DASHBOARD V2
+   MAIN DASHBOARD
 ══════════════════════════════════════ */
 export default function Dashboard() {
   const router = useRouter();
@@ -485,18 +484,18 @@ export default function Dashboard() {
           border-radius:9px;padding:3px 9px 3px 3px;cursor:pointer;transition:all 0.18s;gap:6px;}
         .r-avatar-btn:hover{border-color:rgba(255,255,255,0.11);}
 
-        /* MOBILE TOPBAR */
-        .r-mobile-topbar{display:none;position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.96);
+        /* FIX 3: MOBILE TOPBAR — clean, compact, no overflow */
+        .r-mobile-topbar{display:none;position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.97);
           backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.05);
-          padding:0 14px;height:52px;align-items:center;gap:8px;box-shadow:0 2px 16px rgba(0,0,0,0.3);}
+          padding:0 12px;height:52px;align-items:center;gap:6px;box-shadow:0 2px 16px rgba(0,0,0,0.3);}
         .r-mobile-status-bar{display:none;background:rgba(14,13,22,0.95);border-bottom:1px solid rgba(255,255,255,0.04);
-          padding:6px 14px;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;}
+          padding:6px 12px;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
         .r-mobile-status-bar::-webkit-scrollbar{display:none;}
 
         /* CONTENT */
         .r-content{padding:20px 22px 24px;flex:1;animation:fadeIn 0.3s ease;}
 
-        /* TWO-COLUMN LAYOUT — desktop only */
+        /* FIX 1: Full-width layout on mobile — no right-column gap */
         .r-layout{display:grid;grid-template-columns:1fr 268px;gap:14px;align-items:start;}
 
         /* HERO */
@@ -540,20 +539,16 @@ export default function Dashboard() {
           display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all 0.18s;text-decoration:none;white-space:nowrap;}
         .r-btn-ghost:hover{background:rgba(255,255,255,0.07);color:#FAFAFA;}
 
-        /* BOTTOM NAV */
+        /* FIX 4: BOTTOM NAV — 5 equal items, no FAB */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
-          backdrop-filter:blur(24px);padding:6px 4px env(safe-area-inset-bottom,6px);}
+          backdrop-filter:blur(24px);padding:6px 0 env(safe-area-inset-bottom,6px);}
         .r-bnav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;
-          flex:1;padding:5px 4px;text-decoration:none;color:rgba(255,255,255,0.32);
+          flex:1;padding:5px 2px;text-decoration:none;color:rgba(255,255,255,0.32);
           border:none;background:none;cursor:pointer;transition:color 0.18s;-webkit-tap-highlight-color:transparent;}
         .r-bnav-item.active{color:#a78bfa;}
-        .r-bnav-icon{width:38px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:9px;transition:background 0.18s;}
+        .r-bnav-icon{width:36px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:9px;transition:background 0.18s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(124,58,237,0.13);}
-        .r-bnav-fab{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6D28D9);
-          display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
-          box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
-        .r-bnav-fab:active{transform:scale(0.93);}
 
         /* LIVE PANEL */
         .r-live-panel{background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);border-radius:14px;
@@ -569,6 +564,7 @@ export default function Dashboard() {
         /* PENDING ROW */
         .r-pending-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
 
+        /* ── RESPONSIVE ── */
         @media(max-width:1279px){
           .r-layout{grid-template-columns:1fr;}
           .r-stats{grid-template-columns:repeat(2,1fr);}
@@ -585,11 +581,12 @@ export default function Dashboard() {
           .r-hero{padding:16px 14px 16px;}
           .r-hero-shield{display:none!important;}
           .r-hero h1{font-size:22px!important;}
-          /* FIX: full width single column on mobile */
-          .r-layout{display:block!important;width:100%;}
+          /* FIX 1: Stats full-width on mobile */
           .r-stats{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
           .r-stat{padding:12px 13px;}
           .r-stat-value,.r-stat-zero{font-size:20px;}
+          /* FIX 1: All sections full-width, no right column gap */
+          .r-layout{grid-template-columns:1fr!important;gap:0;}
           .r-bottom-grid{grid-template-columns:1fr;gap:9px;}
           .r-pending-row{grid-template-columns:1fr 1fr;}
           .r-live-panel{display:none!important;}
@@ -601,7 +598,11 @@ export default function Dashboard() {
           .r-content{padding:14px 16px;}
           .r-bottom-grid{grid-template-columns:1fr 1fr;}
         }
-        @media(min-width:1024px){.r-bottom-nav{display:none!important;}.r-mobile-topbar{display:none!important;}.r-mobile-status-bar{display:none!important;}}
+        @media(min-width:1024px){
+          .r-bottom-nav{display:none!important;}
+          .r-mobile-topbar{display:none!important;}
+          .r-mobile-status-bar{display:none!important;}
+        }
       `}</style>
 
       <div className="r-bg" style={{ display: 'flex' }}>
@@ -745,35 +746,59 @@ export default function Dashboard() {
             </button>
           </header>
 
-          {/* ── MOBILE TOPBAR ── */}
+          {/* FIX 3: MOBILE TOPBAR — logo + AI Online + Bell + Avatar only */}
           <header className="r-mobile-topbar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Shield size={13} color="white" strokeWidth={2.2} />
               </div>
               <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 14, letterSpacing: '-0.02em' }}>ModerateAI</span>
             </div>
             <div style={{ flex: 1 }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 16, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.14)', fontSize: 10, fontWeight: 700, color: '#22c55e' }}>
+            {/* AI Online pill */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 16, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.16)', fontSize: 10, fontWeight: 700, color: '#22c55e', flexShrink: 0 }}>
               <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
               AI Online
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 16, background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10, fontWeight: 700, color: '#a78bfa' }}>
-              <Shield size={8} strokeWidth={2.2} /> Protection Active
-            </div>
-            <button className="r-credits-btn" style={{ height: 30, fontSize: 10.5, padding: '0 9px', gap: 4 }}>
-              <CreditCard size={10} />{commentsUsed.toLocaleString()} <ChevronRight size={9} />
-            </button>
-            <div style={{ position: 'relative' }}>
-              <button className="r-icon-btn" style={{ width: 30, height: 30 }} onClick={() => setNotifOpen(v => !v)}>
-                <Bell size={12} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
-                <span style={{ position: 'absolute', top: 5, right: 5, width: 12, height: 12, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, color: 'white', fontWeight: 800 }}>3</span>
+            {/* Bell only — no credits, no protection pill */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <button className="r-icon-btn" style={{ width: 34, height: 34 }} onClick={() => setNotifOpen(v => !v)}>
+                <Bell size={13} color={notifOpen ? '#a78bfa' : 'rgba(255,255,255,0.5)'} strokeWidth={1.8} />
+                <span style={{ position: 'absolute', top: 5, right: 5, width: 13, height: 13, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7, color: 'white', fontWeight: 800 }}>3</span>
               </button>
+              {notifOpen && (
+                <>
+                  <div onClick={() => setNotifOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />
+                  <div style={{ position: 'fixed', top: 58, right: 10, left: 10, zIndex: 60, background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 13, boxShadow: '0 8px 36px rgba(0,0,0,0.55)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.16s ease', overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12 }}>Notifications</span>
+                      <span style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.22)', borderRadius: 6, padding: '2px 7px', fontSize: 9, fontWeight: 800, color: '#a78bfa' }}>3 NEW</span>
+                    </div>
+                    {[
+                      { icon: Shield, color: '#34d399', title: 'Moderation active', sub: 'AI moderator protecting your channel', time: 'Now' },
+                      { icon: Bell,   color: '#60a5fa', title: 'System operational', sub: 'All services running normally', time: '2m' },
+                      { icon: Zap,    color: '#a78bfa', title: 'Upgrade available', sub: 'Unlock unlimited scans with Pro', time: '1h' },
+                    ].map((n, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 9, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: `${n.color}12`, border: `1px solid ${n.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <n.icon size={12} color={n.color} strokeWidth={1.8} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: 'rgba(255,255,255,0.82)', fontSize: 11.5, fontWeight: 600, marginBottom: 1 }}>{n.title}</div>
+                          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5 }}>{n.sub}</div>
+                        </div>
+                        <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 9.5, flexShrink: 0 }}>{n.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
-            <button className="r-avatar-btn" style={{ padding: '2px 7px 2px 2px' }} onClick={() => router.push('/settings')}>
+            {/* Avatar */}
+            <button className="r-avatar-btn" style={{ padding: '2px 6px 2px 2px', flexShrink: 0 }} onClick={() => router.push('/settings')}>
               {userPhoto
-                ? <img src={userPhoto} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
-                : <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 9 }}>{initials}</div>
+                ? <img src={userPhoto} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
+                : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 9 }}>{initials}</div>
               }
             </button>
           </header>
@@ -840,40 +865,43 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* CHANNEL CARD */}
+            {/* FIX 2: CHANNEL CARD — fixed layout, no text overlap */}
             {youtubeConnected ? (
-              <div style={{ background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 20px', marginBottom: 13 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <div style={{ background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px', marginBottom: 13 }}>
+                {/* Row 1: avatar + name + connected badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                   <div style={{ position: 'relative', flexShrink: 0 }}>
                     {channelThumbnail
-                      ? <img src={channelThumbnail} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.25)' }} />
-                      : <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
+                      ? <img src={channelThumbnail} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.25)' }} />
+                      : <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
                     }
-                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f' }} />
+                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
-                      <span style={{ color: '#FAFAFA', fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channelName || 'My Channel'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ color: '#FAFAFA', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60vw' }}>{channelName || 'My Channel'}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(34,197,94,0.09)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 5, padding: '2px 6px', flexShrink: 0 }}>
                         <div style={{ width: 3.5, height: 3.5, borderRadius: '50%', background: '#22c55e' }} />
                         <span style={{ color: '#22c55e', fontSize: 9, fontWeight: 800 }}>CONNECTED</span>
                       </div>
                     </div>
-                    {/* FIX: no-wrap + ellipsis for date line */}
                     {channelHandle && (
-                      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         @{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </div>
                     )}
                   </div>
-                  <div className="r-channel-stats" style={{ display: 'flex', gap: 22, flexShrink: 0 }}>
+                </div>
+                {/* Row 2: stats + open channel button */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                  <div className="r-channel-stats" style={{ display: 'flex', gap: 20 }}>
                     {[
                       { label: 'Subscribers', value: fmtCount(subscriberCount) },
                       { label: 'Videos',      value: fmtCount(videoCount)      },
                       { label: 'Views',       value: fmtCount(viewCount)       },
                     ].map(s => (
                       <div key={s.label} style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#FAFAFA', fontSize: 17, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                        <div style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
                         <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 10, marginTop: 1 }}>{s.label}</div>
                       </div>
                     ))}
@@ -1156,7 +1184,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* DESKTOP LIVE ACTIVITY PANEL */}
+              {/* DESKTOP LIVE ACTIVITY */}
               <div className="r-live-panel" style={{ position: 'sticky', top: 72 }}>
                 <LiveActivityContent />
               </div>
@@ -1164,36 +1192,19 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── BOTTOM NAV (mobile) ── */}
-        {/* Layout: Overview | Live Feed | [Automation FAB] | Alerts | More */}
+        {/* FIX 4: BOTTOM NAV — Overview, Live Feed, Automation, Alerts, More */}
         <nav className="r-bottom-nav">
-          {/* Overview */}
-          <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
-            <span className="r-bnav-icon"><LayoutDashboard size={19} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
-          </Link>
-
-          {/* Live Feed */}
-          <Link href="/live-feed" className="r-bnav-item">
-            <span className="r-bnav-icon"><Rss size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: 500 }}>Live Feed</span>
-          </Link>
-
-          {/* CENTER — Automation FAB */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-            <button className="r-bnav-fab" onClick={() => router.push('/automation')}>
-              <Plus size={22} color="white" strokeWidth={2.5} />
-            </button>
-            <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
-          </div>
-
-          {/* Alerts */}
-          <Link href="/alerts" className="r-bnav-item">
-            <span className="r-bnav-icon"><Bell size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: 500 }}>Alerts</span>
-          </Link>
-
-          {/* More */}
+          {BOTTOM_NAV.map(item => {
+            const isActive = currentPath === item.href;
+            return (
+              <Link key={item.href} href={item.href} className={`r-bnav-item${isActive ? ' active' : ''}`}>
+                <span className="r-bnav-icon">
+                  <item.icon size={19} strokeWidth={isActive ? 2.2 : 1.7} />
+                </span>
+                <span style={{ fontSize: 9, fontWeight: isActive ? 700 : 500 }}>{item.label}</span>
+              </Link>
+            );
+          })}
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
             <span className="r-bnav-icon"><MoreHorizontal size={19} strokeWidth={1.7} /></span>
             <span style={{ fontSize: 9 }}>More</span>
@@ -1207,11 +1218,11 @@ export default function Dashboard() {
             <div style={{ position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60, background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '6px 6px 10px', boxShadow: '0 -8px 40px rgba(0,0,0,0.65)', backdropFilter: 'blur(28px)', animation: 'slideUp 0.18s ease' }}>
               <div style={{ width: 30, height: 3, background: 'rgba(255,255,255,0.09)', borderRadius: 3, margin: '6px auto 12px' }} />
               {[
-                { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
-                { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Zap,        label: 'Automation', href: '/automation', color: '#a78bfa' },
-                { icon: Hash,       label: 'Moderation', href: '/moderation', color: '#60a5fa' },
-                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
+                { icon: MessageSquare, label: 'Comments',   href: '/comments',   color: '#60a5fa' },
+                { icon: Shield,        label: 'Moderation', href: '/moderation', color: '#f87171' },
+                { icon: CreditCard,    label: 'Billing',    href: '/billing',    color: '#F59E0B' },
+                { icon: BarChart2,     label: 'Analytics',  href: '/analytics',  color: '#34d399' },
+                { icon: Settings,      label: 'Settings',   href: '/settings',   color: '#94a3b8' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 13, transition: 'background 0.14s' }}

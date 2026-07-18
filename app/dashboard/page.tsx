@@ -439,6 +439,11 @@ export default function Dashboard() {
 
   const currentPath = '/dashboard';
 
+  // ── FIX 1: YouTube channel URL ──
+  const youtubeChannelUrl = channelHandle
+    ? `https://www.youtube.com/@${channelHandle.replace('@', '')}`
+    : `https://www.youtube.com`;
+
   return (
     <>
       <style>{`
@@ -582,17 +587,15 @@ export default function Dashboard() {
           background:radial-gradient(ellipse,rgba(124,58,237,0.14) 0%,transparent 65%);pointer-events:none;}
         .r-hero-shield{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:140px;height:140px;opacity:0.85;}
 
-        /* ── CHANNEL CARD ── */
         .r-channel-card{display:flex;align-items:center;gap:18px;}
         .r-channel-stats{display:flex;gap:28px;flex-shrink:0;}
         .r-channel-btn{flex-shrink:0;}
 
-        /* ── BOTTOM 3-COL GRID ── */
         .r-bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 
+        /* ── FIX 2: Live panel visible on all sizes, stacks below on mobile ── */
         @media(max-width:1279px){
           .r-layout{grid-template-columns:1fr;}
-          .r-live-panel{display:none;}
           .r-stats{grid-template-columns:repeat(3,1fr);}
         }
         @media(max-width:1023px){
@@ -604,24 +607,17 @@ export default function Dashboard() {
           .r-topbar-search,.r-topbar-status{display:none!important;}
           .r-hero{padding:18px 16px;}
           .r-hero-shield{display:none;}
-
-          /* stat cards: 2 col */
           .r-stats{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
           .r-stat{padding:14px 14px;}
           .r-stat-value,.r-stat-zero{font-size:22px;}
           .r-stat-label{font-size:10.5px;}
-
-          /* channel card: 2 rows on mobile */
           .r-channel-card{flex-wrap:wrap;gap:10px;}
           .r-channel-stats{gap:16px;}
           .r-channel-btn{width:100%;justify-content:center;}
-
-          /* bottom 3-col → single col */
           .r-bottom-grid{grid-template-columns:1fr;gap:10px;}
-
-          /* hero badges wrap */
           .r-hero-badges{flex-wrap:wrap;gap:6px!important;}
           .r-hero h1{font-size:24px!important;}
+          .r-live-panel{margin-top:10px;position:static!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
           .r-stats{grid-template-columns:repeat(3,1fr);}
@@ -819,7 +815,6 @@ export default function Dashboard() {
             {youtubeConnected && (
               <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 22px', marginBottom: 14 }}>
                 <div className="r-channel-card">
-                  {/* Avatar */}
                   <div style={{ position: 'relative', flexShrink: 0 }}>
                     {channelThumbnail
                       ? <img src={channelThumbnail} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
@@ -827,7 +822,6 @@ export default function Dashboard() {
                     }
                     <div style={{ position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
                   </div>
-                  {/* Name + handle */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
                       <span style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channelName || 'My Channel'}</span>
@@ -838,7 +832,6 @@ export default function Dashboard() {
                     </div>
                     {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                   </div>
-                  {/* Stats */}
                   <div className="r-channel-stats">
                     {[
                       { label: 'Subscribers', value: fmtCount(subscriberCount) },
@@ -851,10 +844,16 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                  {/* Button */}
-                  <button className={`ref-btn-ghost r-channel-btn`} style={{ fontSize: 11.5, padding: '7px 12px' }}>
+                  {/* ── FIX 1: Open Channel → YouTube URL ── */}
+                  <a
+                    href={youtubeChannelUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ref-btn-ghost r-channel-btn"
+                    style={{ fontSize: 11.5, padding: '7px 12px' }}
+                  >
                     <ExternalLink size={11} /> Open Channel
-                  </button>
+                  </a>
                 </div>
               </div>
             )}
@@ -945,10 +944,9 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {/* BOTTOM ROW — 3 col desktop, 1 col mobile */}
+                {/* BOTTOM ROW */}
                 <div className="r-bottom-grid">
 
-                  {/* Moderation Accuracy */}
                   <div className="ref-card">
                     <div className="ref-card-top">
                       <div>
@@ -979,7 +977,6 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Top Toxic Keywords */}
                   <div className="ref-card">
                     <div className="ref-card-top">
                       <div>
@@ -993,9 +990,7 @@ export default function Dashboard() {
                     <EmptyState icon={Hash} message="No toxic keywords detected yet. Keywords will appear as comments are scanned." />
                   </div>
 
-                  {/* Recent Automations + System Health + Plan Usage */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
                     <div className="ref-card">
                       <div className="ref-card-top" style={{ alignItems: 'center' }}>
                         <div><div className="ref-card-title">Recent Automations</div></div>
@@ -1047,7 +1042,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* ── LIVE ACTIVITY PANEL ── */}
+              {/* ── FIX 2: LIVE ACTIVITY PANEL — always visible, stacks on mobile ── */}
               <div className="r-live-panel" style={{ position: 'sticky', top: 74 }}>
                 <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -439,10 +439,40 @@ export default function Dashboard() {
 
   const currentPath = '/dashboard';
 
-  // ── FIX 1: YouTube channel URL ──
   const youtubeChannelUrl = channelHandle
     ? `https://www.youtube.com/@${channelHandle.replace('@', '')}`
     : `https://www.youtube.com`;
+
+  /* ── SHARED LIVE ACTIVITY CONTENT ── */
+  function LiveActivityContent() {
+    return (
+      <>
+        <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: '#FAFAFA', fontSize: 13.5, fontWeight: 700 }}>Live Activity</span>
+            <div className="ref-badge ref-badge-live">
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
+              Live
+            </div>
+          </div>
+        </div>
+        <div className="r-live-scroll">
+          {liveEvents.length > 0
+            ? liveEvents.map((ev) => {
+                const item = eventToLiveItem(ev);
+                return <LiveItem key={ev.id} {...item} />;
+              })
+            : <EmptyState icon={Activity} message="No activity yet. Events will appear in real time." />
+          }
+        </div>
+        <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <Link href="/live-feed" className="ref-btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}>
+            View Live Feed <ChevronRight size={12} />
+          </Link>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -593,7 +623,9 @@ export default function Dashboard() {
 
         .r-bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 
-        /* ── FIX 2: Live panel visible on all sizes, stacks below on mobile ── */
+        /* Mobile Live Activity — hidden on desktop */
+        .r-mobile-live-panel{display:none;}
+
         @media(max-width:1279px){
           .r-layout{grid-template-columns:1fr;}
           .r-stats{grid-template-columns:repeat(3,1fr);}
@@ -617,7 +649,8 @@ export default function Dashboard() {
           .r-bottom-grid{grid-template-columns:1fr;gap:10px;}
           .r-hero-badges{flex-wrap:wrap;gap:6px!important;}
           .r-hero h1{font-size:24px!important;}
-          .r-live-panel{margin-top:10px;position:static!important;}
+          .r-live-panel{display:none!important;}
+          .r-mobile-live-panel{display:flex!important;flex-direction:column;}
         }
         @media(min-width:768px) and (max-width:1023px){
           .r-stats{grid-template-columns:repeat(3,1fr);}
@@ -844,7 +877,6 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-                  {/* ── FIX 1: Open Channel → YouTube URL ── */}
                   <a
                     href={youtubeChannelUrl}
                     target="_blank"
@@ -1040,33 +1072,17 @@ export default function Dashboard() {
                     />
                   </div>
                 </div>
+
+                {/* MOBILE ONLY — Live Activity below Top Toxic Keywords */}
+                <div className="r-mobile-live-panel ref-card" style={{ marginTop: 10 }}>
+                  <LiveActivityContent />
+                </div>
+
               </div>
 
-              {/* ── FIX 2: LIVE ACTIVITY PANEL — always visible, stacks on mobile ── */}
+              {/* DESKTOP — Live Activity right panel */}
               <div className="r-live-panel" style={{ position: 'sticky', top: 74 }}>
-                <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: '#FAFAFA', fontSize: 13.5, fontWeight: 700 }}>Live Activity</span>
-                    <div className="ref-badge ref-badge-live">
-                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
-                      Live
-                    </div>
-                  </div>
-                </div>
-                <div className="r-live-scroll">
-                  {liveEvents.length > 0
-                    ? liveEvents.map((ev) => {
-                        const item = eventToLiveItem(ev);
-                        return <LiveItem key={ev.id} {...item} />;
-                      })
-                    : <EmptyState icon={Activity} message="No activity yet. Events will appear in real time." />
-                  }
-                </div>
-                <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  <Link href="/live-feed" className="ref-btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}>
-                    View Live Feed <ChevronRight size={12} />
-                  </Link>
-                </div>
+                <LiveActivityContent />
               </div>
             </div>
           </div>

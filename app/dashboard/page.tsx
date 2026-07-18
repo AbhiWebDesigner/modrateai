@@ -303,7 +303,16 @@ export default function Dashboard() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [chartRange, setChartRange] = useState<'week' | 'month'>('week');
+  const [isMobileView, setIsMobileView] = useState(false);
   const unsubRefs = useRef<Array<() => void>>([]);
+
+  /* Detect narrow viewport (mobile desktop-site ON = narrow actual px width) */
+  useEffect(() => {
+    const check = () => setIsMobileView(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
@@ -497,8 +506,9 @@ export default function Dashboard() {
           background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);
           background-size:44px 44px;}
 
+        /* ── SIDEBAR: only on true desktop ≥1024px actual width ── */
         .r-sidebar{width:220px;min-width:220px;background:#0c0c14;border-right:1px solid rgba(124,58,237,0.12);
-          display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;
+          display:none;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;
           box-shadow:4px 0 40px rgba(0,0,0,0.6);overflow:hidden;}
         .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
           background:linear-gradient(180deg,transparent,rgba(124,58,237,0.18) 30%,rgba(124,58,237,0.28) 50%,rgba(124,58,237,0.18) 70%,transparent);
@@ -523,11 +533,12 @@ export default function Dashboard() {
           border:1px solid rgba(124,58,237,0.16);border-radius:14px;padding:14px;position:relative;z-index:1;}
         .r-sidebar-bottom{padding:8px 8px 20px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:3px;position:relative;z-index:1;}
 
-        .r-main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
+        /* main: no margin by default (mobile first) */
+        .r-main{margin-left:0;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;padding-bottom:72px;}
 
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.90);backdrop-filter:blur(24px);
-          border-bottom:1px solid rgba(255,255,255,0.05);padding:0 24px;height:58px;
-          display:flex;align-items:center;gap:12px;
+          border-bottom:1px solid rgba(255,255,255,0.05);padding:0 12px;height:56px;
+          display:flex;align-items:center;gap:10px;
           box-shadow:0 1px 0 rgba(255,255,255,0.02),0 4px 32px rgba(0,0,0,0.3);}
         .r-search{flex:1;max-width:400px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:9px;padding:0 12px 0 34px;height:34px;color:#FAFAFA;font-size:12.5px;outline:none;transition:all 0.2s;}
@@ -541,28 +552,32 @@ export default function Dashboard() {
           display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative;flex-shrink:0;}
         .r-icon-btn:hover{background:rgba(255,255,255,0.07);}
         .r-credits-btn{display:flex;align-items:center;gap:6px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.18);
-          borderRadius:9px;padding:0 12px;height:34px;color:#F59E0B;font-weight:700;font-size:12px;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+          borderRadius:9px;padding:0 10px;height:32px;color:#F59E0B;font-weight:700;font-size:11px;cursor:pointer;transition:all 0.2s;white-space:nowrap;border-radius:9px;}
         .r-credits-btn:hover{background:rgba(245,158,11,0.14);}
         .r-avatar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
-          border-radius:10px;padding:4px 10px 4px 4px;cursor:pointer;transition:all 0.2s;}
+          border-radius:10px;padding:4px 8px 4px 4px;cursor:pointer;transition:all 0.2s;}
         .r-avatar:hover{border-color:rgba(255,255,255,0.12);}
 
-        .r-content{padding:24px 24px 24px;flex:1;animation:fadeIn 0.35s ease;}
-        .r-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start;}
+        /* content: mobile padding */
+        .r-content{padding:12px 12px 16px;flex:1;animation:fadeIn 0.35s ease;}
 
-        .r-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
-        .r-stat{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px 20px;
+        /* layout: single col on mobile */
+        .r-layout{display:grid;grid-template-columns:1fr;gap:14px;align-items:start;}
+
+        /* stat grid: 2 col mobile */
+        .r-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+        .r-stat{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px;
           transition:all 0.22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;backdrop-filter:blur(16px);position:relative;overflow:hidden;}
-        .r-stat::before{content:'';position:absolute;inset:0;border-radius:16px;
+        .r-stat::before{content:'';position:absolute;inset:0;border-radius:14px;
           background:linear-gradient(135deg,rgba(255,255,255,0.015) 0%,transparent 60%);pointer-events:none;}
         .r-stat:hover{border-color:rgba(255,255,255,0.11);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.28);}
-        .r-stat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+        .r-stat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
         .r-stat-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-        .r-stat-label{color:rgba(255,255,255,0.45);font-size:11.5px;font-weight:500;margin-top:2px;}
+        .r-stat-label{color:rgba(255,255,255,0.45);font-size:10.5px;font-weight:500;margin-top:2px;}
         .r-stat-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;}
-        .r-stat-value{font-size:28px;font-weight:900;color:#FAFAFA;letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
-        .r-stat-zero{font-size:28px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
-        .r-stat-empty{font-size:28px;font-weight:900;color:rgba(255,255,255,0.12);letter-spacing:-0.05em;line-height:1;}
+        .r-stat-value{font-size:22px;font-weight:900;color:#FAFAFA;letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
+        .r-stat-zero{font-size:22px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
+        .r-stat-empty{font-size:22px;font-weight:900;color:rgba(255,255,255,0.12);letter-spacing:-0.05em;line-height:1;}
         .r-stat-pct-up{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#34d399;
           background:rgba(52,211,153,0.09);border:1px solid rgba(52,211,153,0.16);border-radius:6px;padding:2px 6px;white-space:nowrap;}
         .r-stat-pct-down{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#f87171;
@@ -572,9 +587,9 @@ export default function Dashboard() {
         .ref-card{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;backdrop-filter:blur(16px);
           transition:border-color 0.2s;display:flex;flex-direction:column;overflow:hidden;}
         .ref-card:hover{border-color:rgba(255,255,255,0.10);}
-        .ref-card-top{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,0.05);}
-        .ref-card-title{color:#FAFAFA;font-size:13.5px;font-weight:700;letter-spacing:-0.02em;}
-        .ref-card-sub{color:rgba(255,255,255,0.26);font-size:11px;margin-top:2px;}
+        .ref-card-top{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.05);}
+        .ref-card-title{color:#FAFAFA;font-size:13px;font-weight:700;letter-spacing:-0.02em;}
+        .ref-card-sub{color:rgba(255,255,255,0.26);font-size:10.5px;margin-top:2px;}
         .ref-badge{display:inline-flex;align-items:center;gap:4px;border-radius:7px;padding:3px 9px;font-size:9.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;}
         .ref-badge-amber{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.22);color:#F59E0B;}
         .ref-badge-green{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.22);color:#34d399;}
@@ -596,7 +611,8 @@ export default function Dashboard() {
           color:rgba(255,255,255,0.3);background:none;border:none;cursor:pointer;width:100%;transition:all 0.18s;}
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
-        .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
+        /* bottom nav: always visible on mobile */
+        .r-bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(24px);
           padding:8px 4px env(safe-area-inset-bottom,8px);}
         .r-bnav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -606,65 +622,74 @@ export default function Dashboard() {
         .r-bnav-icon{width:40px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background 0.18s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(124,58,237,0.14);}
 
-        .r-live-panel{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;
-          display:flex;flex-direction:column;overflow:hidden;height:fit-content;}
+        .r-live-panel{display:none;}
         .r-live-scroll{overflow-y:auto;max-height:360px;padding:0 14px;}
 
+        /* hero: mobile */
         .r-hero{background:linear-gradient(135deg,rgba(14,13,22,0.98) 0%,rgba(20,14,40,0.98) 100%);
-          border:1px solid rgba(124,58,237,0.14);border-radius:16px;padding:28px 32px;
-          margin-bottom:14px;position:relative;overflow:hidden;}
+          border:1px solid rgba(124,58,237,0.14);border-radius:16px;padding:18px 16px;
+          margin-bottom:12px;position:relative;overflow:hidden;}
         .r-hero::before{content:'';position:absolute;top:-40px;right:60px;width:320px;height:320px;
           background:radial-gradient(ellipse,rgba(124,58,237,0.14) 0%,transparent 65%);pointer-events:none;}
-        .r-hero-shield{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:140px;height:140px;opacity:0.85;}
+        .r-hero-shield{display:none;}
 
-        .r-channel-card{display:flex;align-items:center;gap:18px;}
-        .r-channel-stats{display:flex;gap:28px;flex-shrink:0;}
-        .r-channel-btn{flex-shrink:0;}
+        /* channel card mobile */
+        .r-channel-card{display:flex;flex-direction:column;gap:12px;}
+        .r-channel-stats{display:flex;gap:20px;}
+        .r-channel-btn{width:100%;justify-content:center;}
 
-        .r-bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+        /* bottom grid: single col mobile */
+        .r-bottom-grid{display:grid;grid-template-columns:1fr;gap:10px;}
 
-        /* Mobile Live Activity — hidden on desktop */
-        .r-mobile-live-panel{display:none;}
+        /* mobile live panel shown inline */
+        .r-mobile-live-panel{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;
+          background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);}
 
-        @media(max-width:1279px){
-          .r-layout{grid-template-columns:1fr;}
-          .r-stats{grid-template-columns:repeat(3,1fr);}
+        /* topbar logo — shown on mobile */
+        .r-topbar-logo{display:flex;align-items:center;gap:8px;margin-right:4px;flex-shrink:0;}
+        .r-topbar-logo-mark{width:28px;height:28px;border-radius:8px;
+          background:linear-gradient(135deg,#7C3AED,#5B21B6);
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;
+          box-shadow:0 2px 8px rgba(124,58,237,0.4);}
+
+        /* ── DESKTOP ≥1024px ── */
+        @media(min-width:1024px){
+          .r-sidebar{display:flex!important;}
+          .r-main{margin-left:220px;padding-bottom:0;}
+          .r-topbar{padding:0 24px;height:58px;}
+          .r-topbar-logo{display:none;}
+          .r-topbar-search-wrap{display:flex!important;}
+          .r-topbar-status{display:flex!important;}
+          .r-bottom-nav{display:none!important;}
+          .r-content{padding:24px;}
+          .r-layout{grid-template-columns:1fr 280px;}
+          .r-stats{grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+          .r-stat{padding:18px 20px;border-radius:16px;}
+          .r-stat-value,.r-stat-zero{font-size:28px;}
+          .r-hero{padding:28px 32px;margin-bottom:14px;}
+          .r-hero-shield{display:block;}
+          .r-channel-card{flex-direction:row;align-items:center;gap:18px;}
+          .r-channel-stats{gap:28px;}
+          .r-channel-btn{width:auto;justify-content:flex-start;}
+          .r-bottom-grid{grid-template-columns:1fr 1fr 1fr;}
+          .r-live-panel{display:flex!important;flex-direction:column;background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;height:fit-content;position:sticky;top:74px;}
+          .r-mobile-live-panel{display:none!important;}
+          .ref-card-top{padding:16px 18px 12px;}
         }
-        @media(max-width:1023px){
-          .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;padding-bottom:72px;}
-          .r-bottom-nav{display:flex!important;}
-          .r-content{padding:12px 12px 16px;}
-          .r-topbar{padding:0 12px;}
-          .r-topbar-search,.r-topbar-status{display:none!important;}
-          .r-hero{padding:18px 16px;}
-          .r-hero-shield{display:none;}
-          .r-stats{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-          .r-stat{padding:14px 14px;}
-          .r-stat-value,.r-stat-zero{font-size:22px;}
-          .r-stat-label{font-size:10.5px;}
-          .r-channel-card{flex-wrap:wrap;gap:10px;}
-          .r-channel-stats{gap:16px;}
-          .r-channel-btn{width:100%;justify-content:center;}
-          .r-bottom-grid{grid-template-columns:1fr;gap:10px;}
-          .r-hero-badges{flex-wrap:wrap;gap:6px!important;}
-          .r-hero h1{font-size:24px!important;}
-          .r-live-panel{display:none!important;}
-          .r-mobile-live-panel{display:flex!important;flex-direction:column;}
-        }
+
+        /* mid-tablet tweak 768–1023 */
         @media(min-width:768px) and (max-width:1023px){
           .r-stats{grid-template-columns:repeat(3,1fr);}
-          .r-content{padding:18px;}
-          .r-topbar{padding:0 18px;}
-          .r-channel-card{flex-direction:row;align-items:center;}
           .r-bottom-grid{grid-template-columns:1fr 1fr;}
+          .r-content{padding:16px;}
+          .r-channel-card{flex-direction:row;align-items:center;gap:14px;}
+          .r-channel-btn{width:auto;}
         }
-        @media(min-width:1024px){.r-bottom-nav{display:none!important;}}
       `}</style>
 
       <div className="r-bg" style={{ display: 'flex' }}>
 
-        {/* ── SIDEBAR ── */}
+        {/* ── SIDEBAR (desktop only via CSS) ── */}
         <aside className="r-sidebar">
           <div className="r-logo">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -743,18 +768,32 @@ export default function Dashboard() {
 
           {/* TOPBAR */}
           <header className="r-topbar">
-            <div style={{ position: 'relative', flex: 1, maxWidth: 400 }} className="r-topbar-search">
+            {/* Logo — mobile only */}
+            <div className="r-topbar-logo">
+              <div className="r-topbar-logo-mark"><Shield size={14} color="white" strokeWidth={2.2} /></div>
+              <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 14, letterSpacing: '-0.025em' }}>ModerateAI</span>
+            </div>
+
+            {/* Search — hidden on mobile, shown desktop via CSS */}
+            <div style={{ position: 'relative', flex: 1, maxWidth: 400, display: 'none' }} className="r-topbar-search-wrap">
               <Search size={12} color="rgba(255,255,255,0.18)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               <input className="r-search" placeholder="Search comments, users, keywords…" />
               <span style={{ position: 'absolute', right: 9, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '2px 5px', fontSize: 9.5, color: 'rgba(255,255,255,0.18)', fontWeight: 600 }}>⌘K</span>
             </div>
-            <div className="r-status r-topbar-status"><div className="r-status-dot" />AI System Online</div>
+
+            {/* Status — hidden mobile */}
+            <div className="r-status r-topbar-status" style={{ display: 'none' }}>
+              <div className="r-status-dot" />AI System Online
+            </div>
+
             <div style={{ flex: 1 }} />
+
             <button className="r-credits-btn">
-              <CreditCard size={12} />
+              <CreditCard size={11} />
               {commentsUsed.toLocaleString()} Credits
-              <ChevronRight size={11} />
+              <ChevronRight size={10} />
             </button>
+
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
                 <Bell size={13} color={notifOpen ? '#a78bfa' : 'rgba(255,255,255,0.45)'} strokeWidth={1.8} />
@@ -763,7 +802,7 @@ export default function Dashboard() {
               {notifOpen && (
                 <>
                   <div onClick={() => setNotifOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />
-                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, zIndex: 60, width: 300, background: 'rgba(14,13,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.6)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.18s ease', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, zIndex: 60, width: 280, background: 'rgba(14,13,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.6)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.18s ease', overflow: 'hidden' }}>
                     <div style={{ padding: '13px 15px 9px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12.5 }}>Notifications</span>
                       <span className="ref-badge ref-badge-purple">3 new</span>
@@ -790,7 +829,9 @@ export default function Dashboard() {
                 </>
               )}
             </div>
+
             <button className="r-icon-btn"><Sun size={13} color="rgba(255,255,255,0.4)" strokeWidth={1.8} /></button>
+
             <div className="r-avatar" onClick={() => router.push('/settings')}>
               {userPhoto
                 ? <img src={userPhoto} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
@@ -804,25 +845,25 @@ export default function Dashboard() {
 
             {/* HERO */}
             <div className="r-hero">
-              <div className="r-hero-badges" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div className="r-hero-badges" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
                 {[
                   { label: 'All systems operational', color: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.18)', dot: true },
                   { label: 'Protection active',        color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.18)', icon: Shield },
                   { label: 'Last scan: 10s ago',       color: 'rgba(255,255,255,0.45)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', icon: RefreshCw },
                 ].map(p => (
-                  <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 5, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: p.color }}>
+                  <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 5, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 20, padding: '4px 10px', fontSize: 10.5, fontWeight: 600, color: p.color }}>
                     {p.dot ? <div style={{ width: 5, height: 5, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} /> : p.icon && <p.icon size={10} strokeWidth={2} />}
                     {p.label}
                   </div>
                 ))}
               </div>
-              <h1 style={{ fontSize: 32, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.15, marginBottom: 8 }}>
+              <h1 style={{ fontSize: 26, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.15, marginBottom: 6 }}>
                 Welcome back, <span style={{ background: 'linear-gradient(90deg,#a78bfa,#7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{firstName}</span> 👋
               </h1>
-              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13.5 }}>
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12.5 }}>
                 Your AI moderator is actively protecting your YouTube channel 24/7.
               </p>
-              <div className="r-hero-shield">
+              <div className="r-hero-shield" style={{ position: 'absolute', right: 32, top: '50%', transform: 'translateY(-50%)', width: 140, height: 140, opacity: 0.85 }}>
                 <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <radialGradient id="shg1" cx="50%" cy="30%" r="70%">
@@ -846,24 +887,26 @@ export default function Dashboard() {
 
             {/* CHANNEL CARD */}
             {youtubeConnected && (
-              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 22px', marginBottom: 14 }}>
+              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '16px', marginBottom: 12 }}>
                 <div className="r-channel-card">
-                  <div style={{ position: 'relative', flexShrink: 0 }}>
-                    {channelThumbnail
-                      ? <img src={channelThumbnail} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
-                      : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
-                    }
-                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
-                      <span style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channelName || 'My Channel'}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>
-                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e' }} />
-                        <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 700 }}>CONNECTED</span>
-                      </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      {channelThumbnail
+                        ? <img src={channelThumbnail} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
+                        : <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
+                      }
+                      <div style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
                     </div>
-                    {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
+                        <span style={{ color: '#FAFAFA', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channelName || 'My Channel'}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 6, padding: '2px 6px', flexShrink: 0 }}>
+                          <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e' }} />
+                          <span style={{ color: '#22c55e', fontSize: 9, fontWeight: 700 }}>CONNECTED</span>
+                        </div>
+                      </div>
+                      {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
+                    </div>
                   </div>
                   <div className="r-channel-stats">
                     {[
@@ -872,18 +915,13 @@ export default function Dashboard() {
                       { label: 'Views',       value: fmtCount(viewCount)       },
                     ].map(s => (
                       <div key={s.label} style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#FAFAFA', fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10.5, marginTop: 2 }}>{s.label}</div>
+                        <div style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginTop: 2 }}>{s.label}</div>
                       </div>
                     ))}
                   </div>
-                  <a
-                    href={youtubeChannelUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ref-btn-ghost r-channel-btn"
-                    style={{ fontSize: 11.5, padding: '7px 12px' }}
-                  >
+                  <a href={youtubeChannelUrl} target="_blank" rel="noopener noreferrer"
+                    className="ref-btn-ghost r-channel-btn" style={{ fontSize: 11.5, padding: '7px 12px' }}>
                     <ExternalLink size={11} /> Open Channel
                   </a>
                 </div>
@@ -891,12 +929,12 @@ export default function Dashboard() {
             )}
 
             {!youtubeConnected && (
-              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: '24px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <div style={{ width: 48, height: 48, borderRadius: 16, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <YTIcon color="#f87171" size={24} />
+              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: '20px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <YTIcon color="#f87171" size={22} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h2 style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Connect your YouTube channel</h2>
+                  <h2 style={{ color: '#FAFAFA', fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Connect your YouTube channel</h2>
                   <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>Grant OAuth access and ModerateAI starts protecting your community instantly.</p>
                 </div>
                 <button onClick={handleYouTubeConnect} className="ref-btn-primary" style={{ flexShrink: 0, width: '100%' }}>
@@ -931,7 +969,7 @@ export default function Dashboard() {
                           {isNull
                             ? <div className="r-stat-empty">—</div>
                             : hasReal
-                              ? <><div className="r-stat-value">{s.fmtValue}</div><Sparkline color={s.color} up={s.up} width={64} height={34} /></>
+                              ? <><div className="r-stat-value">{s.fmtValue}</div><Sparkline color={s.color} up={s.up} width={52} height={28} /></>
                               : <div className="r-stat-zero">{s.fmtValue || '0'}</div>
                           }
                         </div>
@@ -942,16 +980,16 @@ export default function Dashboard() {
                 </div>
 
                 {/* CHART CARD */}
-                <div className="ref-card" style={{ marginBottom: 14 }}>
+                <div className="ref-card" style={{ marginBottom: 12 }}>
                   <div className="ref-card-top">
                     <div>
                       <div className="ref-card-title">Comments &amp; AI Replies Overview</div>
                       <div className="ref-card-sub">Activity over time</div>
                     </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
+                    <div style={{ display: 'flex', gap: 5 }}>
                       {(['week', 'month'] as const).map(r => (
                         <button key={r} onClick={() => setChartRange(r)}
-                          style={{ background: chartRange === r ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${chartRange === r ? 'rgba(124,58,237,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, padding: '4px 12px', color: chartRange === r ? '#a78bfa' : 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          style={{ background: chartRange === r ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${chartRange === r ? 'rgba(124,58,237,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, padding: '4px 10px', color: chartRange === r ? '#a78bfa' : 'rgba(255,255,255,0.4)', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>
                           {r === 'week' ? 'This Week' : 'Month'}
                         </button>
                       ))}
@@ -959,15 +997,15 @@ export default function Dashboard() {
                   </div>
                   {hasChartData ? (
                     <>
-                      <div style={{ display: 'flex', gap: 16, padding: '12px 18px 0' }}>
+                      <div style={{ display: 'flex', gap: 12, padding: '10px 14px 0', flexWrap: 'wrap' }}>
                         {chartData.map(d => (
                           <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color }} />
-                            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10.5, fontWeight: 600 }}>{d.label}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: 600 }}>{d.label}</span>
                           </div>
                         ))}
                       </div>
-                      <div style={{ padding: '12px 18px 16px' }}>
+                      <div style={{ padding: '10px 14px 14px' }}>
                         <MiniLineChart data={chartData} timeLabels={chartLabels} />
                       </div>
                     </>
@@ -986,7 +1024,7 @@ export default function Dashboard() {
                         <div className="ref-card-sub">AI confidence · rolling 24h</div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px 16px', gap: 14 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '18px 14px 14px', gap: 12 }}>
                       <DonutChart pct={moderationAcc} label="Excellent" color="#34d399" />
                       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {totalActionsCalc !== null && totalActionsCalc > 0 ? (
@@ -1015,26 +1053,27 @@ export default function Dashboard() {
                         <div className="ref-card-title">Top Toxic Keywords</div>
                         <div className="ref-card-sub">Detected this week</div>
                       </div>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 7, padding: '4px 10px', color: '#a78bfa', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>This Week</button>
-                      </div>
+                      <button style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 7, padding: '4px 10px', color: '#a78bfa', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>This Week</button>
                     </div>
                     <EmptyState icon={Hash} message="No toxic keywords detected yet. Keywords will appear as comments are scanned." />
-                     <div className="r-mobile-live-panel">
-                     <LiveActivityContent />
                   </div>
+
+                  {/* Mobile Live Activity — inline */}
+                  <div className="r-mobile-live-panel">
+                    <LiveActivityContent />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div className="ref-card">
                       <div className="ref-card-top" style={{ alignItems: 'center' }}>
                         <div><div className="ref-card-title">Recent Automations</div></div>
-                        <Link href="/automation" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, textDecoration: 'none', transition: 'color 0.18s' }}
+                        <Link href="/automation" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, textDecoration: 'none' }}
                           onMouseEnter={e => (e.currentTarget.style.color = '#a78bfa')}
                           onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>
                           View all <ChevronRight size={11} />
                         </Link>
                       </div>
-                      <div style={{ padding: '4px 16px 12px' }}>
+                      <div style={{ padding: '4px 14px 10px' }}>
                         <AutomationRow icon={Shield}        iconColor="#f87171" label="Toxic Comment Protection" active={autoHideToxic} />
                         <AutomationRow icon={Bot}           iconColor="#a78bfa" label="AI Auto Reply"            active={autoAiReplies} />
                         <AutomationRow icon={MessageSquare} iconColor="#34d399" label="Spam Filter"             active={autoHideSpam} />
@@ -1049,16 +1088,16 @@ export default function Dashboard() {
                           <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 800 }}>HEALTHY</span>
                         </div>
                       </div>
-                      <div style={{ padding: '10px 16px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div style={{ padding: '10px 14px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                         {[
                           { label: 'Uptime',        value: '100%',                              color: '#34d399' },
                           { label: 'Response Time', value: fmtMs(avgResponseTime) || '0ms',     color: '#a78bfa' },
                           { label: 'AI Confidence', value: `${aiConfidence.toFixed(1)}%`,       color: '#60a5fa' },
                           { label: 'Error Rate',    value: `${(analyticsData?.falsePositiveRate as number ?? 0).toFixed(2)}%`, color: '#F59E0B' },
                         ].map(s => (
-                          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px' }}>
+                          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 10px' }}>
                             <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginBottom: 4 }}>{s.label}</div>
-                            <div style={{ color: s.color, fontSize: 16, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                            <div style={{ color: s.color, fontSize: 15, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
                           </div>
                         ))}
                       </div>
@@ -1077,8 +1116,8 @@ export default function Dashboard() {
 
               </div>
 
-              {/* DESKTOP — Live Activity right panel */}
-              <div className="r-live-panel" style={{ position: 'sticky', top: 74 }}>
+              {/* DESKTOP Live Activity right panel */}
+              <div className="r-live-panel">
                 <LiveActivityContent />
               </div>
             </div>

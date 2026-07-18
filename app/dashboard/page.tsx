@@ -2,10 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Shield, MessageSquare, Eye, Settings, LogOut, CreditCard,
-  BarChart2, Bell, Zap, Search, Activity, Wifi, Cpu, Target,
+  BarChart2, Bell, Zap, Search, Activity, Wifi, Cpu,
   CheckCircle, LayoutDashboard, TrendingUp, TrendingDown,
   MoreHorizontal, Rss, Bot, Users, Video,
-  Eye as EyeIcon, Sun, ChevronRight, ToggleRight, AlertTriangle,
+  Eye as EyeIcon, Sun, ChevronRight, AlertTriangle,
   ExternalLink, RefreshCw, Hash
 } from 'lucide-react';
 import Link from 'next/link';
@@ -14,8 +14,8 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
-/* ── SPARKLINE ── */
-function Sparkline({ color, up = true, width = 80, height = 36 }: { color: string; up?: boolean; width?: number; height?: number }) {
+/* ── SPARKLINE (only shown when value > 0) ── */
+function Sparkline({ color, up = true, width = 64, height = 34 }: { color: string; up?: boolean; width?: number; height?: number }) {
   const points = up
     ? [28, 22, 32, 24, 36, 28, 42, 34, 48, 38, 56, 44, 62]
     : [62, 58, 52, 60, 48, 54, 44, 50, 40, 46, 38, 42, 36];
@@ -40,69 +40,6 @@ function Sparkline({ color, up = true, width = 80, height = 36 }: { color: strin
   );
 }
 
-/* ── MINI LINE CHART ── */
-function MiniLineChart({ data, colors, labels, timeLabels }: {
-  data: { values: number[]; color: string; label: string }[];
-  colors?: string[];
-  labels?: string[];
-  timeLabels: string[];
-}) {
-  const W = 480, H = 160, padL = 36, padR = 10, padT = 10, padB = 24;
-  const chartW = W - padL - padR, chartH = H - padT - padB;
-  const allVals = data.flatMap(d => d.values);
-  const maxV = Math.max(...allVals, 1);
-  const minV = 0;
-  const steps = data[0].values.length;
-
-  const toX = (i: number) => padL + (i / (steps - 1)) * chartW;
-  const toY = (v: number) => padT + chartH - ((v - minV) / (maxV - minV)) * chartH;
-
-  const makePath = (vals: number[]) =>
-    vals.map((v, i) => `${i === 0 ? 'M' : 'L'} ${toX(i).toFixed(1)} ${toY(v).toFixed(1)}`).join(' ');
-
-  const makeArea = (vals: number[], color: string, id: string) => {
-    const line = makePath(vals);
-    const lastX = toX(vals.length - 1), lastY = toY(vals[vals.length - 1]);
-    const firstX = toX(0), bottom = padT + chartH;
-    return (
-      <>
-        <defs>
-          <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-            <stop offset="100%" stopColor={color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={`${line} L${lastX},${bottom} L${firstX},${bottom} Z`} fill={`url(#${id})`} />
-        <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      </>
-    );
-  };
-
-  const yTicks = [0, Math.round(maxV * 0.25), Math.round(maxV * 0.5), Math.round(maxV * 0.75), maxV];
-
-  return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
-      {yTicks.map(t => (
-        <g key={t}>
-          <text x={padL - 6} y={toY(t) + 4} textAnchor="end" fill="rgba(255,255,255,0.2)" fontSize="9" fontFamily="Inter,sans-serif">
-            {t >= 1000 ? `${(t / 1000).toFixed(1)}K` : t}
-          </text>
-          <line x1={padL} y1={toY(t)} x2={W - padR} y2={toY(t)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-        </g>
-      ))}
-      {data.map((d, i) => makeArea(d.values, d.color, `area-${i}`))}
-      {data.map((d, i) =>
-        d.values.map((v, j) => (
-          <circle key={`${i}-${j}`} cx={toX(j)} cy={toY(v)} r="3" fill={d.color} opacity="0.8" />
-        ))
-      )}
-      {timeLabels.map((l, i) => (
-        <text key={l} x={toX(i)} y={H - 4} textAnchor="middle" fill="rgba(255,255,255,0.22)" fontSize="9" fontFamily="Inter,sans-serif">{l}</text>
-      ))}
-    </svg>
-  );
-}
-
 /* ── DONUT CHART ── */
 function DonutChart({ pct, label, color }: { pct: number; label: string; color: string }) {
   const r = 60, circ = 2 * Math.PI * r;
@@ -110,10 +47,6 @@ function DonutChart({ pct, label, color }: { pct: number; label: string; color: 
   return (
     <div style={{ position: 'relative', width: 160, height: 160 }}>
       <svg width={160} height={160} viewBox="0 0 160 160" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={80} cy={80} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={16} />
-        <circle cx={80} cy={80} r={r} fill="none" stroke={`url(#dnt-grad)`} strokeWidth={16}
-          strokeDasharray={`${filled} ${circ - filled}`} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 8px ${color}66)`, transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }} />
         <defs>
           <linearGradient id="dnt-grad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#7C3AED" />
@@ -121,33 +54,14 @@ function DonutChart({ pct, label, color }: { pct: number; label: string; color: 
             <stop offset="100%" stopColor="#34d399" />
           </linearGradient>
         </defs>
+        <circle cx={80} cy={80} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={16} />
+        <circle cx={80} cy={80} r={r} fill="none" stroke="url(#dnt-grad)" strokeWidth={16}
+          strokeDasharray={`${filled} ${circ - filled}`} strokeLinecap="round"
+          style={{ filter: `drop-shadow(0 0 8px ${color}66)`, transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }} />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ color: '#FAFAFA', fontSize: 28, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>{pct.toFixed(1)}%</span>
-        <span style={{ color: color, fontSize: 10, fontWeight: 700, marginTop: 4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</span>
-      </div>
-    </div>
-  );
-}
-
-/* ── CIRCULAR PROGRESS ── */
-function CircularProgress({ pct }: { pct: number }) {
-  const r = 44, circ = 2 * Math.PI * r;
-  const filled = (Math.min(pct, 100) / 100) * circ;
-  const color = pct >= 85 ? '#f87171' : pct >= 60 ? '#F59E0B' : '#34d399';
-  return (
-    <div style={{ position: 'relative', width: 108, height: 108, flexShrink: 0 }}>
-      <svg width={108} height={108} viewBox="0 0 108 108" style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={54} cy={54} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={9} />
-        <circle cx={54} cy={54} r={r} fill="none" stroke={color} strokeWidth={9}
-          strokeDasharray={`${filled} ${circ - filled}`} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 6px ${color}99)`, transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }} />
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color: '#FAFAFA', fontSize: 20, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-          {Math.round(pct)}<span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>%</span>
-        </span>
-        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 600, marginTop: 2, letterSpacing: '0.05em', textTransform: 'uppercase' }}>USED</span>
+        <span style={{ color, fontSize: 10, fontWeight: 700, marginTop: 4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</span>
       </div>
     </div>
   );
@@ -174,66 +88,16 @@ function fmtCount(n: string | number | null | undefined): string {
 function fmt(n: number | null) { return n === null ? null : n >= 1000 ? n.toLocaleString() : String(n); }
 function fmtMs(ms: number | null) { return ms === null ? null : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(2)}s`; }
 
-/* ── LIVE ACTIVITY ITEM ── */
-function LiveItem({ icon: Icon, iconColor, title, sub, time, bg }: {
-  icon: any; iconColor: string; title: string; sub: string; time: string; bg: string;
-}) {
-  return (
-    <div style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'flex-start' }}>
-      <div style={{ width: 32, height: 32, borderRadius: 10, background: bg, border: `1px solid ${iconColor}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
-        <Icon size={14} color={iconColor} strokeWidth={1.8} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: 12, fontWeight: 600, lineHeight: 1.3 }}>{title}</div>
-        <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
-      </div>
-      <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 10, flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>{time}</span>
-    </div>
-  );
-}
-
-/* ── TOXIC KEYWORD ROW ── */
-function KeywordRow({ rank, keyword, count, maxCount }: { rank: number; keyword: string; count: number; maxCount: number }) {
-  const pct = (count / maxCount) * 100;
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0' }}>
-      <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5, fontWeight: 700, width: 18, flexShrink: 0, textAlign: 'right' }}>{String(rank).padStart(2, '0')}</span>
-      <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12.5, fontWeight: 600, flex: 1 }}>{keyword}</span>
-      <div style={{ width: 80, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden', flexShrink: 0 }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg,#7C3AED,#a78bfa)', borderRadius: 4 }} />
-      </div>
-      <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700, width: 32, textAlign: 'right', flexShrink: 0 }}>{count}</span>
-    </div>
-  );
-}
-
-/* ── AUTOMATION ROW ── */
-function AutomationRow({ icon: Icon, iconColor, label, active }: { icon: any; iconColor: string; label: string; active: boolean }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-      <div style={{ width: 30, height: 30, borderRadius: 9, background: `${iconColor}14`, border: `1px solid ${iconColor}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon size={13} color={iconColor} strokeWidth={1.8} />
-      </div>
-      <span style={{ flex: 1, color: 'rgba(255,255,255,0.75)', fontSize: 12.5, fontWeight: 600 }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-        {active && <span style={{ color: '#34d399', fontSize: 10.5, fontWeight: 700 }}>Active</span>}
-        <div style={{ width: 32, height: 18, borderRadius: 9, background: active ? 'rgba(52,211,153,0.25)' : 'rgba(255,255,255,0.07)', border: `1px solid ${active ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.1)'}`, position: 'relative', cursor: 'pointer' }}>
-          <div style={{ position: 'absolute', top: 2, left: active ? 15 : 2, width: 12, height: 12, borderRadius: '50%', background: active ? '#34d399' : 'rgba(255,255,255,0.3)', transition: 'left 0.2s', boxShadow: active ? '0 0 6px rgba(52,211,153,0.6)' : 'none' }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── MONTHLY USAGE CARD ── */
-function MonthlyUsageCard({ plan, commentsUsed, commentsLimit, trialDaysLeft, youtubeConnected, onConnectYouTube }:
-  { plan: string; commentsUsed: number; commentsLimit: number; trialDaysLeft: number | null; youtubeConnected: boolean; onConnectYouTube: () => void }) {
+function MonthlyUsageCard({ plan, commentsUsed, commentsLimit, trialDaysLeft }: {
+  plan: string; commentsUsed: number; commentsLimit: number; trialDaysLeft: number | null;
+}) {
   const usagePct = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
   const remaining = commentsLimit - commentsUsed;
   const isFree = plan === 'free';
   const quotaDisplay = isFree ? '1,500' : commentsLimit.toLocaleString();
-  const planLabel = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
   const planColor = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
+  const planLabel = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
 
   return (
     <div className="ref-card">
@@ -260,7 +124,6 @@ function MonthlyUsageCard({ plan, commentsUsed, commentsLimit, trialDaysLeft, yo
           {isFree && trialDaysLeft !== null && (
             <span style={{ color: trialDaysLeft <= 3 ? '#f87171' : '#F59E0B', fontWeight: 700 }}>Resets in {trialDaysLeft} days</span>
           )}
-          {!isFree && <span>Resets 1 Aug 2026</span>}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
           {[
@@ -282,17 +145,17 @@ function MonthlyUsageCard({ plan, commentsUsed, commentsLimit, trialDaysLeft, yo
   );
 }
 
-/* ── SIDEBAR ── */
+/* ── SIDEBAR NAV ── */
 const SIDEBAR_NAV = [
-  { label: 'Overview',        icon: LayoutDashboard, href: '/dashboard'  },
-  { label: 'Live Feed',       icon: Rss,             href: '/live-feed'  },
-  { label: 'Comments',        icon: MessageSquare,   href: '/comments'   },
-  { label: 'Moderation',      icon: Shield,          href: '/moderation' },
-  { label: 'Automation',      icon: Zap,             href: '/automation' },
-  { label: 'Analytics',       icon: BarChart2,       href: '/analytics'  },
-  { label: 'Alerts',          icon: Bell,            href: '/alerts'     },
-  { label: 'Billing',         icon: CreditCard,      href: '/billing'    },
-  { label: 'Settings',        icon: Settings,        href: '/settings'   },
+  { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
+  { label: 'Live Feed',   icon: Rss,             href: '/live-feed'  },
+  { label: 'Comments',    icon: MessageSquare,   href: '/comments'   },
+  { label: 'Moderation',  icon: Shield,          href: '/moderation' },
+  { label: 'Automation',  icon: Zap,             href: '/automation' },
+  { label: 'Analytics',   icon: BarChart2,       href: '/analytics'  },
+  { label: 'Alerts',      icon: Bell,            href: '/alerts'     },
+  { label: 'Billing',     icon: CreditCard,      href: '/billing'    },
+  { label: 'Settings',    icon: Settings,        href: '/settings'   },
 ];
 
 const BOTTOM_NAV = [
@@ -303,7 +166,7 @@ const BOTTOM_NAV = [
 ];
 
 /* ══════════════════════════════════════
-   MAIN DASHBOARD V2
+   MAIN DASHBOARD
 ══════════════════════════════════════ */
 export default function Dashboard() {
   const router = useRouter();
@@ -312,7 +175,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [chartRange, setChartRange] = useState<'week' | 'month'>('week');
   const unsubDocRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -341,67 +203,49 @@ export default function Dashboard() {
     </div>
   );
 
-  /* ── FIRESTORE DATA ── */
+  /* ── FIRESTORE DATA (real only) ── */
   const plan             = (userData?.plan as string) || 'free';
   const commentsScanned  = (userData?.comments_scanned  as number) ?? null;
   const hiddenComments   = (userData?.comments_hidden   as number) ?? (userData?.hidden_count as number) ?? null;
   const aiReplies        = (userData?.ai_replies        as number) ?? null;
   const avgResponseMs    = (userData?.avg_response_ms   as number) ?? null;
-  const moderationAcc    = (userData?.moderation_accuracy as number) ?? 98.6;
+  const moderationAcc    = (userData?.moderation_accuracy as number) ?? null;
   const commentsUsed     = (userData?.comments_used     as number) || 0;
   const commentsLimit    = plan === 'free' ? 1500 : plan === 'pro' ? 5000 : (userData?.comments_limit as number) || 200000;
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
   const channelName      = (userData?.youtube_channel_name as string) || null;
   const channelHandle    = (userData?.youtube_channel_handle as string) || null;
   const channelThumbnail = (userData?.youtube_channel_thumbnail as string) || null;
+  const channelId        = (userData?.youtube_channel_id as string) || null;
   const subscriberCount  = (userData?.youtube_subscriber_count as string) || null;
   const videoCount       = (userData?.youtube_video_count as string) || null;
   const viewCount        = (userData?.youtube_view_count as string) || null;
-  const aiModel          = (userData?.current_ai_model as string) || null;
+  const automationEnabled = (userData?.automation_enabled as boolean) || false;
+  const protectionScore  = (userData?.protection_score as number) ?? null;
+  const spamDetected     = (userData?.spam_detected as number) ?? null;
+  const liveChatMessages = (userData?.live_chat_messages as number) ?? null;
 
   const trialEndsAt   = userData?.trial_ends_at?.toDate?.() as Date | undefined;
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000)) : null;
+  const lastScanAt    = userData?.last_scan_at?.toDate?.() as Date | undefined;
+  const lastScanAgo   = lastScanAt ? (() => {
+    const secs = Math.floor((Date.now() - lastScanAt.getTime()) / 1000);
+    if (secs < 60) return `${secs}s ago`;
+    if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
+    return `${Math.floor(secs / 3600)}h ago`;
+  })() : null;
 
   const firstName = user?.displayName?.split(' ')[0] || 'there';
   const initials  = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const planLabel = plan === 'free' ? 'Free Trial' : plan === 'pro' ? 'Pro' : plan === 'agency' ? 'Agency' : 'Free Trial';
   const userPhoto = user?.photoURL || (userData?.photo as string) || null;
-  const planColor = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
 
   const statCards = [
-    { label: 'Comments Scanned',  fmtValue: fmt(commentsScanned), raw: commentsScanned, up: true,  color: '#a78bfa', icon: MessageSquare,  pct: '+18.2%' },
-    { label: 'AI Replies Sent',   fmtValue: fmt(aiReplies),       raw: aiReplies,       up: true,  color: '#F59E0B', icon: Bot,            pct: '+24.1%' },
-    { label: 'Hidden Toxic',      fmtValue: fmt(hiddenComments),  raw: hiddenComments,  up: true,  color: '#f87171', icon: EyeIcon,        pct: '+12.7%' },
-    { label: 'Pending Review',    fmtValue: '85',                 raw: 85,              up: true,  color: '#60a5fa', icon: AlertTriangle,  pct: '+7.3%'  },
-    { label: 'Avg. Response',     fmtValue: fmtMs(avgResponseMs), raw: avgResponseMs,   up: false, color: '#34d399', icon: Activity,       pct: '-8.3%'  },
-  ];
-
-  /* ── CHART DATA (dummy weekly) ── */
-  const chartLabels = ['11 Jul', '12 Jul', '13 Jul', '14 Jul', '15 Jul', '16 Jul', '17 Jul'];
-  const chartData = [
-    { label: 'Comments Scanned', color: '#a78bfa', values: [2800, 3400, 4200, 3800, 4600, 4200, 4800] },
-    { label: 'AI Replies',       color: '#F59E0B', values: [1200, 2100, 2800, 2400, 3200, 2900, 3400] },
-    { label: 'Hidden Comments',  color: '#f87171', values: [600,  900,  1100, 800,  1300, 1000, 1200] },
-  ];
-
-  /* ── TOP TOXIC KEYWORDS (dummy) ── */
-  const toxicKeywords = [
-    { keyword: 'scam',              count: 324 },
-    { keyword: 'subscribe my channel', count: 298 },
-    { keyword: 'fake giveaway',     count: 276 },
-    { keyword: 'hate speech',       count: 198 },
-    { keyword: 'bad words',         count: 174 },
-  ];
-
-  /* ── LIVE ACTIVITY (dummy) ── */
-  const liveActivity = [
-    { icon: Shield,       iconColor: '#f87171', bg: 'rgba(248,113,113,0.1)',  title: 'Toxic comment hidden',   sub: 'On "Chill Lofi Beats 🎵"',         time: '2s ago'  },
-    { icon: Bot,          iconColor: '#a78bfa', bg: 'rgba(167,139,250,0.1)',  title: 'AI reply sent',           sub: 'To @music_lover_07',               time: '12s ago' },
-    { icon: MessageSquare,iconColor: '#60a5fa', bg: 'rgba(96,165,250,0.1)',   title: 'New comment scanned',     sub: 'On "Late Night Vibes"',             time: '18s ago' },
-    { icon: Users,        iconColor: '#34d399', bg: 'rgba(52,211,153,0.1)',   title: 'User connected',          sub: '@chill_listener_23',               time: '45s ago' },
-    { icon: AlertTriangle,iconColor: '#f87171', bg: 'rgba(248,113,113,0.1)',  title: 'Spam detected',           sub: 'Comment removed',                  time: '1m ago'  },
-    { icon: Zap,          iconColor: '#F59E0B', bg: 'rgba(245,158,11,0.1)',   title: 'AI rule triggered',       sub: 'Keyword: "scam"',                  time: '2m ago'  },
-    { icon: CheckCircle,  iconColor: '#34d399', bg: 'rgba(52,211,153,0.1)',   title: 'Scan completed',          sub: '186 comments scanned',             time: '2m ago'  },
+    { label: 'Comments Scanned', fmtValue: fmt(commentsScanned), raw: commentsScanned, up: true,  color: '#a78bfa', icon: MessageSquare, pct: null },
+    { label: 'AI Replies Sent',  fmtValue: fmt(aiReplies),       raw: aiReplies,       up: true,  color: '#F59E0B', icon: Bot,           pct: null },
+    { label: 'Hidden Toxic',     fmtValue: fmt(hiddenComments),  raw: hiddenComments,  up: true,  color: '#f87171', icon: EyeIcon,       pct: null },
+    { label: 'Spam Detected',    fmtValue: fmt(spamDetected),    raw: spamDetected,    up: true,  color: '#60a5fa', icon: AlertTriangle, pct: null },
+    { label: 'Avg. Response',    fmtValue: fmtMs(avgResponseMs), raw: avgResponseMs,   up: false, color: '#34d399', icon: Activity,      pct: null },
   ];
 
   const currentPath = '/dashboard';
@@ -416,7 +260,6 @@ export default function Dashboard() {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-        @keyframes liveScroll{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
         ::-webkit-scrollbar{width:3px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px}
@@ -430,59 +273,33 @@ export default function Dashboard() {
           background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        /* SIDEBAR */
-        .r-sidebar{
-          width:220px;min-width:220px;
-          background:#0c0c14;
-          border-right:1px solid rgba(124,58,237,0.12);
-          display:flex;flex-direction:column;
-          position:fixed;height:100vh;left:0;top:0;z-index:40;
-          box-shadow:4px 0 40px rgba(0,0,0,0.6);overflow:hidden;
-        }
-        .r-sidebar::after{
-          content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
+        .r-sidebar{width:220px;min-width:220px;background:#0c0c14;border-right:1px solid rgba(124,58,237,0.12);
+          display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;
+          box-shadow:4px 0 40px rgba(0,0,0,0.6);overflow:hidden;}
+        .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
           background:linear-gradient(180deg,transparent,rgba(124,58,237,0.18) 30%,rgba(124,58,237,0.28) 50%,rgba(124,58,237,0.18) 70%,transparent);
-          pointer-events:none;
-        }
+          pointer-events:none;}
         .r-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.04);position:relative;z-index:1;}
-        .r-logo-mark{
-          width:36px;height:36px;border-radius:11px;flex-shrink:0;
+        .r-logo-mark{width:36px;height:36px;border-radius:11px;flex-shrink:0;
           background:linear-gradient(135deg,#7C3AED 0%,#5B21B6 50%,#4C1D95 100%);
           display:flex;align-items:center;justify-content:center;
-          box-shadow:0 2px 16px rgba(124,58,237,0.4),0 0 0 1px rgba(124,58,237,0.2),inset 0 1px 0 rgba(255,255,255,0.15);
-        }
+          box-shadow:0 2px 16px rgba(124,58,237,0.4),0 0 0 1px rgba(124,58,237,0.2),inset 0 1px 0 rgba(255,255,255,0.15);}
         .r-nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;position:relative;z-index:1;}
-        .r-nav-item{
-          display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;
-          font-size:13px;font-weight:500;text-decoration:none;
-          color:rgba(255,255,255,0.38);
-          transition:all 0.2s cubic-bezier(.4,0,.2,1);
-          border:1px solid transparent;position:relative;overflow:hidden;
-        }
+        .r-nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;
+          font-size:13px;font-weight:500;text-decoration:none;color:rgba(255,255,255,0.38);
+          transition:all 0.2s cubic-bezier(.4,0,.2,1);border:1px solid transparent;position:relative;overflow:hidden;}
         .r-nav-item:hover{background:rgba(124,58,237,0.06);color:rgba(255,255,255,0.75);}
-        .r-nav-item.active{
-          background:linear-gradient(135deg,rgba(124,58,237,0.22) 0%,rgba(124,58,237,0.10) 100%);
+        .r-nav-item.active{background:linear-gradient(135deg,rgba(124,58,237,0.22) 0%,rgba(124,58,237,0.10) 100%);
           color:#a78bfa;border-color:rgba(124,58,237,0.22);font-weight:700;
-          box-shadow:0 0 0 1px rgba(124,58,237,0.10),inset 0 0 24px rgba(124,58,237,0.06);
-        }
-        .r-nav-item.active::before{
-          content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+          box-shadow:0 0 0 1px rgba(124,58,237,0.10),inset 0 0 24px rgba(124,58,237,0.06);}
+        .r-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
           width:3px;height:20px;border-radius:0 3px 3px 0;
-          background:linear-gradient(180deg,#a78bfa,#7C3AED);
-          box-shadow:0 0 8px rgba(124,58,237,0.7);
-        }
-        .r-upgrade{
-          margin:0 8px 8px;
-          background:linear-gradient(135deg,rgba(124,58,237,0.08) 0%,rgba(124,58,237,0.04) 100%);
-          border:1px solid rgba(124,58,237,0.16);border-radius:14px;padding:14px;
-          position:relative;z-index:1;
-        }
+          background:linear-gradient(180deg,#a78bfa,#7C3AED);box-shadow:0 0 8px rgba(124,58,237,0.7);}
+        .r-upgrade{margin:0 8px 8px;background:linear-gradient(135deg,rgba(124,58,237,0.08) 0%,rgba(124,58,237,0.04) 100%);
+          border:1px solid rgba(124,58,237,0.16);border-radius:14px;padding:14px;position:relative;z-index:1;}
         .r-sidebar-bottom{padding:8px 8px 20px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:3px;position:relative;z-index:1;}
 
-        /* MAIN */
         .r-main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
-
-        /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.90);backdrop-filter:blur(24px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 24px;height:58px;
           display:flex;align-items:center;gap:12px;
@@ -498,18 +315,13 @@ export default function Dashboard() {
         .r-icon-btn{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative;flex-shrink:0;}
         .r-icon-btn:hover{background:rgba(255,255,255,0.07);}
-        .r-credits-btn{display:flex;align-items:center;gap:6px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.18);
-          borderRadius:9px;padding:0 12px;height:34px;color:#F59E0B;font-weight:700;font-size:12px;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
-        .r-credits-btn:hover{background:rgba(245,158,11,0.14);}
         .r-avatar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:10px;padding:4px 10px 4px 4px;cursor:pointer;transition:all 0.2s;}
         .r-avatar:hover{border-color:rgba(255,255,255,0.12);}
 
-        /* CONTENT */
-        .r-content{padding:24px 24px 24px;flex:1;animation:fadeIn 0.35s ease;}
-        .r-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start;}
+        .r-content{padding:24px;flex:1;animation:fadeIn 0.35s ease;}
+        .r-layout{display:grid;grid-template-columns:1fr 272px;gap:16px;align-items:start;}
 
-        /* STATS */
         .r-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
         .r-stat{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px 20px;
           transition:all 0.22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;backdrop-filter:blur(16px);position:relative;overflow:hidden;}
@@ -523,13 +335,7 @@ export default function Dashboard() {
         .r-stat-value{font-size:28px;font-weight:900;color:#FAFAFA;letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
         .r-stat-zero{font-size:28px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
         .r-stat-empty{font-size:28px;font-weight:900;color:rgba(255,255,255,0.12);letter-spacing:-0.05em;line-height:1;}
-        .r-stat-pct-up{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#34d399;
-          background:rgba(52,211,153,0.09);border:1px solid rgba(52,211,153,0.16);border-radius:6px;padding:2px 6px;white-space:nowrap;}
-        .r-stat-pct-down{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#f87171;
-          background:rgba(248,113,113,0.09);border:1px solid rgba(248,113,113,0.16);border-radius:6px;padding:2px 6px;white-space:nowrap;}
-        .r-stat-vs{font-size:10px;color:rgba(255,255,255,0.22);margin-top:4px;}
 
-        /* CARDS */
         .ref-card{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;backdrop-filter:blur(16px);
           transition:border-color 0.2s;display:flex;flex-direction:column;overflow:hidden;}
         .ref-card:hover{border-color:rgba(255,255,255,0.10);}
@@ -542,7 +348,6 @@ export default function Dashboard() {
         .ref-badge-purple{background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.28);color:#a78bfa;}
         .ref-badge-live{background:rgba(34,197,94,0.10);border:1px solid rgba(34,197,94,0.22);color:#22c55e;}
 
-        /* BUTTONS */
         .ref-btn-primary{background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;font-weight:700;font-size:12.5px;
           padding:9px 16px;border-radius:9px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
           transition:all 0.2s;text-decoration:none;white-space:nowrap;box-shadow:0 2px 12px rgba(124,58,237,0.28);}
@@ -552,14 +357,12 @@ export default function Dashboard() {
           display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:all 0.18s;text-decoration:none;white-space:nowrap;}
         .ref-btn-ghost:hover{background:rgba(255,255,255,0.08);color:#FAFAFA;}
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;font-weight:700;font-size:12px;
-          padding:9px;border-radius:9px;border:none;cursor:pointer;transition:all 0.2s;text-align:center;
-          text-decoration:none;display:block;}
+          padding:9px;border-radius:9px;border:none;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;display:block;}
         .r-btn-upgrade:hover{opacity:0.88;transform:translateY(-1px);}
         .r-btn-logout{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9px;font-size:12.5px;font-weight:500;
           color:rgba(255,255,255,0.3);background:none;border:none;cursor:pointer;width:100%;transition:all 0.18s;}
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
-        /* BOTTOM NAV */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);backdrop-filter:blur(24px);
           padding:8px 4px env(safe-area-inset-bottom,8px);}
@@ -570,23 +373,19 @@ export default function Dashboard() {
         .r-bnav-icon{width:40px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background 0.18s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(124,58,237,0.14);}
 
-        /* LIVE ACTIVITY PANEL */
-        .r-live-panel{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;
-          display:flex;flex-direction:column;overflow:hidden;height:fit-content;}
-        .r-live-scroll{overflow-y:auto;max-height:360px;padding:0 14px;}
-
-        /* HERO */
         .r-hero{background:linear-gradient(135deg,rgba(14,13,22,0.98) 0%,rgba(20,14,40,0.98) 100%);
           border:1px solid rgba(124,58,237,0.14);border-radius:16px;padding:28px 32px;
           margin-bottom:14px;position:relative;overflow:hidden;}
         .r-hero::before{content:'';position:absolute;top:-40px;right:60px;width:320px;height:320px;
           background:radial-gradient(ellipse,rgba(124,58,237,0.14) 0%,transparent 65%);pointer-events:none;}
-        .r-hero-shield{position:absolute;right:32px;top:50%;transform:translateY(-50%);
-          width:140px;height:140px;opacity:0.85;}
+        .r-hero-shield{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:140px;height:140px;opacity:0.85;}
+
+        .r-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
+          padding:32px 20px;gap:10px;text-align:center;}
 
         @media(max-width:1279px){
           .r-layout{grid-template-columns:1fr;}
-          .r-live-panel{display:none;}
+          .r-live-panel{display:none!important;}
           .r-stats{grid-template-columns:repeat(3,1fr);}
         }
         @media(max-width:1023px){
@@ -611,7 +410,7 @@ export default function Dashboard() {
 
       <div className="r-bg" style={{ display: 'flex' }}>
 
-        {/* ── SIDEBAR ── */}
+        {/* SIDEBAR */}
         <aside className="r-sidebar">
           <div className="r-logo">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -686,100 +485,77 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* ── MAIN ── */}
+        {/* MAIN */}
         <div className="r-main">
-
-          {/* TOPBAR */}
           <header className="r-topbar">
             <div style={{ position: 'relative', flex: 1, maxWidth: 400 }} className="r-topbar-search">
               <Search size={12} color="rgba(255,255,255,0.18)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               <input className="r-search" placeholder="Search comments, users, keywords…" />
               <span style={{ position: 'absolute', right: 9, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 4, padding: '2px 5px', fontSize: 9.5, color: 'rgba(255,255,255,0.18)', fontWeight: 600 }}>⌘K</span>
             </div>
-
             <div className="r-status r-topbar-status"><div className="r-status-dot" />AI System Online</div>
             <div style={{ flex: 1 }} />
-
-            {/* Credits */}
-            <button className="r-credits-btn">
-              <CreditCard size={12} />
-              {commentsUsed.toLocaleString()} Credits
-              <ChevronRight size={11} />
-            </button>
 
             {/* Notif */}
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
                 <Bell size={13} color={notifOpen ? '#a78bfa' : 'rgba(255,255,255,0.45)'} strokeWidth={1.8} />
-                <span style={{ position: 'absolute', top: 7, right: 7, width: 14, height: 14, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: 'white', fontWeight: 800 }}>3</span>
               </button>
               {notifOpen && (
                 <>
                   <div onClick={() => setNotifOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />
-                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, zIndex: 60, width: 300, background: 'rgba(14,13,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.6)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.18s ease', overflow: 'hidden' }}>
-                    <div style={{ padding: '13px 15px 9px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, zIndex: 60, width: 290, background: 'rgba(14,13,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.6)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.18s ease', overflow: 'hidden' }}>
+                    <div style={{ padding: '13px 15px 9px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12.5 }}>Notifications</span>
-                      <span className="ref-badge ref-badge-purple">3 new</span>
                     </div>
-                    {[
-                      { icon: Shield, color: '#34d399', title: 'Moderation active', sub: 'AI moderator is protecting your channel', time: 'Now' },
-                      { icon: Bell,   color: '#60a5fa', title: 'System operational', sub: 'All services running normally', time: '2m' },
-                      { icon: Zap,    color: '#a78bfa', title: 'Upgrade available', sub: 'Unlock unlimited scans with Pro', time: '1h' },
-                    ].map((n, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 10, padding: '11px 15px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                        <div style={{ width: 30, height: 30, borderRadius: 9, background: `${n.color}14`, border: `1px solid ${n.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <n.icon size={13} color={n.color} strokeWidth={1.8} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{n.title}</div>
-                          <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11 }}>{n.sub}</div>
-                        </div>
-                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, flexShrink: 0 }}>{n.time}</span>
-                      </div>
-                    ))}
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                      <Bell size={22} color="rgba(255,255,255,0.12)" />
+                      <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, marginTop: 8 }}>No notifications yet</p>
+                    </div>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Theme */}
-            <button className="r-icon-btn"><Sun size={13} color="rgba(255,255,255,0.4)" strokeWidth={1.8} /></button>
-
-            {/* Avatar */}
             <div className="r-avatar" onClick={() => router.push('/settings')}>
               {userPhoto
                 ? <img src={userPhoto} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
                 : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 10, flexShrink: 0 }}>{initials}</div>
               }
+              <div style={{ marginRight: 4 }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12, lineHeight: 1.25 }}>{firstName}</div>
+                <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, lineHeight: 1.25 }}>{planLabel}</div>
+              </div>
             </div>
           </header>
 
-          {/* CONTENT */}
           <div className="r-content">
-
-            {/* HERO SECTION */}
+            {/* HERO */}
             <div className="r-hero">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                {[
-                  { label: 'All systems operational', color: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.18)', dot: true },
-                  { label: 'Protection active',        color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.18)', dot: false, icon: Shield },
-                  { label: 'Last scan: 10s ago',       color: 'rgba(255,255,255,0.45)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', dot: false, icon: RefreshCw },
-                ].map(p => (
-                  <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 5, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: p.color }}>
-                    {p.dot ? <div style={{ width: 5, height: 5, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} /> : p.icon && <p.icon size={10} strokeWidth={2} />}
-                    {p.label}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#22c55e' }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                  All systems operational
+                </div>
+                {youtubeConnected && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.18)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#a78bfa' }}>
+                    <Shield size={10} strokeWidth={2} /> Protection active
                   </div>
-                ))}
+                )}
+                {lastScanAgo && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)' }}>
+                    <RefreshCw size={10} strokeWidth={2} /> Last scan: {lastScanAgo}
+                  </div>
+                )}
               </div>
               <h1 style={{ fontSize: 32, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.15, marginBottom: 8 }}>
                 Welcome back, <span style={{ background: 'linear-gradient(90deg,#a78bfa,#7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{firstName}</span> 👋
               </h1>
               <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13.5 }}>
-                Your AI moderator is actively protecting your YouTube channel 24/7.
+                {youtubeConnected
+                  ? 'Your AI moderator is actively protecting your YouTube channel 24/7.'
+                  : 'Connect your YouTube channel to start AI moderation.'}
               </p>
-              {/* Shield SVG */}
               <div className="r-hero-shield">
                 <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
@@ -790,27 +566,21 @@ export default function Dashboard() {
                   </defs>
                   <ellipse cx="70" cy="70" rx="65" ry="65" fill="url(#shg1)" />
                   <path d="M70 18 L105 32 L105 68 C105 88 88 104 70 112 C52 104 35 88 35 68 L35 32 Z" fill="rgba(124,58,237,0.18)" stroke="rgba(167,139,250,0.35)" strokeWidth="1.5"/>
-                  <path d="M70 26 L100 38 L100 67 C100 84 85 98 70 105 C55 98 40 84 40 67 L40 38 Z" fill="rgba(124,58,237,0.12)" stroke="rgba(167,139,250,0.2)" strokeWidth="1"/>
                   <circle cx="70" cy="68" r="18" fill="rgba(124,58,237,0.2)" stroke="rgba(167,139,250,0.4)" strokeWidth="1.5"/>
                   <path d="M61 68 L66 74 L79 61" stroke="#a78bfa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  {[0,60,120,180,240,300].map((deg, i) => {
-                    const rad = (deg * Math.PI) / 180;
-                    const x = 70 + 52 * Math.cos(rad), y = 70 + 52 * Math.sin(rad);
-                    return <circle key={i} cx={x} cy={y} r="3" fill="rgba(167,139,250,0.3)" />;
-                  })}
                 </svg>
               </div>
             </div>
 
-            {/* CHANNEL CARD (if connected) */}
+            {/* CHANNEL CARD */}
             {youtubeConnected && (
               <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 22px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                  {channelThumbnail
-                    ? <img src={channelThumbnail} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
+                  {(channelThumbnail || userPhoto)
+                    ? <img src={channelThumbnail || userPhoto!} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
                     : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
                   }
-                  <div style={{ position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
+                  <div style={{ position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)', animation: 'pulse 2s infinite' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
@@ -820,13 +590,17 @@ export default function Dashboard() {
                       <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 700 }}>CONNECTED</span>
                     </div>
                   </div>
-                  {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>@{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
+                  {channelHandle && (
+                    <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>
+                      @{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 28, flexShrink: 0 }}>
                   {[
-                    { label: 'Subscribers', value: fmtCount(subscriberCount), color: '#F59E0B' },
-                    { label: 'Videos', value: fmtCount(videoCount), color: '#a78bfa' },
-                    { label: 'Views', value: fmtCount(viewCount), color: '#34d399' },
+                    { label: 'Subscribers', value: fmtCount(subscriberCount) },
+                    { label: 'Videos',      value: fmtCount(videoCount) },
+                    { label: 'Views',       value: fmtCount(viewCount) },
                   ].map(s => (
                     <div key={s.label} style={{ textAlign: 'center' }}>
                       <div style={{ color: '#FAFAFA', fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
@@ -834,11 +608,11 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  <button className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 12px' }}>
+                {channelId && (
+                  <a href={`https://youtube.com/channel/${channelId}`} target="_blank" rel="noopener noreferrer" className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 12px', flexShrink: 0 }}>
                     <ExternalLink size={11} /> Open Channel
-                  </button>
-                </div>
+                  </a>
+                )}
               </div>
             )}
 
@@ -872,11 +646,6 @@ export default function Dashboard() {
                           <div className="r-stat-icon" style={{ background: `${s.color}14`, border: `1px solid ${s.color}22` }}>
                             <s.icon size={13} color={s.color} strokeWidth={2} />
                           </div>
-                          {hasReal && (
-                            s.up
-                              ? <span className="r-stat-pct-up"><TrendingUp size={9} />{s.pct}</span>
-                              : <span className="r-stat-pct-down"><TrendingDown size={9} />{s.pct}</span>
-                          )}
                         </div>
                         <div className="r-stat-label">{s.label}</div>
                         <div className="r-stat-bottom" style={{ marginTop: 8 }}>
@@ -884,47 +653,16 @@ export default function Dashboard() {
                             ? <div className="r-stat-empty">—</div>
                             : hasReal
                               ? <><div className="r-stat-value">{s.fmtValue}</div><Sparkline color={s.color} up={s.up} width={64} height={34} /></>
-                              : <div className="r-stat-zero">{s.fmtValue || '0'}</div>
+                              : <div className="r-stat-zero">0</div>
                           }
                         </div>
-                        {hasReal && <div className="r-stat-vs">↑ vs yesterday</div>}
                       </div>
                     );
                   })}
                 </div>
 
-                {/* CHART CARD */}
-                <div className="ref-card" style={{ marginBottom: 14 }}>
-                  <div className="ref-card-top">
-                    <div>
-                      <div className="ref-card-title">Comments &amp; AI Replies Overview</div>
-                      <div className="ref-card-sub">Activity over time</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {(['week', 'month'] as const).map(r => (
-                        <button key={r} onClick={() => setChartRange(r)}
-                          style={{ background: chartRange === r ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${chartRange === r ? 'rgba(124,58,237,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, padding: '4px 12px', color: chartRange === r ? '#a78bfa' : 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                          {r === 'week' ? 'This Week' : 'Month'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Legend */}
-                  <div style={{ display: 'flex', gap: 16, padding: '12px 18px 0' }}>
-                    {chartData.map(d => (
-                      <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color }} />
-                        <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10.5, fontWeight: 600 }}>{d.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ padding: '12px 18px 16px' }}>
-                    <MiniLineChart data={chartData} timeLabels={chartLabels} />
-                  </div>
-                </div>
-
                 {/* BOTTOM ROW */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
 
                   {/* Moderation Accuracy */}
                   <div className="ref-card">
@@ -934,63 +672,37 @@ export default function Dashboard() {
                         <div className="ref-card-sub">AI confidence · rolling 24h</div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px 16px', gap: 14 }}>
-                      <DonutChart pct={moderationAcc ?? 98.6} label="Excellent" color="#34d399" />
-                      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {[
-                          { label: 'Correct Actions', value: `${((moderationAcc ?? 98.6) / 100 * 24356).toFixed(0)} (${(moderationAcc ?? 98.6).toFixed(1)}%)`, color: '#34d399' },
-                          { label: 'False Positives', value: `${((1 - (moderationAcc ?? 98.6) / 100) * 24356).toFixed(0)} (${(100 - (moderationAcc ?? 98.6)).toFixed(1)}%)`, color: '#f87171' },
-                        ].map(s => (
-                          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, flex: 1 }}>{s.label}</span>
-                            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{s.value}</span>
+                    {moderationAcc !== null
+                      ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px 16px', gap: 14 }}>
+                          <DonutChart pct={moderationAcc} label={moderationAcc >= 95 ? 'Excellent' : moderationAcc >= 80 ? 'Good' : 'Fair'} color="#34d399" />
+                          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {[
+                              { label: 'True Positive',  value: `${moderationAcc.toFixed(1)}%`,       color: '#34d399' },
+                              { label: 'False Positive', value: `${(100 - moderationAcc).toFixed(1)}%`, color: '#f87171' },
+                            ].map(s => (
+                              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                                <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, flex: 1 }}>{s.label}</span>
+                                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 700 }}>{s.value}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Top Toxic Keywords */}
-                  <div className="ref-card">
-                    <div className="ref-card-top">
-                      <div>
-                        <div className="ref-card-title">Top Toxic Keywords</div>
-                        <div className="ref-card-sub">Detected this week</div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 7, padding: '4px 10px', color: '#a78bfa', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>This Week</button>
-                      </div>
-                    </div>
-                    <div style={{ padding: '8px 16px 14px' }}>
-                      {toxicKeywords.map((k, i) => (
-                        <KeywordRow key={k.keyword} rank={i + 1} keyword={k.keyword} count={k.count} maxCount={toxicKeywords[0].count} />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Recent Automations + System Health */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <div className="ref-card">
-                      <div className="ref-card-top" style={{ alignItems: 'center' }}>
-                        <div>
-                          <div className="ref-card-title">Recent Automations</div>
+                          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5 }}>Rolling 24h · updated in real time</div>
                         </div>
-                        <Link href="/automation" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, textDecoration: 'none', transition: 'color 0.18s' }}
-                          onMouseEnter={e => (e.currentTarget.style.color = '#a78bfa')}
-                          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>
-                          View all <ChevronRight size={11} />
-                        </Link>
-                      </div>
-                      <div style={{ padding: '4px 16px 12px' }}>
-                        {[
-                          { icon: MessageSquare, iconColor: '#a78bfa', label: 'Keyword Auto Reply', active: true },
-                          { icon: Shield,         iconColor: '#f87171', label: 'Toxic Comment Protection', active: true },
-                          { icon: Bot,            iconColor: '#34d399', label: 'Welcome Message', active: true },
-                        ].map(a => <AutomationRow key={a.label} {...a} />)}
-                      </div>
-                    </div>
+                      ) : (
+                        <div className="r-empty-state">
+                          <Activity size={28} color="rgba(255,255,255,0.1)" />
+                          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, lineHeight: 1.6, maxWidth: 200 }}>
+                            No accuracy data yet. Start moderating to see AI confidence scores.
+                          </p>
+                        </div>
+                      )
+                    }
+                  </div>
 
+                  {/* System Health — real data only */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div className="ref-card">
                       <div className="ref-card-top" style={{ alignItems: 'center' }}>
                         <div><div className="ref-card-title">AI System Health</div></div>
@@ -1001,10 +713,10 @@ export default function Dashboard() {
                       </div>
                       <div style={{ padding: '10px 16px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         {[
-                          { label: 'Uptime',          value: '100%',  color: '#34d399' },
-                          { label: 'Response Time',   value: fmtMs(avgResponseMs) || '42ms', color: '#a78bfa' },
-                          { label: 'Requests Today',  value: '12,430', color: '#60a5fa' },
-                          { label: 'Error Rate',      value: '0.02%', color: '#F59E0B' },
+                          { label: 'Uptime',         value: protectionScore !== null ? `${protectionScore}%` : '100%',      color: '#34d399' },
+                          { label: 'Response Time',  value: fmtMs(avgResponseMs) || '0ms',                                  color: '#a78bfa' },
+                          { label: 'Automation',     value: automationEnabled ? 'Active' : 'Inactive',                      color: automationEnabled ? '#34d399' : 'rgba(255,255,255,0.3)' },
+                          { label: 'Spam Caught',    value: spamDetected !== null ? String(spamDetected) : '0',             color: '#F59E0B' },
                         ].map(s => (
                           <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px' }}>
                             <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginBottom: 4 }}>{s.label}</div>
@@ -1014,37 +726,40 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {/* Plan Usage */}
-                    <MonthlyUsageCard plan={plan} commentsUsed={commentsUsed} commentsLimit={commentsLimit} trialDaysLeft={trialDaysLeft} youtubeConnected={youtubeConnected} onConnectYouTube={handleYouTubeConnect} />
+                    <MonthlyUsageCard plan={plan} commentsUsed={commentsUsed} commentsLimit={commentsLimit} trialDaysLeft={trialDaysLeft} />
                   </div>
                 </div>
               </div>
 
-              {/* ── LIVE ACTIVITY PANEL ── */}
-              <div className="r-live-panel" style={{ position: 'sticky', top: 74 }}>
+              {/* LIVE ACTIVITY PANEL — empty state when no real data */}
+              <div className="r-live-panel ref-card" style={{ position: 'sticky', top: 74 }}>
                 <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: '#FAFAFA', fontSize: 13.5, fontWeight: 700 }}>Live Activity</span>
-                    <div className="ref-badge ref-badge-live">
-                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
-                      Live
-                    </div>
+                  <span style={{ color: '#FAFAFA', fontSize: 13.5, fontWeight: 700 }}>Live Activity</span>
+                  <div className="ref-badge ref-badge-live">
+                    <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
+                    Live
                   </div>
                 </div>
-                <div className="r-live-scroll">
-                  {liveActivity.map((item, i) => <LiveItem key={i} {...item} />)}
-                </div>
-                <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  <Link href="/live-feed" className="ref-btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}>
-                    View Live Feed <ChevronRight size={12} />
-                  </Link>
+                <div style={{ padding: '0 14px', flex: 1 }}>
+                  {/* Empty state — bot not active yet */}
+                  <div className="r-empty-state" style={{ padding: '40px 16px' }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Activity size={22} color="rgba(167,139,250,0.4)" />
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, lineHeight: 1.65, maxWidth: 200 }}>
+                      No live activity yet. Activity will appear here once the bot starts moderating.
+                    </p>
+                    <Link href="/live-feed" className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 14px', marginTop: 4 }}>
+                      Go to Live Feed <ChevronRight size={11} />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── BOTTOM NAV (mobile) ── */}
+        {/* BOTTOM NAV */}
         <nav className="r-bottom-nav">
           {BOTTOM_NAV.map(item => {
             const isActive = currentPath === item.href;
@@ -1068,11 +783,11 @@ export default function Dashboard() {
             <div style={{ position: 'fixed', bottom: 70, left: 12, right: 12, zIndex: 60, background: 'rgba(14,14,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '8px 8px 12px', boxShadow: '0 -8px 48px rgba(0,0,0,0.7)', backdropFilter: 'blur(28px)', animation: 'slideUp 0.2s ease' }}>
               <div style={{ width: 32, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
               {[
-                { icon: CreditCard,    label: 'Billing',       href: '/billing',     color: '#F59E0B' },
-                { icon: BarChart2,     label: 'Analytics',     href: '/analytics',   color: '#34d399' },
-                { icon: Bot,           label: 'Human-AI',      href: '/automation',  color: '#a78bfa' },
-                { icon: Hash,          label: 'Comments',      href: '/comments',    color: '#60a5fa' },
-                { icon: Settings,      label: 'Settings',      href: '/settings',    color: '#94a3b8' },
+                { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
+                { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
+                { icon: Bot,        label: 'Automation', href: '/automation', color: '#a78bfa' },
+                { icon: Hash,       label: 'Comments',   href: '/comments',   color: '#60a5fa' },
+                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '11px 14px', borderRadius: 11, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 13.5, transition: 'background 0.15s' }}

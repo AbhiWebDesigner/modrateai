@@ -235,10 +235,13 @@ const SIDEBAR_NAV = [
   { label: 'Settings',   icon: Settings,        href: '/settings'   },
 ];
 
+/* ── BOTTOM NAV items (no duplicate Comments) ── */
 const BOTTOM_NAV = [
-  { label: 'Overview',  icon: LayoutDashboard, href: '/dashboard'  },
-  { label: 'Live Feed', icon: Rss,             href: '/live-feed'  },
-  { label: 'Comments',  icon: MessageSquare,   href: '/comments'   },
+  { label: 'Overview',  icon: LayoutDashboard, href: '/dashboard' },
+  { label: 'Live Feed', icon: Rss,             href: '/live-feed' },
+  // CENTER = Automation FAB
+  { label: 'Comments',  icon: MessageSquare,   href: '/comments'  },
+  { label: 'More',      icon: MoreHorizontal,  href: null         },
 ];
 
 /* ══════════════════════════════════════
@@ -316,11 +319,9 @@ export default function Dashboard() {
   const viewCount        = (userData?.youtube_view_count as string) || null;
 
   const moderationAcc   = (analyticsData?.moderationAccuracy as number) ?? (userData?.moderation_accuracy as number) ?? 99.9;
-  const aiConfidence    = (analyticsData?.aiConfidence as number) ?? 98.6;
   const totalScanned    = (analyticsData?.totalScanned as number) ?? 0;
   const totalHidden     = (analyticsData?.totalHidden as number) ?? 0;
   const totalReplies    = (analyticsData?.totalReplies as number) ?? 0;
-  const spamDetected    = (analyticsData?.spamDetected as number) ?? 0;
   const pendingReview   = (analyticsData?.pendingReview as number) ?? (userData?.pending_review as number) ?? 0;
   const avgResponseTime = (analyticsData?.avgResponseTime as number) ?? avgResponseMs ?? 0;
 
@@ -494,6 +495,8 @@ export default function Dashboard() {
 
         /* CONTENT */
         .r-content{padding:20px 22px 24px;flex:1;animation:fadeIn 0.3s ease;}
+
+        /* TWO-COLUMN LAYOUT — desktop only */
         .r-layout{display:grid;grid-template-columns:1fr 268px;gap:14px;align-items:start;}
 
         /* HERO */
@@ -549,7 +552,7 @@ export default function Dashboard() {
         .r-bnav-item.active .r-bnav-icon{background:rgba(124,58,237,0.13);}
         .r-bnav-fab{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6D28D9);
           display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
-          box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:4px;transition:transform 0.18s;}
+          box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
         /* LIVE PANEL */
@@ -582,6 +585,8 @@ export default function Dashboard() {
           .r-hero{padding:16px 14px 16px;}
           .r-hero-shield{display:none!important;}
           .r-hero h1{font-size:22px!important;}
+          /* FIX: full width single column on mobile */
+          .r-layout{display:block!important;width:100%;}
           .r-stats{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
           .r-stat{padding:12px 13px;}
           .r-stat-value,.r-stat-zero{font-size:20px;}
@@ -810,7 +815,6 @@ export default function Dashboard() {
               <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12.5 }}>
                 Your AI moderator is actively protecting your YouTube channel 24/7.
               </p>
-              {/* SHIELD GRAPHIC */}
               <div className="r-hero-shield">
                 <svg viewBox="0 0 130 130" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
@@ -822,16 +826,13 @@ export default function Dashboard() {
                   <ellipse cx="65" cy="65" rx="60" ry="60" fill="url(#shg1)" />
                   <path d="M65 16 L98 29 L98 63 C98 82 82 97 65 104 C48 97 32 82 32 63 L32 29 Z" fill="rgba(124,58,237,0.16)" stroke="rgba(167,139,250,0.3)" strokeWidth="1.5"/>
                   <path d="M65 23 L93 35 L93 62 C93 78 79 91 65 98 C51 91 37 78 37 62 L37 35 Z" fill="rgba(124,58,237,0.1)" stroke="rgba(167,139,250,0.18)" strokeWidth="1"/>
-                  {/* YT icon in center */}
                   <circle cx="65" cy="63" r="16" fill="rgba(220,38,38,0.18)" stroke="rgba(248,113,113,0.35)" strokeWidth="1.5"/>
                   <path d="M58 57.5 L58 68.5 L74 63 Z" fill="#f87171" opacity="0.9"/>
-                  {/* Orbit dots */}
                   {[0,60,120,180,240,300].map((deg, i) => {
                     const rad = (deg * Math.PI) / 180;
                     const x = 65 + 48 * Math.cos(rad), y = 65 + 48 * Math.sin(rad);
                     return <circle key={i} cx={x} cy={y} r="2.5" fill="rgba(167,139,250,0.28)" />;
                   })}
-                  {/* Orbit icons */}
                   <rect x="20" y="22" width="14" height="14" rx="4" fill="rgba(167,139,250,0.14)" stroke="rgba(167,139,250,0.28)" strokeWidth="1"/>
                   <rect x="96" y="22" width="14" height="14" rx="4" fill="rgba(245,158,11,0.14)" stroke="rgba(245,158,11,0.28)" strokeWidth="1"/>
                   <rect x="110" y="58" width="14" height="14" rx="4" fill="rgba(52,211,153,0.14)" stroke="rgba(52,211,153,0.28)" strokeWidth="1"/>
@@ -858,7 +859,12 @@ export default function Dashboard() {
                         <span style={{ color: '#22c55e', fontSize: 9, fontWeight: 800 }}>CONNECTED</span>
                       </div>
                     </div>
-                    {channelHandle && <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>@{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
+                    {/* FIX: no-wrap + ellipsis for date line */}
+                    {channelHandle && (
+                      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                        @{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                    )}
                   </div>
                   <div className="r-channel-stats" style={{ display: 'flex', gap: 22, flexShrink: 0 }}>
                     {[
@@ -929,7 +935,6 @@ export default function Dashboard() {
 
                 {/* PENDING + MODERATION ROW */}
                 <div className="r-pending-row">
-                  {/* PENDING REVIEW */}
                   <div className="r-card">
                     <div className="r-card-top">
                       <div>
@@ -950,7 +955,6 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* MODERATION ACCURACY */}
                   <div className="r-card">
                     <div className="r-card-top">
                       <div>
@@ -1045,7 +1049,6 @@ export default function Dashboard() {
                           );
                         })
                       ) : (
-                        // Placeholder rows
                         [['scam', 324], ['subscribe my channel', 298], ['fake giveaway', 276], ['hate speech', 198], ['bad words', 174]].map(([kw, count], i) => (
                           <div key={i} className="r-keyword-row">
                             <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10, fontWeight: 700, width: 16, flexShrink: 0 }}>{String(i + 1).padStart(2, '0')}</span>
@@ -1063,7 +1066,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* LIVE ACTIVITY (mobile) */}
+                  {/* LIVE ACTIVITY (mobile only) */}
                   <div className="r-card r-mobile-live">
                     <LiveActivityContent />
                   </div>
@@ -1153,7 +1156,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* DESKTOP LIVE ACTIVITY */}
+              {/* DESKTOP LIVE ACTIVITY PANEL */}
               <div className="r-live-panel" style={{ position: 'sticky', top: 72 }}>
                 <LiveActivityContent />
               </div>
@@ -1161,27 +1164,36 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── BOTTOM NAV ── */}
+        {/* ── BOTTOM NAV (mobile) ── */}
+        {/* Layout: Overview | Live Feed | [Automation FAB] | Comments | More */}
         <nav className="r-bottom-nav">
-          {BOTTOM_NAV.map(item => {
-            const isActive = currentPath === item.href;
-            return (
-              <Link key={item.href} href={item.href} className={`r-bnav-item${isActive ? ' active' : ''}`}>
-                <span className="r-bnav-icon"><item.icon size={19} strokeWidth={isActive ? 2.2 : 1.7} /></span>
-                <span style={{ fontSize: 9, fontWeight: isActive ? 700 : 500 }}>{item.label}</span>
-              </Link>
-            );
-          })}
-          {/* CENTER FAB */}
+          {/* Overview */}
+          <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
+            <span className="r-bnav-icon"><LayoutDashboard size={19} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>
+            <span style={{ fontSize: 9, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
+          </Link>
+
+          {/* Live Feed */}
+          <Link href="/live-feed" className="r-bnav-item">
+            <span className="r-bnav-icon"><Rss size={19} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 9, fontWeight: 500 }}>Live Feed</span>
+          </Link>
+
+          {/* CENTER — Automation FAB */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
             <button className="r-bnav-fab" onClick={() => router.push('/automation')}>
               <Plus size={22} color="white" strokeWidth={2.5} />
             </button>
+            <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
           </div>
+
+          {/* Comments */}
           <Link href="/comments" className="r-bnav-item">
             <span className="r-bnav-icon"><MessageSquare size={19} strokeWidth={1.7} /></span>
             <span style={{ fontSize: 9, fontWeight: 500 }}>Comments</span>
           </Link>
+
+          {/* More */}
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
             <span className="r-bnav-icon"><MoreHorizontal size={19} strokeWidth={1.7} /></span>
             <span style={{ fontSize: 9 }}>More</span>

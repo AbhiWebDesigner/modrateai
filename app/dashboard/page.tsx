@@ -582,9 +582,10 @@ export default function Dashboard() {
           background:radial-gradient(ellipse,rgba(124,58,237,0.14) 0%,transparent 65%);pointer-events:none;}
         .r-hero-shield{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:140px;height:140px;opacity:0.85;}
 
-        /* ── CHANNEL CARD MOBILE ── */
-        .r-channel-card{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+        /* ── CHANNEL CARD ── */
+        .r-channel-card{display:flex;align-items:center;gap:18px;}
         .r-channel-stats{display:flex;gap:28px;flex-shrink:0;}
+        .r-channel-btn{flex-shrink:0;}
 
         /* ── BOTTOM 3-COL GRID ── */
         .r-bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
@@ -610,10 +611,10 @@ export default function Dashboard() {
           .r-stat-value,.r-stat-zero{font-size:22px;}
           .r-stat-label{font-size:10.5px;}
 
-          /* channel card: stack vertically */
-          .r-channel-card{flex-direction:column;align-items:flex-start;gap:12px;}
-          .r-channel-stats{gap:20px;width:100%;}
-          .r-channel-top-row{width:100%;}
+          /* channel card: 2 rows on mobile */
+          .r-channel-card{flex-wrap:wrap;gap:10px;}
+          .r-channel-stats{gap:16px;}
+          .r-channel-btn{width:100%;justify-content:center;}
 
           /* bottom 3-col → single col */
           .r-bottom-grid{grid-template-columns:1fr;gap:10px;}
@@ -816,46 +817,44 @@ export default function Dashboard() {
 
             {/* CHANNEL CARD */}
             {youtubeConnected && (
-              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '16px 18px', marginBottom: 14 }}>
+              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 22px', marginBottom: 14 }}>
                 <div className="r-channel-card">
-                  {/* Avatar + name row */}
-                  <div className="r-channel-top-row" style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
-                    <div style={{ position: 'relative', flexShrink: 0 }}>
-                      {channelThumbnail
-                        ? <img src={channelThumbnail} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
-                        : <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
-                      }
-                      <div style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
-                        <span style={{ color: '#FAFAFA', fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{channelName || 'My Channel'}</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>
-                          <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e' }} />
-                          <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 700 }}>CONNECTED</span>
-                        </div>
+                  {/* Avatar */}
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    {channelThumbnail
+                      ? <img src={channelThumbnail} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
+                      : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
+                    }
+                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
+                  </div>
+                  {/* Name + handle */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
+                      <span style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channelName || 'My Channel'}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>
+                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e' }} />
+                        <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 700 }}>CONNECTED</span>
                       </div>
-                      {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{channelHandle.replace('@', '')} · Connected {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                     </div>
+                    {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                   </div>
-                  {/* Stats + button row */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12 }}>
-                    <div className="r-channel-stats">
-                      {[
-                        { label: 'Subscribers', value: fmtCount(subscriberCount) },
-                        { label: 'Videos',      value: fmtCount(videoCount)      },
-                        { label: 'Views',       value: fmtCount(viewCount)       },
-                      ].map(s => (
-                        <div key={s.label} style={{ textAlign: 'center' }}>
-                          <div style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-                          <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginTop: 2 }}>{s.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <button className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 12px', flexShrink: 0 }}>
-                      <ExternalLink size={11} /> Open Channel
-                    </button>
+                  {/* Stats */}
+                  <div className="r-channel-stats">
+                    {[
+                      { label: 'Subscribers', value: fmtCount(subscriberCount) },
+                      { label: 'Videos',      value: fmtCount(videoCount)      },
+                      { label: 'Views',       value: fmtCount(viewCount)       },
+                    ].map(s => (
+                      <div key={s.label} style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#FAFAFA', fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10.5, marginTop: 2 }}>{s.label}</div>
+                      </div>
+                    ))}
                   </div>
+                  {/* Button */}
+                  <button className={`ref-btn-ghost r-channel-btn`} style={{ fontSize: 11.5, padding: '7px 12px' }}>
+                    <ExternalLink size={11} /> Open Channel
+                  </button>
                 </div>
               </div>
             )}

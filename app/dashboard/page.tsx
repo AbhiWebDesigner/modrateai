@@ -1165,7 +1165,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── BOTTOM NAV (mobile) ── */}
-        {/* Layout: Overview | Live Feed | [Automation FAB] | Comments | More */}
+        {/* Layout: Overview | Live Feed | [Automation FAB] | Alerts | More */}
         <nav className="r-bottom-nav">
           {/* Overview */}
           <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
@@ -1187,10 +1187,10 @@ export default function Dashboard() {
             <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
           </div>
 
-          {/* Comments */}
-          <Link href="/comments" className="r-bnav-item">
-            <span className="r-bnav-icon"><MessageSquare size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: 500 }}>Comments</span>
+          {/* Alerts */}
+          <Link href="/alerts" className="r-bnav-item">
+            <span className="r-bnav-icon"><Bell size={19} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 9, fontWeight: 500 }}>Alerts</span>
           </Link>
 
           {/* More */}

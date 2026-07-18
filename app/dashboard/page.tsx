@@ -310,30 +310,25 @@ export default function Dashboard() {
       if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
 
-      // Clear old listeners
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
 
-      // users/{uid}
       const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
         setLoading(false);
       });
       unsubRefs.current.push(unsubUser);
 
-      // analytics/{uid}
       const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), (snap) => {
         if (snap.exists()) setAnalyticsData(snap.data());
       });
       unsubRefs.current.push(unsubAnalytics);
 
-      // automations/{uid}
       const unsubAutomation = onSnapshot(doc(db, 'automations', firebaseUser.uid), (snap) => {
         if (snap.exists()) setAutomationData(snap.data());
       });
       unsubRefs.current.push(unsubAutomation);
 
-      // users/{uid}/events — live activity (last 10)
       const eventsRef = collection(db, 'users', firebaseUser.uid, 'events');
       const eventsQ = query(eventsRef, orderBy('timestamp', 'desc'), limit(10));
       const unsubEvents = onSnapshot(eventsQ, (snap) => {
@@ -386,7 +381,6 @@ export default function Dashboard() {
   const spamDetected     = (analyticsData?.spamDetected as number) ?? 0;
   const avgResponseTime  = (analyticsData?.avgResponseTime as number) ?? avgResponseMs ?? 0;
 
-  // weekly chart data from analytics.weekly (arrays of 7)
   const weeklyScanned  = (analyticsData?.weekly?.scanned  as number[]) ?? [];
   const weeklyReplies  = (analyticsData?.weekly?.replies  as number[]) ?? [];
   const weeklyHidden   = (analyticsData?.weekly?.hidden   as number[]) ?? [];
@@ -409,7 +403,6 @@ export default function Dashboard() {
   const userPhoto = user?.photoURL || (userData?.photo as string) || null;
   const planColor = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
 
-  /* ── STAT CARDS (no Pending Review — removed) ── */
   const statCards = [
     { label: 'Comments Scanned', fmtValue: fmt(commentsScanned ?? totalScanned),  raw: commentsScanned ?? totalScanned,  up: true,  color: '#a78bfa', icon: MessageSquare },
     { label: 'AI Replies Sent',  fmtValue: fmt(aiReplies ?? totalReplies),         raw: aiReplies ?? totalReplies,         up: true,  color: '#F59E0B', icon: Bot           },
@@ -418,7 +411,6 @@ export default function Dashboard() {
     { label: 'Avg. Response',    fmtValue: fmtMs(avgResponseTime),                 raw: avgResponseTime,                   up: false, color: '#34d399', icon: Activity      },
   ];
 
-  /* ── CHART DATA from Firestore weekly arrays ── */
   const chartLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const chartData = [
     { label: 'Comments Scanned', color: '#a78bfa', values: weeklyScanned.length === 7 ? weeklyScanned : [0,0,0,0,0,0,0] },
@@ -426,7 +418,6 @@ export default function Dashboard() {
     { label: 'Hidden Comments',  color: '#f87171', values: weeklyHidden.length  === 7 ? weeklyHidden  : [0,0,0,0,0,0,0] },
   ];
 
-  /* ── LIVE ACTIVITY from Firestore events subcollection ── */
   function eventToLiveItem(ev: any) {
     const type = ev.type || '';
     const map: Record<string, { icon: any; iconColor: string; bg: string; title: string; sub: string }> = {
@@ -442,7 +433,6 @@ export default function Dashboard() {
     return { ...cfg, time: timeAgo(ev.timestamp) };
   }
 
-  /* ── MODERATION ACCURACY stats (real) ── */
   const totalActionsCalc   = totalScanned > 0 ? totalScanned : null;
   const correctActionsCalc = totalActionsCalc ? Math.round((moderationAcc / 100) * totalActionsCalc) : null;
   const falsePositivesCalc = totalActionsCalc ? totalActionsCalc - (correctActionsCalc ?? 0) : null;
@@ -592,6 +582,13 @@ export default function Dashboard() {
           background:radial-gradient(ellipse,rgba(124,58,237,0.14) 0%,transparent 65%);pointer-events:none;}
         .r-hero-shield{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:140px;height:140px;opacity:0.85;}
 
+        /* ── CHANNEL CARD MOBILE ── */
+        .r-channel-card{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+        .r-channel-stats{display:flex;gap:28px;flex-shrink:0;}
+
+        /* ── BOTTOM 3-COL GRID ── */
+        .r-bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
         @media(max-width:1279px){
           .r-layout{grid-template-columns:1fr;}
           .r-live-panel{display:none;}
@@ -601,18 +598,36 @@ export default function Dashboard() {
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;padding-bottom:72px;}
           .r-bottom-nav{display:flex!important;}
-          .r-stats{grid-template-columns:1fr 1fr;gap:8px;}
-          .r-content{padding:12px;}
+          .r-content{padding:12px 12px 16px;}
           .r-topbar{padding:0 12px;}
           .r-topbar-search,.r-topbar-status{display:none!important;}
-          .r-stat-value,.r-stat-zero{font-size:24px;}
-          .r-hero{padding:20px;}
+          .r-hero{padding:18px 16px;}
           .r-hero-shield{display:none;}
+
+          /* stat cards: 2 col */
+          .r-stats{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+          .r-stat{padding:14px 14px;}
+          .r-stat-value,.r-stat-zero{font-size:22px;}
+          .r-stat-label{font-size:10.5px;}
+
+          /* channel card: stack vertically */
+          .r-channel-card{flex-direction:column;align-items:flex-start;gap:12px;}
+          .r-channel-stats{gap:20px;width:100%;}
+          .r-channel-top-row{width:100%;}
+
+          /* bottom 3-col → single col */
+          .r-bottom-grid{grid-template-columns:1fr;gap:10px;}
+
+          /* hero badges wrap */
+          .r-hero-badges{flex-wrap:wrap;gap:6px!important;}
+          .r-hero h1{font-size:24px!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
           .r-stats{grid-template-columns:repeat(3,1fr);}
           .r-content{padding:18px;}
           .r-topbar{padding:0 18px;}
+          .r-channel-card{flex-direction:row;align-items:center;}
+          .r-bottom-grid{grid-template-columns:1fr 1fr;}
         }
         @media(min-width:1024px){.r-bottom-nav{display:none!important;}}
       `}</style>
@@ -759,7 +774,7 @@ export default function Dashboard() {
 
             {/* HERO */}
             <div className="r-hero">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div className="r-hero-badges" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 {[
                   { label: 'All systems operational', color: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.18)', dot: true },
                   { label: 'Protection active',        color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.18)', icon: Shield },
@@ -801,52 +816,60 @@ export default function Dashboard() {
 
             {/* CHANNEL CARD */}
             {youtubeConnected && (
-              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 22px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-                <div style={{ position: 'relative', flexShrink: 0 }}>
-                  {channelThumbnail
-                    ? <img src={channelThumbnail} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
-                    : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
-                  }
-                  <div style={{ position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                    <span style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 800 }}>{channelName || 'My Channel'}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 6, padding: '2px 7px' }}>
-                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e' }} />
-                      <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 700 }}>CONNECTED</span>
+              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '16px 18px', marginBottom: 14 }}>
+                <div className="r-channel-card">
+                  {/* Avatar + name row */}
+                  <div className="r-channel-top-row" style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      {channelThumbnail
+                        ? <img src={channelThumbnail} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
+                        : <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
+                      }
+                      <div style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+                        <span style={{ color: '#FAFAFA', fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{channelName || 'My Channel'}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 6, padding: '2px 7px', flexShrink: 0 }}>
+                          <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e' }} />
+                          <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 700 }}>CONNECTED</span>
+                        </div>
+                      </div>
+                      {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{channelHandle.replace('@', '')} · Connected {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                     </div>
                   </div>
-                  {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>@{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
-                </div>
-                <div style={{ display: 'flex', gap: 28, flexShrink: 0 }}>
-                  {[
-                    { label: 'Subscribers', value: fmtCount(subscriberCount) },
-                    { label: 'Videos',      value: fmtCount(videoCount)      },
-                    { label: 'Views',       value: fmtCount(viewCount)       },
-                  ].map(s => (
-                    <div key={s.label} style={{ textAlign: 'center' }}>
-                      <div style={{ color: '#FAFAFA', fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-                      <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10.5, marginTop: 2 }}>{s.label}</div>
+                  {/* Stats + button row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12 }}>
+                    <div className="r-channel-stats">
+                      {[
+                        { label: 'Subscribers', value: fmtCount(subscriberCount) },
+                        { label: 'Videos',      value: fmtCount(videoCount)      },
+                        { label: 'Views',       value: fmtCount(viewCount)       },
+                      ].map(s => (
+                        <div key={s.label} style={{ textAlign: 'center' }}>
+                          <div style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                          <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginTop: 2 }}>{s.label}</div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                    <button className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 12px', flexShrink: 0 }}>
+                      <ExternalLink size={11} /> Open Channel
+                    </button>
+                  </div>
                 </div>
-                <button className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 12px', flexShrink: 0 }}>
-                  <ExternalLink size={11} /> Open Channel
-                </button>
               </div>
             )}
 
             {!youtubeConnected && (
-              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: '24px 28px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-                <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <YTIcon color="#f87171" size={26} />
+              <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: '24px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ width: 48, height: 48, borderRadius: 16, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <YTIcon color="#f87171" size={24} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h2 style={{ color: '#FAFAFA', fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Connect your YouTube channel</h2>
-                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12.5 }}>Grant OAuth access and ModerateAI starts protecting your community instantly.</p>
+                  <h2 style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Connect your YouTube channel</h2>
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>Grant OAuth access and ModerateAI starts protecting your community instantly.</p>
                 </div>
-                <button onClick={handleYouTubeConnect} className="ref-btn-primary" style={{ flexShrink: 0 }}>
+                <button onClick={handleYouTubeConnect} className="ref-btn-primary" style={{ flexShrink: 0, width: '100%' }}>
                   <YTIcon color="#fff" size={13} /> Connect YouTube
                 </button>
               </div>
@@ -923,8 +946,8 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {/* BOTTOM ROW */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                {/* BOTTOM ROW — 3 col desktop, 1 col mobile */}
+                <div className="r-bottom-grid">
 
                   {/* Moderation Accuracy */}
                   <div className="ref-card">
@@ -957,7 +980,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Top Toxic Keywords — empty state, no fake data */}
+                  {/* Top Toxic Keywords */}
                   <div className="ref-card">
                     <div className="ref-card-top">
                       <div>
@@ -974,7 +997,6 @@ export default function Dashboard() {
                   {/* Recent Automations + System Health + Plan Usage */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-                    {/* Automations — real from Firestore */}
                     <div className="ref-card">
                       <div className="ref-card-top" style={{ alignItems: 'center' }}>
                         <div><div className="ref-card-title">Recent Automations</div></div>
@@ -991,7 +1013,6 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {/* AI System Health — real data only */}
                     <div className="ref-card">
                       <div className="ref-card-top" style={{ alignItems: 'center' }}>
                         <div><div className="ref-card-title">AI System Health</div></div>
@@ -1015,7 +1036,6 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {/* Plan Usage */}
                     <MonthlyUsageCard
                       plan={plan}
                       commentsUsed={commentsUsed}

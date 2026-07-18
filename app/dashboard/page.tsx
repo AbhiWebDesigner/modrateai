@@ -1020,8 +1020,10 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <EmptyState icon={Hash} message="No toxic keywords detected yet. Keywords will appear as comments are scanned." />
+                     <div className="r-mobile-live-panel">
+                     <LiveActivityContent />
                   </div>
-
+                  </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div className="ref-card">
                       <div className="ref-card-top" style={{ alignItems: 'center' }}>
@@ -1071,11 +1073,6 @@ export default function Dashboard() {
                       onConnectYouTube={handleYouTubeConnect}
                     />
                   </div>
-                </div>
-
-                {/* MOBILE ONLY — Live Activity below Top Toxic Keywords */}
-                <div className="r-mobile-live-panel ref-card" style={{ marginTop: 10 }}>
-                  <LiveActivityContent />
                 </div>
 
               </div>

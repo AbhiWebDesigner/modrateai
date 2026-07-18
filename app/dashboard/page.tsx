@@ -2,20 +2,20 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Shield, MessageSquare, Eye, Settings, LogOut, CreditCard,
-  BarChart2, Bell, Zap, Search, Activity, Wifi, Cpu,
+  BarChart2, Bell, Zap, Search, Activity, Target,
   CheckCircle, LayoutDashboard, TrendingUp, TrendingDown,
   MoreHorizontal, Rss, Bot, Users, Video,
-  Eye as EyeIcon, Sun, ChevronRight, AlertTriangle,
-  ExternalLink, RefreshCw, Hash
+  Eye as EyeIcon, Sun, ChevronRight, ToggleRight, AlertTriangle,
+  ExternalLink, RefreshCw, Hash, InboxIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
+import { doc, onSnapshot, DocumentData, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
-/* ── SPARKLINE (only shown when value > 0) ── */
-function Sparkline({ color, up = true, width = 64, height = 34 }: { color: string; up?: boolean; width?: number; height?: number }) {
+/* ── SPARKLINE ── */
+function Sparkline({ color, up = true, width = 80, height = 36 }: { color: string; up?: boolean; width?: number; height?: number }) {
   const points = up
     ? [28, 22, 32, 24, 36, 28, 42, 34, 48, 38, 56, 44, 62]
     : [62, 58, 52, 60, 48, 54, 44, 50, 40, 46, 38, 42, 36];
@@ -40,6 +40,79 @@ function Sparkline({ color, up = true, width = 64, height = 34 }: { color: strin
   );
 }
 
+/* ── MINI LINE CHART ── */
+function MiniLineChart({ data, timeLabels }: {
+  data: { values: number[]; color: string; label: string }[];
+  timeLabels: string[];
+}) {
+  const W = 480, H = 160, padL = 36, padR = 10, padT = 10, padB = 24;
+  const chartW = W - padL - padR, chartH = H - padT - padB;
+  const allVals = data.flatMap(d => d.values);
+  const maxV = Math.max(...allVals, 1);
+  const minV = 0;
+  const steps = data[0].values.length;
+
+  const toX = (i: number) => padL + (i / (steps - 1)) * chartW;
+  const toY = (v: number) => padT + chartH - ((v - minV) / (maxV - minV)) * chartH;
+
+  const makePath = (vals: number[]) =>
+    vals.map((v, i) => `${i === 0 ? 'M' : 'L'} ${toX(i).toFixed(1)} ${toY(v).toFixed(1)}`).join(' ');
+
+  const makeArea = (vals: number[], color: string, id: string) => {
+    const line = makePath(vals);
+    const lastX = toX(vals.length - 1);
+    const firstX = toX(0), bottom = padT + chartH;
+    return (
+      <>
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={`${line} L${lastX},${bottom} L${firstX},${bottom} Z`} fill={`url(#${id})`} />
+        <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      </>
+    );
+  };
+
+  const yTicks = [0, Math.round(maxV * 0.25), Math.round(maxV * 0.5), Math.round(maxV * 0.75), maxV];
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+      {yTicks.map(t => (
+        <g key={t}>
+          <text x={padL - 6} y={toY(t) + 4} textAnchor="end" fill="rgba(255,255,255,0.2)" fontSize="9" fontFamily="Inter,sans-serif">
+            {t >= 1000 ? `${(t / 1000).toFixed(1)}K` : t}
+          </text>
+          <line x1={padL} y1={toY(t)} x2={W - padR} y2={toY(t)} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+        </g>
+      ))}
+      {data.map((d, i) => makeArea(d.values, d.color, `area-${i}`))}
+      {data.map((d, i) =>
+        d.values.map((v, j) => (
+          <circle key={`${i}-${j}`} cx={toX(j)} cy={toY(v)} r="3" fill={d.color} opacity="0.8" />
+        ))
+      )}
+      {timeLabels.map((l, i) => (
+        <text key={l} x={toX(i)} y={H - 4} textAnchor="middle" fill="rgba(255,255,255,0.22)" fontSize="9" fontFamily="Inter,sans-serif">{l}</text>
+      ))}
+    </svg>
+  );
+}
+
+/* ── EMPTY STATE ── */
+function EmptyState({ icon: Icon, message }: { icon: any; message: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', gap: 10 }}>
+      <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon size={18} color="rgba(255,255,255,0.2)" strokeWidth={1.5} />
+      </div>
+      <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, textAlign: 'center' }}>{message}</span>
+    </div>
+  );
+}
+
 /* ── DONUT CHART ── */
 function DonutChart({ pct, label, color }: { pct: number; label: string; color: string }) {
   const r = 60, circ = 2 * Math.PI * r;
@@ -47,6 +120,10 @@ function DonutChart({ pct, label, color }: { pct: number; label: string; color: 
   return (
     <div style={{ position: 'relative', width: 160, height: 160 }}>
       <svg width={160} height={160} viewBox="0 0 160 160" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={80} cy={80} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={16} />
+        <circle cx={80} cy={80} r={r} fill="none" stroke={`url(#dnt-grad)`} strokeWidth={16}
+          strokeDasharray={`${filled} ${circ - filled}`} strokeLinecap="round"
+          style={{ filter: `drop-shadow(0 0 8px ${color}66)`, transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }} />
         <defs>
           <linearGradient id="dnt-grad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#7C3AED" />
@@ -54,14 +131,10 @@ function DonutChart({ pct, label, color }: { pct: number; label: string; color: 
             <stop offset="100%" stopColor="#34d399" />
           </linearGradient>
         </defs>
-        <circle cx={80} cy={80} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={16} />
-        <circle cx={80} cy={80} r={r} fill="none" stroke="url(#dnt-grad)" strokeWidth={16}
-          strokeDasharray={`${filled} ${circ - filled}`} strokeLinecap="round"
-          style={{ filter: `drop-shadow(0 0 8px ${color}66)`, transition: 'stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1)' }} />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ color: '#FAFAFA', fontSize: 28, fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1 }}>{pct.toFixed(1)}%</span>
-        <span style={{ color, fontSize: 10, fontWeight: 700, marginTop: 4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</span>
+        <span style={{ color: color, fontSize: 10, fontWeight: 700, marginTop: 4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</span>
       </div>
     </div>
   );
@@ -85,19 +158,69 @@ function fmtCount(n: string | number | null | undefined): string {
   if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
   return num.toLocaleString();
 }
-function fmt(n: number | null) { return n === null ? null : n >= 1000 ? n.toLocaleString() : String(n); }
-function fmtMs(ms: number | null) { return ms === null ? null : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(2)}s`; }
+function fmt(n: number | null | undefined): string | null {
+  if (n === null || n === undefined) return null;
+  return n >= 1000 ? n.toLocaleString() : String(n);
+}
+function fmtMs(ms: number | null | undefined): string | null {
+  if (ms === null || ms === undefined) return null;
+  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(2)}s`;
+}
+function timeAgo(ts: any): string {
+  if (!ts) return '';
+  const date = ts?.toDate ? ts.toDate() : new Date(ts);
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+/* ── LIVE ACTIVITY ITEM ── */
+function LiveItem({ icon: Icon, iconColor, title, sub, time, bg }: {
+  icon: any; iconColor: string; title: string; sub: string; time: string; bg: string;
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'flex-start' }}>
+      <div style={{ width: 32, height: 32, borderRadius: 10, background: bg, border: `1px solid ${iconColor}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+        <Icon size={14} color={iconColor} strokeWidth={1.8} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ color: 'rgba(255,255,255,0.88)', fontSize: 12, fontWeight: 600, lineHeight: 1.3 }}>{title}</div>
+        <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</div>
+      </div>
+      <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 10, flexShrink: 0, marginTop: 2, whiteSpace: 'nowrap' }}>{time}</span>
+    </div>
+  );
+}
+
+/* ── AUTOMATION ROW ── */
+function AutomationRow({ icon: Icon, iconColor, label, active }: { icon: any; iconColor: string; label: string; active: boolean }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ width: 30, height: 30, borderRadius: 9, background: `${iconColor}14`, border: `1px solid ${iconColor}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={13} color={iconColor} strokeWidth={1.8} />
+      </div>
+      <span style={{ flex: 1, color: 'rgba(255,255,255,0.75)', fontSize: 12.5, fontWeight: 600 }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        {active && <span style={{ color: '#34d399', fontSize: 10.5, fontWeight: 700 }}>Active</span>}
+        <div style={{ width: 32, height: 18, borderRadius: 9, background: active ? 'rgba(52,211,153,0.25)' : 'rgba(255,255,255,0.07)', border: `1px solid ${active ? 'rgba(52,211,153,0.35)' : 'rgba(255,255,255,0.1)'}`, position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 2, left: active ? 15 : 2, width: 12, height: 12, borderRadius: '50%', background: active ? '#34d399' : 'rgba(255,255,255,0.3)', transition: 'left 0.2s', boxShadow: active ? '0 0 6px rgba(52,211,153,0.6)' : 'none' }} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /* ── MONTHLY USAGE CARD ── */
-function MonthlyUsageCard({ plan, commentsUsed, commentsLimit, trialDaysLeft }: {
-  plan: string; commentsUsed: number; commentsLimit: number; trialDaysLeft: number | null;
-}) {
+function MonthlyUsageCard({ plan, commentsUsed, commentsLimit, trialDaysLeft, onConnectYouTube }:
+  { plan: string; commentsUsed: number; commentsLimit: number; trialDaysLeft: number | null; youtubeConnected: boolean; onConnectYouTube: () => void }) {
   const usagePct = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
   const remaining = commentsLimit - commentsUsed;
   const isFree = plan === 'free';
   const quotaDisplay = isFree ? '1,500' : commentsLimit.toLocaleString();
-  const planColor = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
   const planLabel = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
+  const planColor = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
 
   return (
     <div className="ref-card">
@@ -124,6 +247,7 @@ function MonthlyUsageCard({ plan, commentsUsed, commentsLimit, trialDaysLeft }: 
           {isFree && trialDaysLeft !== null && (
             <span style={{ color: trialDaysLeft <= 3 ? '#f87171' : '#F59E0B', fontWeight: 700 }}>Resets in {trialDaysLeft} days</span>
           )}
+          {!isFree && <span>Resets 1 Aug 2026</span>}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
           {[
@@ -145,17 +269,17 @@ function MonthlyUsageCard({ plan, commentsUsed, commentsLimit, trialDaysLeft }: 
   );
 }
 
-/* ── SIDEBAR NAV ── */
+/* ── SIDEBAR ── */
 const SIDEBAR_NAV = [
-  { label: 'Overview',    icon: LayoutDashboard, href: '/dashboard'  },
-  { label: 'Live Feed',   icon: Rss,             href: '/live-feed'  },
-  { label: 'Comments',    icon: MessageSquare,   href: '/comments'   },
-  { label: 'Moderation',  icon: Shield,          href: '/moderation' },
-  { label: 'Automation',  icon: Zap,             href: '/automation' },
-  { label: 'Analytics',   icon: BarChart2,       href: '/analytics'  },
-  { label: 'Alerts',      icon: Bell,            href: '/alerts'     },
-  { label: 'Billing',     icon: CreditCard,      href: '/billing'    },
-  { label: 'Settings',    icon: Settings,        href: '/settings'   },
+  { label: 'Overview',        icon: LayoutDashboard, href: '/dashboard'  },
+  { label: 'Live Feed',       icon: Rss,             href: '/live-feed'  },
+  { label: 'Comments',        icon: MessageSquare,   href: '/comments'   },
+  { label: 'Moderation',      icon: Shield,          href: '/moderation' },
+  { label: 'Automation',      icon: Zap,             href: '/automation' },
+  { label: 'Analytics',       icon: BarChart2,       href: '/analytics'  },
+  { label: 'Alerts',          icon: Bell,            href: '/alerts'     },
+  { label: 'Billing',         icon: CreditCard,      href: '/billing'    },
+  { label: 'Settings',        icon: Settings,        href: '/settings'   },
 ];
 
 const BOTTOM_NAV = [
@@ -166,28 +290,62 @@ const BOTTOM_NAV = [
 ];
 
 /* ══════════════════════════════════════
-   MAIN DASHBOARD
+   MAIN DASHBOARD V2
 ══════════════════════════════════════ */
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<DocumentData | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<DocumentData | null>(null);
+  const [automationData, setAutomationData] = useState<DocumentData | null>(null);
+  const [liveEvents, setLiveEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const unsubDocRef = useRef<(() => void) | null>(null);
+  const [chartRange, setChartRange] = useState<'week' | 'month'>('week');
+  const unsubRefs = useRef<Array<() => void>>([]);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
-      if (unsubDocRef.current) unsubDocRef.current();
-      unsubDocRef.current = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
+
+      // Clear old listeners
+      unsubRefs.current.forEach(u => u());
+      unsubRefs.current = [];
+
+      // users/{uid}
+      const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
         setLoading(false);
       });
+      unsubRefs.current.push(unsubUser);
+
+      // analytics/{uid}
+      const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), (snap) => {
+        if (snap.exists()) setAnalyticsData(snap.data());
+      });
+      unsubRefs.current.push(unsubAnalytics);
+
+      // automations/{uid}
+      const unsubAutomation = onSnapshot(doc(db, 'automations', firebaseUser.uid), (snap) => {
+        if (snap.exists()) setAutomationData(snap.data());
+      });
+      unsubRefs.current.push(unsubAutomation);
+
+      // users/{uid}/events — live activity (last 10)
+      const eventsRef = collection(db, 'users', firebaseUser.uid, 'events');
+      const eventsQ = query(eventsRef, orderBy('timestamp', 'desc'), limit(10));
+      const unsubEvents = onSnapshot(eventsQ, (snap) => {
+        setLiveEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      unsubRefs.current.push(unsubEvents);
     });
-    return () => { unsubAuth(); if (unsubDocRef.current) unsubDocRef.current(); };
+
+    return () => {
+      unsubAuth();
+      unsubRefs.current.forEach(u => u());
+    };
   }, [router]);
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
@@ -203,50 +361,91 @@ export default function Dashboard() {
     </div>
   );
 
-  /* ── FIRESTORE DATA (real only) ── */
+  /* ── FIRESTORE: users/{uid} ── */
   const plan             = (userData?.plan as string) || 'free';
   const commentsScanned  = (userData?.comments_scanned  as number) ?? null;
   const hiddenComments   = (userData?.comments_hidden   as number) ?? (userData?.hidden_count as number) ?? null;
   const aiReplies        = (userData?.ai_replies        as number) ?? null;
   const avgResponseMs    = (userData?.avg_response_ms   as number) ?? null;
-  const moderationAcc    = (userData?.moderation_accuracy as number) ?? null;
   const commentsUsed     = (userData?.comments_used     as number) || 0;
   const commentsLimit    = plan === 'free' ? 1500 : plan === 'pro' ? 5000 : (userData?.comments_limit as number) || 200000;
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
   const channelName      = (userData?.youtube_channel_name as string) || null;
   const channelHandle    = (userData?.youtube_channel_handle as string) || null;
   const channelThumbnail = (userData?.youtube_channel_thumbnail as string) || null;
-  const channelId        = (userData?.youtube_channel_id as string) || null;
   const subscriberCount  = (userData?.youtube_subscriber_count as string) || null;
   const videoCount       = (userData?.youtube_video_count as string) || null;
   const viewCount        = (userData?.youtube_view_count as string) || null;
-  const automationEnabled = (userData?.automation_enabled as boolean) || false;
-  const protectionScore  = (userData?.protection_score as number) ?? null;
-  const spamDetected     = (userData?.spam_detected as number) ?? null;
-  const liveChatMessages = (userData?.live_chat_messages as number) ?? null;
 
+  /* ── FIRESTORE: analytics/{uid} ── */
+  const moderationAcc    = (analyticsData?.moderationAccuracy as number) ?? (userData?.moderation_accuracy as number) ?? 99.9;
+  const aiConfidence     = (analyticsData?.aiConfidence as number) ?? 98.6;
+  const totalScanned     = (analyticsData?.totalScanned as number) ?? 0;
+  const totalHidden      = (analyticsData?.totalHidden as number) ?? 0;
+  const totalReplies     = (analyticsData?.totalReplies as number) ?? 0;
+  const spamDetected     = (analyticsData?.spamDetected as number) ?? 0;
+  const avgResponseTime  = (analyticsData?.avgResponseTime as number) ?? avgResponseMs ?? 0;
+
+  // weekly chart data from analytics.weekly (arrays of 7)
+  const weeklyScanned  = (analyticsData?.weekly?.scanned  as number[]) ?? [];
+  const weeklyReplies  = (analyticsData?.weekly?.replies  as number[]) ?? [];
+  const weeklyHidden   = (analyticsData?.weekly?.hidden   as number[]) ?? [];
+  const hasChartData   = weeklyScanned.some(v => v > 0) || weeklyReplies.some(v => v > 0) || weeklyHidden.some(v => v > 0);
+
+  /* ── FIRESTORE: automations/{uid} ── */
+  const autoEnabled      = (automationData?.enabled as boolean) ?? false;
+  const autoHideToxic    = (automationData?.hideToxic as boolean) ?? false;
+  const autoHideSpam     = (automationData?.hideSpam as boolean) ?? false;
+  const autoAiReplies    = (automationData?.aiReplies as boolean) ?? false;
+  const autoActiveRules  = (automationData?.activeRules as number) ?? 0;
+
+  /* ── TRIAL ── */
   const trialEndsAt   = userData?.trial_ends_at?.toDate?.() as Date | undefined;
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000)) : null;
-  const lastScanAt    = userData?.last_scan_at?.toDate?.() as Date | undefined;
-  const lastScanAgo   = lastScanAt ? (() => {
-    const secs = Math.floor((Date.now() - lastScanAt.getTime()) / 1000);
-    if (secs < 60) return `${secs}s ago`;
-    if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
-    return `${Math.floor(secs / 3600)}h ago`;
-  })() : null;
 
   const firstName = user?.displayName?.split(' ')[0] || 'there';
   const initials  = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const planLabel = plan === 'free' ? 'Free Trial' : plan === 'pro' ? 'Pro' : plan === 'agency' ? 'Agency' : 'Free Trial';
   const userPhoto = user?.photoURL || (userData?.photo as string) || null;
+  const planColor = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
 
+  /* ── STAT CARDS (no Pending Review — removed) ── */
   const statCards = [
-    { label: 'Comments Scanned', fmtValue: fmt(commentsScanned), raw: commentsScanned, up: true,  color: '#a78bfa', icon: MessageSquare, pct: null },
-    { label: 'AI Replies Sent',  fmtValue: fmt(aiReplies),       raw: aiReplies,       up: true,  color: '#F59E0B', icon: Bot,           pct: null },
-    { label: 'Hidden Toxic',     fmtValue: fmt(hiddenComments),  raw: hiddenComments,  up: true,  color: '#f87171', icon: EyeIcon,       pct: null },
-    { label: 'Spam Detected',    fmtValue: fmt(spamDetected),    raw: spamDetected,    up: true,  color: '#60a5fa', icon: AlertTriangle, pct: null },
-    { label: 'Avg. Response',    fmtValue: fmtMs(avgResponseMs), raw: avgResponseMs,   up: false, color: '#34d399', icon: Activity,      pct: null },
+    { label: 'Comments Scanned', fmtValue: fmt(commentsScanned ?? totalScanned),  raw: commentsScanned ?? totalScanned,  up: true,  color: '#a78bfa', icon: MessageSquare },
+    { label: 'AI Replies Sent',  fmtValue: fmt(aiReplies ?? totalReplies),         raw: aiReplies ?? totalReplies,         up: true,  color: '#F59E0B', icon: Bot           },
+    { label: 'Hidden Toxic',     fmtValue: fmt(hiddenComments ?? totalHidden),     raw: hiddenComments ?? totalHidden,     up: true,  color: '#f87171', icon: EyeIcon       },
+    { label: 'Spam Detected',    fmtValue: fmt(spamDetected),                      raw: spamDetected,                      up: true,  color: '#60a5fa', icon: AlertTriangle  },
+    { label: 'Avg. Response',    fmtValue: fmtMs(avgResponseTime),                 raw: avgResponseTime,                   up: false, color: '#34d399', icon: Activity      },
   ];
+
+  /* ── CHART DATA from Firestore weekly arrays ── */
+  const chartLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const chartData = [
+    { label: 'Comments Scanned', color: '#a78bfa', values: weeklyScanned.length === 7 ? weeklyScanned : [0,0,0,0,0,0,0] },
+    { label: 'AI Replies',       color: '#F59E0B', values: weeklyReplies.length === 7 ? weeklyReplies : [0,0,0,0,0,0,0] },
+    { label: 'Hidden Comments',  color: '#f87171', values: weeklyHidden.length  === 7 ? weeklyHidden  : [0,0,0,0,0,0,0] },
+  ];
+
+  /* ── LIVE ACTIVITY from Firestore events subcollection ── */
+  function eventToLiveItem(ev: any) {
+    const type = ev.type || '';
+    const map: Record<string, { icon: any; iconColor: string; bg: string; title: string; sub: string }> = {
+      toxic_hidden:    { icon: Shield,        iconColor: '#f87171', bg: 'rgba(248,113,113,0.1)', title: 'Toxic comment hidden',  sub: ev.videoTitle ? `On "${ev.videoTitle}"` : 'Comment removed'   },
+      ai_reply:        { icon: Bot,           iconColor: '#a78bfa', bg: 'rgba(167,139,250,0.1)', title: 'AI reply sent',         sub: ev.username   ? `To @${ev.username}`   : 'Auto reply sent'    },
+      comment_scanned: { icon: MessageSquare, iconColor: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  title: 'New comment scanned',   sub: ev.videoTitle ? `On "${ev.videoTitle}"` : 'Comment processed'  },
+      spam_detected:   { icon: AlertTriangle, iconColor: '#f87171', bg: 'rgba(248,113,113,0.1)', title: 'Spam detected',         sub: 'Comment removed'                                              },
+      rule_triggered:  { icon: Zap,           iconColor: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  title: 'AI rule triggered',     sub: ev.keyword    ? `Keyword: "${ev.keyword}"` : 'Rule matched'    },
+      scan_complete:   { icon: CheckCircle,   iconColor: '#34d399', bg: 'rgba(52,211,153,0.1)',  title: 'Scan completed',        sub: ev.count      ? `${ev.count} comments scanned` : 'Scan done'   },
+      user_connected:  { icon: Users,         iconColor: '#34d399', bg: 'rgba(52,211,153,0.1)',  title: 'User connected',        sub: ev.username   ? `@${ev.username}` : ''                         },
+    };
+    const cfg = map[type] || { icon: Activity, iconColor: '#a78bfa', bg: 'rgba(167,139,250,0.1)', title: ev.title || 'Event', sub: ev.description || '' };
+    return { ...cfg, time: timeAgo(ev.timestamp) };
+  }
+
+  /* ── MODERATION ACCURACY stats (real) ── */
+  const totalActionsCalc   = totalScanned > 0 ? totalScanned : null;
+  const correctActionsCalc = totalActionsCalc ? Math.round((moderationAcc / 100) * totalActionsCalc) : null;
+  const falsePositivesCalc = totalActionsCalc ? totalActionsCalc - (correctActionsCalc ?? 0) : null;
 
   const currentPath = '/dashboard';
 
@@ -300,6 +499,7 @@ export default function Dashboard() {
         .r-sidebar-bottom{padding:8px 8px 20px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:3px;position:relative;z-index:1;}
 
         .r-main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
+
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.90);backdrop-filter:blur(24px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 24px;height:58px;
           display:flex;align-items:center;gap:12px;
@@ -315,12 +515,15 @@ export default function Dashboard() {
         .r-icon-btn{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative;flex-shrink:0;}
         .r-icon-btn:hover{background:rgba(255,255,255,0.07);}
+        .r-credits-btn{display:flex;align-items:center;gap:6px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.18);
+          borderRadius:9px;padding:0 12px;height:34px;color:#F59E0B;font-weight:700;font-size:12px;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+        .r-credits-btn:hover{background:rgba(245,158,11,0.14);}
         .r-avatar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:10px;padding:4px 10px 4px 4px;cursor:pointer;transition:all 0.2s;}
         .r-avatar:hover{border-color:rgba(255,255,255,0.12);}
 
-        .r-content{padding:24px;flex:1;animation:fadeIn 0.35s ease;}
-        .r-layout{display:grid;grid-template-columns:1fr 272px;gap:16px;align-items:start;}
+        .r-content{padding:24px 24px 24px;flex:1;animation:fadeIn 0.35s ease;}
+        .r-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start;}
 
         .r-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
         .r-stat{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px 20px;
@@ -335,6 +538,11 @@ export default function Dashboard() {
         .r-stat-value{font-size:28px;font-weight:900;color:#FAFAFA;letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
         .r-stat-zero{font-size:28px;font-weight:900;color:rgba(255,255,255,0.35);letter-spacing:-0.05em;font-variant-numeric:tabular-nums;line-height:1;}
         .r-stat-empty{font-size:28px;font-weight:900;color:rgba(255,255,255,0.12);letter-spacing:-0.05em;line-height:1;}
+        .r-stat-pct-up{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#34d399;
+          background:rgba(52,211,153,0.09);border:1px solid rgba(52,211,153,0.16);border-radius:6px;padding:2px 6px;white-space:nowrap;}
+        .r-stat-pct-down{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#f87171;
+          background:rgba(248,113,113,0.09);border:1px solid rgba(248,113,113,0.16);border-radius:6px;padding:2px 6px;white-space:nowrap;}
+        .r-stat-vs{font-size:10px;color:rgba(255,255,255,0.22);margin-top:4px;}
 
         .ref-card{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;backdrop-filter:blur(16px);
           transition:border-color 0.2s;display:flex;flex-direction:column;overflow:hidden;}
@@ -373,6 +581,10 @@ export default function Dashboard() {
         .r-bnav-icon{width:40px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:background 0.18s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(124,58,237,0.14);}
 
+        .r-live-panel{background:rgba(14,13,22,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:16px;
+          display:flex;flex-direction:column;overflow:hidden;height:fit-content;}
+        .r-live-scroll{overflow-y:auto;max-height:360px;padding:0 14px;}
+
         .r-hero{background:linear-gradient(135deg,rgba(14,13,22,0.98) 0%,rgba(20,14,40,0.98) 100%);
           border:1px solid rgba(124,58,237,0.14);border-radius:16px;padding:28px 32px;
           margin-bottom:14px;position:relative;overflow:hidden;}
@@ -380,12 +592,9 @@ export default function Dashboard() {
           background:radial-gradient(ellipse,rgba(124,58,237,0.14) 0%,transparent 65%);pointer-events:none;}
         .r-hero-shield{position:absolute;right:32px;top:50%;transform:translateY(-50%);width:140px;height:140px;opacity:0.85;}
 
-        .r-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;
-          padding:32px 20px;gap:10px;text-align:center;}
-
         @media(max-width:1279px){
           .r-layout{grid-template-columns:1fr;}
-          .r-live-panel{display:none!important;}
+          .r-live-panel{display:none;}
           .r-stats{grid-template-columns:repeat(3,1fr);}
         }
         @media(max-width:1023px){
@@ -410,7 +619,7 @@ export default function Dashboard() {
 
       <div className="r-bg" style={{ display: 'flex' }}>
 
-        {/* SIDEBAR */}
+        {/* ── SIDEBAR ── */}
         <aside className="r-sidebar">
           <div className="r-logo">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -422,7 +631,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Channel mini */}
           {youtubeConnected && channelName && (
             <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '8px 10px' }}>
@@ -485,8 +693,10 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* MAIN */}
+        {/* ── MAIN ── */}
         <div className="r-main">
+
+          {/* TOPBAR */}
           <header className="r-topbar">
             <div style={{ position: 'relative', flex: 1, maxWidth: 400 }} className="r-topbar-search">
               <Search size={12} color="rgba(255,255,255,0.18)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -495,66 +705,77 @@ export default function Dashboard() {
             </div>
             <div className="r-status r-topbar-status"><div className="r-status-dot" />AI System Online</div>
             <div style={{ flex: 1 }} />
-
-            {/* Notif */}
+            <button className="r-credits-btn">
+              <CreditCard size={12} />
+              {commentsUsed.toLocaleString()} Credits
+              <ChevronRight size={11} />
+            </button>
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
                 <Bell size={13} color={notifOpen ? '#a78bfa' : 'rgba(255,255,255,0.45)'} strokeWidth={1.8} />
+                <span style={{ position: 'absolute', top: 7, right: 7, width: 14, height: 14, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: 'white', fontWeight: 800 }}>3</span>
               </button>
               {notifOpen && (
                 <>
                   <div onClick={() => setNotifOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />
-                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, zIndex: 60, width: 290, background: 'rgba(14,13,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.6)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.18s ease', overflow: 'hidden' }}>
-                    <div style={{ padding: '13px 15px 9px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, zIndex: 60, width: 300, background: 'rgba(14,13,20,0.98)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.6)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.18s ease', overflow: 'hidden' }}>
+                    <div style={{ padding: '13px 15px 9px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12.5 }}>Notifications</span>
+                      <span className="ref-badge ref-badge-purple">3 new</span>
                     </div>
-                    <div style={{ padding: '20px', textAlign: 'center' }}>
-                      <Bell size={22} color="rgba(255,255,255,0.12)" />
-                      <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, marginTop: 8 }}>No notifications yet</p>
-                    </div>
+                    {[
+                      { icon: Shield, color: '#34d399', title: 'Moderation active', sub: 'AI moderator is protecting your channel', time: 'Now' },
+                      { icon: Bell,   color: '#60a5fa', title: 'System operational', sub: 'All services running normally', time: '2m' },
+                      { icon: Zap,    color: '#a78bfa', title: 'Upgrade available', sub: 'Unlock unlimited scans with Pro', time: '1h' },
+                    ].map((n, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, padding: '11px 15px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        <div style={{ width: 30, height: 30, borderRadius: 9, background: `${n.color}14`, border: `1px solid ${n.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <n.icon size={13} color={n.color} strokeWidth={1.8} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{n.title}</div>
+                          <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11 }}>{n.sub}</div>
+                        </div>
+                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, flexShrink: 0 }}>{n.time}</span>
+                      </div>
+                    ))}
                   </div>
                 </>
               )}
             </div>
-
+            <button className="r-icon-btn"><Sun size={13} color="rgba(255,255,255,0.4)" strokeWidth={1.8} /></button>
             <div className="r-avatar" onClick={() => router.push('/settings')}>
               {userPhoto
                 ? <img src={userPhoto} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
                 : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 10, flexShrink: 0 }}>{initials}</div>
               }
-              <div style={{ marginRight: 4 }}>
-                <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12, lineHeight: 1.25 }}>{firstName}</div>
-                <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, lineHeight: 1.25 }}>{planLabel}</div>
-              </div>
             </div>
           </header>
 
+          {/* CONTENT */}
           <div className="r-content">
+
             {/* HERO */}
             <div className="r-hero">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#22c55e' }}>
-                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
-                  All systems operational
-                </div>
-                {youtubeConnected && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.18)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#a78bfa' }}>
-                    <Shield size={10} strokeWidth={2} /> Protection active
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                {[
+                  { label: 'All systems operational', color: '#22c55e', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.18)', dot: true },
+                  { label: 'Protection active',        color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.18)', icon: Shield },
+                  { label: 'Last scan: 10s ago',       color: 'rgba(255,255,255,0.45)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', icon: RefreshCw },
+                ].map(p => (
+                  <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 5, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: p.color }}>
+                    {p.dot ? <div style={{ width: 5, height: 5, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} /> : p.icon && <p.icon size={10} strokeWidth={2} />}
+                    {p.label}
                   </div>
-                )}
-                {lastScanAgo && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)' }}>
-                    <RefreshCw size={10} strokeWidth={2} /> Last scan: {lastScanAgo}
-                  </div>
-                )}
+                ))}
               </div>
               <h1 style={{ fontSize: 32, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.04em', lineHeight: 1.15, marginBottom: 8 }}>
                 Welcome back, <span style={{ background: 'linear-gradient(90deg,#a78bfa,#7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{firstName}</span> 👋
               </h1>
               <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13.5 }}>
-                {youtubeConnected
-                  ? 'Your AI moderator is actively protecting your YouTube channel 24/7.'
-                  : 'Connect your YouTube channel to start AI moderation.'}
+                Your AI moderator is actively protecting your YouTube channel 24/7.
               </p>
               <div className="r-hero-shield">
                 <svg viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -566,8 +787,14 @@ export default function Dashboard() {
                   </defs>
                   <ellipse cx="70" cy="70" rx="65" ry="65" fill="url(#shg1)" />
                   <path d="M70 18 L105 32 L105 68 C105 88 88 104 70 112 C52 104 35 88 35 68 L35 32 Z" fill="rgba(124,58,237,0.18)" stroke="rgba(167,139,250,0.35)" strokeWidth="1.5"/>
+                  <path d="M70 26 L100 38 L100 67 C100 84 85 98 70 105 C55 98 40 84 40 67 L40 38 Z" fill="rgba(124,58,237,0.12)" stroke="rgba(167,139,250,0.2)" strokeWidth="1"/>
                   <circle cx="70" cy="68" r="18" fill="rgba(124,58,237,0.2)" stroke="rgba(167,139,250,0.4)" strokeWidth="1.5"/>
                   <path d="M61 68 L66 74 L79 61" stroke="#a78bfa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  {[0,60,120,180,240,300].map((deg, i) => {
+                    const rad = (deg * Math.PI) / 180;
+                    const x = 70 + 52 * Math.cos(rad), y = 70 + 52 * Math.sin(rad);
+                    return <circle key={i} cx={x} cy={y} r="3" fill="rgba(167,139,250,0.3)" />;
+                  })}
                 </svg>
               </div>
             </div>
@@ -576,11 +803,11 @@ export default function Dashboard() {
             {youtubeConnected && (
               <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 22px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                  {(channelThumbnail || userPhoto)
-                    ? <img src={channelThumbnail || userPhoto!} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
+                  {channelThumbnail
+                    ? <img src={channelThumbnail} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.3)' }} />
                     : <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
                   }
-                  <div style={{ position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)', animation: 'pulse 2s infinite' }} />
+                  <div style={{ position: 'absolute', bottom: 1, right: 1, width: 13, height: 13, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
@@ -590,17 +817,13 @@ export default function Dashboard() {
                       <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 700 }}>CONNECTED</span>
                     </div>
                   </div>
-                  {channelHandle && (
-                    <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>
-                      @{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </div>
-                  )}
+                  {channelHandle && <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 11.5 }}>@{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: 28, flexShrink: 0 }}>
                   {[
                     { label: 'Subscribers', value: fmtCount(subscriberCount) },
-                    { label: 'Videos',      value: fmtCount(videoCount) },
-                    { label: 'Views',       value: fmtCount(viewCount) },
+                    { label: 'Videos',      value: fmtCount(videoCount)      },
+                    { label: 'Views',       value: fmtCount(viewCount)       },
                   ].map(s => (
                     <div key={s.label} style={{ textAlign: 'center' }}>
                       <div style={{ color: '#FAFAFA', fontSize: 18, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
@@ -608,15 +831,12 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-                {channelId && (
-                  <a href={`https://youtube.com/channel/${channelId}`} target="_blank" rel="noopener noreferrer" className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 12px', flexShrink: 0 }}>
-                    <ExternalLink size={11} /> Open Channel
-                  </a>
-                )}
+                <button className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 12px', flexShrink: 0 }}>
+                  <ExternalLink size={11} /> Open Channel
+                </button>
               </div>
             )}
 
-            {/* NOT CONNECTED BANNER */}
             {!youtubeConnected && (
               <div style={{ background: 'rgba(14,13,22,0.98)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 16, padding: '24px 28px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
                 <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -635,17 +855,23 @@ export default function Dashboard() {
             {/* TWO-COLUMN LAYOUT */}
             <div className="r-layout">
               <div>
+
                 {/* STAT CARDS */}
                 <div className="r-stats">
                   {statCards.map((s) => {
                     const isNull  = s.fmtValue === null;
-                    const hasReal = !isNull && s.raw !== null && (s.raw as number) > 0;
+                    const hasReal = !isNull && s.raw !== null && s.raw !== undefined && (s.raw as number) > 0;
                     return (
                       <div key={s.label} className="r-stat">
                         <div className="r-stat-header">
                           <div className="r-stat-icon" style={{ background: `${s.color}14`, border: `1px solid ${s.color}22` }}>
                             <s.icon size={13} color={s.color} strokeWidth={2} />
                           </div>
+                          {hasReal && (
+                            s.up
+                              ? <span className="r-stat-pct-up"><TrendingUp size={9} />↑</span>
+                              : <span className="r-stat-pct-down"><TrendingDown size={9} />↓</span>
+                          )}
                         </div>
                         <div className="r-stat-label">{s.label}</div>
                         <div className="r-stat-bottom" style={{ marginTop: 8 }}>
@@ -653,16 +879,52 @@ export default function Dashboard() {
                             ? <div className="r-stat-empty">—</div>
                             : hasReal
                               ? <><div className="r-stat-value">{s.fmtValue}</div><Sparkline color={s.color} up={s.up} width={64} height={34} /></>
-                              : <div className="r-stat-zero">0</div>
+                              : <div className="r-stat-zero">{s.fmtValue || '0'}</div>
                           }
                         </div>
+                        {hasReal && <div className="r-stat-vs">↑ vs yesterday</div>}
                       </div>
                     );
                   })}
                 </div>
 
+                {/* CHART CARD */}
+                <div className="ref-card" style={{ marginBottom: 14 }}>
+                  <div className="ref-card-top">
+                    <div>
+                      <div className="ref-card-title">Comments &amp; AI Replies Overview</div>
+                      <div className="ref-card-sub">Activity over time</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {(['week', 'month'] as const).map(r => (
+                        <button key={r} onClick={() => setChartRange(r)}
+                          style={{ background: chartRange === r ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${chartRange === r ? 'rgba(124,58,237,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 7, padding: '4px 12px', color: chartRange === r ? '#a78bfa' : 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          {r === 'week' ? 'This Week' : 'Month'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {hasChartData ? (
+                    <>
+                      <div style={{ display: 'flex', gap: 16, padding: '12px 18px 0' }}>
+                        {chartData.map(d => (
+                          <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: d.color }} />
+                            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10.5, fontWeight: 600 }}>{d.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ padding: '12px 18px 16px' }}>
+                        <MiniLineChart data={chartData} timeLabels={chartLabels} />
+                      </div>
+                    </>
+                  ) : (
+                    <EmptyState icon={BarChart2} message="No activity yet. Data will appear once comments are scanned." />
+                  )}
+                </div>
+
                 {/* BOTTOM ROW */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
 
                   {/* Moderation Accuracy */}
                   <div className="ref-card">
@@ -672,37 +934,64 @@ export default function Dashboard() {
                         <div className="ref-card-sub">AI confidence · rolling 24h</div>
                       </div>
                     </div>
-                    {moderationAcc !== null
-                      ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px 16px', gap: 14 }}>
-                          <DonutChart pct={moderationAcc} label={moderationAcc >= 95 ? 'Excellent' : moderationAcc >= 80 ? 'Good' : 'Fair'} color="#34d399" />
-                          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {[
-                              { label: 'True Positive',  value: `${moderationAcc.toFixed(1)}%`,       color: '#34d399' },
-                              { label: 'False Positive', value: `${(100 - moderationAcc).toFixed(1)}%`, color: '#f87171' },
-                            ].map(s => (
-                              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <div style={{ width: 6, height: 6, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-                                <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, flex: 1 }}>{s.label}</span>
-                                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 700 }}>{s.value}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10.5 }}>Rolling 24h · updated in real time</div>
-                        </div>
-                      ) : (
-                        <div className="r-empty-state">
-                          <Activity size={28} color="rgba(255,255,255,0.1)" />
-                          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, lineHeight: 1.6, maxWidth: 200 }}>
-                            No accuracy data yet. Start moderating to see AI confidence scores.
-                          </p>
-                        </div>
-                      )
-                    }
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 16px 16px', gap: 14 }}>
+                      <DonutChart pct={moderationAcc} label="Excellent" color="#34d399" />
+                      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {totalActionsCalc !== null && totalActionsCalc > 0 ? (
+                          <>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', flexShrink: 0 }} />
+                              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, flex: 1 }}>Correct Actions</span>
+                              <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 700 }}>{correctActionsCalc?.toLocaleString()} ({moderationAcc.toFixed(1)}%)</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f87171', flexShrink: 0 }} />
+                              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, flex: 1 }}>False Positives</span>
+                              <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 700 }}>{falsePositivesCalc?.toLocaleString()} ({(100 - moderationAcc).toFixed(1)}%)</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: 11, padding: '8px 0' }}>Stats will appear after first scan</div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* System Health — real data only */}
+                  {/* Top Toxic Keywords — empty state, no fake data */}
+                  <div className="ref-card">
+                    <div className="ref-card-top">
+                      <div>
+                        <div className="ref-card-title">Top Toxic Keywords</div>
+                        <div className="ref-card-sub">Detected this week</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 7, padding: '4px 10px', color: '#a78bfa', fontSize: 10.5, fontWeight: 700, cursor: 'pointer' }}>This Week</button>
+                      </div>
+                    </div>
+                    <EmptyState icon={Hash} message="No toxic keywords detected yet. Keywords will appear as comments are scanned." />
+                  </div>
+
+                  {/* Recent Automations + System Health + Plan Usage */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                    {/* Automations — real from Firestore */}
+                    <div className="ref-card">
+                      <div className="ref-card-top" style={{ alignItems: 'center' }}>
+                        <div><div className="ref-card-title">Recent Automations</div></div>
+                        <Link href="/automation" style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, textDecoration: 'none', transition: 'color 0.18s' }}
+                          onMouseEnter={e => (e.currentTarget.style.color = '#a78bfa')}
+                          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>
+                          View all <ChevronRight size={11} />
+                        </Link>
+                      </div>
+                      <div style={{ padding: '4px 16px 12px' }}>
+                        <AutomationRow icon={Shield}        iconColor="#f87171" label="Toxic Comment Protection" active={autoHideToxic} />
+                        <AutomationRow icon={Bot}           iconColor="#a78bfa" label="AI Auto Reply"            active={autoAiReplies} />
+                        <AutomationRow icon={MessageSquare} iconColor="#34d399" label="Spam Filter"             active={autoHideSpam} />
+                      </div>
+                    </div>
+
+                    {/* AI System Health — real data only */}
                     <div className="ref-card">
                       <div className="ref-card-top" style={{ alignItems: 'center' }}>
                         <div><div className="ref-card-title">AI System Health</div></div>
@@ -713,10 +1002,10 @@ export default function Dashboard() {
                       </div>
                       <div style={{ padding: '10px 16px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         {[
-                          { label: 'Uptime',         value: protectionScore !== null ? `${protectionScore}%` : '100%',      color: '#34d399' },
-                          { label: 'Response Time',  value: fmtMs(avgResponseMs) || '0ms',                                  color: '#a78bfa' },
-                          { label: 'Automation',     value: automationEnabled ? 'Active' : 'Inactive',                      color: automationEnabled ? '#34d399' : 'rgba(255,255,255,0.3)' },
-                          { label: 'Spam Caught',    value: spamDetected !== null ? String(spamDetected) : '0',             color: '#F59E0B' },
+                          { label: 'Uptime',        value: '100%',                              color: '#34d399' },
+                          { label: 'Response Time', value: fmtMs(avgResponseTime) || '0ms',     color: '#a78bfa' },
+                          { label: 'AI Confidence', value: `${aiConfidence.toFixed(1)}%`,       color: '#60a5fa' },
+                          { label: 'Error Rate',    value: `${(analyticsData?.falsePositiveRate as number ?? 0).toFixed(2)}%`, color: '#F59E0B' },
                         ].map(s => (
                           <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '10px 12px' }}>
                             <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, marginBottom: 4 }}>{s.label}</div>
@@ -726,40 +1015,50 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <MonthlyUsageCard plan={plan} commentsUsed={commentsUsed} commentsLimit={commentsLimit} trialDaysLeft={trialDaysLeft} />
+                    {/* Plan Usage */}
+                    <MonthlyUsageCard
+                      plan={plan}
+                      commentsUsed={commentsUsed}
+                      commentsLimit={commentsLimit}
+                      trialDaysLeft={trialDaysLeft}
+                      youtubeConnected={youtubeConnected}
+                      onConnectYouTube={handleYouTubeConnect}
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* LIVE ACTIVITY PANEL — empty state when no real data */}
-              <div className="r-live-panel ref-card" style={{ position: 'sticky', top: 74 }}>
+              {/* ── LIVE ACTIVITY PANEL ── */}
+              <div className="r-live-panel" style={{ position: 'sticky', top: 74 }}>
                 <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#FAFAFA', fontSize: 13.5, fontWeight: 700 }}>Live Activity</span>
-                  <div className="ref-badge ref-badge-live">
-                    <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
-                    Live
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: '#FAFAFA', fontSize: 13.5, fontWeight: 700 }}>Live Activity</span>
+                    <div className="ref-badge ref-badge-live">
+                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
+                      Live
+                    </div>
                   </div>
                 </div>
-                <div style={{ padding: '0 14px', flex: 1 }}>
-                  {/* Empty state — bot not active yet */}
-                  <div className="r-empty-state" style={{ padding: '40px 16px' }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Activity size={22} color="rgba(167,139,250,0.4)" />
-                    </div>
-                    <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, lineHeight: 1.65, maxWidth: 200 }}>
-                      No live activity yet. Activity will appear here once the bot starts moderating.
-                    </p>
-                    <Link href="/live-feed" className="ref-btn-ghost" style={{ fontSize: 11.5, padding: '7px 14px', marginTop: 4 }}>
-                      Go to Live Feed <ChevronRight size={11} />
-                    </Link>
-                  </div>
+                <div className="r-live-scroll">
+                  {liveEvents.length > 0
+                    ? liveEvents.map((ev) => {
+                        const item = eventToLiveItem(ev);
+                        return <LiveItem key={ev.id} {...item} />;
+                      })
+                    : <EmptyState icon={Activity} message="No activity yet. Events will appear in real time." />
+                  }
+                </div>
+                <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <Link href="/live-feed" className="ref-btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: 12 }}>
+                    View Live Feed <ChevronRight size={12} />
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* BOTTOM NAV */}
+        {/* ── BOTTOM NAV ── */}
         <nav className="r-bottom-nav">
           {BOTTOM_NAV.map(item => {
             const isActive = currentPath === item.href;

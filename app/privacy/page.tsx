@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <div className="mb-10">
           <h1 className="text-4xl font-bold text-white mb-2">Privacy Policy</h1>
           <p className="text-gray-400 text-sm">
-            Last Updated: May 2026 &nbsp;·&nbsp; https://moderateai.site/privacy
+            Last Updated: May 2026
           </p>
           <div className="mt-4 h-1 w-16 bg-[#ff6b00] rounded-full" />
         </div>
@@ -29,11 +29,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">1. Introduction</h2>
             <p>
-              ModerateAI is an AI-powered YouTube comment moderation platform available at{" "}
-              <a href="https://moderateai.site" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
-                https://moderateai.site
-              </a>
-              , designed to help YouTube creators protect their communities through automated, real-time moderation.
+              ModerateAI is an AI-powered YouTube comment moderation platform designed to help YouTube creators protect their communities through automated, real-time moderation.
             </p>
             <p className="mt-2">
               This Privacy Policy describes how we collect, use, store, share, and protect your personal information when you use our Service. By accessing or using ModerateAI, you agree to the practices described in this Policy.
@@ -128,10 +124,10 @@ export default function PrivacyPage() {
                 "To generate AI-powered replies to comments on your behalf",
                 "To manage Live Chat moderation and timeout controls",
                 "To provide analytics and insights on your channel's comment activity",
-                "To send moderation alerts via Telegram (if enabled by you)",
+                "To send moderation alerts via third-party notification services (if enabled by you)",
                 "To process payments and manage your subscription",
                 "To communicate service updates, billing notices, and support responses",
-                "To improve the accuracy and performance of our AI moderation system",
+                "To improve the quality, reliability, and performance of our Service",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -140,7 +136,7 @@ export default function PrivacyPage() {
               ))}
             </ul>
             <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium">
-              🔒 We do NOT sell your data, use it for advertising, or share it with third parties for their own purposes — ever.
+              🔒 We do not sell your data, use it for advertising, or share it with third parties for their own purposes.
             </div>
           </section>
 
@@ -193,7 +189,7 @@ export default function PrivacyPage() {
             <ul className="space-y-2">
               {[
                 "Secure cloud infrastructure and hosting providers",
-                "Secure database and authentication providers",
+                "Secure authentication and data storage providers",
                 "Trusted payment processors for subscription billing",
                 "Trusted notification providers for moderation alerts (if enabled by you)",
               ].map((item, i) => (
@@ -212,7 +208,7 @@ export default function PrivacyPage() {
 
             <h3 className="font-semibold text-[#ff6b00] mb-2 mt-5">5.3 Business Transfers</h3>
             <p>
-              In the event of a merger, acquisition, or transfer of assets, your data may be transferred to the successor entity. We will notify you by email prior to your data becoming subject to a different privacy policy.
+              In the event of a merger, acquisition, or transfer of assets, your data may be transferred to the successor entity. We will notify you prior to your data becoming subject to a different privacy policy.
             </p>
           </section>
 
@@ -226,7 +222,7 @@ export default function PrivacyPage() {
                 "Account data is retained for as long as your account remains active.",
                 "YouTube OAuth tokens are permanently deleted upon channel disconnection or account deletion.",
                 "Comment and moderation logs are retained for up to 12 months, after which they are anonymized or deleted.",
-                "Billing records are retained for 7 years in compliance with applicable Indian financial regulations.",
+                "Billing records are retained for 7 years in compliance with applicable financial regulations.",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -247,8 +243,8 @@ export default function PrivacyPage() {
             <p className="mb-3">We implement industry-standard security measures to protect your data:</p>
             <ul className="space-y-2">
               {[
-                "Encryption in transit — all data is transmitted over secure HTTPS connections.",
-                "Encryption at rest — OAuth tokens and sensitive credentials are encrypted in storage.",
+                "Encryption in transit — all data is transmitted over secure, encrypted connections.",
+                "Encryption at rest — sensitive credentials and tokens are encrypted in storage.",
                 "Access controls — access to production systems is restricted to authorized personnel under least-privilege principles.",
                 "Security monitoring — we employ continuous monitoring and conduct regular security reviews.",
               ].map((item, i) => (
@@ -269,7 +265,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">8. Your Rights (DPDPA 2023)</h2>
             <p className="mb-3">
-              Under the Digital Personal Data Protection Act, 2023 and other applicable Indian laws, you have the right to:
+              Under the Digital Personal Data Protection Act, 2023 and other applicable laws, you have the right to:
             </p>
             <ul className="space-y-2">
               {[
@@ -319,7 +315,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">10. Children&apos;s Privacy</h2>
             <p>
-              ModerateAI is not intended for individuals under the age of 18. We do not knowingly collect personal data from minors. If you believe we have inadvertently collected such data, please contact us immediately and we will delete it without delay.
+              ModerateAI is not intended for individuals under the minimum age required by applicable law. We do not knowingly collect personal data from minors. If you believe we have inadvertently collected such data, please refer to the Contact section below and we will delete it without delay.
             </p>
           </section>
 
@@ -370,7 +366,7 @@ export default function PrivacyPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
-                <span>Privacy Officer: ModerateAI Data Privacy Team</span>
+                <span>Privacy Officer: ModerateAI Privacy Team</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
@@ -383,7 +379,7 @@ export default function PrivacyPage() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
-          © 2026 ModerateAI. Made in India 🇮🇳. All rights reserved.
+          © 2026 ModerateAI. All rights reserved.
         </div>
       </div>
     </div>

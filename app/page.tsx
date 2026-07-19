@@ -185,14 +185,17 @@ const FEATURES = [
   { icon: TrendingUp, color: '#34d399', bg: 'rgba(16,185,129,0.1)', title: 'Engagement Analytics', body: 'Comment volume, toxicity trends, reply performance — one dashboard, real time.' },
   { icon: Filter, color: '#f87171', bg: 'rgba(239,68,68,0.1)', title: 'Custom Rules', body: 'Keyword blocklists, sensitivity thresholds, safe-lists, language filters — fully configurable.' },
 ];
+
+/* ── SECURITY CARDS (updated content only) ── */
 const SEC = [
-  { icon: Lock, color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', title: 'AES-256 Encryption', body: 'All credentials encrypted at rest — the same standard used by banks.' },
-  { icon: Shield, color: '#10B981', bg: 'rgba(16,185,129,0.08)', title: 'OAuth 2.0 Only', body: 'Your password is never stored. Authentication uses YouTube\'s official OAuth with scoped tokens.' },
-  { icon: Globe, color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', title: 'Cloudflare Edge', body: 'DDoS protection, rate limiting, and TLS 1.3 on every request — globally.' },
-  { icon: Eye, color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', title: 'Zero Data Selling', body: 'Your comment data is never sold, shared, or used to train third-party models.' },
-  { icon: Zap, color: '#fb923c', bg: 'rgba(251,146,60,0.08)', title: 'Session Control', body: 'Every active session is visible in your dashboard. Revoke any device at any time.' },
-  { icon: Filter, color: '#f87171', bg: 'rgba(239,68,68,0.08)', title: 'Rate Limiting', body: 'All endpoints are rate-limited. Abuse patterns trigger automatic account protection.' },
+  { icon: Lock, color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', title: 'AES-256 Encryption', body: 'Your data is encrypted both in transit and at rest using industry-standard encryption.' },
+  { icon: Shield, color: '#10B981', bg: 'rgba(16,185,129,0.08)', title: 'OAuth 2.0 Authentication', body: 'Official YouTube OAuth authentication with secure scoped access. Your password is never stored.' },
+  { icon: Globe, color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', title: 'Enterprise Edge Protection', body: 'Global edge protection, encrypted connections, and intelligent traffic filtering help safeguard every request.' },
+  { icon: Eye, color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', title: 'Zero Data Selling', body: 'Your channel and moderation data is never sold, shared, or used to train third-party AI models.' },
+  { icon: Zap, color: '#fb923c', bg: 'rgba(251,146,60,0.08)', title: 'Secure Session Management', body: 'View active sessions, revoke access instantly, and maintain full control over your account.' },
+  { icon: Filter, color: '#f87171', bg: 'rgba(239,68,68,0.08)', title: 'Intelligent Rate Limiting', body: 'Automatic abuse detection and smart request throttling help protect your account and platform stability.' },
 ];
+
 const LANGS = [
   { flag: '🇮🇳', name: 'Hindi' }, { flag: '🇮🇳', name: 'Tamil' }, { flag: '🇮🇳', name: 'Telugu' },
   { flag: '🇮🇳', name: 'Kannada' }, { flag: '🇮🇳', name: 'Bengali' }, { flag: '🇮🇳', name: 'Marathi' },
@@ -203,7 +206,7 @@ const LANGS = [
   { flag: '🇮🇹', name: 'Italian' }, { flag: '🌍', name: '+80 more' },
 ];
 
-/* ── PLANS (UPDATED) ── */
+/* ── PLANS ── */
 const PLANS = [
   {
     name: 'Free Trial',
@@ -686,8 +689,8 @@ export default function LandingPage() {
           <div className="con">
             <FadeIn>
               <div className="eyebrow-dark"><Lock size={11} /> Security</div>
-              <h2 className="sh-dark">Built for channels that<br />can't afford a breach.</h2>
-              <p className="sub-dark">Enterprise-grade security on every creator account. No exceptions.</p>
+              <h2 className="sh-dark">Built for creators who<br />take security seriously.</h2>
+              <p className="sub-dark">Enterprise-grade security, privacy, and account protection designed to keep your YouTube channel safe.</p>
             </FadeIn>
             <div className="sec-grid">
               {SEC.map((s, i) => (

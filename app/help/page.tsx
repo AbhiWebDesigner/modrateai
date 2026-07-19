@@ -9,13 +9,14 @@ export const metadata: Metadata = {
 
 const quickLinks = [
   { icon: "🚀", label: "Getting Started", href: "/documentation" },
-  { icon: "🔐", label: "Google Sign-In", href: "/docs#permissions" },
-  { icon: "📺", label: "Connect YouTube Channel", href: "/docs#how-it-works" },
+  { icon: "🔐", label: "Google Sign-In", href: "/documentation#permissions" },
+  { icon: "📺", label: "Connect YouTube Channel", href: "/documentation#how-it-works" },
   { icon: "💳", label: "Manage Subscription", href: "/billing" },
   { icon: "🛡️", label: "Privacy & Security", href: "/privacy" },
   { icon: "📄", label: "Documentation", href: "/documentation" },
   { icon: "🟢", label: "Status Page", href: "/status" },
 ];
+
 
 const faqs = [
   {
@@ -159,7 +160,7 @@ export default function HelpPage() {
               Contact Support
             </a>
             <Link
-              href="/docs"
+              href="/documentation"
               className="px-5 py-2.5 rounded-xl border border-white/10 text-gray-300 font-semibold text-sm hover:border-[#ff6b00]/40 hover:text-white transition"
             >
               View Documentation

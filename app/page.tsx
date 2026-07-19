@@ -171,26 +171,26 @@ function ProductPreview() {
 /* ── DATA ── */
 const STEPS = [
   { icon: Shield, label: 'Connect YouTube', detail: 'One-click OAuth — read-only comment access, revocable anytime.' },
-  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment reaches our model in under 200ms, before anyone sees it.' },
-  { icon: Languages, label: 'Language auto-detected', detail: 'The model identifies language and applies culturally-aware rules automatically.' },
+  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment is analyzed in real time by our AI — before anyone sees it.' },
+  { icon: Languages, label: 'Language auto-detected', detail: 'The AI identifies language and applies culturally-aware rules automatically.' },
   { icon: EyeOff, label: 'Harmful content hidden', detail: 'Toxic and spam comments are hidden instantly — never permanently deleted.' },
   { icon: MessageSquare, label: 'AI replies naturally', detail: 'Genuine comments receive contextual replies in the commenter\'s own language.' },
   { icon: BarChart3, label: 'Analytics updated', detail: 'Every moderation event is logged to your dashboard in real time.' },
 ];
+
 const FEATURES = [
   { icon: Cpu, color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', title: 'Context-Aware AI', body: 'Reads intent, not just keywords. Sarcasm, mixed-language attacks — caught before anyone sees them.' },
   { icon: Languages, color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', title: '100+ Languages', body: 'Hindi, Tamil, Arabic, Spanish, Korean — auto-detected. No manual language setup ever needed.' },
   { icon: MessageSquare, color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', title: 'AI Auto-Replies', body: 'Genuine comments get a human-sounding reply in the commenter\'s own language. No templates.' },
-  { icon: Bell, color: '#fb923c', bg: 'rgba(251,146,60,0.1)', title: 'Instant Alerts', body: 'Telegram notification the moment a coordinated spam attack begins on your channel.' },
+  { icon: Bell, color: '#fb923c', bg: 'rgba(251,146,60,0.1)', title: 'Instant Alerts', body: 'Get notified the moment a coordinated spam attack begins on your channel.' },
   { icon: TrendingUp, color: '#34d399', bg: 'rgba(16,185,129,0.1)', title: 'Engagement Analytics', body: 'Comment volume, toxicity trends, reply performance — one dashboard, real time.' },
   { icon: Filter, color: '#f87171', bg: 'rgba(239,68,68,0.1)', title: 'Custom Rules', body: 'Keyword blocklists, sensitivity thresholds, safe-lists, language filters — fully configurable.' },
 ];
 
-/* ── SECURITY CARDS (updated content only) ── */
 const SEC = [
-  { icon: Lock, color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', title: 'AES-256 Encryption', body: 'Your data is encrypted both in transit and at rest using industry-standard encryption.' },
-  { icon: Shield, color: '#10B981', bg: 'rgba(16,185,129,0.08)', title: 'OAuth 2.0 Authentication', body: 'Official YouTube OAuth authentication with secure scoped access. Your password is never stored.' },
-  { icon: Globe, color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', title: 'Enterprise Edge Protection', body: 'Global edge protection, encrypted connections, and intelligent traffic filtering help safeguard every request.' },
+  { icon: Lock, color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', title: 'Industry-Standard Encryption', body: 'Your data is protected using industry-standard encryption both in transit and at rest.' },
+  { icon: Shield, color: '#10B981', bg: 'rgba(16,185,129,0.08)', title: 'Secure OAuth Authentication', body: 'Official YouTube OAuth authentication with secure scoped access. Your password is never stored.' },
+  { icon: Globe, color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', title: 'Enterprise-Grade Infrastructure', body: 'Global protection, encrypted connections, and intelligent traffic filtering help safeguard every request.' },
   { icon: Eye, color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', title: 'Zero Data Selling', body: 'Your channel and moderation data is never sold, shared, or used to train third-party AI models.' },
   { icon: Zap, color: '#fb923c', bg: 'rgba(251,146,60,0.08)', title: 'Secure Session Management', body: 'View active sessions, revoke access instantly, and maintain full control over your account.' },
   { icon: Filter, color: '#f87171', bg: 'rgba(239,68,68,0.08)', title: 'Intelligent Rate Limiting', body: 'Automatic abuse detection and smart request throttling help protect your account and platform stability.' },
@@ -206,7 +206,6 @@ const LANGS = [
   { flag: '🇮🇹', name: 'Italian' }, { flag: '🌍', name: '+80 more' },
 ];
 
-/* ── PLANS ── */
 const PLANS = [
   {
     name: 'Free Trial',
@@ -292,10 +291,10 @@ const PLANS = [
 const FAQS = [
   { q: 'How does ModerateAI connect to YouTube?', a: 'You authorize via YouTube\'s official OAuth flow. We never store your password — only a revocable, scoped access token.' },
   { q: 'Which languages does the AI understand?', a: 'ModerateAI detects intent in 100+ languages — Hindi, Tamil, Arabic, Spanish, Korean, and more — with no extra configuration.' },
-  { q: 'Will the AI accidentally hide genuine comments?', a: 'Our false-positive rate is under 0.3%. The model reads context, not just keywords. Every hidden comment is reviewable and restorable.' },
+  { q: 'Will the AI accidentally hide genuine comments?', a: 'Our AI is designed for high accuracy with a very low false-positive rate. It reads context, not just keywords. Every hidden comment is reviewable and restorable.' },
   { q: 'How long does setup take?', a: 'Under 2 minutes. Connect YouTube, choose your sensitivity level, done. No code, no plugins.' },
   { q: 'Can I customize what gets hidden?', a: 'Yes. Keyword rules, sensitivity thresholds, language filters, and safe-lists — or let the AI handle everything automatically.' },
-  { q: 'Is my channel data secure?', a: 'AES-256 at rest, TLS 1.3 in transit, hosted on Cloudflare\'s edge. Your data is never sold or shared.' },
+  { q: 'Is my channel data secure?', a: 'Your data is protected using industry-standard encryption in transit and at rest. It is never sold, shared, or used to train third-party models.' },
 ];
 
 /* ══════════════════════════════════════════ MAIN ══════════════════════════════════════════ */
@@ -537,7 +536,7 @@ export default function LandingPage() {
           </Link>
           <div className="n-links">
             {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
-              <a key={item} href={`#${item.toLowerCase().replace(/\s+/g,'-')}`} className="n-link">{item}</a>
+              <a key={item} href={item === 'Documentation' ? '/documentation' : `#${item.toLowerCase().replace(/\s+/g,'-')}`} className="n-link">{item}</a>
             ))}
           </div>
           <div className="n-right">
@@ -552,7 +551,7 @@ export default function LandingPage() {
           {menuOpen && (
             <motion.div className="mob-menu" initial={{ opacity:0,y:-8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0,y:-8 }} transition={{ duration:0.18 }}>
               {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
-                <a key={item} href={`#${item.toLowerCase().replace(/\s+/g,'-')}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
+                <a key={item} href={item === 'Documentation' ? '/documentation' : `#${item.toLowerCase().replace(/\s+/g,'-')}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
               ))}
               <div style={{ height:1, background:'rgba(255,255,255,0.05)', margin:'7px 0' }} />
               <Link href="/login" className="mob-a">Login</Link>
@@ -569,7 +568,7 @@ export default function LandingPage() {
               <motion.div initial={{ opacity:0,y:16 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.05 }}>
                 <div className="h-badge">
                   <div className="h-badge-dot" />
-                  <span className="h-badge-text">GPT-4 Powered Moderation</span>
+                  <span className="h-badge-text">AI-Powered Moderation</span>
                 </div>
               </motion.div>
               <motion.h1 className="h1 serif" initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.7,delay:0.12,ease:[0.22,1,0.36,1] }}>
@@ -605,8 +604,8 @@ export default function LandingPage() {
             {[
               { display: <><Counter to={100} suffix="+" /></>, label: 'Languages' },
               { display: '24/7', label: 'Live Protection' },
-              { display: '<200ms', label: 'Response Time' },
-              { display: <><Counter to={99.7} suffix="%" /></>, label: 'Detection Accuracy' },
+              { display: 'Real-time', label: 'Moderation' },
+              { display: 'High', label: 'Detection Accuracy' },
               { display: '0', label: 'Lines of Code to Setup' },
             ].map((s, i) => (
               <FadeIn key={i} delay={i * 0.06}>
@@ -813,12 +812,12 @@ export default function LandingPage() {
               <div className="foot-col">
                 <h4>Product</h4>
                 {['Features','Pricing','Security'].map(t => <a key={t} href={`#${t.toLowerCase()}`} className="foot-a">{t}</a>)}
-                <Link href="/docs" className="foot-a">Documentation</Link>
+                <Link href="/documentation" className="foot-a">Documentation</Link>
                 <Link href="/status" className="foot-a">Status</Link>
               </div>
               <div className="foot-col">
                 <h4>Support</h4>
-                 <Link href="/help" className="foot-a">Help Center</Link>
+                <Link href="/help" className="foot-a">Help Center</Link>
                 <Link href="mailto:support@moderateai.site" className="foot-a">Contact</Link>
                 <Link href="/privacy" className="foot-a">Privacy Policy</Link>
                 <Link href="/terms" className="foot-a">Terms</Link>

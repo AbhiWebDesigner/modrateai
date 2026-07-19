@@ -9,7 +9,7 @@ import {
   TrendingUp, Filter, Bell, X, Menu, Sparkles
 } from 'lucide-react';
 
-/* ── FADE IN WRAPPER — aggressive threshold so mobile triggers fast ── */
+/* ── FADE IN WRAPPER ── */
 function FadeIn({ children, delay = 0, className = '', style = {} }: {
   children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties;
 }) {
@@ -17,9 +17,7 @@ function FadeIn({ children, delay = 0, className = '', style = {} }: {
   const inView = useInView(ref, { once: true, margin: '0px 0px -40px 0px' });
   return (
     <motion.div
-      ref={ref}
-      className={className}
-      style={style}
+      ref={ref} className={className} style={style}
       initial={{ opacity: 0, y: 18 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
@@ -37,13 +35,10 @@ function Counter({ to, suffix = '', prefix = '' }: { to: number; suffix?: string
   useEffect(() => {
     if (!inView) return;
     let v = 0;
-    const dur = 1600;
-    const step = 16;
-    const inc = to / (dur / step);
+    const dur = 1600; const step = 16; const inc = to / (dur / step);
     const t = setInterval(() => {
       v += inc;
-      if (v >= to) { setVal(to); clearInterval(t); }
-      else setVal(Math.floor(v));
+      if (v >= to) { setVal(to); clearInterval(t); } else setVal(Math.floor(v));
     }, step);
     return () => clearInterval(t);
   }, [inView, to]);
@@ -207,11 +202,90 @@ const LANGS = [
   { flag: '🇮🇩', name: 'Indonesian' }, { flag: '🇹🇷', name: 'Turkish' }, { flag: '🇨🇳', name: 'Chinese' },
   { flag: '🇮🇹', name: 'Italian' }, { flag: '🌍', name: '+80 more' },
 ];
+
+/* ── PLANS (UPDATED) ── */
 const PLANS = [
-  { name: 'Free', monthly: 0, annual: 0, desc: 'For creators just starting out.', features: ['1,500 comments/month','Basic spam detection','English & Hindi','Email alerts'], missing: ['AI auto-replies','Telegram alerts'], cta: 'Start Free', primary: false, hl: false, badge: null },
-  { name: 'Pro', monthly: 349, annual: 299, desc: 'For creators who care about community.', features: ['25,000 comments/month','AI toxicity detection','100+ languages','AI auto-replies','Telegram alerts','Priority support'], missing: [], cta: 'Start 19-Day Trial', primary: true, hl: true, badge: 'Most Popular' },
-  { name: 'Agency', monthly: 999, annual: 849, desc: 'For teams managing multiple channels.', features: ['Unlimited comments','Multi-channel','100+ languages','AI auto-replies','Webhook integrations','Dedicated support'], missing: [], cta: 'Contact Us', primary: false, hl: false, badge: null },
+  {
+    name: 'Free Trial',
+    monthly: 0,
+    annual: 0,
+    desc: 'Try ModerateAI free for 19 days.',
+    features: [
+      '19-Day Free Trial',
+      '1 YouTube Channel',
+      '2,000 Comments Scanned',
+      'AI Toxic Detection',
+      'AI Spam Detection',
+      'Review Queue',
+      '250 AI Actions',
+      'Smart AI Replies (Max 3 Per Video)',
+      'Basic Analytics Dashboard',
+      '10+ Languages',
+      'Email Support',
+    ],
+    missing: [],
+    cta: 'Start Free Trial',
+    primary: false,
+    hl: false,
+    badge: null,
+  },
+  {
+    name: 'Pro',
+    monthly: 349,
+    annual: 299,
+    desc: 'Perfect for growing creators.',
+    features: [
+      '1 YouTube Channel',
+      '25,000 Comments Scanned / Month',
+      'AI Toxic Detection',
+      'AI Spam Detection',
+      'Auto Hide',
+      'Review Queue',
+      'Live Chat Moderation',
+      'Progressive Live Chat Timeouts',
+      '1,900 AI Actions / Month',
+      'Smart AI Replies (Max 3 Per Video)',
+      'Unlimited Automation Rules',
+      'Full Analytics Dashboard',
+      '50+ Languages',
+      'Priority Email Support',
+    ],
+    missing: [],
+    cta: 'Start 19-Day Trial',
+    primary: true,
+    hl: true,
+    badge: 'Most Popular',
+  },
+  {
+    name: 'Agency',
+    monthly: 2499,
+    annual: 2149,
+    desc: 'Built for businesses & agencies.',
+    features: [
+      '2 YouTube Channels',
+      '150,000 Comments Scanned / Month',
+      'AI Toxic Detection',
+      'AI Spam Detection',
+      'Auto Hide',
+      'Review Queue',
+      'Live Chat Moderation',
+      'Progressive Live Chat Timeouts',
+      '15,000 AI Actions / Month',
+      'Smart AI Replies (Max 3 Per Video)',
+      'Unlimited Automation Rules',
+      'Advanced Analytics Dashboard',
+      'Telegram Alerts',
+      '100+ Languages',
+      'Dedicated Priority Support',
+    ],
+    missing: [],
+    cta: 'Get Agency',
+    primary: false,
+    hl: false,
+    badge: null,
+  },
 ];
+
 const FAQS = [
   { q: 'How does ModerateAI connect to YouTube?', a: 'You authorize via YouTube\'s official OAuth flow. We never store your password — only a revocable, scoped access token.' },
   { q: 'Which languages does the AI understand?', a: 'ModerateAI detects intent in 100+ languages — Hindi, Tamil, Arabic, Spanish, Korean, and more — with no extra configuration.' },
@@ -261,7 +335,6 @@ export default function LandingPage() {
           background-clip: text; animation: lp-grad 5s ease infinite;
         }
 
-        /* ── NAV ── */
         .lp-nav {
           position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
           z-index: 200; width: calc(100% - 32px); max-width: 1120px;
@@ -286,7 +359,6 @@ export default function LandingPage() {
         .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; margin-left: auto; }
         @media (max-width: 800px) { .n-links, .n-login { display: none !important; } .n-burger { display: flex; } }
 
-        /* ── MOBILE MENU ── */
         .mob-menu {
           position: fixed; top: 72px; left: 14px; right: 14px; z-index: 199;
           background: rgba(10,10,12,0.97); border: 1px solid rgba(255,255,255,0.07);
@@ -296,11 +368,8 @@ export default function LandingPage() {
         .mob-a { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 14px; border-radius: 9px; transition: all 0.18s; display: block; }
         .mob-a:hover { background: rgba(255,255,255,0.04); color: #F0F0F0; }
 
-        /* ── HERO ── */
         .hero {
-          padding: 112px 24px 72px;
-          position: relative;
-          overflow: hidden;
+          padding: 112px 24px 72px; position: relative; overflow: hidden;
           background:
             radial-gradient(ellipse 70% 55% at 15% 20%, rgba(245,158,11,0.08) 0%, transparent 60%),
             radial-gradient(ellipse 55% 55% at 85% 80%, rgba(139,92,246,0.1) 0%, transparent 60%),
@@ -314,8 +383,7 @@ export default function LandingPage() {
           -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
         }
         .hero-inner {
-          position: relative; z-index: 2;
-          max-width: 1120px; margin: 0 auto;
+          position: relative; z-index: 2; max-width: 1120px; margin: 0 auto;
           display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
         }
         .h-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 5px 14px 5px 10px; margin-bottom: 28px; }
@@ -331,29 +399,16 @@ export default function LandingPage() {
         .h-trust { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
+        @media (max-width: 820px) { .hero-inner { grid-template-columns: 1fr; gap: 44px; } .hero { padding: 96px 20px 56px; } .hero-right { animation: none; } }
 
-        @media (max-width: 820px) {
-          .hero-inner { grid-template-columns: 1fr; gap: 44px; }
-          .hero { padding: 96px 20px 56px; }
-          .hero-right { animation: none; }
-        }
-
-        /* ── STATS ── */
         .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
         .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; }
         .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
         .s-cell + .s-cell::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:1px; height:26px; background:rgba(255,255,255,0.07); }
         .s-num { font-size: 28px; font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
         .s-lbl { color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500; margin-top: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
-        @media (max-width: 580px) {
-          .stats-row { display: grid; grid-template-columns: 1fr 1fr; }
-          .s-cell { padding: 16px 20px; }
-          .s-cell + .s-cell::before { display: none; }
-          .s-cell:nth-child(odd):not(:first-child) { border-top: 1px solid rgba(255,255,255,0.05); }
-          .s-cell:nth-child(even) { border-left: 1px solid rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.05); }
-        }
+        @media (max-width: 580px) { .stats-row { display: grid; grid-template-columns: 1fr 1fr; } .s-cell { padding: 16px 20px; } .s-cell + .s-cell::before { display: none; } .s-cell:nth-child(odd):not(:first-child) { border-top: 1px solid rgba(255,255,255,0.05); } .s-cell:nth-child(even) { border-left: 1px solid rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.05); } }
 
-        /* ── SECTIONS ── */
         .section { padding: 96px 24px; }
         .section-sm { padding: 80px 24px; }
         .con { max-width: 1120px; margin: 0 auto; }
@@ -364,7 +419,6 @@ export default function LandingPage() {
         .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; font-weight: 400; }
         .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; font-weight: 400; }
 
-        /* ── HOW ── */
         .how-bg { background: linear-gradient(180deg, #0C0C0C 0%, #0F0F0F 100%); }
         .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
         .tl { position: relative; margin-top: 48px; }
@@ -378,7 +432,6 @@ export default function LandingPage() {
         .tl-body p { font-size: 13px; color: rgba(255,255,255,0.33); line-height: 1.55; }
         @media (max-width: 780px) { .how-grid { grid-template-columns: 1fr; gap: 40px; } }
 
-        /* ── FEATURES ── */
         .feat-bg { background: #090909; }
         .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
         .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 26px; transition: all 0.3s cubic-bezier(0.22,1,0.36,1); position: relative; overflow: hidden; }
@@ -391,13 +444,11 @@ export default function LandingPage() {
         @media (max-width: 780px) { .feat-grid { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 480px) { .feat-grid { grid-template-columns: 1fr; } }
 
-        /* ── LANG ── */
         .lang-bg { background: linear-gradient(180deg, #0D0D0D 0%, #0A0A0A 100%); }
         .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
         .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 7px 15px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
         .l-chip:hover { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.2); color: rgba(255,255,255,0.82); }
 
-        /* ── SECURITY ── */
         .sec-bg { background: #FAFAFA; }
         .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
         .s-card { background: #F2F2F0; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 24px; transition: all 0.22s; }
@@ -408,7 +459,6 @@ export default function LandingPage() {
         @media (max-width: 780px) { .sec-grid { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 460px) { .sec-grid { grid-template-columns: 1fr; } }
 
-        /* ── PRICING ── */
         .price-bg { background: #F5F5F3; }
         .p-toggle { display: inline-flex; background: rgba(0,0,0,0.06); border-radius: 9px; padding: 3px; margin: 24px auto 0; }
         .pt-btn { padding: 6px 17px; border-radius: 7px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; }
@@ -441,7 +491,6 @@ export default function LandingPage() {
         .cta-dgl:hover { background:rgba(255,255,255,0.1); }
         @media (max-width: 780px) { .price-cards { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
 
-        /* ── FAQ ── */
         .faq-bg { background: #FFFFFF; }
         .faq-list { margin-top: 48px; }
         .faq-item { border-bottom: 1px solid rgba(0,0,0,0.06); }
@@ -451,7 +500,6 @@ export default function LandingPage() {
         .faq-ico.open { transform: rotate(180deg); color: #F59E0B; }
         .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
-        /* ── CTA ── */
         .cta-wrap { background: #080808; padding: 120px 24px; position: relative; overflow: hidden; }
         .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.09) 0%, transparent 70%); }
         .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
@@ -460,7 +508,6 @@ export default function LandingPage() {
         .cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.17); border-radius:20px; padding:4px 13px; margin-bottom:24px; }
         .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
-        /* ── FOOTER ── */
         .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 24px 26px; }
         .foot-in { max-width: 1120px; margin: 0 auto; }
         .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
@@ -542,7 +589,6 @@ export default function LandingPage() {
                 ))}
               </motion.div>
             </div>
-
             <motion.div className="hero-right"
               initial={{ opacity:0,y:24,scale:0.97 }} animate={{ opacity:1,y:0,scale:1 }}
               transition={{ duration:0.85,delay:0.18,ease:[0.22,1,0.36,1] }}>

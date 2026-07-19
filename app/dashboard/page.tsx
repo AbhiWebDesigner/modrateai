@@ -15,7 +15,6 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, onSnapshot, DocumentData, collection, query, orderBy, limit } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
-/* ── SPARKLINE ── */
 function Sparkline({ color, up = true, width = 72, height = 32 }: { color: string; up?: boolean; width?: number; height?: number }) {
   const points = up
     ? [28, 22, 32, 24, 36, 28, 42, 34, 48, 38, 56, 44, 62]
@@ -41,7 +40,6 @@ function Sparkline({ color, up = true, width = 72, height = 32 }: { color: strin
   );
 }
 
-/* ── MINI BAR CHART ── */
 function MiniBarChart({ values, color }: { values: number[]; color: string }) {
   const max = Math.max(...values, 1);
   return (
@@ -58,7 +56,6 @@ function MiniBarChart({ values, color }: { values: number[]; color: string }) {
   );
 }
 
-/* ── MINI LINE CHART ── */
 function MiniLineChart({ data, timeLabels }: {
   data: { values: number[]; color: string; label: string }[];
   timeLabels: string[];
@@ -112,7 +109,6 @@ function MiniLineChart({ data, timeLabels }: {
   );
 }
 
-/* ── DONUT CHART ── */
 function DonutChart({ pct, label, color }: { pct: number; label: string; color: string }) {
   const r = 56, circ = 2 * Math.PI * r, filled = (pct / 100) * circ;
   return (
@@ -138,7 +134,6 @@ function DonutChart({ pct, label, color }: { pct: number; label: string; color: 
   );
 }
 
-/* ── YT ICON ── */
 function YTIcon({ color = '#f87171', size = 14 }: { color?: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
@@ -147,7 +142,6 @@ function YTIcon({ color = '#f87171', size = 14 }: { color?: string; size?: numbe
   );
 }
 
-/* ── FORMAT HELPERS ── */
 function fmtCount(n: string | number | null | undefined): string {
   if (n === null || n === undefined || n === '') return '—';
   const num = typeof n === 'string' ? parseInt(n, 10) : n;
@@ -174,7 +168,6 @@ function timeAgo(ts: any): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-/* ── EMPTY STATE ── */
 function EmptyState({ icon: Icon, message }: { icon: any; message: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 16px', gap: 8 }}>
@@ -186,7 +179,6 @@ function EmptyState({ icon: Icon, message }: { icon: any; message: string }) {
   );
 }
 
-/* ── LIVE ITEM ── */
 function LiveItem({ icon: Icon, iconColor, title, sub, time, bg }: {
   icon: any; iconColor: string; title: string; sub: string; time: string; bg: string;
 }) {
@@ -204,7 +196,6 @@ function LiveItem({ icon: Icon, iconColor, title, sub, time, bg }: {
   );
 }
 
-/* ── AUTOMATION ROW ── */
 function AutomationRow({ icon: Icon, iconColor, label, active }: { icon: any; iconColor: string; label: string; active: boolean }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -222,7 +213,6 @@ function AutomationRow({ icon: Icon, iconColor, label, active }: { icon: any; ic
   );
 }
 
-/* ── SIDEBAR NAV ── */
 const SIDEBAR_NAV = [
   { label: 'Overview',   icon: LayoutDashboard, href: '/dashboard'  },
   { label: 'Live Feed',  icon: Rss,             href: '/live-feed'  },
@@ -235,9 +225,6 @@ const SIDEBAR_NAV = [
   { label: 'Settings',   icon: Settings,        href: '/settings'   },
 ];
 
-/* ══════════════════════════════════════
-   MAIN DASHBOARD
-══════════════════════════════════════ */
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -293,7 +280,6 @@ export default function Dashboard() {
     </div>
   );
 
-  /* ── DATA ── */
   const plan             = (userData?.plan as string) || 'free';
   const commentsScanned  = (userData?.comments_scanned  as number) ?? null;
   const hiddenComments   = (userData?.comments_hidden   as number) ?? (userData?.hidden_count as number) ?? null;
@@ -410,7 +396,7 @@ export default function Dashboard() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',-apple-system,sans-serif;}
-        html,body{background:#0a0a0f;}
+        html,body{background:#0a0a0f;width:100%;overflow-x:hidden;}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -419,7 +405,7 @@ export default function Dashboard() {
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:3px}
 
-        .r-bg{min-height:100vh;background:#0a0a0f;position:relative;}
+        .r-bg{min-height:100vh;background:#0a0a0f;position:relative;width:100%;overflow-x:hidden;}
         .r-bg::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
           background:radial-gradient(ellipse 55% 45% at -5% -5%,rgba(124,58,237,0.09) 0%,transparent 55%),
             radial-gradient(ellipse 45% 35% at 108% 108%,rgba(245,158,11,0.06) 0%,transparent 55%);}
@@ -427,7 +413,6 @@ export default function Dashboard() {
           background-image:linear-gradient(rgba(255,255,255,0.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.011) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        /* SIDEBAR */
         .r-sidebar{width:216px;min-width:216px;background:#0c0c14;border-right:1px solid rgba(124,58,237,0.11);
           display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;}
         .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
@@ -455,10 +440,8 @@ export default function Dashboard() {
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;font-weight:700;font-size:11.5px;
           padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;display:block;}
 
-        /* MAIN */
-        .r-main{margin-left:216px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;}
+        .r-main{margin-left:216px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;width:calc(100% - 216px);}
 
-        /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(24px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 22px;height:56px;
           display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,0.25);}
@@ -476,7 +459,6 @@ export default function Dashboard() {
           border-radius:9px;padding:3px 9px 3px 3px;cursor:pointer;transition:all 0.18s;gap:6px;}
         .r-avatar-btn:hover{border-color:rgba(255,255,255,0.11);}
 
-        /* MOBILE TOPBAR */
         .r-mobile-topbar{display:none;position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.96);
           backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.05);
           padding:0 12px;height:52px;align-items:center;gap:5px;box-shadow:0 2px 16px rgba(0,0,0,0.3);}
@@ -485,13 +467,10 @@ export default function Dashboard() {
           padding:6px 12px;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;}
         .r-mobile-status-bar::-webkit-scrollbar{display:none;}
 
-        /* CONTENT */
-        .r-content{padding:20px 22px 24px;flex:1;animation:fadeIn 0.3s ease;}
+        .r-content{padding:20px 22px 24px;flex:1;animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;}
 
-        /* TWO-COLUMN LAYOUT */
         .r-layout{display:grid;grid-template-columns:1fr 280px;gap:14px;align-items:start;width:100%;}
 
-        /* HERO */
         .r-hero{background:linear-gradient(135deg,rgba(14,13,22,0.99) 0%,rgba(18,12,36,0.99) 100%);
           border:1px solid rgba(124,58,237,0.13);border-radius:16px;padding:24px 28px;
           margin-bottom:13px;position:relative;overflow:hidden;}
@@ -499,7 +478,6 @@ export default function Dashboard() {
           background:radial-gradient(ellipse,rgba(124,58,237,0.12) 0%,transparent 65%);pointer-events:none;}
         .r-hero-shield{position:absolute;right:24px;top:50%;transform:translateY(-50%);width:130px;height:130px;opacity:0.9;}
 
-        /* STAT CARDS */
         .r-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:13px;}
         .r-stat{background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:16px 18px;
           transition:all 0.2s;display:flex;flex-direction:column;position:relative;overflow:hidden;}
@@ -515,14 +493,12 @@ export default function Dashboard() {
           background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.15);border-radius:5px;padding:1.5px 5px;}
         .r-stat-vs{font-size:9.5px;color:rgba(255,255,255,0.2);margin-top:3px;}
 
-        /* CARD */
         .r-card{background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;}
         .r-card:hover{border-color:rgba(255,255,255,0.09);}
         .r-card-top{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 11px;border-bottom:1px solid rgba(255,255,255,0.04);}
         .r-card-title{color:#FAFAFA;font-size:13px;font-weight:700;}
         .r-card-sub{color:rgba(255,255,255,0.24);font-size:10.5px;margin-top:2px;}
 
-        /* BUTTONS */
         .r-btn-primary{background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;font-weight:700;font-size:12px;
           padding:8px 14px;border-radius:8px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
           transition:all 0.18s;text-decoration:none;white-space:nowrap;box-shadow:0 2px 10px rgba(124,58,237,0.25);}
@@ -532,7 +508,6 @@ export default function Dashboard() {
           display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:all 0.18s;text-decoration:none;white-space:nowrap;}
         .r-btn-ghost:hover{background:rgba(255,255,255,0.07);color:#FAFAFA;}
 
-        /* BOTTOM NAV */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
           backdrop-filter:blur(24px);padding:6px 4px env(safe-area-inset-bottom,6px);}
@@ -547,21 +522,16 @@ export default function Dashboard() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
-        /* LIVE PANEL */
         .r-live-panel{background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);border-radius:14px;
           display:flex;flex-direction:column;overflow:hidden;}
         .r-mobile-live{display:none;}
 
-        /* KEYWORD ROW */
         .r-keyword-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
 
-        /* BOTTOM GRID */
         .r-bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 
-        /* PENDING ROW */
         .r-pending-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
 
-        /* ── DESKTOP ≥1024px ── */
         @media(min-width:1024px){
           .r-bottom-nav{display:none!important;}
           .r-mobile-topbar{display:none!important;}
@@ -571,15 +541,14 @@ export default function Dashboard() {
           .r-bottom-grid{grid-template-columns:1fr 1fr 1fr;}
         }
 
-        /* ── TABLET 768–1023px ── */
         @media(min-width:768px) and (max-width:1023px){
           .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;padding-bottom:76px;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;}
           .r-bottom-nav{display:flex!important;}
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
           .r-mobile-status-bar{display:flex!important;}
-          .r-content{padding:14px 16px 16px;}
+          .r-content{padding:14px 16px 16px;width:100%!important;box-sizing:border-box!important;}
           .r-layout{display:flex!important;flex-direction:column!important;width:100%!important;gap:10px;}
           .r-layout > div{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
           .r-stats{grid-template-columns:repeat(2,1fr);gap:10px;}
@@ -591,56 +560,48 @@ export default function Dashboard() {
           .r-mobile-live{display:flex!important;flex-direction:column;}
         }
 
-        /* ── MOBILE <768px ── */
         @media(max-width:767px){
           .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;padding-bottom:80px;}
+          .r-main{margin-left:0!important;width:100%!important;max-width:100vw!important;overflow-x:hidden!important;padding-bottom:80px;}
           .r-bottom-nav{display:flex!important;}
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
           .r-mobile-status-bar{display:flex!important;}
-          .r-content{padding:10px 10px 16px;}
+          .r-content{padding:10px 10px 16px;width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:hidden!important;}
           .r-hero{padding:14px 14px 14px;margin-bottom:10px;}
           .r-hero-shield{display:none!important;}
           .r-hero h1{font-size:20px!important;}
 
-          /* Single column full width */
-          .r-layout{display:flex!important;flex-direction:column!important;width:100%!important;gap:10px;}
-          .r-layout > div{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
+          .r-layout{display:flex!important;flex-direction:column!important;width:100%!important;max-width:100%!important;gap:10px;box-sizing:border-box!important;}
+          .r-layout > div{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;}
 
-          /* 2-col stat cards */
-          .r-stats{grid-template-columns:1fr 1fr!important;gap:8px;margin-bottom:10px;}
+          .r-stats{grid-template-columns:1fr 1fr!important;gap:8px;margin-bottom:10px;width:100%!important;}
           .r-stat{padding:12px 12px;}
           .r-stat-value,.r-stat-zero{font-size:22px!important;}
           .r-stat-label{font-size:10px;}
 
-          /* Stack pending + moderation */
-          .r-pending-row{grid-template-columns:1fr!important;gap:8px;margin-bottom:10px;}
+          .r-pending-row{grid-template-columns:1fr!important;gap:8px;margin-bottom:10px;width:100%!important;}
 
-          /* Donut compact */
           .r-donut-wrap{flex-direction:column!important;align-items:center!important;gap:10px!important;}
           .r-donut-wrap > div:last-child{width:100%;}
 
-          /* Bottom grid single column — force all children full width */
-          .r-bottom-grid{display:flex!important;flex-direction:column!important;gap:9px!important;width:100%!important;}
-          .r-bottom-grid > *{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
-          .r-bottom-grid-last{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
+          .r-bottom-grid{display:flex!important;flex-direction:column!important;gap:9px!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
+          .r-bottom-grid > *{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;}
+          .r-bottom-grid-last{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;}
 
-          /* Hide desktop live, show mobile */
           .r-live-panel{display:none!important;}
-          .r-mobile-live{display:flex!important;flex-direction:column;}
+          .r-mobile-live{display:flex!important;flex-direction:column;width:100%!important;}
 
-          /* Channel card stack */
           .r-channel-card-inner{flex-direction:column!important;align-items:flex-start!important;gap:12px!important;}
           .r-channel-stats{flex-direction:row!important;gap:16px!important;width:100%;}
           .r-channel-open-btn{width:100%!important;justify-content:center!important;}
 
-          /* Mobile topbar: hide Protection badge to avoid overflow */
           .r-mob-protect-badge{display:none!important;}
           .r-credits-btn{padding:0 7px!important;font-size:10px!important;gap:3px!important;}
+
+          .r-card{width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
         }
 
-        /* ── Very small phones <380px ── */
         @media(max-width:379px){
           .r-stats{grid-template-columns:1fr 1fr!important;gap:6px;}
           .r-stat{padding:10px 10px;}
@@ -652,7 +613,7 @@ export default function Dashboard() {
 
       <div className="r-bg" style={{ display: 'flex' }}>
 
-        {/* ── SIDEBAR ── */}
+        {/* SIDEBAR */}
         <aside className="r-sidebar">
           <div className="r-logo">
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
@@ -726,10 +687,10 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* ── MAIN ── */}
+        {/* MAIN */}
         <div className="r-main">
 
-          {/* ── DESKTOP TOPBAR ── */}
+          {/* DESKTOP TOPBAR */}
           <header className="r-topbar">
             <div style={{ position: 'relative', flex: 1, maxWidth: 360 }}>
               <Search size={11} color="rgba(255,255,255,0.16)" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
@@ -791,7 +752,7 @@ export default function Dashboard() {
             </button>
           </header>
 
-          {/* ── MOBILE TOPBAR ── */}
+          {/* MOBILE TOPBAR */}
           <header className="r-mobile-topbar">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -800,12 +761,10 @@ export default function Dashboard() {
               <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13, letterSpacing: '-0.02em' }}>ModerateAI</span>
             </div>
             <div style={{ flex: 1 }} />
-            {/* AI Online badge — hidden on very small phones via CSS */}
             <div className="r-mob-ai-badge" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 14, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.14)', fontSize: 9.5, fontWeight: 700, color: '#22c55e', flexShrink: 0, whiteSpace: 'nowrap' }}>
               <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
               AI Online
             </div>
-            {/* Protection badge — hidden on mobile to avoid overflow */}
             <div className="r-mob-protect-badge" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 14, background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 9.5, fontWeight: 700, color: '#a78bfa', flexShrink: 0, whiteSpace: 'nowrap' }}>
               <Shield size={8} strokeWidth={2.2} /> Protection
             </div>
@@ -826,7 +785,7 @@ export default function Dashboard() {
             </button>
           </header>
 
-          {/* ── MOBILE STATUS BAR ── */}
+          {/* MOBILE STATUS BAR */}
           <div className="r-mobile-status-bar">
             {[
               { label: 'AI System Online', color: '#22c55e', bg: 'rgba(34,197,94,0.07)', border: 'rgba(34,197,94,0.16)', dot: true },
@@ -840,7 +799,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* ── CONTENT ── */}
+          {/* CONTENT */}
           <div className="r-content">
 
             {/* HERO */}
@@ -890,7 +849,7 @@ export default function Dashboard() {
 
             {/* CHANNEL CARD */}
             {youtubeConnected ? (
-              <div style={{ background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 16px', marginBottom: 13 }}>
+              <div style={{ background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 16px', marginBottom: 13, width: '100%', boxSizing: 'border-box' }}>
                 <div className="r-channel-card-inner" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                   <div style={{ position: 'relative', flexShrink: 0 }}>
                     {channelThumbnail
@@ -931,7 +890,7 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div style={{ background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(124,58,237,0.18)', borderRadius: 14, padding: '16px 14px', marginBottom: 13, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(124,58,237,0.18)', borderRadius: 14, padding: '16px 14px', marginBottom: 13, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(248,113,113,0.09)', border: '1px solid rgba(248,113,113,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <YTIcon color="#f87171" size={20} />
                 </div>
@@ -947,7 +906,7 @@ export default function Dashboard() {
 
             {/* TWO-COLUMN LAYOUT */}
             <div className="r-layout">
-              <div>
+              <div style={{ minWidth: 0, width: '100%' }}>
 
                 {/* STAT CARDS */}
                 <div className="r-stats">
@@ -1211,7 +1170,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── BOTTOM NAV (mobile only) ── */}
+        {/* BOTTOM NAV */}
         <nav className="r-bottom-nav">
           <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
             <span className="r-bnav-icon"><LayoutDashboard size={19} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>

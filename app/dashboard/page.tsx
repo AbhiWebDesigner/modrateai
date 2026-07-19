@@ -235,13 +235,9 @@ const SIDEBAR_NAV = [
   { label: 'Settings',   icon: Settings,        href: '/settings'   },
 ];
 
-/* ── BOTTOM NAV items (no duplicate Comments) ── */
 const BOTTOM_NAV = [
-  { label: 'Overview',  icon: LayoutDashboard, href: '/dashboard' },
-  { label: 'Live Feed', icon: Rss,             href: '/live-feed' },
-  // CENTER = Automation FAB
-  { label: 'Comments',  icon: MessageSquare,   href: '/comments'  },
-  { label: 'More',      icon: MoreHorizontal,  href: null         },
+  { label: 'Overview',  icon: LayoutDashboard, href: '/dashboard'  },
+  { label: 'Live Feed', icon: Rss,             href: '/live-feed'  },
 ];
 
 /* ══════════════════════════════════════
@@ -319,9 +315,11 @@ export default function Dashboard() {
   const viewCount        = (userData?.youtube_view_count as string) || null;
 
   const moderationAcc   = (analyticsData?.moderationAccuracy as number) ?? (userData?.moderation_accuracy as number) ?? 99.9;
+  const aiConfidence    = (analyticsData?.aiConfidence as number) ?? 98.6;
   const totalScanned    = (analyticsData?.totalScanned as number) ?? 0;
   const totalHidden     = (analyticsData?.totalHidden as number) ?? 0;
   const totalReplies    = (analyticsData?.totalReplies as number) ?? 0;
+  const spamDetected    = (analyticsData?.spamDetected as number) ?? 0;
   const pendingReview   = (analyticsData?.pendingReview as number) ?? (userData?.pending_review as number) ?? 0;
   const avgResponseTime = (analyticsData?.avgResponseTime as number) ?? avgResponseMs ?? 0;
 
@@ -495,8 +493,6 @@ export default function Dashboard() {
 
         /* CONTENT */
         .r-content{padding:20px 22px 24px;flex:1;animation:fadeIn 0.3s ease;}
-
-        /* TWO-COLUMN LAYOUT — desktop only */
         .r-layout{display:grid;grid-template-columns:1fr 268px;gap:14px;align-items:start;}
 
         /* HERO */
@@ -552,7 +548,7 @@ export default function Dashboard() {
         .r-bnav-item.active .r-bnav-icon{background:rgba(124,58,237,0.13);}
         .r-bnav-fab{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6D28D9);
           display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
-          box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
+          box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:4px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
         /* LIVE PANEL */
@@ -585,8 +581,6 @@ export default function Dashboard() {
           .r-hero{padding:16px 14px 16px;}
           .r-hero-shield{display:none!important;}
           .r-hero h1{font-size:22px!important;}
-          /* FIX: full width single column on mobile */
-          .r-layout{display:block!important;width:100%;}
           .r-stats{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
           .r-stat{padding:12px 13px;}
           .r-stat-value,.r-stat-zero{font-size:20px;}
@@ -594,7 +588,15 @@ export default function Dashboard() {
           .r-pending-row{grid-template-columns:1fr 1fr;}
           .r-live-panel{display:none!important;}
           .r-mobile-live{display:flex!important;flex-direction:column;}
+          .r-layout{grid-template-columns:1fr!important;gap:0!important;}
           .r-channel-stats{gap:14px!important;}
+          .r-channel-card-inner{flex-wrap:nowrap!important;}
+        }
+        @media(max-width:600px){
+          .r-channel-wrap{flex-direction:column!important;align-items:flex-start!important;}
+          .r-channel-stats-wrap{width:100%;justify-content:space-between!important;}
+          .r-channel-open-btn{width:100%;justify-content:center!important;}
+          .r-pending-row{grid-template-columns:1fr!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
           .r-stats{grid-template-columns:repeat(2,1fr);}
@@ -815,6 +817,7 @@ export default function Dashboard() {
               <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12.5 }}>
                 Your AI moderator is actively protecting your YouTube channel 24/7.
               </p>
+              {/* SHIELD GRAPHIC */}
               <div className="r-hero-shield">
                 <svg viewBox="0 0 130 130" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <defs>
@@ -826,13 +829,16 @@ export default function Dashboard() {
                   <ellipse cx="65" cy="65" rx="60" ry="60" fill="url(#shg1)" />
                   <path d="M65 16 L98 29 L98 63 C98 82 82 97 65 104 C48 97 32 82 32 63 L32 29 Z" fill="rgba(124,58,237,0.16)" stroke="rgba(167,139,250,0.3)" strokeWidth="1.5"/>
                   <path d="M65 23 L93 35 L93 62 C93 78 79 91 65 98 C51 91 37 78 37 62 L37 35 Z" fill="rgba(124,58,237,0.1)" stroke="rgba(167,139,250,0.18)" strokeWidth="1"/>
+                  {/* YT icon in center */}
                   <circle cx="65" cy="63" r="16" fill="rgba(220,38,38,0.18)" stroke="rgba(248,113,113,0.35)" strokeWidth="1.5"/>
                   <path d="M58 57.5 L58 68.5 L74 63 Z" fill="#f87171" opacity="0.9"/>
+                  {/* Orbit dots */}
                   {[0,60,120,180,240,300].map((deg, i) => {
                     const rad = (deg * Math.PI) / 180;
                     const x = 65 + 48 * Math.cos(rad), y = 65 + 48 * Math.sin(rad);
                     return <circle key={i} cx={x} cy={y} r="2.5" fill="rgba(167,139,250,0.28)" />;
                   })}
+                  {/* Orbit icons */}
                   <rect x="20" y="22" width="14" height="14" rx="4" fill="rgba(167,139,250,0.14)" stroke="rgba(167,139,250,0.28)" strokeWidth="1"/>
                   <rect x="96" y="22" width="14" height="14" rx="4" fill="rgba(245,158,11,0.14)" stroke="rgba(245,158,11,0.28)" strokeWidth="1"/>
                   <rect x="110" y="58" width="14" height="14" rx="4" fill="rgba(52,211,153,0.14)" stroke="rgba(52,211,153,0.28)" strokeWidth="1"/>
@@ -843,42 +849,38 @@ export default function Dashboard() {
             {/* CHANNEL CARD */}
             {youtubeConnected ? (
               <div style={{ background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 20px', marginBottom: 13 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                {/* Row 1: avatar + name + stats + button */}
+                <div className="r-channel-wrap" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ position: 'relative', flexShrink: 0 }}>
                     {channelThumbnail
-                      ? <img src={channelThumbnail} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.25)' }} />
-                      : <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
+                      ? <img src={channelThumbnail} alt="" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(167,139,250,0.25)' }} />
+                      : <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 900, color: 'white' }}>{(channelName || 'C')[0]}</div>
                     }
-                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f' }} />
+                    <div style={{ position: 'absolute', bottom: 1, right: 1, width: 11, height: 11, borderRadius: '50%', background: '#22c55e', border: '2px solid #0a0a0f' }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2, flexWrap: 'wrap' }}>
-                      <span style={{ color: '#FAFAFA', fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channelName || 'My Channel'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <span style={{ color: '#FAFAFA', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channelName || 'My Channel'}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(34,197,94,0.09)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 5, padding: '2px 6px', flexShrink: 0 }}>
                         <div style={{ width: 3.5, height: 3.5, borderRadius: '50%', background: '#22c55e' }} />
-                        <span style={{ color: '#22c55e', fontSize: 9, fontWeight: 800 }}>CONNECTED</span>
+                        <span style={{ color: '#22c55e', fontSize: 8.5, fontWeight: 800 }}>CONNECTED</span>
                       </div>
                     </div>
-                    {/* FIX: no-wrap + ellipsis for date line */}
-                    {channelHandle && (
-                      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-                        @{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </div>
-                    )}
+                    {channelHandle && <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>@{channelHandle.replace('@', '')} · {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>}
                   </div>
-                  <div className="r-channel-stats" style={{ display: 'flex', gap: 22, flexShrink: 0 }}>
+                  <div className="r-channel-stats-wrap" style={{ display: 'flex', gap: 18, flexShrink: 0 }}>
                     {[
                       { label: 'Subscribers', value: fmtCount(subscriberCount) },
                       { label: 'Videos',      value: fmtCount(videoCount)      },
                       { label: 'Views',       value: fmtCount(viewCount)       },
                     ].map(s => (
                       <div key={s.label} style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#FAFAFA', fontSize: 17, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 10, marginTop: 1 }}>{s.label}</div>
+                        <div style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 900, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 9.5, marginTop: 1 }}>{s.label}</div>
                       </div>
                     ))}
                   </div>
-                  <a href={youtubeChannelUrl} target="_blank" rel="noopener noreferrer" className="r-btn-ghost" style={{ fontSize: 11, padding: '6px 11px' }}>
+                  <a href={youtubeChannelUrl} target="_blank" rel="noopener noreferrer" className="r-btn-ghost r-channel-open-btn" style={{ fontSize: 11, padding: '6px 10px', flexShrink: 0 }}>
                     <ExternalLink size={10} /> Open Channel
                   </a>
                 </div>
@@ -935,6 +937,7 @@ export default function Dashboard() {
 
                 {/* PENDING + MODERATION ROW */}
                 <div className="r-pending-row">
+                  {/* PENDING REVIEW */}
                   <div className="r-card">
                     <div className="r-card-top">
                       <div>
@@ -955,6 +958,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
+                  {/* MODERATION ACCURACY */}
                   <div className="r-card">
                     <div className="r-card-top">
                       <div>
@@ -1049,6 +1053,7 @@ export default function Dashboard() {
                           );
                         })
                       ) : (
+                        // Placeholder rows
                         [['scam', 324], ['subscribe my channel', 298], ['fake giveaway', 276], ['hate speech', 198], ['bad words', 174]].map(([kw, count], i) => (
                           <div key={i} className="r-keyword-row">
                             <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10, fontWeight: 700, width: 16, flexShrink: 0 }}>{String(i + 1).padStart(2, '0')}</span>
@@ -1066,7 +1071,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* LIVE ACTIVITY (mobile only) */}
+                  {/* LIVE ACTIVITY (mobile) */}
                   <div className="r-card r-mobile-live">
                     <LiveActivityContent />
                   </div>
@@ -1156,7 +1161,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* DESKTOP LIVE ACTIVITY PANEL */}
+              {/* DESKTOP LIVE ACTIVITY */}
               <div className="r-live-panel" style={{ position: 'sticky', top: 72 }}>
                 <LiveActivityContent />
               </div>
@@ -1164,36 +1169,28 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── BOTTOM NAV (mobile) ── */}
-        {/* Layout: Overview | Live Feed | [Automation FAB] | Alerts | More */}
+        {/* ── BOTTOM NAV ── */}
         <nav className="r-bottom-nav">
-          {/* Overview */}
-          <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
-            <span className="r-bnav-icon"><LayoutDashboard size={19} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
-          </Link>
-
-          {/* Live Feed */}
-          <Link href="/live-feed" className="r-bnav-item">
-            <span className="r-bnav-icon"><Rss size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: 500 }}>Live Feed</span>
-          </Link>
-
-          {/* CENTER — Automation FAB */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+          {BOTTOM_NAV.map(item => {
+            const isActive = currentPath === item.href;
+            return (
+              <Link key={item.href} href={item.href} className={`r-bnav-item${isActive ? ' active' : ''}`}>
+                <span className="r-bnav-icon"><item.icon size={19} strokeWidth={isActive ? 2.2 : 1.7} /></span>
+                <span style={{ fontSize: 9, fontWeight: isActive ? 700 : 500 }}>{item.label}</span>
+              </Link>
+            );
+          })}
+          {/* CENTER FAB */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 2 }}>
             <button className="r-bnav-fab" onClick={() => router.push('/automation')}>
               <Plus size={22} color="white" strokeWidth={2.5} />
             </button>
-            <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
+            <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)' }}>Automation</span>
           </div>
-
-          {/* Alerts */}
-          <Link href="/alerts" className="r-bnav-item">
-            <span className="r-bnav-icon"><Bell size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: 500 }}>Alerts</span>
+          <Link href="/comments" className="r-bnav-item">
+            <span className="r-bnav-icon"><MessageSquare size={19} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 9, fontWeight: 500 }}>Comments</span>
           </Link>
-
-          {/* More */}
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
             <span className="r-bnav-icon"><MoreHorizontal size={19} strokeWidth={1.7} /></span>
             <span style={{ fontSize: 9 }}>More</span>

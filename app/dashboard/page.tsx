@@ -585,6 +585,7 @@ export default function Dashboard() {
           .r-stats{grid-template-columns:repeat(2,1fr);gap:10px;}
           .r-bottom-grid{display:flex!important;flex-direction:column!important;gap:10px!important;width:100%!important;}
           .r-bottom-grid > *{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
+          .r-bottom-grid-last{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
           .r-pending-row{grid-template-columns:1fr 1fr;}
           .r-live-panel{display:none!important;}
           .r-mobile-live{display:flex!important;flex-direction:column;}
@@ -623,6 +624,7 @@ export default function Dashboard() {
           /* Bottom grid single column — force all children full width */
           .r-bottom-grid{display:flex!important;flex-direction:column!important;gap:9px!important;width:100%!important;}
           .r-bottom-grid > *{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
+          .r-bottom-grid-last{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
 
           /* Hide desktop live, show mobile */
           .r-live-panel{display:none!important;}
@@ -1134,7 +1136,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* AI SYSTEM HEALTH + PLAN */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div className="r-bottom-grid-last" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div className="r-card">
                       <div className="r-card-top" style={{ alignItems: 'center' }}>
                         <div><div className="r-card-title">AI System Health</div></div>

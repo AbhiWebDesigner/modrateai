@@ -18,7 +18,7 @@ export default function TermsPage() {
         <div className="mb-10">
           <h1 className="text-4xl font-bold text-white mb-2">Terms and Conditions</h1>
           <p className="text-gray-400 text-sm">
-            Effective: May 2026 &nbsp;·&nbsp; https://moderateai.site/terms
+            Effective: May 2026
           </p>
           <div className="mt-4 h-1 w-16 bg-[#ff6b00] rounded-full" />
         </div>
@@ -72,7 +72,7 @@ export default function TermsPage() {
             <p className="mb-3">To use ModerateAI, you must:</p>
             <ul className="space-y-2">
               {[
-                "Be at least 18 years of age, or have valid parental or guardian consent",
+                "Be at least the minimum age required under applicable law, or have valid parental or guardian consent where permitted",
                 "Hold a valid YouTube channel and Google account",
                 "Agree to comply with YouTube's Terms of Service and Community Guidelines",
                 "Provide accurate registration and billing information",
@@ -259,7 +259,7 @@ export default function TermsPage() {
               <Link href="/privacy" className="text-[#ff6b00] hover:underline">
                 Privacy Policy
               </Link>
-              , which is incorporated into these Terms by reference. We are committed to protecting your personal data in accordance with the Digital Personal Data Protection Act, 2023 (DPDPA) and other applicable Indian laws.
+              , which is incorporated into these Terms by reference. We are committed to protecting your personal data in accordance with the Digital Personal Data Protection Act, 2023 (DPDPA) and other applicable laws.
             </p>
           </section>
 
@@ -371,7 +371,7 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
-                <span>Support Team: ModerateAI Legal &amp; Privacy Team</span>
+                <span>Support Team: ModerateAI Support Team</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
@@ -384,7 +384,7 @@ export default function TermsPage() {
 
         {/* Footer */}
         <div className="mt-16 pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
-          © 2026 ModerateAI. Made in India 🇮🇳. All rights reserved.
+          © 2026 ModerateAI. All rights reserved.
         </div>
       </div>
     </div>

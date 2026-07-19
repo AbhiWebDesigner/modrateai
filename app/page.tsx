@@ -812,11 +812,13 @@ export default function LandingPage() {
               </div>
               <div className="foot-col">
                 <h4>Product</h4>
-                {['Features','Pricing','Security','Documentation','Status'].map(t => <a key={t} href={`#${t.toLowerCase()}`} className="foot-a">{t}</a>)}
+                {['Features','Pricing','Security'].map(t => <a key={t} href={`#${t.toLowerCase()}`} className="foot-a">{t}</a>)}
+                <Link href="/docs" className="foot-a">Documentation</Link>
+                <Link href="/status" className="foot-a">Status</Link>
               </div>
               <div className="foot-col">
                 <h4>Support</h4>
-                <a href="#" className="foot-a">Help Center</a>
+                 <Link href="/help" className="foot-a">Help Center</Link>
                 <a href="mailto:support@moderateai.site" className="foot-a">Contact</a>
                 <Link href="/privacy" className="foot-a">Privacy Policy</Link>
                 <Link href="/terms" className="foot-a">Terms</Link>

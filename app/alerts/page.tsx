@@ -197,9 +197,9 @@ export default function AlertsPage() {
         .r-bnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.07);
           backdrop-filter:blur(24px);padding:6px 0 env(safe-area-inset-bottom,6px);}
-        .r-bnav-inner{display:flex;justify-content:space-around;align-items:center;}
+        .r-bnav-inner{display:flex;justify-content:space-evenly;align-items:center;width:100%;}
         .r-bnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;
-          padding:6px 16px;text-decoration:none;color:rgba(255,255,255,0.35);
+          padding:6px 0;flex:1;text-decoration:none;color:rgba(255,255,255,0.35);
           background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color 0.15s;}
         .r-bnav-btn.active{color:#F59E0B;}
         .r-bnav-icon{width:36px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:9px;}

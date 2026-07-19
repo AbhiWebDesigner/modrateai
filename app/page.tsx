@@ -127,7 +127,7 @@ function ProductPreview() {
         </div>
         <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Lock size={9} color="rgba(255,255,255,0.25)" />
-          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>app.moderateai.site/dashboard</span>
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>moderateai.site/dashboard</span>
         </div>
         <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
@@ -539,7 +539,6 @@ export default function LandingPage() {
           </div>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
-            <Link href="/login" className="n-cta">Start Free Trial</Link>
           </div>
           <button className="n-burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
             {menuOpen ? <X size={19} /> : <Menu size={19} />}

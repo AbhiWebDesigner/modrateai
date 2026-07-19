@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import {
   Bell, Send, LayoutDashboard, BarChart2, Zap, Settings,
-MoreHorizontal, CreditCard, Layers, LogOut, Rss, Shield, MessageSquare} 
+MoreHorizontal, CreditCard, Layers, LogOut, Rss, Shield, MessageSquare}
 from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -17,8 +17,7 @@ const BOTTOM_NAV = [
   { href: '/alerts',     icon: Bell,            label: 'Alerts'     },
 ];
 
-
-  const SIDEBAR_NAV = [
+const SIDEBAR_NAV = [
   { href: '/dashboard',        icon: LayoutDashboard, label: 'Overview'        },
   { href: '/live-feed',        icon: Rss,             label: 'Live Feed'       },
   { href: '/analytics',        icon: BarChart2,       label: 'Analytics'       },
@@ -30,13 +29,12 @@ const BOTTOM_NAV = [
 ];
 
 const MORE_ITEMS = [
-
-  { href: '/billing',         icon: CreditCard, label: 'Billing',          color: '#F59E0B' },
-  { href: '/channels',        icon: Layers,     label: 'Channels',         color: '#60a5fa' },
-  { href: '/analytics',       icon: BarChart2,  label: 'Analytics',        color: '#a78bfa' },
+  { href: '/billing',         icon: CreditCard,    label: 'Billing',          color: '#F59E0B' },
+  { href: '/channels',        icon: Layers,        label: 'Channels',         color: '#60a5fa' },
+  { href: '/analytics',       icon: BarChart2,     label: 'Analytics',        color: '#a78bfa' },
   { href: '/human-ai-replies',icon: MessageSquare, label: 'Human-AI Replies', color: '#34d399' },
-  { href: '/notifications',   icon: Bell,       label: 'Notifications',    color: '#f87171' },
-  { href: '/settings',        icon: Settings,   label: 'Settings',         color: '#94a3b8' },
+  { href: '/notifications',   icon: Bell,          label: 'Notifications',    color: '#f87171' },
+  { href: '/settings',        icon: Settings,      label: 'Settings',         color: '#94a3b8' },
 ];
 
 const NOTIFICATION_EVENTS = [
@@ -119,7 +117,7 @@ export default function AlertsPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',-apple-system,sans-serif;}
-        html,body{background:#0a0a0f;}
+        html,body{background:#0a0a0f;width:100%;overflow-x:hidden;}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -173,7 +171,7 @@ export default function AlertsPage() {
         .r-btn-logout:hover{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);}
 
         /* LAYOUT */
-        .r-main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column;}
+        .r-main{margin-left:220px;min-height:100vh;display:flex;flex-direction:column;width:calc(100% - 220px);}
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(28px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 28px;height:60px;
           display:flex;align-items:center;gap:12px;box-shadow:0 4px 32px rgba(0,0,0,0.3);}
@@ -210,11 +208,11 @@ export default function AlertsPage() {
         /* RESPONSIVE */
         @media(max-width:1023px){
           .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;padding-bottom:72px;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:72px;}
           .r-bnav{display:block!important;}
           .r-topbar{padding:0 14px;height:54px;}
           .r-topbar-search{display:none!important;}
-          .r-content{padding:16px!important;max-width:100%!important;margin:0!important;}
+          .r-content{padding:12px!important;max-width:100%!important;width:100%!important;margin:0!important;}
           .a-channel-grid{grid-template-columns:1fr!important;gap:10px!important;}
         }
         @media(min-width:768px) and (max-width:1023px){
@@ -223,7 +221,7 @@ export default function AlertsPage() {
         @media(min-width:1024px){.r-bnav{display:none!important;}}
       `}</style>
 
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex' }}>
+      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', width: '100%', overflowX: 'hidden' }}>
 
         {/* SIDEBAR */}
         <aside className="r-sidebar">
@@ -264,9 +262,9 @@ export default function AlertsPage() {
         </aside>
 
         {/* MAIN */}
-        <div className="r-main" style={{ width: '100%' }}>
+        <div className="r-main">
 
-          {/* Topbar — title left, everything else right */}
+          {/* Topbar — Connect YouTube REMOVED */}
           <header className="r-topbar">
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
               <h1 style={{ fontSize: 22, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.03em' }}>Alerts</h1>
@@ -302,7 +300,7 @@ export default function AlertsPage() {
 
             <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 16 }}>Get notified where you already are</p>
 
-            {/* Channel cards — full width grid */}
+            {/* Channel cards */}
             <div className="a-channel-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
 
               {/* Telegram */}
@@ -350,7 +348,7 @@ export default function AlertsPage() {
               </div>
             </div>
 
-            {/* Notification Settings — full width */}
+            {/* Notification Settings */}
             <div className="a-card" style={{ padding: '20px 24px', marginBottom: 8 }}>
               <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15, marginBottom: 3 }}>Notification Settings</div>
@@ -388,7 +386,7 @@ export default function AlertsPage() {
           </div>
         </div>
 
-        {/* BOTTOM NAV — untouched */}
+        {/* BOTTOM NAV */}
         <nav className="r-bnav">
           <div className="r-bnav-inner">
             {BOTTOM_NAV.map(item => {

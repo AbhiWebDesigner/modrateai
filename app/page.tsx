@@ -819,16 +819,14 @@ export default function LandingPage() {
               <div className="foot-col">
                 <h4>Support</h4>
                  <Link href="/help" className="foot-a">Help Center</Link>
-                <a href="mailto:support@moderateai.site" className="foot-a">Contact</a>
+                <Link href="mailto:support@moderateai.site" className="foot-a">Contact</Link>
                 <Link href="/privacy" className="foot-a">Privacy Policy</Link>
                 <Link href="/terms" className="foot-a">Terms</Link>
               </div>
               <div className="foot-col">
                 <h4>Connect</h4>
-                <a href="https://github.com" target="_blank" rel="noreferrer" className="foot-a">GitHub</a>
-                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="foot-a">LinkedIn</a>
-                <a href="https://youtube.com" target="_blank" rel="noreferrer" className="foot-a">YouTube</a>
-                <a href="mailto:support@moderateai.site" className="foot-a">support@moderateai.site</a>
+                <Link href="https://github.com" target="_blank" rel="noreferrer" className="foot-a">GitHub</Link>
+                <Link href="https://youtube.com" target="_blank" rel="noreferrer" className="foot-a">YouTube</Link>
               </div>
             </div>
             <div className="foot-bot">

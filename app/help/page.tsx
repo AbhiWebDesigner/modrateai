@@ -8,12 +8,12 @@ export const metadata: Metadata = {
 };
 
 const quickLinks = [
-  { icon: "🚀", label: "Getting Started", href: "/docs" },
+  { icon: "🚀", label: "Getting Started", href: "/documentation" },
   { icon: "🔐", label: "Google Sign-In", href: "/docs#permissions" },
   { icon: "📺", label: "Connect YouTube Channel", href: "/docs#how-it-works" },
   { icon: "💳", label: "Manage Subscription", href: "/billing" },
   { icon: "🛡️", label: "Privacy & Security", href: "/privacy" },
-  { icon: "📄", label: "Documentation", href: "/docs" },
+  { icon: "📄", label: "Documentation", href: "/documentation" },
   { icon: "🟢", label: "Status Page", href: "/status" },
 ];
 
@@ -275,7 +275,7 @@ export default function HelpPage() {
           <h2 className="text-2xl font-bold text-white mb-6">Helpful Resources</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: "📖", label: "Documentation", href: "/docs", internal: true },
+              { icon: "📖", label: "Documentation", href: "/documentation", internal: true },
               { icon: "🔏", label: "Privacy Policy", href: "/privacy", internal: true },
               { icon: "📄", label: "Terms & Conditions", href: "/terms", internal: true },
               { icon: "🟢", label: "Status Page", href: "/status", internal: true },

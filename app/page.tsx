@@ -352,8 +352,8 @@ export default function LandingPage() {
         .n-link { color: rgba(255,255,255,0.42); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 10px; border-radius: 7px; transition: color 0.2s, background 0.2s; }
         .n-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
         .n-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .n-login { color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600; text-decoration: none; padding: 6px 14px; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; transition: all 0.2s; }
-        .n-login:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.35); background: rgba(255,255,255,0.06); box-shadow: 0 0 16px rgba(255,255,255,0.08); }
+        .n-login { color: #FAFAFA; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 16px; border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; transition: all 0.25s; }
+        .n-login:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.80); background: rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(255,255,255,0.25), 0 0 40px rgba(255,255,255,0.10); }
         .n-cta { background: #F59E0B; color: #080808; font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 8px; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
         .n-cta:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.35); }
         .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; margin-left: auto; }

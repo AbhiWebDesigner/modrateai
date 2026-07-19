@@ -581,9 +581,10 @@ export default function Dashboard() {
           .r-mobile-status-bar{display:flex!important;}
           .r-content{padding:14px 16px 16px;}
           .r-layout{display:flex!important;flex-direction:column!important;width:100%!important;gap:10px;}
-          .r-layout > div{width:100%!important;min-width:0!important;}
+          .r-layout > div{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
           .r-stats{grid-template-columns:repeat(2,1fr);gap:10px;}
-          .r-bottom-grid{grid-template-columns:1fr 1fr;gap:10px;}
+          .r-bottom-grid{display:flex!important;flex-direction:column!important;gap:10px!important;width:100%!important;}
+          .r-bottom-grid > *{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
           .r-pending-row{grid-template-columns:1fr 1fr;}
           .r-live-panel{display:none!important;}
           .r-mobile-live{display:flex!important;flex-direction:column;}
@@ -604,7 +605,7 @@ export default function Dashboard() {
 
           /* Single column full width */
           .r-layout{display:flex!important;flex-direction:column!important;width:100%!important;gap:10px;}
-          .r-layout > div{width:100%!important;min-width:0!important;}
+          .r-layout > div{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
 
           /* 2-col stat cards */
           .r-stats{grid-template-columns:1fr 1fr!important;gap:8px;margin-bottom:10px;}
@@ -619,8 +620,9 @@ export default function Dashboard() {
           .r-donut-wrap{flex-direction:column!important;align-items:center!important;gap:10px!important;}
           .r-donut-wrap > div:last-child{width:100%;}
 
-          /* Bottom grid single column */
-          .r-bottom-grid{grid-template-columns:1fr!important;gap:9px;}
+          /* Bottom grid single column — force all children full width */
+          .r-bottom-grid{display:flex!important;flex-direction:column!important;gap:9px!important;width:100%!important;}
+          .r-bottom-grid > *{width:100%!important;min-width:0!important;box-sizing:border-box!important;}
 
           /* Hide desktop live, show mobile */
           .r-live-panel{display:none!important;}

@@ -18,7 +18,7 @@ export default function TermsPage() {
         <div className="mb-10">
           <h1 className="text-4xl font-bold text-white mb-2">Terms and Conditions</h1>
           <p className="text-gray-400 text-sm">
-            Effective Date: May 25, 2026 &nbsp;·&nbsp; Website: https://moderateai.site
+            Effective: May 2026 &nbsp;·&nbsp; https://moderateai.site/terms
           </p>
           <div className="mt-4 h-1 w-16 bg-[#ff6b00] rounded-full" />
         </div>
@@ -29,11 +29,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">1. Acceptance of Terms</h2>
             <p>
-              By accessing or using ModerateAI available at{" "}
-              <a href="https://moderateai.site" className="text-[#ff6b00] hover:underline" target="_blank" rel="noopener noreferrer">
-                https://moderateai.site
-              </a>
-              , you agree to be bound by these Terms and Conditions. If you do not agree, you must not use our Service.
+              By accessing or using ModerateAI, you agree to be bound by these Terms and Conditions and all applicable laws and regulations. If you do not agree to these Terms, you must not access or use our Service.
             </p>
             <p className="mt-2">
               These Terms apply to all users, including visitors, registered users, and YouTube content creators who subscribe to any of our plans.
@@ -46,18 +42,16 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">2. Description of Service</h2>
             <p className="mb-3">
-              ModerateAI is an AI-powered YouTube comment moderation and management tool designed for Indian YouTube creators. Our Service provides:
+              ModerateAI is an AI-powered YouTube comment moderation and management platform. Our Service provides:
             </p>
             <ul className="space-y-2">
               {[
-                "Automatic detection and hiding of harmful, spammy, or abusive comments",
-                "AI-generated replies to comments on YouTube videos, Shorts, Posts, and Live chat",
-                "Spam detection and auto-hide functionality",
-                "Live chat progressive timeout management",
-                "Analytics dashboard for comment and channel insights",
-                "Multi-language support — 10+ Indian languages and 100+ world languages",
-                "Telegram and WhatsApp notification alerts (Agency plan)",
-                "API access for advanced integrations (Agency plan)",
+                "Automated detection and moderation of harmful, spammy, or abusive comments",
+                "AI-generated replies to comments on YouTube videos, Shorts, Community Posts, and Live Chat",
+                "Live Chat progressive timeout management",
+                "Analytics dashboard for comment activity and channel insights",
+                "Multi-language comment moderation support",
+                "Moderation alert notifications (on applicable plans)",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -65,6 +59,9 @@ export default function TermsPage() {
                 </li>
               ))}
             </ul>
+            <p className="mt-3 text-sm text-gray-400">
+              Feature availability varies by subscription plan. Please refer to the Pricing page for current plan details.
+            </p>
           </section>
 
           <hr className="border-white/10" />
@@ -75,8 +72,8 @@ export default function TermsPage() {
             <p className="mb-3">To use ModerateAI, you must:</p>
             <ul className="space-y-2">
               {[
-                "Be at least 18 years of age, or have parental/guardian consent",
-                "Have a valid YouTube channel and Google account",
+                "Be at least 18 years of age, or have valid parental or guardian consent",
+                "Hold a valid YouTube channel and Google account",
                 "Agree to comply with YouTube's Terms of Service and Community Guidelines",
                 "Provide accurate registration and billing information",
               ].map((item, i) => (
@@ -94,14 +91,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">4. Account Registration</h2>
             <p>
-              You are responsible for maintaining the confidentiality of your account credentials. Notify us immediately at{" "}
-              <a href="mailto:contact@moderateai.site" className="text-[#ff6b00] hover:underline">
-                contact@moderateai.site
-              </a>{" "}
-              if you suspect unauthorized access.
+              You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. If you suspect unauthorized access or a security breach, please refer to the Contact section below.
             </p>
             <p className="mt-2">
-              ModerateAI reserves the right to terminate accounts that violate these Terms, provide false information, or engage in fraudulent activity.
+              ModerateAI reserves the right to suspend or terminate accounts that violate these Terms, provide false information, or engage in fraudulent activity.
             </p>
           </section>
 
@@ -110,83 +103,28 @@ export default function TermsPage() {
           {/* 5 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">5. Subscription Plans and Pricing</h2>
-
-            {[
-              {
-                name: "Free Trial Plan",
-                price: "₹0/month",
-                trial: "19-day free trial",
-                features: [
-                  "1 YouTube channel",
-                  "1,500 comments scanned/month",
-                  "All videos + Shorts + Posts scanned",
-                  "Unlimited bad comments hidden for review",
-                  "Live chat progressive timeouts",
-                  "Spam detection & auto-hide",
-                  "3 AI replies per video (45s delay)",
-                  "10+ Indian languages",
-                  "Basic dashboard",
-                ],
-              },
-              {
-                name: "Pro Plan",
-                price: "₹349/month",
-                trial: "7-day free trial",
-                features: [
-                  "1 YouTube channel",
-                  "5,000 comments scanned/month",
-                  "All videos + Shorts + Posts + Live chat",
-                  "Unlimited bad comments hidden for review",
-                  "Live chat progressive timeouts",
-                  "Spam detection & auto-hide",
-                  "Auto-replies scale with comments (45s delay)",
-                  "100+ world languages",
-                  "Full analytics dashboard",
-                  "Telegram alerts",
-                  "Priority support",
-                ],
-              },
-              {
-                name: "Agency Plan",
-                price: "₹1,900/month",
-                trial: "7-day free trial",
-                features: [
-                  "1 YouTube channel",
-                  "Unlimited comments scanned",
-                  "All videos + Shorts + Posts + Live chat",
-                  "Unlimited bad comment hiding",
-                  "Advanced timeout controls",
-                  "Unlimited auto-replies",
-                  "100+ world languages",
-                  "Advanced analytics + exports",
-                  "Telegram + WhatsApp alerts",
-                  "Dedicated support",
-                  "API access",
-                ],
-              },
-            ].map((plan) => (
-              <div key={plan.name} className="mt-4 p-4 rounded-xl border border-white/10 bg-white/5">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-white">{plan.name}</h3>
-                  <div className="text-right">
-                    <span className="text-[#ff6b00] font-bold">{plan.price}</span>
-                    <span className="text-gray-400 text-xs block">{plan.trial}</span>
-                  </div>
-                </div>
-                <ul className="space-y-1">
-                  {plan.features.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
-                      <span className="text-[#ff6b00] mt-0.5">✓</span>
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-
-            <p className="mt-4 text-sm">
-              Prices are in Indian Rupees (INR). ModerateAI reserves the right to modify pricing with 30 days&apos; advance notice to existing subscribers.
+            <p className="mb-3">
+              ModerateAI offers multiple subscription plans, including a free trial option for new users.
             </p>
+            <p className="mb-3">
+              Current pricing, available features, usage limits, and trial availability are displayed on our{" "}
+              <Link href="/pricing" className="text-[#ff6b00] hover:underline">
+                Pricing page
+              </Link>{" "}
+              and may be updated from time to time. By purchasing a subscription, you agree to the pricing and plan details presented at the time of purchase.
+            </p>
+            <ul className="space-y-2">
+              {[
+                "All prices are displayed in Indian Rupees (INR) unless otherwise stated.",
+                "ModerateAI reserves the right to modify pricing with at least 30 days' advance notice to existing subscribers.",
+                "Plan features and usage limits are subject to change. Subscribers will be notified of material changes.",
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-[#ff6b00] mt-1">✓</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </section>
 
           <hr className="border-white/10" />
@@ -195,14 +133,14 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">6. Payment and Billing</h2>
             <p className="mb-3">
-              By subscribing to a paid plan, you authorize ModerateAI to charge your chosen payment method on a recurring monthly basis.
+              By subscribing to a paid plan, you authorize ModerateAI to charge your chosen payment method on a recurring basis according to your selected billing cycle.
             </p>
             <ul className="space-y-2">
               {[
-                "All payments are processed securely through our payment gateway partners.",
-                "Subscriptions automatically renew at the end of each billing cycle unless cancelled.",
+                "All payments are processed securely through trusted third-party payment processors.",
+                "Subscriptions automatically renew at the end of each billing cycle unless cancelled prior to renewal.",
                 "You may cancel your subscription at any time from your account settings.",
-                "Refunds are not provided for partial months or unused features unless required by applicable law.",
+                "Refunds are not provided for partial billing periods or unused features unless required by applicable law.",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -218,10 +156,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">7. Free Trial Terms</h2>
             <p>
-              Free trials are offered to new users only. One free trial per user/email/channel is permitted. After the free trial ends, your account will transition to a paid plan or access will be restricted.
+              Free trials are available to new users only. One free trial per user, email address, or YouTube channel is permitted. Upon expiry of the trial period, your account will transition to a paid plan or access will be restricted until a subscription is activated.
             </p>
             <p className="mt-2">
-              ModerateAI reserves the right to modify or discontinue free trial offers at any time without prior notice.
+              ModerateAI reserves the right to modify, limit, or discontinue free trial offers at any time without prior notice.
             </p>
           </section>
 
@@ -230,12 +168,14 @@ export default function TermsPage() {
           {/* 8 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">8. YouTube API and Google Compliance</h2>
-            <p className="mb-3">Our Service integrates with the YouTube Data API. By using ModerateAI, you also agree to:</p>
+            <p className="mb-3">
+              Our Service integrates with the YouTube Data API. By using ModerateAI, you also agree to:
+            </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
                 <span>
-                  Google&apos;s Terms of Service:{" "}
+                  Google Terms of Service:{" "}
                   <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
                     https://policies.google.com/terms
                   </a>
@@ -261,7 +201,11 @@ export default function TermsPage() {
               </li>
             </ul>
             <p className="mt-3">
-              You grant ModerateAI limited access to your YouTube channel data solely for providing moderation and reply services. We will not use your YouTube data for any other purpose without explicit consent.
+              You grant ModerateAI limited, scoped access to your YouTube channel data solely for the purpose of delivering moderation and reply services. We will not use your YouTube data for any purpose beyond what is described in our{" "}
+              <Link href="/privacy" className="text-[#ff6b00] hover:underline">
+                Privacy Policy
+              </Link>
+              .
             </p>
           </section>
 
@@ -274,12 +218,12 @@ export default function TermsPage() {
             <ul className="space-y-2">
               {[
                 "Violate YouTube's Community Guidelines or Terms of Service",
-                "Harass, threaten, or harm any person or entity",
-                "Spread misinformation, hate speech, or illegal content",
-                "Circumvent, hack, or reverse-engineer our platform",
-                "Use automated bots or scripts to manipulate the Service",
-                "Share account access with unauthorized third parties",
-                "Engage in any activity that disrupts or damages the Service",
+                "Harass, threaten, or cause harm to any person or entity",
+                "Distribute misinformation, hate speech, or unlawful content",
+                "Attempt to circumvent, reverse-engineer, or exploit our platform",
+                "Use automated tools or scripts to manipulate or abuse the Service",
+                "Share, transfer, or resell account access to unauthorized third parties",
+                "Engage in any conduct that disrupts, damages, or impairs the Service",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-red-400 mt-1">✗</span>
@@ -287,6 +231,9 @@ export default function TermsPage() {
                 </li>
               ))}
             </ul>
+            <p className="mt-3">
+              Violation of this policy may result in immediate account suspension or termination without refund.
+            </p>
           </section>
 
           <hr className="border-white/10" />
@@ -295,10 +242,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">10. Intellectual Property</h2>
             <p>
-              All content, software, trademarks, logos, and branding associated with ModerateAI are the exclusive intellectual property of ModerateAI and its licensors. You may not copy, reproduce, or distribute without prior written permission.
+              All content, software, trademarks, logos, and branding associated with ModerateAI are the exclusive intellectual property of ModerateAI and its licensors. You may not copy, reproduce, modify, or distribute any part of the Service without prior written permission.
             </p>
             <p className="mt-2">
-              AI-generated replies produced on your behalf are provided for use on your YouTube channel. ModerateAI retains no ownership over such outputs once delivered.
+              AI-generated replies produced on your behalf are provided for use on your YouTube channel. ModerateAI retains no ownership over such outputs once delivered to you.
             </p>
           </section>
 
@@ -312,7 +259,7 @@ export default function TermsPage() {
               <Link href="/privacy" className="text-[#ff6b00] hover:underline">
                 Privacy Policy
               </Link>
-              . We are committed to protecting your data in accordance with the Digital Personal Data Protection Act, 2023 (DPDPA).
+              , which is incorporated into these Terms by reference. We are committed to protecting your personal data in accordance with the Digital Personal Data Protection Act, 2023 (DPDPA) and other applicable Indian laws.
             </p>
           </section>
 
@@ -321,14 +268,14 @@ export default function TermsPage() {
           {/* 12 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">12. Limitation of Liability</h2>
-            <p className="mb-3">To the maximum extent permitted by law, ModerateAI shall not be liable for:</p>
+            <p className="mb-3">To the maximum extent permitted by applicable law, ModerateAI shall not be liable for:</p>
             <ul className="space-y-2">
               {[
-                "Any indirect, incidental, or consequential damages from your use of the Service",
-                "Loss of revenue, data, or goodwill resulting from comment moderation actions",
-                "Actions taken by YouTube or Google that affect your channel",
-                "Inaccuracies or errors in AI-generated replies",
-                "Service interruptions due to maintenance, updates, or unforeseen events",
+                "Any indirect, incidental, special, or consequential damages arising from your use of the Service",
+                "Loss of revenue, data, reputation, or goodwill resulting from moderation actions",
+                "Actions taken by YouTube, Google, or other third parties that affect your channel",
+                "Inaccuracies or errors in AI-generated content",
+                "Service interruptions resulting from maintenance, updates, or unforeseen circumstances",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -337,7 +284,7 @@ export default function TermsPage() {
               ))}
             </ul>
             <p className="mt-3">
-              Our total liability shall not exceed the amount paid by you in the three (3) months preceding the claim.
+              Our total cumulative liability to you shall not exceed the total fees paid by you in the three (3) months preceding the claim.
             </p>
           </section>
 
@@ -347,14 +294,14 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">13. Disclaimer of Warranties</h2>
             <p className="mb-3">
-              ModerateAI is provided on an &quot;as is&quot; and &quot;as available&quot; basis. We do not guarantee that:
+              ModerateAI is provided on an &quot;as is&quot; and &quot;as available&quot; basis without warranties of any kind, express or implied. We do not guarantee that:
             </p>
             <ul className="space-y-2">
               {[
-                "The Service will be uninterrupted or error-free",
-                "All harmful comments will be detected or removed",
-                "AI replies will always be accurate or appropriate",
-                "Results will meet your specific expectations",
+                "The Service will be uninterrupted, timely, or error-free",
+                "All harmful or spammy comments will be detected or actioned",
+                "AI-generated replies will be accurate, appropriate, or suitable for all contexts",
+                "The Service will meet your specific requirements or expectations",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -370,7 +317,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">14. Termination</h2>
             <p>
-              Either party may terminate this agreement at any time. ModerateAI reserves the right to suspend or terminate your account immediately if you violate these Terms. Upon termination, your access will cease and data may be deleted per our Privacy Policy.
+              Either party may terminate this agreement at any time. ModerateAI reserves the right to suspend or terminate your account immediately and without prior notice if you violate these Terms or engage in conduct that we reasonably determine to be harmful to the Service or other users. Upon termination, your access to the Service will cease and your data will be handled in accordance with our Privacy Policy.
             </p>
           </section>
 
@@ -380,7 +327,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">15. Modifications to Terms</h2>
             <p>
-              We may update these Terms from time to time. We will notify you via email or a prominent website notice. Continued use after changes constitutes acceptance of the revised Terms.
+              We may update these Terms from time to time to reflect changes in our practices, applicable law, or Service offerings. We will notify you of material changes via email or a prominent notice on our platform. Continued use of the Service following such notification constitutes your acceptance of the revised Terms.
             </p>
           </section>
 
@@ -390,14 +337,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">16. Governing Law and Dispute Resolution</h2>
             <p>
-              These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts in Hyderabad, Telangana, India.
+              These Terms are governed by and construed in accordance with the laws of India. Any disputes arising from or relating to these Terms or your use of the Service shall be subject to the exclusive jurisdiction of the courts in Hyderabad, Telangana, India.
             </p>
             <p className="mt-2">
-              We encourage users to contact us at{" "}
-              <a href="mailto:contact@moderateai.site" className="text-[#ff6b00] hover:underline">
-                contact@moderateai.site
-              </a>{" "}
-              to resolve disputes amicably before initiating legal proceedings.
+              We encourage users to contact us through the Contact section below to seek an amicable resolution before initiating any formal legal proceedings.
             </p>
           </section>
 
@@ -406,6 +349,7 @@ export default function TermsPage() {
           {/* 17 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">17. Contact Information</h2>
+            <p className="mb-3">For questions, concerns, or requests regarding these Terms, please contact:</p>
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
@@ -427,7 +371,11 @@ export default function TermsPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
-                <span>Address: India</span>
+                <span>Support Team: ModerateAI Legal &amp; Privacy Team</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#ff6b00] mt-1">✓</span>
+                <span>Jurisdiction: India</span>
               </li>
             </ul>
           </section>

@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         <div className="mb-10">
           <h1 className="text-4xl font-bold text-white mb-2">Privacy Policy</h1>
           <p className="text-gray-400 text-sm">
-            Last Updated: May 25, 2026 &nbsp;·&nbsp; https://moderateai.site/privacy
+            Last Updated: May 2026 &nbsp;·&nbsp; https://moderateai.site/privacy
           </p>
           <div className="mt-4 h-1 w-16 bg-[#ff6b00] rounded-full" />
         </div>
@@ -29,17 +29,17 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">1. Introduction</h2>
             <p>
-              Welcome to ModerateAI. We are an AI-powered YouTube comment moderation platform available at{" "}
+              ModerateAI is an AI-powered YouTube comment moderation platform available at{" "}
               <a href="https://moderateai.site" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
                 https://moderateai.site
               </a>
-              , designed to help Indian YouTube creators protect their communities 24/7.
+              , designed to help YouTube creators protect their communities through automated, real-time moderation.
             </p>
             <p className="mt-2">
-              This Privacy Policy explains how we collect, use, store, share, and protect your personal information when you use our Service. By using ModerateAI, you agree to the practices described here.
+              This Privacy Policy describes how we collect, use, store, share, and protect your personal information when you use our Service. By accessing or using ModerateAI, you agree to the practices described in this Policy.
             </p>
             <p className="mt-2">
-              Our use of information received from Google APIs adheres to the{" "}
+              Our use of information received from Google APIs strictly adheres to the{" "}
               <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
                 Google API Services User Data Policy
               </a>
@@ -57,8 +57,8 @@ export default function PrivacyPage() {
             <ul className="space-y-2">
               {[
                 "Full name and email address",
-                "Profile picture (from Google OAuth)",
-                "Billing information (processed securely via payment gateway)",
+                "Profile picture (obtained via Google OAuth)",
+                "Billing information (processed securely via our payment processor)",
                 "Subscription plan and payment history",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
@@ -74,8 +74,8 @@ export default function PrivacyPage() {
               {[
                 "YouTube channel ID and channel name",
                 "YouTube OAuth access tokens and refresh tokens",
-                "Comments on your videos, Shorts, Posts, and Live chat",
-                "Video metadata (title, ID, publish date) needed for moderation",
+                "Comments on your videos, Shorts, Community Posts, and Live Chat",
+                "Video metadata (title, ID, publish date) required for moderation",
                 "Channel analytics data for dashboard display",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
@@ -88,10 +88,10 @@ export default function PrivacyPage() {
             <h3 className="font-semibold text-[#ff6b00] mb-2 mt-6">2.3 Usage and Technical Data</h3>
             <ul className="space-y-2">
               {[
-                "IP address and approximate location",
+                "IP address and approximate geographic location",
                 "Browser type, operating system, and device information",
-                "Pages visited, features used, and time spent on the platform",
-                "Error logs and performance data to improve the Service",
+                "Pages visited, features used, and session duration",
+                "Error logs and performance diagnostics used to improve the Service",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -103,9 +103,9 @@ export default function PrivacyPage() {
             <h3 className="font-semibold text-[#ff6b00] mb-2 mt-6">2.4 Communication Data</h3>
             <ul className="space-y-2">
               {[
-                "Messages sent to our support team",
+                "Messages submitted to our support team",
                 "Feedback and survey responses",
-                "Notification preferences (Telegram / WhatsApp numbers, if provided)",
+                "Notification contact details (e.g. Telegram ID), if provided by you",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -120,18 +120,18 @@ export default function PrivacyPage() {
           {/* 3 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">3. How We Use Your Data</h2>
-            <p className="mb-3">We use the data we collect solely to provide and improve our Service:</p>
+            <p className="mb-3">We use the information we collect solely to provide and improve our Service:</p>
             <ul className="space-y-2">
               {[
                 "To authenticate your identity and connect your YouTube channel",
-                "To automatically scan, detect, and hide harmful or spammy comments",
+                "To automatically scan, detect, and moderate harmful or spammy comments",
                 "To generate AI-powered replies to comments on your behalf",
-                "To manage Live chat timeouts and spam controls",
-                "To provide analytics and insights about your channel's comment activity",
-                "To send Telegram and/or WhatsApp alerts about moderation activity (if enabled)",
+                "To manage Live Chat moderation and timeout controls",
+                "To provide analytics and insights on your channel's comment activity",
+                "To send moderation alerts via Telegram (if enabled by you)",
                 "To process payments and manage your subscription",
                 "To communicate service updates, billing notices, and support responses",
-                "To improve the accuracy and performance of our AI moderation models",
+                "To improve the accuracy and performance of our AI moderation system",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -140,7 +140,7 @@ export default function PrivacyPage() {
               ))}
             </ul>
             <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium">
-              🔒 We do NOT sell your data or use it for advertising — ever.
+              🔒 We do NOT sell your data, use it for advertising, or share it with third parties for their own purposes — ever.
             </div>
           </section>
 
@@ -150,19 +150,20 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">4. Google User Data — Limited Use Policy</h2>
             <p className="mb-3">
-              ModerateAI&apos;s use of data from Google APIs follows the{" "}
+              ModerateAI&apos;s use of data obtained from Google APIs complies with the{" "}
               <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
                 Google API Services User Data Policy
               </a>
-              :
+              , including the following Limited Use requirements:
             </p>
             <ul className="space-y-2">
               {[
-                "We only request Google/YouTube data scopes necessary to provide the moderation service.",
+                "We request only the minimum Google and YouTube data scopes necessary to deliver the moderation service.",
                 "We do not use Google user data to serve advertisements.",
-                "We do not allow humans to read your Google user data unless you give explicit permission, for security purposes, or as required by law.",
+                "We do not use or transfer Google user data to train third-party AI or machine learning models.",
+                "We do not allow human access to your Google user data except where you have given explicit permission, for security purposes, or as required by law.",
                 "We do not use or transfer Google user data for any purpose not described in this Privacy Policy.",
-                "Your YouTube OAuth tokens are stored securely and used only to interact with your channel on your behalf.",
+                "Your YouTube OAuth tokens are stored securely and used exclusively to interact with your channel on your behalf.",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -171,7 +172,7 @@ export default function PrivacyPage() {
               ))}
             </ul>
             <p className="mt-4">
-              You may revoke ModerateAI&apos;s access to your YouTube data at any time by visiting:{" "}
+              You may revoke ModerateAI&apos;s access to your Google account at any time by visiting:{" "}
               <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-[#ff6b00] hover:underline">
                 https://myaccount.google.com/permissions
               </a>
@@ -184,17 +185,17 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">5. Data Sharing and Disclosure</h2>
             <p className="mb-4">
-              We do not sell, rent, or trade your personal data. We may share your information only in these limited circumstances:
+              We do not sell, rent, or trade your personal data. We share your information only in the following limited circumstances:
             </p>
 
-            <h3 className="font-semibold text-[#ff6b00] mb-2">5.1 Service Providers</h3>
-            <p className="mb-2">We work with trusted third-party providers:</p>
+            <h3 className="font-semibold text-[#ff6b00] mb-2">5.1 Trusted Service Providers</h3>
+            <p className="mb-2">We engage trusted third-party providers to support our infrastructure and operations, including:</p>
             <ul className="space-y-2">
               {[
-                "Supabase — secure database hosting and authentication",
-                "Firebase — real-time data and notifications",
-                "Payment gateway partners — for processing subscription payments",
-                "Telegram / WhatsApp APIs — for sending moderation alerts (if enabled by you)",
+                "Secure cloud infrastructure and hosting providers",
+                "Secure database and authentication providers",
+                "Trusted payment processors for subscription billing",
+                "Trusted notification providers for moderation alerts (if enabled by you)",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -202,15 +203,16 @@ export default function PrivacyPage() {
                 </li>
               ))}
             </ul>
+            <p className="mt-2 text-sm text-gray-400">All providers are bound by confidentiality obligations and may only process your data as necessary to provide their services to us.</p>
 
             <h3 className="font-semibold text-[#ff6b00] mb-2 mt-5">5.2 Legal Requirements</h3>
             <p>
-              We may disclose your data if required by law, court order, or government authority, or to protect the rights, safety, or property of ModerateAI, our users, or the public.
+              We may disclose your data if required by applicable law, court order, or governmental authority, or where necessary to protect the rights, safety, or property of ModerateAI, our users, or the public.
             </p>
 
             <h3 className="font-semibold text-[#ff6b00] mb-2 mt-5">5.3 Business Transfers</h3>
             <p>
-              In the event of a merger, acquisition, or sale of assets, your data may be transferred. We will notify you via email before your data becomes subject to a different privacy policy.
+              In the event of a merger, acquisition, or transfer of assets, your data may be transferred to the successor entity. We will notify you by email prior to your data becoming subject to a different privacy policy.
             </p>
           </section>
 
@@ -221,10 +223,10 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-bold text-white mb-3">6. Data Retention</h2>
             <ul className="space-y-2">
               {[
-                "Account data is retained until you delete your account.",
-                "YouTube OAuth tokens are deleted upon disconnecting your channel or deleting your account.",
-                "Comment and moderation logs are retained for up to 12 months, then anonymized or deleted.",
-                "Billing records are retained for 7 years as required by Indian financial regulations.",
+                "Account data is retained for as long as your account remains active.",
+                "YouTube OAuth tokens are permanently deleted upon channel disconnection or account deletion.",
+                "Comment and moderation logs are retained for up to 12 months, after which they are anonymized or deleted.",
+                "Billing records are retained for 7 years in compliance with applicable Indian financial regulations.",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -233,11 +235,7 @@ export default function PrivacyPage() {
               ))}
             </ul>
             <p className="mt-3">
-              You may request deletion of your data at any time by contacting{" "}
-              <a href="mailto:contact@moderateai.site" className="text-[#ff6b00] hover:underline">
-                contact@moderateai.site
-              </a>
-              .
+              To request deletion of your data, please refer to the Contact section below.
             </p>
           </section>
 
@@ -246,12 +244,13 @@ export default function PrivacyPage() {
           {/* 7 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">7. Data Security</h2>
+            <p className="mb-3">We implement industry-standard security measures to protect your data:</p>
             <ul className="space-y-2">
               {[
-                "All data is transmitted over encrypted HTTPS connections.",
-                "OAuth tokens and sensitive credentials are stored using encryption at rest.",
-                "Access to production databases is restricted to authorized personnel only.",
-                "We conduct regular security reviews and vulnerability assessments.",
+                "Encryption in transit — all data is transmitted over secure HTTPS connections.",
+                "Encryption at rest — OAuth tokens and sensitive credentials are encrypted in storage.",
+                "Access controls — access to production systems is restricted to authorized personnel under least-privilege principles.",
+                "Security monitoring — we employ continuous monitoring and conduct regular security reviews.",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -260,7 +259,7 @@ export default function PrivacyPage() {
               ))}
             </ul>
             <p className="mt-3">
-              While we take every reasonable precaution, no method of transmission over the Internet is 100% secure.
+              While we take every reasonable precaution to safeguard your data, no method of electronic transmission or storage is entirely risk-free.
             </p>
           </section>
 
@@ -275,10 +274,10 @@ export default function PrivacyPage() {
             <ul className="space-y-2">
               {[
                 "Access — Request a copy of the personal data we hold about you.",
-                "Correction — Request correction of inaccurate or incomplete data.",
-                "Erasure — Request deletion of your personal data (subject to legal obligations).",
-                "Withdraw Consent — Withdraw consent for data processing at any time.",
-                "Grievance Redressal — Lodge a complaint with us regarding our data practices.",
+                "Correction — Request correction of inaccurate or incomplete personal data.",
+                "Erasure — Request deletion of your personal data, subject to legal retention obligations.",
+                "Withdraw Consent — Withdraw consent for data processing at any time without affecting prior lawful processing.",
+                "Grievance Redressal — Lodge a complaint regarding our data practices.",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -287,11 +286,7 @@ export default function PrivacyPage() {
               ))}
             </ul>
             <p className="mt-3">
-              To exercise any of these rights, contact{" "}
-              <a href="mailto:contact@moderateai.site" className="text-[#ff6b00] hover:underline">
-                contact@moderateai.site
-              </a>
-              . We will respond within 30 days.
+              To exercise any of these rights, please refer to the Contact section below. We will respond within 30 days of receiving your request.
             </p>
           </section>
 
@@ -300,12 +295,12 @@ export default function PrivacyPage() {
           {/* 9 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">9. Cookies and Tracking Technologies</h2>
-            <p className="mb-3">ModerateAI uses cookies to:</p>
+            <p className="mb-3">ModerateAI uses cookies and similar technologies to:</p>
             <ul className="space-y-2">
               {[
-                "Maintain your login session",
+                "Maintain your authenticated session",
                 "Remember your preferences and settings",
-                "Analyze website traffic and usage patterns",
+                "Analyze usage patterns to improve the Service",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <span className="text-[#ff6b00] mt-1">✓</span>
@@ -314,7 +309,7 @@ export default function PrivacyPage() {
               ))}
             </ul>
             <p className="mt-3">
-              You can control cookie settings through your browser preferences. Disabling certain cookies may affect the functionality of the Service.
+              You may manage cookie preferences through your browser settings. Disabling certain cookies may limit the functionality of the Service.
             </p>
           </section>
 
@@ -324,7 +319,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">10. Children&apos;s Privacy</h2>
             <p>
-              ModerateAI is not intended for use by individuals under the age of 18. We do not knowingly collect personal data from minors. If you believe we have collected such data inadvertently, please contact us immediately and we will delete it promptly.
+              ModerateAI is not intended for individuals under the age of 18. We do not knowingly collect personal data from minors. If you believe we have inadvertently collected such data, please contact us immediately and we will delete it without delay.
             </p>
           </section>
 
@@ -334,7 +329,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">11. Third-Party Links</h2>
             <p>
-              Our Service may contain links to third-party websites. We are not responsible for their privacy practices. We encourage you to review the privacy policies of any third-party sites you visit.
+              Our Service may contain links to third-party websites or services. We are not responsible for the privacy practices of those third parties. We encourage you to review the privacy policies of any external sites you visit.
             </p>
           </section>
 
@@ -344,7 +339,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">12. Changes to This Privacy Policy</h2>
             <p>
-              We may update this Privacy Policy from time to time. We will notify you of significant changes via email or a prominent notice on our website. Continued use of the Service after changes are posted constitutes your acceptance.
+              We may update this Privacy Policy periodically to reflect changes in our practices or applicable law. We will notify you of material changes via email or a prominent notice on our platform. Continued use of the Service following such notice constitutes your acceptance of the updated Policy.
             </p>
           </section>
 
@@ -353,7 +348,7 @@ export default function PrivacyPage() {
           {/* 13 */}
           <section>
             <h2 className="text-xl font-bold text-white mb-3">13. Contact Us</h2>
-            <p className="mb-3">For questions or concerns about this Privacy Policy, please contact:</p>
+            <p className="mb-3">For any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact:</p>
             <ul className="space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
@@ -375,11 +370,11 @@ export default function PrivacyPage() {
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
-                <span>Grievance Officer: ModerateAI Data Privacy Team</span>
+                <span>Privacy Officer: ModerateAI Data Privacy Team</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-[#ff6b00] mt-1">✓</span>
-                <span>Address: India</span>
+                <span>Jurisdiction: India</span>
               </li>
             </ul>
           </section>

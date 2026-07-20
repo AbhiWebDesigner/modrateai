@@ -744,7 +744,6 @@ export default function ModerationPage() {
               {[
                 { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
                 { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Zap,        label: 'Automation', href: '/automation', color: '#a78bfa' },
                 { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
               ].map(item => (

@@ -31,7 +31,6 @@ const SIDEBAR_NAV = [
 const MORE_ITEMS = [
   { href: '/billing',         icon: CreditCard,    label: 'Billing',          color: '#F59E0B' },
   { href: '/analytics',       icon: BarChart2,     label: 'Analytics',        color: '#a78bfa' },
-  { href: '/automation',      icon: Zap,           label: 'Automation',       color: '#f59e0b' },
   { href: '/moderation',      icon: Shield,        label: 'Moderation',       color: '#34d399' },
   { href: '/settings',        icon: Settings,      label: 'Settings',         color: '#94a3b8' },
 ];

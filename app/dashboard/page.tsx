@@ -286,7 +286,8 @@ export default function Dashboard() {
   const avgResponseMs    = (userData?.avg_response_ms   as number) ?? null;
   const commentsUsed     = (userData?.comments_used     as number) || 0;
   const commentsLimit    = plan === 'free' ? 2000 : plan === 'pro' ? 5000 : (userData?.comments_limit as number) || 200000;
-  const youtubeConnected = (userData?.youtube_connected as boolean) || false;
+  // ── FIX 1: single source of truth for YouTube connection state ──
+  const youtubeConnected = (userData?.youtube_connected as boolean) === true;
   const channelName      = (userData?.youtube_channel_name as string) || null;
   const channelHandle    = (userData?.youtube_channel_handle as string) || null;
   const channelThumbnail = (userData?.youtube_channel_thumbnail as string) || null;
@@ -320,6 +321,12 @@ export default function Dashboard() {
   const planLabel  = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
   const planColor  = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
   const userPhoto  = user?.photoURL || (userData?.photo as string) || null;
+
+  // Credits — shown for all plans, value from Firestore
+  const aiCredits = (userData?.ai_credits as number) ?? commentsUsed;
+
+  // ── FIX 3: Upgrade card only for free plan ──
+  const showUpgradeCard = plan === 'free';
 
   const youtubeChannelUrl = channelHandle
     ? `https://www.youtube.com/@${channelHandle.replace('@', '')}`
@@ -367,20 +374,38 @@ export default function Dashboard() {
 
   const requestVolumeBars = (analyticsData?.requestVolume12h as number[]) ?? [];
 
+  // ── FIX 1 continued: Hero status badges — gated on youtubeConnected ──
+  const heroBadges = youtubeConnected
+    ? [
+        { label: 'All systems operational', color: '#22c55e', bg: 'rgba(34,197,94,0.07)', border: 'rgba(34,197,94,0.16)', dot: true },
+        { label: 'Protection active',        color: '#a78bfa', bg: 'rgba(167,139,250,0.07)', border: 'rgba(167,139,250,0.16)', icon: Shield },
+      ]
+    : [
+        { label: 'Offline — connect YouTube', color: 'rgba(255,255,255,0.35)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.09)', dot: false },
+      ];
+
   function LiveActivityContent() {
     return (
       <>
         <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ color: '#FAFAFA', fontSize: 13, fontWeight: 700 }}>Live Activity</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 7, padding: '3px 8px' }}>
-            <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
-            <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 800 }}>LIVE</span>
-          </div>
+          {/* ── FIX 1: LIVE badge only when YouTube is connected ── */}
+          {youtubeConnected ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 7, padding: '3px 8px' }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
+              <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 800 }}>LIVE</span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, padding: '3px 8px' }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.25)' }} />
+              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 9.5, fontWeight: 800 }}>OFFLINE</span>
+            </div>
+          )}
         </div>
         <div style={{ overflowY: 'auto', maxHeight: 340, padding: '0 14px' }}>
-          {liveEvents.length > 0
+          {youtubeConnected && liveEvents.length > 0
             ? liveEvents.map((ev) => { const item = eventToLiveItem(ev); return <LiveItem key={ev.id} {...item} />; })
-            : <EmptyState icon={Activity} message="No activity yet. Events will appear in real time." />
+            : <EmptyState icon={Activity} message={youtubeConnected ? 'No activity yet. Events will appear in real time.' : 'Connect your YouTube channel to see live activity.'} />
           }
         </div>
         <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -601,8 +626,6 @@ export default function Dashboard() {
 
           .r-mob-protect-badge{display:none!important;}
           .r-credits-btn{padding:0 7px!important;font-size:10px!important;gap:3px!important;}
-
-          .r-card{width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
         }
 
         @media(max-width:379px){
@@ -656,7 +679,8 @@ export default function Dashboard() {
             })}
           </nav>
 
-          {plan === 'free' && (
+          {/* ── FIX 3: Upgrade card only for free plan ── */}
+          {showUpgradeCard && (
             <div className="r-upgrade">
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
                 <Zap size={10} color="#a78bfa" />
@@ -700,19 +724,30 @@ export default function Dashboard() {
               <input className="r-search" placeholder="Search comments, users, keywords…" />
               <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, padding: '1.5px 4px', fontSize: 9, color: 'rgba(255,255,255,0.16)', fontWeight: 600 }}>⌘K</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
-              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
-              AI Online
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
-              <Shield size={9} strokeWidth={2} /> Protection Active
-            </div>
+
+            {/* ── FIX 1: AI Online badge — only when connected ── */}
+            {youtubeConnected && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
+                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                AI Online
+              </div>
+            )}
+
+            {/* ── FIX 1: Protection Active badge — only when connected ── */}
+            {youtubeConnected && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
+                <Shield size={9} strokeWidth={2} /> Protection Active
+              </div>
+            )}
+
             <div style={{ flex: 1 }} />
+
             <button className="r-credits-btn">
               <CreditCard size={11} />
-              {commentsUsed.toLocaleString()} Credits
+              {aiCredits.toLocaleString()} Credits
               <ChevronRight size={10} />
             </button>
+
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
                 <Bell size={12} color={notifOpen ? '#a78bfa' : 'rgba(255,255,255,0.4)'} strokeWidth={1.8} />
@@ -764,15 +799,21 @@ export default function Dashboard() {
               <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13, letterSpacing: '-0.02em' }}>ModerateAI</span>
             </div>
             <div style={{ flex: 1 }} />
-            <div className="r-mob-ai-badge" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 14, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.14)', fontSize: 9.5, fontWeight: 700, color: '#22c55e', flexShrink: 0, whiteSpace: 'nowrap' }}>
-              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
-              AI Online
-            </div>
-            <div className="r-mob-protect-badge" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 14, background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 9.5, fontWeight: 700, color: '#a78bfa', flexShrink: 0, whiteSpace: 'nowrap' }}>
-              <Shield size={8} strokeWidth={2.2} /> Protection
-            </div>
+            {/* ── FIX 1: Mobile AI Online — only when connected ── */}
+            {youtubeConnected && (
+              <div className="r-mob-ai-badge" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 14, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.14)', fontSize: 9.5, fontWeight: 700, color: '#22c55e', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                AI Online
+              </div>
+            )}
+            {/* ── FIX 1: Mobile Protection badge — only when connected ── */}
+            {youtubeConnected && (
+              <div className="r-mob-protect-badge" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 14, background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 9.5, fontWeight: 700, color: '#a78bfa', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                <Shield size={8} strokeWidth={2.2} /> Protection
+              </div>
+            )}
             <button className="r-credits-btn" style={{ height: 28, flexShrink: 0 }}>
-              <CreditCard size={9} />{commentsUsed.toLocaleString()} <ChevronRight size={8} />
+              <CreditCard size={9} />{aiCredits.toLocaleString()} <ChevronRight size={8} />
             </button>
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" style={{ width: 28, height: 28 }} onClick={() => setNotifOpen(v => !v)}>
@@ -789,30 +830,34 @@ export default function Dashboard() {
           </header>
 
           {/* MOBILE STATUS BAR */}
-          <div className="r-mobile-status-bar">
-            {[
-              { label: 'AI System Online', color: '#22c55e', bg: 'rgba(34,197,94,0.07)', border: 'rgba(34,197,94,0.16)', dot: true },
-              { label: 'Protection Active', color: '#a78bfa', bg: 'rgba(167,139,250,0.07)', border: 'rgba(167,139,250,0.16)', icon: Shield },
-            ].map(p => (
-              <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 4, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 14, padding: '3px 7px', fontSize: 9.5, fontWeight: 600, color: p.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                {p.dot ? <div style={{ width: 4, height: 4, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} /> : p.icon && <p.icon size={8} strokeWidth={2.2} />}
-                {p.label}
-              </div>
-            ))}
-          </div>
+          {/* ── FIX 1: Status bar — only when connected ── */}
+          {youtubeConnected && (
+            <div className="r-mobile-status-bar">
+              {[
+                { label: 'AI System Online', color: '#22c55e', bg: 'rgba(34,197,94,0.07)', border: 'rgba(34,197,94,0.16)', dot: true },
+                { label: 'Protection Active', color: '#a78bfa', bg: 'rgba(167,139,250,0.07)', border: 'rgba(167,139,250,0.16)', icon: Shield },
+              ].map(p => (
+                <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 4, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 14, padding: '3px 7px', fontSize: 9.5, fontWeight: 600, color: p.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {p.dot ? <div style={{ width: 4, height: 4, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} /> : p.icon && <p.icon size={8} strokeWidth={2.2} />}
+                  {p.label}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* CONTENT */}
           <div className="r-content">
 
             {/* HERO */}
             <div className="r-hero">
+              {/* ── FIX 1: Hero badges — driven by heroBadges computed above ── */}
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-                {[
-                  { label: 'All systems operational', color: '#22c55e', bg: 'rgba(34,197,94,0.07)', border: 'rgba(34,197,94,0.16)', dot: true },
-                  { label: 'Protection active',        color: '#a78bfa', bg: 'rgba(167,139,250,0.07)', border: 'rgba(167,139,250,0.16)', icon: Shield },
-                ].map(p => (
+                {heroBadges.map(p => (
                   <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 4, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 18, padding: '3px 9px', fontSize: 10, fontWeight: 600, color: p.color }}>
-                    {p.dot ? <div style={{ width: 4, height: 4, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} /> : p.icon && <p.icon size={9} strokeWidth={2} />}
+                    {'dot' in p && p.dot
+                      ? <div style={{ width: 4, height: 4, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} />
+                      : 'icon' in p && p.icon && <p.icon size={9} strokeWidth={2} />
+                    }
                     {p.label}
                   </div>
                 ))}
@@ -1199,7 +1244,6 @@ export default function Dashboard() {
               {[
                 { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
                 { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Zap,        label: 'Automation', href: '/automation', color: '#a78bfa' },
                 { icon: Hash,       label: 'Moderation', href: '/moderation', color: '#60a5fa' },
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
               ].map(item => (

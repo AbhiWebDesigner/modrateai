@@ -582,10 +582,9 @@ export default function AutomationPage() {
             <div style={{ width: 34, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 4, margin: "6px auto 14px" }} />
             {[
               { icon: "💳", label: "Billing",         href: "/billing"         },
-              { icon: "🌐", label: "Channels",        href: "/channels"        },
               { icon: "📊", label: "Analytics",       href: "/analytics"       },
-              { icon: "🤖", label: "Human-AI replys", href: "/Human-AI replys" },
-              { icon: "🔔", label: "Notifications",   href: "/notifications"   },
+              { icon: "⚡", label: "Automation",      href: "/automation"      },
+              { icon: "🤖", label: "Moderation",      href: "/moderation"      },
               { icon: "⚙️", label: "Settings",        href: "/settings"        },
             ].map(item => (
               <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}

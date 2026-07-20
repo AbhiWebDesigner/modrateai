@@ -441,7 +441,7 @@ function UserAvatar({ src, initials, size }: { src: string | null; initials: str
         width={size}
         height={size}
         alt="User avatar"
-        style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+        style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0, display: 'block' }}
       />
     );
   }
@@ -473,7 +473,6 @@ export default function LiveFeedPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [lastScanTimestamp, setLastScanTimestamp] = useState<Date | null>(null);
 
-  // Real backend metrics — no fake values
   const [liveQueueCount, setLiveQueueCount] = useState<number | null>(null);
   const [processingCount, setProcessingCount] = useState<number | null>(null);
   const [avgResponseMs, setAvgResponseMs] = useState<number | null>(null);
@@ -503,14 +502,12 @@ export default function LiveFeedPage() {
       unsubRefs.current = [];
       initialSnapCount = 0;
 
-      // User doc — connection state + plan
       const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
         if (initialSnapCount < 2) onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubUser);
 
-      // Analytics doc — real metrics only
       const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), (snap) => {
         if (snap.exists()) {
           const d = snap.data();
@@ -527,7 +524,6 @@ export default function LiveFeedPage() {
       });
       unsubRefs.current.push(unsubAnalytics);
 
-      // Comments stream
       const commentsQuery = query(
         collection(db, 'users', firebaseUser.uid, 'comments'),
         orderBy('timestamp', 'desc'),
@@ -597,7 +593,6 @@ export default function LiveFeedPage() {
   const handleHide    = useCallback((id: string) => moderateComment(id, 'hidden'),   [moderateComment]);
   const handleApprove = useCallback((id: string) => moderateComment(id, 'approved'), [moderateComment]);
 
-  // FIX: removed `comments` from deps — uses functional updater + setDoc only needs uid
   const handleDelete = useCallback(async (id: string) => {
     if (!user) return;
     setComments(prev => prev.filter(c => c.id !== id));
@@ -606,7 +601,6 @@ export default function LiveFeedPage() {
       setLocalActions(prev => { const next = { ...prev }; delete next[id]; return next; });
     } catch (err) {
       console.error('Failed to delete comment:', err);
-      // Firestore listener will restore state on next snapshot if needed
     }
   }, [user]);
 
@@ -631,7 +625,6 @@ export default function LiveFeedPage() {
 
   const plan      = (userData?.plan as string) || 'free';
   const planLabel = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
-  // suppress unused warning until planLabel is wired to UI
   void planLabel;
 
   const firstName = user?.displayName?.split(' ')[0] || 'there';
@@ -640,7 +633,6 @@ export default function LiveFeedPage() {
 
   const lastScanTime = timeAgoFn(lastScanTimestamp);
 
-  // ── Single source of truth: identical to Dashboard ────────────────────────
   const isYouTubeConnected = getYouTubeConnected(userData);
   const handleYouTubeConnect = () => connectYouTube(user?.uid);
 
@@ -673,7 +665,6 @@ export default function LiveFeedPage() {
     return true;
   });
 
-  // Live queue: prefer real backend value; fallback to flagged count; null → '--'
   const liveQueue: number | null = liveQueueCount !== null
     ? liveQueueCount
     : isYouTubeConnected
@@ -750,10 +741,23 @@ export default function LiveFeedPage() {
         .r-icon-btn{width:33px;height:33px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.18s;position:relative;flex-shrink:0;}
         .r-icon-btn:hover{background:rgba(255,255,255,0.07);}
-        .r-avatar-btn{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
-        border-radius:9px;padding:3px 9px 3px 3px;cursor:pointer;transition:all 0.18s;gap:6px;
-        flex-shrink:0;overflow:visible;}
-        .r-avatar-btn:hover{border-color:rgba(255,255,255,0.11);}
+
+        /* ── FIX: avatar button — never shrinks, never clips ── */
+        .r-avatar-btn{
+          display:flex;
+          align-items:center;
+          background:rgba(255,255,255,0.04);
+          border:1px solid rgba(255,255,255,0.07);
+          border-radius:9px;
+          padding:3px 9px 3px 3px;
+          cursor:pointer;
+          transition:border-color 0.18s;
+          gap:6px;
+          flex-shrink:0;
+          overflow:visible;
+          min-width:0;
+        }
+        .r-avatar-btn:hover{border-color:rgba(255,255,255,0.18);}
 
         .r-mobile-topbar{display:none;position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.96);
           backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.05);
@@ -886,38 +890,52 @@ export default function LiveFeedPage() {
 
           {/* DESKTOP TOPBAR */}
           <header className="r-topbar">
-            <div style={{ position: 'relative', flex: 1, maxWidth: 360 }}>
+            {/* Search — capped width, takes available space but doesn't push right items */}
+            <div style={{ position: 'relative', flex: '1 1 0', maxWidth: 360, minWidth: 0 }}>
               <Search size={11} color="rgba(255,255,255,0.16)" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               <input
                 className="r-search"
+                style={{ width: '100%' }}
                 placeholder="Search comments, authors, videos…"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
 
+            {/* Status badges */}
             {isYouTubeConnected ? (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
                   AI Online
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap', flexShrink: 0 }}>
                   <Shield size={9} strokeWidth={2} /> Protection Active
                 </div>
               </>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.14)', fontSize: 10.5, fontWeight: 600, color: '#f87171', whiteSpace: 'nowrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.14)', fontSize: 10.5, fontWeight: 600, color: '#f87171', whiteSpace: 'nowrap', flexShrink: 0 }}>
                 <WifiOff size={9} strokeWidth={2} /> Offline
               </div>
             )}
 
-            <div style={{ flex: 1 }} />
+            {/* Spacer */}
+            <div style={{ flex: '1 1 0' }} />
+
+            {/* Icon buttons */}
             <button className="r-icon-btn">
               <Bell size={12} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
             </button>
-            <button className="r-icon-btn"><Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} /></button>
-            <button className="r-avatar-btn" style={{ flexShrink: 0 }} onClick={() => router.push('/settings')}>
+            <button className="r-icon-btn">
+              <Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} />
+            </button>
+
+            {/* ── Avatar button: flex-shrink:0 inline + overflow:visible via CSS class ── */}
+            <button
+              className="r-avatar-btn"
+              style={{ flexShrink: 0 }}
+              onClick={() => router.push('/settings')}
+            >
               <UserAvatar src={userPhoto} initials={initials} size={25} />
             </button>
           </header>

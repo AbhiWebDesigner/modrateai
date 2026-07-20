@@ -87,12 +87,11 @@ function SkeletonRow() {
   );
 }
 
-// ─── Waiting State ────────────────────────────────────────────────────────────
+// ─── Waiting State (YouTube connected, no comments yet) ───────────────────────
 
 function WaitingState({ lastScan }: { lastScan: string }) {
   return (
     <div style={{ padding: '0 0 8px' }}>
-      {/* Subtle waiting header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '18px 16px 12px',
@@ -109,7 +108,6 @@ function WaitingState({ lastScan }: { lastScan: string }) {
           Waiting for new comments · Last scan: {lastScan}
         </span>
       </div>
-      {/* Ghost skeleton rows to convey "live" feel */}
       <SkeletonRow />
       <SkeletonRow />
       <SkeletonRow />
@@ -120,9 +118,44 @@ function WaitingState({ lastScan }: { lastScan: string }) {
       }}>
         <Radio size={11} color="rgba(255,255,255,0.15)" />
         <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 11 }}>
-          AI is actively monitoring your YouTube channel. Monitoring continues automatically.
+          AI is monitoring your YouTube channel. Waiting for new comments. Monitoring continues automatically.
         </span>
       </div>
+    </div>
+  );
+}
+
+// ─── Offline State (YouTube not connected) ────────────────────────────────────
+
+function OfflineCommentState({ onConnect }: { onConnect: () => void }) {
+  return (
+    <div style={{ padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+      <div style={{
+        width: 44, height: 44, borderRadius: 13,
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <WifiOff size={18} color="rgba(255,255,255,0.15)" strokeWidth={1.5} />
+      </div>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+          No live comments available
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, lineHeight: 1.6, maxWidth: 280 }}>
+          Connect your YouTube channel to start real-time moderation.
+          Monitoring will begin automatically after connection.
+        </div>
+      </div>
+      <button onClick={onConnect} style={{
+        marginTop: 4,
+        background: 'linear-gradient(135deg,#7C3AED,#6D28D9)',
+        color: '#fff', fontWeight: 700, fontSize: 12,
+        padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        boxShadow: '0 2px 10px rgba(124,58,237,0.25)',
+      }}>
+        Connect YouTube Channel
+      </button>
     </div>
   );
 }
@@ -400,9 +433,15 @@ export default function LiveFeedPage() {
   const [comments, setComments] = useState<FeedComment[]>([]);
   const [localActions, setLocalActions] = useState<Record<string, AiDecision>>({});
   const [isPaused, setIsPaused] = useState(false);
-  const [lastScanTime, setLastScanTime] = useState<string>('Just now');
-  const [avgResponseMs, setAvgResponseMs] = useState<number>(320);
-  const [processingCount, setProcessingCount] = useState<number>(0);
+  const [lastScanTimestamp, setLastScanTimestamp] = useState<Date | null>(null);
+
+  // Real backend metrics — no fake values
+  const [liveQueueCount, setLiveQueueCount] = useState<number | null>(null);
+  const [processingCount, setProcessingCount] = useState<number | null>(null);
+  const [avgResponseMs, setAvgResponseMs] = useState<number | null>(null);
+
+  // YouTube connect — exact same handler as Dashboard
+  const handleYouTubeConnect = () => { window.location.href = `/api/auth/youtube?uid=${user?.uid}`; };
 
   const isPausedRef = useRef(false);
   const pendingRef = useRef<FeedComment[]>([]);
@@ -410,15 +449,6 @@ export default function LiveFeedPage() {
   const unsubRefs = useRef<Array<() => void>>([]);
 
   useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
-
-  // ── Simulate live processing count ──────────────────────────────────────
-  useEffect(() => {
-    const iv = setInterval(() => {
-      setProcessingCount(Math.floor(Math.random() * 4));
-      setAvgResponseMs(prev => Math.max(180, Math.min(600, prev + (Math.random() * 40 - 20))));
-    }, 3500);
-    return () => clearInterval(iv);
-  }, []);
 
   // ── Auth + Firestore ──────────────────────────────────────────────────────
 
@@ -437,18 +467,32 @@ export default function LiveFeedPage() {
       unsubRefs.current = [];
       initialSnapCount = 0;
 
+      // User doc — connection state + plan
       const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
         if (initialSnapCount < 2) onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubUser);
 
-      // Dummy analytics listener for initialSnapCount
-      const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), () => {
+      // Analytics doc — real metrics (queue, processing, avg latency, last scan)
+      const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), (snap) => {
+        if (snap.exists()) {
+          const d = snap.data();
+          setLiveQueueCount(typeof d.liveQueue === 'number' ? d.liveQueue : null);
+          setProcessingCount(typeof d.processingNow === 'number' ? d.processingNow : null);
+          setAvgResponseMs(typeof d.avgResponseMs === 'number' ? d.avgResponseMs : null);
+          // Real last scan timestamp
+          const rawTs = d.last_scan_at ?? d.lastScanAt ?? d.lastScan ?? null;
+          if (rawTs) {
+            const date = rawTs?.toDate ? rawTs.toDate() : new Date(rawTs);
+            setLastScanTimestamp(date);
+          }
+        }
         if (initialSnapCount < 2) onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubAnalytics);
 
+      // Comments stream
       const commentsQuery = query(
         collection(db, 'users', firebaseUser.uid, 'comments'),
         orderBy('timestamp', 'desc'),
@@ -460,8 +504,7 @@ export default function LiveFeedPage() {
           firestoreCommentToFeed(d.id, d.data()),
         );
 
-        setLastScanTime('Just now');
-
+        // lastScanTimestamp is set from real analytics doc — not overridden here
         if (isPausedRef.current) {
           pendingRef.current = incoming;
         } else {
@@ -551,14 +594,28 @@ export default function LiveFeedPage() {
   // ── Derived ───────────────────────────────────────────────────────────────
 
   const plan      = (userData?.plan as string) || 'free';
-  const planColor = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
   const planLabel = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
 
   const firstName = user?.displayName?.split(' ')[0] || 'there';
   const initials  = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const userPhoto = user?.photoURL || (userData?.photo as string) || null;
 
-  const channelsWatching = (userData?.channels_count as number) ?? 1;
+  // timeAgo helper — same pattern as Dashboard
+  const timeAgoFn = (date: Date | null): string => {
+    if (!date) return '--';
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  };
+  const lastScanTime = lastScanTimestamp ? timeAgoFn(lastScanTimestamp) : '--';
+
+  // YouTube connection state — exact same field + logic as Dashboard
+  const isYouTubeConnected = (userData?.youtube_connected as boolean) || false;
+  const channelsCount: number = isYouTubeConnected
+    ? ((userData?.channels_count as number) ?? 1)
+    : 0;
 
   const resolvedComments = comments.map(c => localActions[c.id] ? { ...c, aiDecision: localActions[c.id] } : c);
 
@@ -579,10 +636,21 @@ export default function LiveFeedPage() {
     return true;
   });
 
-  // Live queue = flagged + pending
-  const liveQueue = counts.flagged + (isPaused ? pendingRef.current.length : 0);
+  // Live queue: prefer real backend value; fallback to flagged count; null = show '--'
+  const liveQueue: number | null = liveQueueCount !== null
+    ? liveQueueCount
+    : isYouTubeConnected
+      ? counts.flagged
+      : null;
 
   const currentPath = '/live-feed';
+
+  // Metric display helpers
+  const displayProcessing = processingCount !== null ? processingCount : (isYouTubeConnected ? 0 : null);
+  const displayAvgResponse = avgResponseMs !== null ? `${Math.round(avgResponseMs)}ms` : '--';
+  const displayMonitoring = isYouTubeConnected
+    ? `${channelsCount} ${channelsCount === 1 ? 'Channel' : 'Channels'}`
+    : '0 Channels';
 
   return (
     <>
@@ -595,7 +663,6 @@ export default function LiveFeedPage() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
         @keyframes slideInRow{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
-        @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
         ::-webkit-scrollbar{width:3px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:3px}
@@ -794,13 +861,24 @@ export default function LiveFeedPage() {
                 onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
-              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
-              AI Online
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
-              <Shield size={9} strokeWidth={2} /> Protection Active
-            </div>
+
+            {/* Connection-aware topbar badges */}
+            {isYouTubeConnected ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
+                  <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                  AI Online
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
+                  <Shield size={9} strokeWidth={2} /> Protection Active
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.14)', fontSize: 10.5, fontWeight: 600, color: '#f87171', whiteSpace: 'nowrap' }}>
+                <WifiOff size={9} strokeWidth={2} /> Offline
+              </div>
+            )}
+
             <div style={{ flex: 1 }} />
             <button className="r-icon-btn">
               <Bell size={12} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
@@ -862,43 +940,75 @@ export default function LiveFeedPage() {
 
             {/* ── LIVE STATUS BAR ─────────────────────────────────────────── */}
             <div className="lf-status-bar" style={{ marginBottom: 12 }}>
-              {/* AI Online */}
+
+              {/* Status: online vs offline */}
               <div className="lf-status-item">
-                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 7px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
-                <div>
-                  <div style={{ color: '#22c55e', fontSize: 10.5, fontWeight: 700 }}>AI Online</div>
-                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Engine running</div>
-                </div>
+                {isYouTubeConnected ? (
+                  <>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 7px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
+                    <div>
+                      <div style={{ color: '#22c55e', fontSize: 10.5, fontWeight: 700 }}>AI Online</div>
+                      <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Engine running</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f87171', flexShrink: 0 }} />
+                    <div>
+                      <div style={{ color: '#f87171', fontSize: 10.5, fontWeight: 700 }}>Offline</div>
+                      <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Not started</div>
+                    </div>
+                  </>
+                )}
               </div>
+
               {/* Protection */}
               <div className="lf-status-item">
-                <Shield size={12} color="#a78bfa" strokeWidth={2} />
+                <Shield size={12} color={isYouTubeConnected ? '#a78bfa' : 'rgba(255,255,255,0.2)'} strokeWidth={2} />
                 <div>
-                  <div style={{ color: '#a78bfa', fontSize: 10.5, fontWeight: 700 }}>Protected</div>
-                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Filters active</div>
-                </div>
-              </div>
-              {/* Watching channels */}
-              <div className="lf-status-item">
-                <Eye size={12} color="#60a5fa" strokeWidth={2} />
-                <div>
-                  <div style={{ color: '#60a5fa', fontSize: 10.5, fontWeight: 700 }}>
-                    {channelsWatching} Channel{channelsWatching !== 1 ? 's' : ''}
+                  <div style={{ color: isYouTubeConnected ? '#a78bfa' : 'rgba(255,255,255,0.3)', fontSize: 10.5, fontWeight: 700 }}>
+                    {isYouTubeConnected ? 'Protected' : 'Inactive'}
                   </div>
-                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Watching now</div>
+                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>
+                    {isYouTubeConnected ? 'Filters active' : 'No channel'}
+                  </div>
                 </div>
               </div>
+
+              {/* Channels */}
+              <div className="lf-status-item">
+                <Eye size={12} color={isYouTubeConnected ? '#60a5fa' : 'rgba(255,255,255,0.2)'} strokeWidth={2} />
+                <div>
+                  <div style={{ color: isYouTubeConnected ? '#60a5fa' : 'rgba(255,255,255,0.3)', fontSize: 10.5, fontWeight: 700 }}>
+                    {isYouTubeConnected
+                      ? `Watching ${channelsCount} ${channelsCount === 1 ? 'Channel' : 'Channels'}`
+                      : '0 Connected'}
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>
+                    {isYouTubeConnected ? 'Monitoring now' : 'Not monitoring'}
+                  </div>
+                </div>
+              </div>
+
               {/* Last scan */}
               <div className="lf-status-item">
                 <RefreshCw size={11} color="rgba(255,255,255,0.35)" strokeWidth={2} />
                 <div>
-                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10.5, fontWeight: 700 }}>{lastScanTime}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10.5, fontWeight: 700 }}>
+                    {isYouTubeConnected ? lastScanTime : 'N/A'}
+                  </div>
                   <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Last scan</div>
                 </div>
               </div>
-              {/* Stream state */}
+
+              {/* Stream state badge */}
               <div className="lf-status-item" style={{ marginLeft: 'auto', borderRight: 'none' }}>
-                {isPaused ? (
+                {!isYouTubeConnected ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.18)', borderRadius: 7, padding: '4px 10px' }}>
+                    <WifiOff size={10} color="#f87171" />
+                    <span style={{ color: '#f87171', fontSize: 9.5, fontWeight: 800 }}>OFFLINE</span>
+                  </div>
+                ) : isPaused ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 7, padding: '4px 10px' }}>
                     <WifiOff size={10} color="#F59E0B" />
                     <span style={{ color: '#F59E0B', fontSize: 9.5, fontWeight: 800 }}>PAUSED</span>
@@ -919,31 +1029,31 @@ export default function LiveFeedPage() {
             <div className="lf-metrics-grid" style={{ marginBottom: 12 }}>
               <LiveMetricBox
                 label="Live Queue"
-                value={liveQueue}
+                value={liveQueue !== null ? liveQueue : '--'}
                 sub="awaiting review"
                 color="#F59E0B"
                 icon={Bell}
-                pulse={liveQueue > 0}
+                pulse={liveQueue !== null && liveQueue > 0}
               />
               <LiveMetricBox
                 label="Processing Now"
-                value={processingCount}
+                value={displayProcessing !== null ? displayProcessing : '--'}
                 sub="comments being analyzed"
                 color="#a78bfa"
                 icon={Zap}
-                pulse={processingCount > 0}
+                pulse={displayProcessing !== null && displayProcessing > 0}
               />
               <LiveMetricBox
                 label="Avg Response"
-                value={`${Math.round(avgResponseMs)}ms`}
+                value={isYouTubeConnected ? displayAvgResponse : '--'}
                 sub="AI decision latency"
                 color="#34d399"
                 icon={Timer}
               />
               <LiveMetricBox
                 label="Monitoring"
-                value={`${channelsWatching}ch`}
-                sub={`${counts.all} comments loaded`}
+                value={displayMonitoring}
+                sub={isYouTubeConnected ? `${counts.all} comments loaded` : 'Connect YouTube to start'}
                 color="#60a5fa"
                 icon={Eye}
               />
@@ -955,7 +1065,13 @@ export default function LiveFeedPage() {
                 <div>
                   <div className="r-card-title">Comment Stream</div>
                   <div className="r-card-sub">
-                    {feedLoading ? 'Connecting to stream…' : isPaused ? `Feed paused · ${pendingRef.current.length} buffered` : 'Updating in real time'}
+                    {!isYouTubeConnected
+                      ? 'Connect your YouTube channel to begin'
+                      : feedLoading
+                        ? 'Connecting to stream…'
+                        : isPaused
+                          ? `Feed paused · ${pendingRef.current.length} buffered`
+                          : 'Updating in real time'}
                   </div>
                 </div>
               </div>
@@ -993,7 +1109,9 @@ export default function LiveFeedPage() {
 
               {/* Feed rows */}
               <div className="lf-feed-scroll">
-                {feedLoading ? (
+                {!isYouTubeConnected ? (
+                  <OfflineCommentState onConnect={handleYouTubeConnect} />
+                ) : feedLoading ? (
                   <>
                     <SkeletonRow />
                     <SkeletonRow />
@@ -1038,6 +1156,23 @@ export default function LiveFeedPage() {
                     <SkeletonRow />
                     <SkeletonRow />
                   </>
+                ) : !isYouTubeConnected ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 16px', gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <WifiOff size={16} color="rgba(255,255,255,0.18)" strokeWidth={1.5} />
+                    </div>
+                    <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 11.5, textAlign: 'center', lineHeight: 1.6, maxWidth: 240 }}>
+                      Connect your YouTube channel to see moderation activity here.
+                    </span>
+                    <button onClick={handleYouTubeConnect} style={{
+                      background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.24)',
+                      borderRadius: 8, padding: '6px 14px', color: '#a78bfa',
+                      fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                    }}>
+                      Connect YouTube
+                    </button>
+                  </div>
                 ) : resolvedComments.length === 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 16px', gap: 8 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

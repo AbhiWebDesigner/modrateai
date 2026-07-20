@@ -149,6 +149,9 @@ export default function ModerationPage() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>(DEFAULT_FILTERS);
   const filtersInitialized = useRef(false);
+  // Tracks how many of the two required listeners (users + automations) have
+  // delivered their first snapshot. Loading clears exactly once when both reach 2.
+  const initialSnapCount = useRef(0);
   const unsubRefs = useRef<Array<() => void>>([]);
 
   useEffect(() => {
@@ -156,12 +159,24 @@ export default function ModerationPage() {
       if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
       filtersInitialized.current = false;
+      initialSnapCount.current = 0;
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
 
+      // Called by each required listener after its first snapshot fires.
+      // setLoading(false) is called exactly once, when both have settled.
+      const onRequiredSnapReady = () => {
+        initialSnapCount.current += 1;
+        if (initialSnapCount.current === 2) {
+          setLoading(false);
+        }
+      };
+
       const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
-        setLoading(false);
+        // Signal that this listener has delivered its first snapshot.
+        // Guard ensures subsequent real-time updates don't call it again.
+        if (initialSnapCount.current < 2) onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubUser);
 
@@ -174,16 +189,19 @@ export default function ModerationPage() {
         if (snap.exists()) {
           const data = snap.data();
           setAutomationData(data);
-          // Load persisted activeFilters on first snapshot only
+          // Restore persisted activeFilters on first snapshot only.
+          // Accepts empty array [] as a valid saved value; only falls back
+          // to DEFAULT_FILTERS when the field is absent or not an array.
           if (!filtersInitialized.current) {
             filtersInitialized.current = true;
-            if (Array.isArray(data.activeFilters) && data.activeFilters.length > 0) {
+            if (Array.isArray(data.activeFilters)) {
               setActiveFilters(data.activeFilters as string[]);
             }
           }
-        } else {
-          setLoading(false);
         }
+        // Signal that this listener has delivered its first snapshot.
+        // Guard ensures subsequent real-time updates don't call it again.
+        if (initialSnapCount.current < 2) onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubAutomation);
     });
@@ -203,13 +221,18 @@ export default function ModerationPage() {
 
   const toggleFilter = async (key: string) => {
     if (!user) return;
-    const updated = activeFilters.includes(key)
-      ? activeFilters.filter(k => k !== key)
-      : [...activeFilters, key];
+    // Capture previous state for rollback on Firestore failure.
+    const previous = activeFilters;
+    const updated = previous.includes(key)
+      ? previous.filter(k => k !== key)
+      : [...previous, key];
+    // Optimistic UI update.
     setActiveFilters(updated);
     try {
       await setDoc(doc(db, 'automations', user.uid), { activeFilters: updated }, { merge: true });
     } catch (error) {
+      // Restore previous state so the UI stays consistent with the database.
+      setActiveFilters(previous);
       console.error('Failed to persist filters:', error);
     }
   };

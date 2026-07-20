@@ -59,11 +59,11 @@ const DEFAULT_ANALYTICS: AnalyticsData = {
 const NAV_ITEMS = [
   { label: 'Overview',        icon: LayoutDashboard, href: '/dashboard',       active: false },
   { label: 'Live Feed',       icon: BarChart2,       href: '/live-feed',       active: false },
-  { label: 'Analytics',       icon: BarChart2,       href: '/analytics',       active: true  },
+  { label: 'Moderation',      icon: Shield,          href: '/moderation',      active: false },
   { label: 'Automation',      icon: Zap,             href: '/automation',      active: false },
   { label: 'Alerts',          icon: Bell,            href: '/alerts',          active: false },
+  { label: 'Analytics',       icon: BarChart2,       href: '/analytics',       active: true  },
   { label: 'Billing',         icon: CreditCard,      href: '/billing',         active: false },
-  { label: 'Human-AI replys', icon: Star,            href: '/human-ai-replys', active: false },
   { label: 'Settings',        icon: Settings,        href: '/settings',        active: false },
 ];
 
@@ -417,10 +417,8 @@ export default function AnalyticsPage() {
               <div style={{ width: 34, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
               {[
                 { icon: CreditCard, label: 'Billing',         href: '/billing'          },
-                { icon: Star,       label: 'Human-AI replys', href: '/human-ai-replys'  },
+                { icon: Star,       label: 'Moderation',      href: '/moderation'       },
                 { icon: Settings,   label: 'Settings',        href: '/settings'         },
-                { icon: BarChart2,  label: 'Channels',        href: '/channels'         },
-                { icon: Bell,       label: 'Notifications',   href: '/notifications'    },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: 14 }}>

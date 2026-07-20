@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
@@ -216,13 +216,9 @@ async function ensureParentDoc(uid: string) {
 
 async function fetchYouTubeVideos(uid: string): Promise<YouTubeVideo[]> {
   try {
-    // Load YouTube token from Firestore (stored by OAuth callback)
     const tokenDoc = await getDoc(doc(db, "youtube_tokens", uid));
     if (!tokenDoc.exists()) return [];
-
     const { access_token } = tokenDoc.data() as { access_token: string };
-
-    // Fetch user's uploads playlist
     const channelRes = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true`,
       { headers: { Authorization: `Bearer ${access_token}` } }
@@ -231,28 +227,22 @@ async function fetchYouTubeVideos(uid: string): Promise<YouTubeVideo[]> {
     const channelData = await channelRes.json();
     const uploadsId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
     if (!uploadsId) return [];
-
-    // Fetch playlist items
     const playlistRes = await fetch(
       `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=50`,
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
     if (!playlistRes.ok) return [];
     const playlistData = await playlistRes.json();
-
     const videoIds: string[] = (playlistData.items ?? []).map(
       (item: { contentDetails: { videoId: string } }) => item.contentDetails.videoId
     );
     if (!videoIds.length) return [];
-
-    // Fetch video stats + content details
     const statsRes = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails,liveStreamingDetails&id=${videoIds.join(",")}`,
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
     if (!statsRes.ok) return [];
     const statsData = await statsRes.json();
-
     return (statsData.items ?? []).map((v: {
       id: string;
       snippet: { title: string; publishedAt: string; thumbnails?: { medium?: { url: string }; default?: { url: string } }; liveBroadcastContent?: string };
@@ -345,7 +335,6 @@ function BottomNav({ pathname, moreOpen, setMoreOpen }: { pathname: string; more
   );
 }
 
-// Video skeleton loader
 function VideoSkeleton() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14, padding: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14 }}>
@@ -358,7 +347,6 @@ function VideoSkeleton() {
   );
 }
 
-// Premium video card
 function VideoCard({ video, selected, onClick }: { video: YouTubeVideo; selected: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick} style={{
@@ -384,7 +372,7 @@ function VideoCard({ video, selected, onClick }: { video: YouTubeVideo; selected
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, lineHeight: 1.35, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{video.title}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, color: "rgba(255,255,255,0.40)", fontSize: 11 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, color: "rgba(255,255,255,0.40)", fontSize: 11, flexWrap: "wrap" }}>
           <span>👁 {formatViews(video.viewCount)}</span>
           <span>💬 {formatViews(video.commentCount)}</span>
           <span>{formatDate(video.publishedAt)}</span>
@@ -395,7 +383,6 @@ function VideoCard({ video, selected, onClick }: { video: YouTubeVideo; selected
   );
 }
 
-// Rule summary card
 function RuleSummary({ ruleName, selectedVideo, keywords, replyMode, replyDelay, ruleActive }: {
   ruleName: string; selectedVideo: YouTubeVideo | null; keywords: string[]; replyMode: "random" | "ai"; replyDelay: number; ruleActive: boolean;
 }) {
@@ -421,7 +408,6 @@ function RuleSummary({ ruleName, selectedVideo, keywords, replyMode, replyDelay,
   );
 }
 
-// Live preview panel
 function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstruction, replyDelay }: {
   selectedVideo: YouTubeVideo | null; keywords: string[]; replies: string[]; replyMode: "random" | "ai"; aiInstruction: string; replyDelay: number;
 }) {
@@ -430,10 +416,8 @@ function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstructio
   const generatedReply = replyMode === "random" ? (replies.find(r => r.trim()) || "Auto reply will appear here...") : (aiInstruction ? "AI will generate a contextual reply based on your instruction." : "Enter AI instruction to preview reply.");
 
   return (
-    <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 20, position: "sticky", top: 24 }}>
+    <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: 20 }}>
       <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16 }}>📱 Live Preview</div>
-
-      {/* Video Preview */}
       <div style={{ background: "#000", borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 16 }}>
         <div style={{ position: "relative", background: "#111" }}>
           {selectedVideo?.thumbnail ? (
@@ -447,12 +431,10 @@ function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstructio
         </div>
         <div style={{ padding: "0 12px 12px" }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.6 }}>Comments</div>
-          {/* User comment */}
           <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 10px", marginBottom: 6 }}>
             <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.55)", marginBottom: 3 }}>👤 Viewer</div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.70)", lineHeight: 1.4 }}>{exampleComment}</div>
           </div>
-          {/* Flow indicators */}
           {matchedKeyword && (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", marginBottom: 4 }}>
@@ -467,7 +449,6 @@ function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstructio
                 <div style={{ width: 1, height: 14, background: "rgba(245,158,11,0.3)", marginLeft: 14 }} />
                 <span style={{ background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.20)", borderRadius: 6, fontSize: 9, fontWeight: 700, color: "#22c55e", padding: "2px 7px" }}>DELAY: {replyDelay}s</span>
               </div>
-              {/* Bot reply */}
               <div style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: 8, padding: "8px 10px" }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: "#F59E0B", marginBottom: 3 }}>🤖 ModerateAI</div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", lineHeight: 1.4 }}>{generatedReply}</div>
@@ -479,12 +460,102 @@ function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstructio
           )}
         </div>
       </div>
-
       <div style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.18)", borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
         <span style={{ fontSize: 11, color: "rgba(255,255,255,0.60)", fontWeight: 500 }}>Rule is ready to go live</span>
       </div>
     </div>
+  );
+}
+
+// ─── Mobile Preview Bottom Sheet ──────────────────────────────────────────────
+
+function MobilePreviewSheet({ open, onClose, selectedVideo, keywords, replies, replyMode, aiInstruction, replyDelay, ruleName, ruleActive }: {
+  open: boolean; onClose: () => void;
+  selectedVideo: YouTubeVideo | null; keywords: string[]; replies: string[]; replyMode: "random" | "ai"; aiInstruction: string; replyDelay: number; ruleName: string; ruleActive: boolean;
+}) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const startYRef = useRef<number | null>(null);
+  const currentYRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startYRef.current === null) return;
+    const delta = e.touches[0].clientY - startYRef.current;
+    currentYRef.current = delta;
+    if (delta > 0 && sheetRef.current) {
+      sheetRef.current.style.transform = `translateY(${delta}px)`;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (currentYRef.current > 80) {
+      onClose();
+    } else if (sheetRef.current) {
+      sheetRef.current.style.transform = "translateY(0)";
+    }
+    startYRef.current = null;
+    currentYRef.current = 0;
+  };
+
+  if (!open) return null;
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.70)", backdropFilter: "blur(6px)", animation: "fadeInBg 0.25s ease" }}
+      />
+      <div
+        ref={sheetRef}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 210,
+          background: "linear-gradient(180deg, #110d1a 0%, #0d0a14 100%)",
+          border: "1px solid rgba(255,255,255,0.09)",
+          borderBottom: "none",
+          borderRadius: "24px 24px 0 0",
+          maxHeight: "88vh",
+          display: "flex",
+          flexDirection: "column",
+          animation: "slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+          transition: "transform 0.15s ease",
+          willChange: "transform",
+        }}
+      >
+        {/* Drag handle */}
+        <div style={{ padding: "14px 24px 0", flexShrink: 0 }}>
+          <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 4, margin: "0 auto 16px" }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>Rule Preview</div>
+            <button
+              onClick={onClose}
+              style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.6)", fontSize: 16 }}
+            >✕</button>
+          </div>
+        </div>
+
+        {/* Scrollable content */}
+        <div style={{ overflowY: "auto", flex: 1, padding: "0 16px 32px", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+          <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} />
+          <LivePreview selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} />
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -494,48 +565,40 @@ export default function AutomationPage() {
   const pathname = usePathname();
   const router   = useRouter();
 
-  // Auth
   const [user,        setUser]        = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Rules list
   const [rules,        setRules]        = useState<Rule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
   const [saving,       setSaving]       = useState(false);
   const [deleting,     setDeleting]     = useState<string | null>(null);
 
-  // Builder state
   const [showBuilder,  setShowBuilder]  = useState(false);
   const [currentStep,  setCurrentStep]  = useState(0);
 
-  // Step 0 — Video
-  const [videos,           setVideos]           = useState<YouTubeVideo[]>([]);
-  const [videosLoading,    setVideosLoading]    = useState(false);
-  const [videoSearch,      setVideoSearch]      = useState("");
-  const [showVideoSelector,setShowVideoSelector] = useState(false);
-  const [selectedVideo,    setSelectedVideo]    = useState<YouTubeVideo | null>(null);
-  const [ruleName,         setRuleName]         = useState("");
+  const [videos,            setVideos]            = useState<YouTubeVideo[]>([]);
+  const [videosLoading,     setVideosLoading]     = useState(false);
+  const [videoSearch,       setVideoSearch]       = useState("");
+  const [showVideoSelector, setShowVideoSelector] = useState(false);
+  const [selectedVideo,     setSelectedVideo]     = useState<YouTubeVideo | null>(null);
+  const [ruleName,          setRuleName]          = useState("");
 
-  // Step 1 — Keywords
-  const [keywords,      setKeywords]      = useState<string[]>([]);
-  const [keywordInput,  setKeywordInput]  = useState("");
-  const [aiDetection,   setAiDetection]   = useState(false);
-  const [suggestions,   setSuggestions]   = useState<string[]>([]);
+  const [keywords,     setKeywords]     = useState<string[]>([]);
+  const [keywordInput, setKeywordInput] = useState("");
+  const [aiDetection,  setAiDetection]  = useState(false);
+  const [suggestions,  setSuggestions]  = useState<string[]>([]);
 
-  // Step 2 — Replies
   const [replyMode,     setReplyMode]     = useState<"random" | "ai">("random");
   const [replies,       setReplies]       = useState(["", "", ""]);
   const [aiInstruction, setAiInstruction] = useState("");
 
-  // Step 3 — Advanced
   const [advanced,   setAdvanced]   = useState<AdvancedSettings>(DEFAULT_ADVANCED);
   const [ruleActive, setRuleActive] = useState(true);
   const [replyDelay, setReplyDelay] = useState(20);
 
-  // UI
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [moreOpen,         setMoreOpen]         = useState(false);
+  const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
-  // Auth effect
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) { router.push("/login"); return; }
@@ -545,7 +608,6 @@ export default function AutomationPage() {
     return () => unsub();
   }, [router]);
 
-  // Rules listener
   useEffect(() => {
     if (!user) return;
     const rulesRef = collection(db, "automations", user.uid, "rules");
@@ -557,7 +619,6 @@ export default function AutomationPage() {
     return () => unsub();
   }, [user]);
 
-  // Load YouTube videos when selector opens
   useEffect(() => {
     if (!showVideoSelector || !user || videos.length > 0) return;
     setVideosLoading(true);
@@ -567,7 +628,6 @@ export default function AutomationPage() {
     });
   }, [showVideoSelector, user, videos.length]);
 
-  // Keyword suggestions
   const updateSuggestions = useCallback((input: string) => {
     const lower = input.toLowerCase().trim();
     if (!lower) { setSuggestions([]); return; }
@@ -577,7 +637,6 @@ export default function AutomationPage() {
 
   useEffect(() => { updateSuggestions(keywordInput); }, [keywordInput, updateSuggestions]);
 
-  // Filtered videos
   const filteredVideos = useMemo(() => {
     if (!videoSearch.trim()) return videos;
     const q = videoSearch.toLowerCase();
@@ -589,7 +648,7 @@ export default function AutomationPage() {
     setKeywordInput(""); setAiDetection(false); setReplyMode("random");
     setReplies(["", "", ""]); setAiInstruction(""); setReplyDelay(20);
     setRuleActive(true); setAdvanced(DEFAULT_ADVANCED); setShowBuilder(false);
-    setSuggestions([]);
+    setSuggestions([]); setMobilePreviewOpen(false);
   };
 
   const addKeyword = (kw?: string) => {
@@ -671,27 +730,85 @@ export default function AutomationPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.015em; box-sizing: border-box; margin: 0; padding: 0; }
         html, body { background: #07030F; color: white; }
+
+        /* Layout */
         .desktop-sidebar { display: none !important; }
         .bottom-nav      { display: flex !important; }
-        .main-content    { margin-left: 0 !important; padding: 20px 16px 90px !important; }
+        .main-content    { margin-left: 0 !important; padding: 20px 16px 160px !important; }
+
         @media (min-width: 1024px) {
-          .desktop-sidebar { display: flex !important; }
-          .bottom-nav      { display: none !important; }
-          .main-content    { margin-left: 228px !important; padding: 32px 40px !important; }
+          .desktop-sidebar   { display: flex !important; }
+          .bottom-nav        { display: none !important; }
+          .main-content      { margin-left: 228px !important; padding: 32px 40px 60px !important; }
+          .preview-panel     { display: block !important; }
+          .mobile-preview-fab { display: none !important; }
+          .sticky-mobile-cta { display: none !important; }
         }
+
+        /* Template scroll — mobile horizontal, desktop wrap */
+        .template-scroll {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          padding-bottom: 4px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .template-scroll::-webkit-scrollbar { display: none; }
+        @media (min-width: 1024px) {
+          .template-scroll {
+            flex-wrap: wrap;
+            overflow-x: visible;
+          }
+        }
+        .template-chip { flex-shrink: 0; }
+
+        /* Video grid */
+        .video-option-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+        @media (min-width: 640px) {
+          .video-option-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* Inputs */
         input:focus, textarea:focus, select:focus { border-color: rgba(245,158,11,0.5) !important; outline: none; }
         input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.25); }
         select option { background: #1a1a2e; color: white; }
-        @keyframes spin    { to { transform: rotate(360deg); } }
-        @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes shimmer { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        input, textarea, select { -webkit-appearance: none; }
+
+        /* Animations */
+        @keyframes spin        { to { transform: rotate(360deg); } }
+        @keyframes fadeIn      { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp     { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeInBg    { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes shimmer     { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+        /* Hover states */
         .rule-card { animation: fadeIn 0.2s ease; }
         .rule-card:hover { border-color: rgba(245,158,11,0.18) !important; background: rgba(255,255,255,0.045) !important; }
-        .video-card-hover:hover { border-color: rgba(245,158,11,0.25) !important; background: rgba(245,158,11,0.04) !important; }
         .template-btn:hover { border-color: rgba(245,158,11,0.30) !important; background: rgba(245,158,11,0.08) !important; color: #F59E0B !important; }
         .suggestion-chip:hover { background: rgba(245,158,11,0.18) !important; }
-        @media (min-width: 1024px) { .preview-panel { display: block !important; } }
+
+        /* Mobile-only elements */
+        .mobile-preview-fab { display: flex; }
+        .sticky-mobile-cta  { display: flex; }
+        .preview-panel      { display: none; }
+
+        /* Fix overflow */
+        .keyword-chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 32px; }
+        .step-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .step-scroll::-webkit-scrollbar { display: none; }
+
+        /* Working hours responsive */
+        .working-hours-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .cooldown-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .delay-row { display: flex; gap: 8px; }
+        .max-replies-row { display: flex; gap: 8px; flex-wrap: wrap; }
       `}</style>
 
       {/* Background */}
@@ -709,12 +826,15 @@ export default function AutomationPage() {
         {/* ── Rules List ── */}
         {!showBuilder ? (
           <>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
               <div>
-                <h1 style={{ fontSize: 22, fontWeight: 800, color: "#FAFAFA", marginBottom: 4 }}>Automation Rules</h1>
-                <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>Rules run in order — higher rules have higher priority</p>
+                <h1 style={{ fontSize: 20, fontWeight: 800, color: "#FAFAFA", marginBottom: 3 }}>Automation Rules</h1>
+                <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>Rules run in order — higher rules have higher priority</p>
               </div>
-              <button onClick={() => setShowBuilder(true)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(245,158,11,0.25)" }}>
+              <button
+                onClick={() => setShowBuilder(true)}
+                style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(245,158,11,0.25)", whiteSpace: "nowrap" }}
+              >
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 Create Rule
               </button>
@@ -725,31 +845,33 @@ export default function AutomationPage() {
                 <div style={{ width: 32, height: 32, border: "2px solid #F59E0B", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
               </div>
             ) : rules.length === 0 ? (
-              /* Premium empty state */
-              <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 24, padding: "72px 24px", textAlign: "center", animation: "fadeIn 0.3s ease" }}>
-                <div style={{ width: 80, height: 80, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 20px" }}>⚡</div>
-                <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>No automation rules yet</h2>
-                <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 14, marginBottom: 28, maxWidth: 340, margin: "0 auto 28px" }}>Create your first rule to automatically reply to YouTube comments when keywords are matched.</p>
-                <button onClick={() => setShowBuilder(true)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px 32px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", boxShadow: "0 4px 24px rgba(245,158,11,0.30)" }}>
+              <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 24, padding: "56px 20px", textAlign: "center", animation: "fadeIn 0.3s ease" }}>
+                <div style={{ width: 72, height: 72, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 16px" }}>⚡</div>
+                <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>No automation rules yet</h2>
+                <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 24, maxWidth: 300, margin: "0 auto 24px", lineHeight: 1.5 }}>Create your first rule to automatically reply to YouTube comments when keywords are matched.</p>
+                <button
+                  onClick={() => setShowBuilder(true)}
+                  style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px 28px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", boxShadow: "0 4px 24px rgba(245,158,11,0.30)" }}
+                >
                   ⚡ Create Your First Rule
                 </button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {rules.map(rule => (
-                  <div key={rule.id} className="rule-card" style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, transition: "all 0.2s" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                      <div style={{ background: "rgba(245,158,11,0.12)", borderRadius: 10, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>⚡</div>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>{rule.name}</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginTop: 2 }}>{rule.video?.title?.slice(0, 40)}{(rule.video?.title?.length ?? 0) > 40 ? "…" : ""} • {rule.keywords?.length ?? 0} keywords</div>
+                  <div key={rule.id} className="rule-card" style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, transition: "all 0.2s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
+                      <div style={{ background: "rgba(245,158,11,0.12)", borderRadius: 10, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>⚡</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.name}</div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.video?.title?.slice(0, 36)}{(rule.video?.title?.length ?? 0) > 36 ? "…" : ""} · {rule.keywords?.length ?? 0} kw</div>
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                      <button onClick={() => toggleRule(rule)} style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "3px 12px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
-                        {rule.active ? "● Active" : "○ Inactive"}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                      <button onClick={() => toggleRule(rule)} style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+                        {rule.active ? "● On" : "○ Off"}
                       </button>
-                      <button onClick={() => deleteRule(rule.id, rule.active)} disabled={deleting === rule.id} style={{ color: "rgba(255,100,100,0.55)", background: "none", border: "none", cursor: "pointer", fontSize: 16, opacity: deleting === rule.id ? 0.4 : 1 }}>
+                      <button onClick={() => deleteRule(rule.id, rule.active)} disabled={deleting === rule.id} style={{ color: "rgba(255,100,100,0.55)", background: "none", border: "none", cursor: "pointer", fontSize: 16, opacity: deleting === rule.id ? 0.4 : 1, padding: "4px" }}>
                         {deleting === rule.id ? "⏳" : "🗑️"}
                       </button>
                     </div>
@@ -762,113 +884,120 @@ export default function AutomationPage() {
 
         /* ── Builder ── */
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+            {/* Left/Main column */}
             <div style={{ flex: 1, minWidth: 0 }}>
 
               {/* Builder header */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <button onClick={resetBuilder} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", fontSize: 14 }}>←</button>
-                  <div>
-                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>Automation / New Rule</div>
-                    <div style={{ fontWeight: 700, fontSize: 15 }}>{ruleName || "Untitled Rule"}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <button onClick={resetBuilder} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", fontSize: 14, flexShrink: 0 }}>←</button>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>Automation / New Rule</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ruleName || "Untitled Rule"}</div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", borderRadius: 20, padding: "4px 12px", fontSize: 11 }}>● Live Preview</span>
-                  <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "9px 20px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                {/* Desktop-only Go Live in header */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                  <span className="preview-panel" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", borderRadius: 20, padding: "4px 10px", fontSize: 11, display: "none" }}>● Live</span>
+                  <button
+                    onClick={goLive}
+                    disabled={saving || !ruleName || !selectedVideo}
+                    className="preview-panel"
+                    style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "9px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "none", alignItems: "center", gap: 6 }}
+                  >
                     {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live"}
                   </button>
                 </div>
               </div>
 
-              {/* Steps */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 24, overflowX: "auto", paddingBottom: 4 }}>
+              {/* Step indicators */}
+              <div className="step-scroll" style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 20, paddingBottom: 4 }}>
                 {STEPS.map((step, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                    <button onClick={() => setCurrentStep(i)} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 10, fontSize: 13, cursor: "pointer", border: "none", background: i === currentStep ? "rgba(245,158,11,0.12)" : "transparent", color: i === currentStep ? "#F59E0B" : i < currentStep ? "#22c55e" : "rgba(255,255,255,0.30)", fontWeight: i === currentStep ? 600 : 400, outline: i === currentStep ? "1px solid rgba(245,158,11,0.30)" : "none" }}>
-                      <span style={{ background: i === currentStep ? "#F59E0B" : i < currentStep ? "#22c55e" : "rgba(255,255,255,0.10)", color: i < currentStep ? "white" : i === currentStep ? "#07030F" : "rgba(255,255,255,0.4)", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                    <button onClick={() => setCurrentStep(i)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 10, fontSize: 12, cursor: "pointer", border: "none", background: i === currentStep ? "rgba(245,158,11,0.12)" : "transparent", color: i === currentStep ? "#F59E0B" : i < currentStep ? "#22c55e" : "rgba(255,255,255,0.30)", fontWeight: i === currentStep ? 600 : 400, outline: i === currentStep ? "1px solid rgba(245,158,11,0.30)" : "none", whiteSpace: "nowrap" }}>
+                      <span style={{ background: i === currentStep ? "#F59E0B" : i < currentStep ? "#22c55e" : "rgba(255,255,255,0.10)", color: i < currentStep ? "white" : i === currentStep ? "#07030F" : "rgba(255,255,255,0.4)", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, flexShrink: 0 }}>
                         {i < currentStep ? "✓" : i + 1}
                       </span>
                       {step}
                     </button>
-                    {i < STEPS.length - 1 && <span style={{ color: "rgba(255,255,255,0.12)", fontSize: 12 }}>—</span>}
+                    {i < STEPS.length - 1 && <span style={{ color: "rgba(255,255,255,0.12)", fontSize: 11 }}>—</span>}
                   </div>
                 ))}
               </div>
 
-              {/* Rule summary (mobile only) */}
-              <div className="summary-mobile">
-                <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} />
-              </div>
-
-              {/* Step content */}
-              <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "24px", animation: "fadeIn 0.18s ease" }}>
+              {/* Step content card */}
+              <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "20px 16px", animation: "fadeIn 0.18s ease" }}>
 
                 {/* ── Step 0: Select Video ── */}
                 {currentStep === 0 && (
                   <div>
-                    <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Select YouTube Video</h2>
-                    <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 24 }}>Choose which video to monitor for comments</p>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Select YouTube Video</h2>
+                    <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 20 }}>Choose which video to monitor for comments</p>
 
-                    {/* Rule name */}
-                    <div style={{ marginBottom: 20 }}>
-                      <label style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", display: "block", marginBottom: 8 }}>Rule Name</label>
-                      <input value={ruleName} onChange={e => setRuleName(e.target.value)} placeholder="e.g. Spam Filter Rule" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14 }} />
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", display: "block", marginBottom: 7 }}>Rule Name</label>
+                      <input
+                        value={ruleName}
+                        onChange={e => setRuleName(e.target.value)}
+                        placeholder="e.g. Spam Filter Rule"
+                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14 }}
+                      />
                     </div>
 
-                    {/* Video options */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
-                      <button onClick={() => setShowVideoSelector(true)} style={{ background: selectedVideo ? "rgba(245,158,11,0.10)" : "rgba(255,255,255,0.04)", border: `1px solid ${selectedVideo ? "rgba(245,158,11,0.35)" : "rgba(255,255,255,0.08)"}`, borderRadius: 14, padding: 16, textAlign: "left", cursor: "pointer", color: "white", transition: "all 0.2s" }}>
+                    <div className="video-option-grid">
+                      <button onClick={() => setShowVideoSelector(true)} style={{ background: selectedVideo ? "rgba(245,158,11,0.10)" : "rgba(255,255,255,0.04)", border: `1px solid ${selectedVideo ? "rgba(245,158,11,0.35)" : "rgba(255,255,255,0.08)"}`, borderRadius: 14, padding: 14, textAlign: "left", cursor: "pointer", color: "white", transition: "all 0.2s", minHeight: 90 }}>
                         {selectedVideo ? (
                           <>
-                            {selectedVideo.thumbnail ? <img src={selectedVideo.thumbnail} alt="" style={{ width: "100%", height: 52, objectFit: "cover", borderRadius: 8, marginBottom: 8 }} /> : <div style={{ fontSize: 24, marginBottom: 8 }}>🎬</div>}
+                            {selectedVideo.thumbnail ? <img src={selectedVideo.thumbnail} alt="" style={{ width: "100%", height: 48, objectFit: "cover", borderRadius: 8, marginBottom: 7 }} /> : <div style={{ fontSize: 20, marginBottom: 7 }}>🎬</div>}
                             <div style={{ fontWeight: 600, fontSize: 12, lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{selectedVideo.title}</div>
-                            <div style={{ color: "#F59E0B", fontSize: 10, marginTop: 4, fontWeight: 600 }}>✓ Selected — tap to change</div>
+                            <div style={{ color: "#F59E0B", fontSize: 10, marginTop: 4, fontWeight: 600 }}>✓ Tap to change</div>
                           </>
                         ) : (
                           <>
-                            <div style={{ fontSize: 24, marginBottom: 8 }}>🎬</div>
+                            <div style={{ fontSize: 22, marginBottom: 7 }}>🎬</div>
                             <div style={{ fontWeight: 600, fontSize: 13 }}>Specific Video</div>
-                            <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 4 }}>Choose a video</div>
+                            <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 3 }}>Choose from your channel</div>
                           </>
                         )}
                       </button>
                       {[{ label: "Future Videos", icon: "🔮" }, { label: "Latest Video", icon: "🆕" }, { label: "All Videos", icon: "📺" }].map(opt => (
-                        <div key={opt.label} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: 16, opacity: 0.45, position: "relative" }}>
-                          <div style={{ fontSize: 24, marginBottom: 8 }}>{opt.icon}</div>
+                        <div key={opt.label} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: 14, opacity: 0.45, position: "relative", minHeight: 90 }}>
+                          <div style={{ fontSize: 22, marginBottom: 7 }}>{opt.icon}</div>
                           <div style={{ fontWeight: 600, fontSize: 13 }}>{opt.label}</div>
                           <span style={{ background: "rgba(234,179,8,0.18)", color: "#eab308", borderRadius: 6, fontSize: 9, padding: "2px 6px", fontWeight: 700, position: "absolute", top: 12, right: 12 }}>PRO</span>
                         </div>
                       ))}
                     </div>
 
-                    <button onClick={() => setCurrentStep(1)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", width: "100%" }}>Next — Set Keywords →</button>
+                    <button onClick={() => setCurrentStep(1)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", width: "100%" }}>
+                      Next — Set Keywords →
+                    </button>
                   </div>
                 )}
 
                 {/* ── Step 1: Keywords ── */}
                 {currentStep === 1 && (
                   <div>
-                    <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Keyword Triggers</h2>
-                    <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 20 }}>Comments matching these keywords will trigger auto-reply</p>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Keyword Triggers</h2>
+                    <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 18 }}>Comments matching these keywords will trigger auto-reply</p>
 
-                    {/* Templates */}
-                    <div style={{ marginBottom: 20 }}>
+                    {/* Templates horizontal scroll on mobile */}
+                    <div style={{ marginBottom: 18 }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.6 }}>Quick Templates</div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      <div className="template-scroll">
                         {RULE_TEMPLATES.map(t => (
-                          <button key={t.id} className="template-btn" onClick={() => applyTemplate(t)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.65)", transition: "all 0.18s" }}>
+                          <button key={t.id} className="template-btn template-chip" onClick={() => applyTemplate(t)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.65)", transition: "all 0.18s", whiteSpace: "nowrap" }}>
                             <span>{t.icon}</span>{t.label}
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    {/* AI detection */}
-                    <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", marginBottom: 20 }}>
-                      <div>
+                    {/* AI detection toggle */}
+                    <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", marginBottom: 16, gap: 12 }}>
+                      <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: 13 }}>AI Intent Detection</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2 }}>Semantic matching — understands meaning, not just words</div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2 }}>Semantic matching — understands meaning</div>
                       </div>
                       <button onClick={() => setAiDetection(!aiDetection)} style={{ background: aiDetection ? "#F59E0B" : "rgba(255,255,255,0.10)", borderRadius: 20, width: 44, height: 24, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, transition: "all 0.2s" }}>
                         <div style={{ background: "white", borderRadius: "50%", width: 18, height: 18, position: "absolute", top: 3, left: aiDetection ? 23 : 3, transition: "all 0.2s" }} />
@@ -876,14 +1005,19 @@ export default function AutomationPage() {
                     </div>
 
                     {/* Keyword input */}
-                    <div style={{ display: "flex", gap: 8, marginBottom: suggestions.length > 0 ? 10 : 16 }}>
-                      <input value={keywordInput} onChange={e => setKeywordInput(e.target.value)} onKeyDown={e => e.key === "Enter" && addKeyword()} placeholder="Type keyword and press Enter" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", flex: 1, padding: "10px 14px", fontSize: 14 }} />
-                      <button onClick={() => addKeyword()} style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "10px 16px", fontSize: 13, fontWeight: 600, color: "#F59E0B", cursor: "pointer" }}>+ Add</button>
+                    <div style={{ display: "flex", gap: 8, marginBottom: suggestions.length > 0 ? 10 : 14 }}>
+                      <input
+                        value={keywordInput}
+                        onChange={e => setKeywordInput(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && addKeyword()}
+                        placeholder="Type keyword and press Enter"
+                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", flex: 1, padding: "11px 14px", fontSize: 14, minWidth: 0 }}
+                      />
+                      <button onClick={() => addKeyword()} style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "11px 14px", fontSize: 13, fontWeight: 600, color: "#F59E0B", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>+ Add</button>
                     </div>
 
-                    {/* AI keyword suggestions */}
                     {suggestions.length > 0 && (
-                      <div style={{ marginBottom: 16 }}>
+                      <div style={{ marginBottom: 14 }}>
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>💡 Suggestions</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                           {suggestions.map(s => (
@@ -893,12 +1027,11 @@ export default function AutomationPage() {
                       </div>
                     )}
 
-                    {/* Keyword chips */}
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24, minHeight: 32 }}>
+                    <div className="keyword-chips" style={{ marginBottom: 20 }}>
                       {keywords.map(kw => (
-                        <span key={kw} style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, color: "#FBBF24", display: "flex", alignItems: "center", gap: 6, padding: "4px 12px", fontSize: 13 }}>
+                        <span key={kw} style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, color: "#FBBF24", display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", fontSize: 13 }}>
                           {kw}
-                          <button onClick={() => setKeywords(keywords.filter(k => k !== kw))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.40)", cursor: "pointer", fontSize: 14, lineHeight: 1 }}>×</button>
+                          <button onClick={() => setKeywords(keywords.filter(k => k !== kw))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.40)", cursor: "pointer", fontSize: 15, lineHeight: 1, padding: 0 }}>×</button>
                         </span>
                       ))}
                       {keywords.length === 0 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>No keywords added yet</span>}
@@ -906,7 +1039,7 @@ export default function AutomationPage() {
 
                     <div style={{ display: "flex", gap: 10 }}>
                       <button onClick={() => setCurrentStep(0)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
-                      <button onClick={() => setCurrentStep(2)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next — Auto Reply →</button>
+                      <button onClick={() => setCurrentStep(2)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next →</button>
                     </div>
                   </div>
                 )}
@@ -914,34 +1047,48 @@ export default function AutomationPage() {
                 {/* ── Step 2: Auto Reply ── */}
                 {currentStep === 2 && (
                   <div>
-                    <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Auto Reply Settings</h2>
-                    <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 24 }}>Configure how the bot replies to matched comments</p>
-                    <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Auto Reply Settings</h2>
+                    <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 20 }}>Configure how the bot replies to matched comments</p>
+
+                    <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
                       {(["random", "ai"] as const).map(mode => (
-                        <button key={mode} onClick={() => setReplyMode(mode)} style={{ padding: "9px 18px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: replyMode === mode ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.05)", color: replyMode === mode ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyMode === mode ? "1px solid rgba(245,158,11,0.30)" : "none" }}>
-                          {mode === "random" ? "🎲 Random Templates" : "🤖 AI Generated"}
+                        <button key={mode} onClick={() => setReplyMode(mode)} style={{ flex: 1, padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: replyMode === mode ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.05)", color: replyMode === mode ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyMode === mode ? "1px solid rgba(245,158,11,0.30)" : "none" }}>
+                          {mode === "random" ? "🎲 Random" : "🤖 AI"}
                         </button>
                       ))}
                     </div>
+
                     {replyMode === "random" ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
                         {replies.map((r, i) => (
                           <div key={i}>
                             <label style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", display: "block", marginBottom: 6 }}>Reply {i + 1}</label>
-                            <input value={r} onChange={e => { const arr = [...replies]; arr[i] = e.target.value; setReplies(arr); }} placeholder={`Template reply ${i + 1}...`} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14 }} />
+                            <input
+                              value={r}
+                              onChange={e => { const arr = [...replies]; arr[i] = e.target.value; setReplies(arr); }}
+                              placeholder={`Template reply ${i + 1}...`}
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14 }}
+                            />
                           </div>
                         ))}
                         <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>Use {"{{username}}"} to mention the commenter</div>
                       </div>
                     ) : (
-                      <div style={{ marginBottom: 24 }}>
+                      <div style={{ marginBottom: 20 }}>
                         <label style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", display: "block", marginBottom: 6 }}>AI Instruction</label>
-                        <textarea value={aiInstruction} onChange={e => setAiInstruction(e.target.value)} placeholder="e.g. Reply politely in Telugu, thank them for watching..." rows={4} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px", fontSize: 14, resize: "none" }} />
+                        <textarea
+                          value={aiInstruction}
+                          onChange={e => setAiInstruction(e.target.value)}
+                          placeholder="e.g. Reply politely in Telugu, thank them for watching..."
+                          rows={4}
+                          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14, resize: "vertical" }}
+                        />
                       </div>
                     )}
+
                     <div style={{ display: "flex", gap: 10 }}>
                       <button onClick={() => setCurrentStep(1)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
-                      <button onClick={() => setCurrentStep(3)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next — Advanced →</button>
+                      <button onClick={() => setCurrentStep(3)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next →</button>
                     </div>
                   </div>
                 )}
@@ -949,13 +1096,13 @@ export default function AutomationPage() {
                 {/* ── Step 3: Advanced ── */}
                 {currentStep === 3 && (
                   <div>
-                    <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Advanced Settings</h2>
-                    <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 24 }}>Fine-tune your automation rule</p>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Advanced Settings</h2>
+                    <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 20 }}>Fine-tune your automation rule</p>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
 
-                      {/* Rule status toggle */}
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
+                      {/* Rule status */}
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", gap: 12 }}>
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 14 }}>Rule Status</div>
                           <div style={{ color: ruleActive ? "#22c55e" : "rgba(255,255,255,0.40)", fontSize: 12, marginTop: 2 }}>{ruleActive ? "● Active" : "○ Inactive"}</div>
@@ -966,87 +1113,87 @@ export default function AutomationPage() {
                       </div>
 
                       {/* Reply Delay */}
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>Reply Delay</div>
-                        <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>Reply Delay</div>
+                        <div className="delay-row">
                           {[20, 40, 60].map(d => (
-                            <button key={d} onClick={() => setReplyDelay(d)} style={{ padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: replyDelay === d ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: replyDelay === d ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyDelay === d ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{d}s</button>
+                            <button key={d} onClick={() => setReplyDelay(d)} style={{ flex: 1, padding: "9px 0", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: replyDelay === d ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: replyDelay === d ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyDelay === d ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{d}s</button>
                           ))}
                         </div>
                       </div>
 
                       {/* Max replies per user */}
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Max Replies per User</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 12 }}>Limit how many times the bot replies to the same user</div>
-                        <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Max Replies per User</div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Limit replies to same user</div>
+                        <div className="max-replies-row">
                           {[1, 2, 3, 5, 10].map(n => (
-                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, maxRepliesPerUser: n }))} style={{ padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.maxRepliesPerUser === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.maxRepliesPerUser === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.maxRepliesPerUser === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n}</button>
+                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, maxRepliesPerUser: n }))} style={{ padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.maxRepliesPerUser === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.maxRepliesPerUser === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.maxRepliesPerUser === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n}</button>
                           ))}
                         </div>
                       </div>
 
                       {/* Cooldown */}
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Cooldown Period</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 12 }}>Wait before replying to the same user again</div>
-                        <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Cooldown Period</div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Wait before replying to same user again</div>
+                        <div className="cooldown-row">
                           {[15, 30, 60, 120, 1440].map(n => (
-                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, cooldownMinutes: n }))} style={{ padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.cooldownMinutes === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.cooldownMinutes === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.cooldownMinutes === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n < 60 ? `${n}m` : n === 1440 ? "24h" : `${n / 60}h`}</button>
+                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, cooldownMinutes: n }))} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.cooldownMinutes === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.cooldownMinutes === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.cooldownMinutes === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n < 60 ? `${n}m` : n === 1440 ? "24h" : `${n / 60}h`}</button>
                           ))}
                         </div>
                       </div>
 
                       {/* Working hours */}
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12 }}>Working Hours</div>
-                        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>Working Hours</div>
+                        <div className="working-hours-row">
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <label style={{ fontSize: 12, color: "rgba(255,255,255,0.50)" }}>From</label>
-                            <select value={advanced.workingHoursStart} onChange={e => setAdvanced(a => ({ ...a, workingHoursStart: parseInt(e.target.value) }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "6px 10px", fontSize: 13, cursor: "pointer" }}>
+                            <label style={{ fontSize: 12, color: "rgba(255,255,255,0.50)", whiteSpace: "nowrap" }}>From</label>
+                            <select value={advanced.workingHoursStart} onChange={e => setAdvanced(a => ({ ...a, workingHoursStart: parseInt(e.target.value) }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "7px 10px", fontSize: 13, cursor: "pointer" }}>
                               {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>)}
                             </select>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <label style={{ fontSize: 12, color: "rgba(255,255,255,0.50)" }}>To</label>
-                            <select value={advanced.workingHoursEnd} onChange={e => setAdvanced(a => ({ ...a, workingHoursEnd: parseInt(e.target.value) }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "6px 10px", fontSize: 13, cursor: "pointer" }}>
+                            <label style={{ fontSize: 12, color: "rgba(255,255,255,0.50)", whiteSpace: "nowrap" }}>To</label>
+                            <select value={advanced.workingHoursEnd} onChange={e => setAdvanced(a => ({ ...a, workingHoursEnd: parseInt(e.target.value) }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "7px 10px", fontSize: 13, cursor: "pointer" }}>
                               {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>)}
                             </select>
                           </div>
                         </div>
                       </div>
 
-                      {/* Minimum comment length */}
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Minimum Comment Length</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 12 }}>Ignore very short comments (spam prevention)</div>
-                        <div style={{ display: "flex", gap: 8 }}>
+                      {/* Min comment length */}
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Min Comment Length</div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Ignore very short comments</div>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                           {[0, 5, 10, 20, 50].map(n => (
-                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, minCommentLength: n }))} style={{ padding: "7px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.minCommentLength === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.minCommentLength === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.minCommentLength === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n === 0 ? "Any" : `${n}+`}</button>
+                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, minCommentLength: n }))} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.minCommentLength === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.minCommentLength === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.minCommentLength === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n === 0 ? "Any" : `${n}+`}</button>
                           ))}
                         </div>
                       </div>
 
                       {/* Language filter */}
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 16px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>Language Filter</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 12 }}>Only reply to comments in this language</div>
-                        <select value={advanced.languageFilter} onChange={e => setAdvanced(a => ({ ...a, languageFilter: e.target.value }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "8px 12px", fontSize: 13, cursor: "pointer", width: "100%" }}>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Language Filter</div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Only reply to comments in this language</div>
+                        <select value={advanced.languageFilter} onChange={e => setAdvanced(a => ({ ...a, languageFilter: e.target.value }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "9px 12px", fontSize: 13, cursor: "pointer", width: "100%" }}>
                           {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
                         </select>
                       </div>
 
                       {/* Toggle options */}
                       {[
-                        { key: "enableWeekends",   label: "Enable Weekends",      sub: "Reply to comments on Saturdays and Sundays" },
-                        { key: "ignoreLinks",      label: "Ignore Comments with Links", sub: "Skip comments containing URLs (spam prevention)" },
-                        { key: "ignoreEmojisOnly", label: "Ignore Emoji-only",    sub: "Skip comments that contain only emojis" },
-                        { key: "ignoreBots",       label: "Ignore Bots",          sub: "Auto-detect and skip bot comments" },
+                        { key: "enableWeekends",   label: "Enable Weekends",         sub: "Reply on Saturdays and Sundays" },
+                        { key: "ignoreLinks",      label: "Ignore Comments with Links", sub: "Skip comments containing URLs" },
+                        { key: "ignoreEmojisOnly", label: "Ignore Emoji-only",        sub: "Skip emoji-only comments" },
+                        { key: "ignoreBots",       label: "Ignore Bots",             sub: "Auto-detect and skip bot comments" },
                       ].map(item => (
-                        <div key={item.key} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
-                          <div>
+                        <div key={item.key} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", gap: 12 }}>
+                          <div style={{ minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: 14 }}>{item.label}</div>
-                            <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginTop: 2 }}>{item.sub}</div>
+                            <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2 }}>{item.sub}</div>
                           </div>
                           <button onClick={() => setAdvanced(a => ({ ...a, [item.key]: !a[item.key as keyof AdvancedSettings] }))} style={{ background: advanced[item.key as keyof AdvancedSettings] ? "#F59E0B" : "rgba(255,255,255,0.10)", borderRadius: 20, width: 44, height: 24, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, transition: "all 0.2s" }}>
                             <div style={{ background: "white", borderRadius: "50%", width: 18, height: 18, position: "absolute", top: 3, left: advanced[item.key as keyof AdvancedSettings] ? 23 : 3, transition: "all 0.2s" }} />
@@ -1057,7 +1204,13 @@ export default function AutomationPage() {
 
                     <div style={{ display: "flex", gap: 10 }}>
                       <button onClick={() => setCurrentStep(2)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
-                      <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      {/* Desktop go live inside step */}
+                      <button
+                        onClick={goLive}
+                        disabled={saving || !ruleName || !selectedVideo}
+                        className="preview-panel"
+                        style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "none", alignItems: "center", justifyContent: "center", gap: 6 }}
+                      >
                         {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live!"}
                       </button>
                     </div>
@@ -1066,8 +1219,8 @@ export default function AutomationPage() {
               </div>
             </div>
 
-            {/* ── Right Panel ── */}
-            <div style={{ width: 280, flexShrink: 0, display: "none" }} className="preview-panel">
+            {/* ── Right Panel — Desktop only ── */}
+            <div style={{ width: 280, flexShrink: 0, display: "none", position: "sticky", top: 24 }} className="preview-panel">
               <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} />
               <LivePreview selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} />
             </div>
@@ -1075,34 +1228,130 @@ export default function AutomationPage() {
         )}
       </main>
 
+      {/* ── Mobile: Floating Preview Button — only in builder ── */}
+      {showBuilder && (
+        <button
+          className="mobile-preview-fab"
+          onClick={() => setMobilePreviewOpen(true)}
+          style={{
+            position: "fixed",
+            bottom: 88,
+            right: 16,
+            zIndex: 48,
+            background: "rgba(14,10,24,0.96)",
+            border: "1px solid rgba(245,158,11,0.35)",
+            borderRadius: 20,
+            padding: "10px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 13,
+            fontWeight: 700,
+            color: "#F59E0B",
+            cursor: "pointer",
+            boxShadow: "0 4px 24px rgba(245,158,11,0.20), 0 2px 8px rgba(0,0,0,0.5)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Preview
+        </button>
+      )}
+
+      {/* ── Mobile: Sticky CTA — only in builder ── */}
+      {showBuilder && (
+        <div
+          className="sticky-mobile-cta"
+          style={{
+            position: "fixed",
+            bottom: 60,
+            left: 0,
+            right: 0,
+            zIndex: 46,
+            background: "linear-gradient(180deg, transparent 0%, rgba(7,3,15,0.95) 35%, rgba(7,3,15,1) 100%)",
+            padding: "12px 16px 10px",
+            display: "flex",
+            gap: 10,
+          }}
+        >
+          <button
+            onClick={goLive}
+            disabled={saving || !ruleName || !selectedVideo}
+            style={{
+              background: saving || !ruleName || !selectedVideo
+                ? "rgba(255,255,255,0.07)"
+                : "linear-gradient(135deg, #F59E0B, #EA580C)",
+              borderRadius: 14,
+              flex: 1,
+              padding: "14px",
+              fontSize: 14,
+              fontWeight: 700,
+              color: saving || !ruleName || !selectedVideo ? "rgba(255,255,255,0.30)" : "white",
+              border: "none",
+              cursor: saving || !ruleName || !selectedVideo ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              boxShadow: (!saving && ruleName && selectedVideo) ? "0 4px 20px rgba(245,158,11,0.30)" : "none",
+              transition: "all 0.2s",
+            }}
+          >
+            {saving ? (
+              <>
+                <div style={{ width: 16, height: 16, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                Saving…
+              </>
+            ) : (
+              <>
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                {!ruleName ? "Enter rule name to save" : !selectedVideo ? "Select a video to save" : "Save Automation"}
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* ── Mobile Preview Bottom Sheet ── */}
+      <MobilePreviewSheet
+        open={mobilePreviewOpen}
+        onClose={() => setMobilePreviewOpen(false)}
+        selectedVideo={selectedVideo}
+        keywords={keywords}
+        replies={replies}
+        replyMode={replyMode}
+        aiInstruction={aiInstruction}
+        replyDelay={replyDelay}
+        ruleName={ruleName}
+        ruleActive={ruleActive}
+      />
+
       {/* ── Video Selector Modal ── */}
       {showVideoSelector && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div style={{ background: "#0D0A1A", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 20, width: "100%", maxWidth: 520, maxHeight: "88vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUp 0.2s ease" }}>
-            {/* Modal header */}
-            <div style={{ padding: "20px 24px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <h3 style={{ fontWeight: 700, fontSize: 17 }}>Select YouTube Video</h3>
-                <button onClick={() => setShowVideoSelector(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.40)", cursor: "pointer", fontSize: 18 }}>✕</button>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "0" }}>
+          <div style={{ background: "#0D0A1A", border: "1px solid rgba(255,255,255,0.09)", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 520, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUpSheet 0.25s cubic-bezier(0.32, 0.72, 0, 1)" }}>
+            <div style={{ padding: "16px 20px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
+              <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 4, margin: "0 auto 14px" }} />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 16 }}>Select YouTube Video</h3>
+                <button onClick={() => setShowVideoSelector(false)} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 14 }}>✕</button>
               </div>
-              {/* Search */}
               <div style={{ position: "relative" }}>
                 <svg style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width="14" height="14" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input value={videoSearch} onChange={e => setVideoSearch(e.target.value)} placeholder="Search by title or video ID…" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "9px 14px 9px 36px", fontSize: 13 }} />
+                <input value={videoSearch} onChange={e => setVideoSearch(e.target.value)} placeholder="Search by title or video ID…" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px 10px 36px", fontSize: 13 }} />
               </div>
             </div>
 
-            {/* Video list */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "12px 24px 16px" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 16px", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
               {videosLoading ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {[1, 2, 3, 4].map(i => <VideoSkeleton key={i} />)}
                 </div>
               ) : filteredVideos.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "48px 24px" }}>
-                  <div style={{ fontSize: 36, marginBottom: 12 }}>{videos.length === 0 ? "📺" : "🔍"}</div>
-                  <div style={{ fontWeight: 600, marginBottom: 6 }}>{videos.length === 0 ? "No YouTube videos found" : "No results found"}</div>
-                  <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{videos.length === 0 ? "Connect your YouTube channel in Settings to load your videos." : "Try a different search term."}</div>
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <div style={{ fontSize: 32, marginBottom: 10 }}>{videos.length === 0 ? "📺" : "🔍"}</div>
+                  <div style={{ fontWeight: 600, marginBottom: 6, fontSize: 15 }}>{videos.length === 0 ? "No YouTube videos found" : "No results found"}</div>
+                  <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, lineHeight: 1.4 }}>{videos.length === 0 ? "Connect your YouTube channel in Settings to load your videos." : "Try a different search term."}</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1113,10 +1362,9 @@ export default function AutomationPage() {
               )}
             </div>
 
-            {/* Modal footer */}
-            <div style={{ padding: "12px 24px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 10, flexShrink: 0 }}>
-              <button onClick={() => { setShowVideoSelector(false); setVideoSearch(""); }} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 12, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>Cancel</button>
-              <button onClick={() => { setShowVideoSelector(false); setVideoSearch(""); }} disabled={!selectedVideo} style={{ background: selectedVideo ? "linear-gradient(135deg, #F59E0B, #EA580C)" : "rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 12, fontSize: 13, fontWeight: 700, color: selectedVideo ? "white" : "rgba(255,255,255,0.30)", border: "none", cursor: selectedVideo ? "pointer" : "not-allowed" }}>Confirm Selection</button>
+            <div style={{ padding: "10px 16px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 10, flexShrink: 0, paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}>
+              <button onClick={() => { setShowVideoSelector(false); setVideoSearch(""); }} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => { setShowVideoSelector(false); setVideoSearch(""); }} disabled={!selectedVideo} style={{ background: selectedVideo ? "linear-gradient(135deg, #F59E0B, #EA580C)" : "rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: selectedVideo ? "white" : "rgba(255,255,255,0.30)", border: "none", cursor: selectedVideo ? "pointer" : "not-allowed" }}>Confirm</button>
             </div>
           </div>
         </div>
@@ -1146,11 +1394,6 @@ export default function AutomationPage() {
           </div>
         </>
       )}
-
-      <style>{`
-        @media (min-width: 1024px) { .preview-panel { display: block !important; } .summary-mobile { display: none !important; } }
-        .summary-mobile { display: block; }
-      `}</style>
     </>
   );
 }

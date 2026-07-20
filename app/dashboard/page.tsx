@@ -1083,7 +1083,6 @@ export default function Dashboard() {
                       <AutomationRow icon={Shield}        iconColor="#f87171" label="Toxic Comment Protection" active={autoHideToxic} />
                       <AutomationRow icon={Bot}           iconColor="#a78bfa" label="AI Auto Reply"            active={autoAiReplies} />
                       <AutomationRow icon={MessageSquare} iconColor="#34d399" label="Welcome Message"          active={autoWelcome} />
-                      <AutomationRow icon={Zap}           iconColor="#60a5fa" label="DM Auto Reply"            active={autoDmReply} />
                       <AutomationRow icon={AlertTriangle} iconColor="#F59E0B" label="Comment Filter"           active={autoHideSpam} />
                     </div>
                   </div>

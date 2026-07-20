@@ -793,7 +793,6 @@ export default function Dashboard() {
             {[
               { label: 'AI System Online', color: '#22c55e', bg: 'rgba(34,197,94,0.07)', border: 'rgba(34,197,94,0.16)', dot: true },
               { label: 'Protection Active', color: '#a78bfa', bg: 'rgba(167,139,250,0.07)', border: 'rgba(167,139,250,0.16)', icon: Shield },
-              { label: 'Last scan: 25s ago', color: 'rgba(255,255,255,0.4)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.07)', icon: RefreshCw },
             ].map(p => (
               <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 4, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 14, padding: '3px 7px', fontSize: 9.5, fontWeight: 600, color: p.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
                 {p.dot ? <div style={{ width: 4, height: 4, borderRadius: '50%', background: p.color, animation: 'pulse 2s infinite' }} /> : p.icon && <p.icon size={8} strokeWidth={2.2} />}

@@ -2,17 +2,19 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Shield, MessageSquare, Settings, LogOut, CreditCard,
-  BarChart2, Bell, Zap, Search, Activity,
+  BarChart2, Bell, Zap, Search,
   LayoutDashboard, MoreHorizontal, Rss,
-  Eye as EyeIcon, Sun, ChevronRight,
-  Hash, Plus, Bot, AlertTriangle, CheckCircle,
-  Clock, Filter, RefreshCw, X, ToggleLeft, ToggleRight
+  Eye as EyeIcon, Sun,
+  Plus, Bot, AlertTriangle, CheckCircle,
+  Clock, Filter, RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, onSnapshot, DocumentData, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, DocumentData, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+
+const DEFAULT_FILTERS = ['spam', 'scam', 'hate', 'harassment', 'links', 'adult'];
 
 function EmptyState({ icon: Icon, message }: { icon: any; message: string }) {
   return (
@@ -145,14 +147,15 @@ export default function ModerationPage() {
   const [automationData, setAutomationData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<string[]>(['spam', 'scam', 'hate', 'harassment', 'links', 'adult']);
+  const [activeFilters, setActiveFilters] = useState<string[]>(DEFAULT_FILTERS);
+  const filtersInitialized = useRef(false);
   const unsubRefs = useRef<Array<() => void>>([]);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
+      filtersInitialized.current = false;
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
 
@@ -168,7 +171,19 @@ export default function ModerationPage() {
       unsubRefs.current.push(unsubAnalytics);
 
       const unsubAutomation = onSnapshot(doc(db, 'automations', firebaseUser.uid), (snap) => {
-        if (snap.exists()) setAutomationData(snap.data());
+        if (snap.exists()) {
+          const data = snap.data();
+          setAutomationData(data);
+          // Load persisted activeFilters on first snapshot only
+          if (!filtersInitialized.current) {
+            filtersInitialized.current = true;
+            if (Array.isArray(data.activeFilters) && data.activeFilters.length > 0) {
+              setActiveFilters(data.activeFilters as string[]);
+            }
+          }
+        } else {
+          setLoading(false);
+        }
       });
       unsubRefs.current.push(unsubAutomation);
     });
@@ -180,8 +195,23 @@ export default function ModerationPage() {
   const toggleAutomation = async (field: string, value: boolean) => {
     if (!user) return;
     try {
-      await updateDoc(doc(db, 'automations', user.uid), { [field]: value });
-    } catch (e) { console.error(e); }
+      await setDoc(doc(db, 'automations', user.uid), { [field]: value }, { merge: true });
+    } catch (error) {
+      console.error('Failed to update automation:', error);
+    }
+  };
+
+  const toggleFilter = async (key: string) => {
+    if (!user) return;
+    const updated = activeFilters.includes(key)
+      ? activeFilters.filter(k => k !== key)
+      : [...activeFilters, key];
+    setActiveFilters(updated);
+    try {
+      await setDoc(doc(db, 'automations', user.uid), { activeFilters: updated }, { merge: true });
+    } catch (error) {
+      console.error('Failed to persist filters:', error);
+    }
   };
 
   if (loading) return (
@@ -196,7 +226,7 @@ export default function ModerationPage() {
 
   const plan          = (userData?.plan as string) || 'free';
   const commentsUsed  = (userData?.comments_used as number) || 0;
-  const commentsLimit = (userData?.comments_limit as number) || (plan === 'free' ? 1500 : 5000);
+  const commentsLimit = userData?.comments_limit ?? (plan === 'agency' ? 150000 : plan === 'pro' ? 25000 : 2000);
   const usagePct      = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
   const planColor     = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
   const planLabel     = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
@@ -205,20 +235,28 @@ export default function ModerationPage() {
   const initials   = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const userPhoto  = user?.photoURL || (userData?.photo as string) || null;
 
-  const autoHideToxic  = (automationData?.hideToxic  as boolean) ?? false;
-  const autoHideSpam   = (automationData?.hideSpam   as boolean) ?? false;
-  const autoAiReplies  = (automationData?.aiReplies  as boolean) ?? false;
-  const autoWelcome    = (automationData?.welcome     as boolean) ?? false;
-  const autoLiveChat   = (automationData?.liveChat    as boolean) ?? false;
+  const autoHideToxic   = (automationData?.hideToxic   as boolean) ?? false;
+  const autoHideSpam    = (automationData?.hideSpam    as boolean) ?? false;
+  const autoAiReplies   = (automationData?.aiReplies   as boolean) ?? false;
+  const autoLiveChat    = (automationData?.liveChat    as boolean) ?? false;
   const autoLiveTimeout = (automationData?.liveTimeout as boolean) ?? false;
-  const autoHide       = (automationData?.autoHide    as boolean) ?? false;
+  const autoHide        = (automationData?.autoHide    as boolean) ?? false;
 
-  const totalScanned   = (analyticsData?.totalScanned    as number) ?? 0;
-  const totalHidden    = (analyticsData?.totalHidden     as number) ?? 0;
-  const totalReplies   = (analyticsData?.totalReplies    as number) ?? 0;
-  const moderationAcc  = (analyticsData?.moderationAccuracy as number) ?? 99.9;
-  const activeRules    = (automationData?.activeRules    as number) ?? 0;
-  const pendingReview  = (analyticsData?.pendingReview   as number) ?? 0;
+  // Dynamic active rules count
+  const activeRules = [
+    autoHideSpam,
+    autoHideToxic,
+    autoHide,
+    autoAiReplies,
+    autoLiveChat,
+    autoLiveTimeout,
+  ].filter(Boolean).length;
+
+  const totalScanned  = (analyticsData?.totalScanned        as number) ?? 0;
+  const totalHidden   = (analyticsData?.totalHidden         as number) ?? 0;
+  const totalReplies  = (analyticsData?.totalReplies        as number) ?? 0;
+  const moderationAcc = (analyticsData?.moderationAccuracy  as number) ?? 0;
+  const pendingReview = (analyticsData?.pendingReview       as number) ?? 0;
 
   const lastScanAt = userData?.last_scan_at?.toDate?.() as Date | undefined;
   const lastScanLabel = lastScanAt
@@ -231,12 +269,6 @@ export default function ModerationPage() {
     : '—';
 
   const currentPath = '/moderation';
-
-  const toggleFilter = (key: string) => {
-    setActiveFilters(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-  };
 
   return (
     <>
@@ -399,7 +431,7 @@ export default function ModerationPage() {
                 <span style={{ color: '#a78bfa', fontWeight: 700, fontSize: 11 }}>Upgrade to Pro</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 9 }}>
-                {['Unlimited comments', 'Advanced AI models', 'Priority support', 'Team members'].map(f => (
+                {['25,000 comments / month', 'Unlimited automation rules', 'Priority support', '1,900 AI actions / month'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,0.32)', fontSize: 10 }}>
                     <div style={{ width: 3, height: 3, borderRadius: '50%', background: '#a78bfa', flexShrink: 0 }} />{f}
                   </div>
@@ -442,7 +474,7 @@ export default function ModerationPage() {
               <Shield size={9} strokeWidth={2} /> Protection Active
             </div>
             <div style={{ flex: 1 }} />
-            <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
+            <button className="r-icon-btn">
               <Bell size={12} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
             </button>
             <button className="r-icon-btn"><Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} /></button>
@@ -641,12 +673,12 @@ export default function ModerationPage() {
               </div>
               <div style={{ padding: '12px 14px 14px' }}>
                 <div className="mod-stats-grid">
-                  <StatBox label="Comments Scanned" value={totalScanned.toLocaleString()} color="#a78bfa" icon={MessageSquare} iconColor="#a78bfa" />
-                  <StatBox label="Hidden Comments"  value={totalHidden.toLocaleString()}   color="#f87171" icon={EyeIcon}       iconColor="#f87171" />
-                  <StatBox label="AI Replies"        value={totalReplies.toLocaleString()}  color="#F59E0B" icon={Bot}           iconColor="#F59E0B" />
-                  <StatBox label="Detection Accuracy" value={`${moderationAcc.toFixed(1)}%`} color="#34d399" icon={CheckCircle} iconColor="#34d399" />
-                  <StatBox label="Last Scan"          value={lastScanLabel}                  color="#60a5fa" icon={RefreshCw}    iconColor="#60a5fa" />
-                  <StatBox label="Active Rules"       value={activeRules}                    color="#FAFAFA" icon={Zap}          iconColor="#a78bfa" />
+                  <StatBox label="Comments Scanned"  value={totalScanned.toLocaleString()}                              color="#a78bfa" icon={MessageSquare} iconColor="#a78bfa" />
+                  <StatBox label="Hidden Comments"   value={totalHidden.toLocaleString()}                               color="#f87171" icon={EyeIcon}       iconColor="#f87171" />
+                  <StatBox label="AI Replies"        value={totalReplies.toLocaleString()}                              color="#F59E0B" icon={Bot}           iconColor="#F59E0B" />
+                  <StatBox label="Detection Accuracy" value={totalScanned === 0 ? '—' : `${moderationAcc.toFixed(1)}%`} color="#34d399" icon={CheckCircle}  iconColor="#34d399" />
+                  <StatBox label="Last Scan"          value={lastScanLabel}                                              color="#60a5fa" icon={RefreshCw}    iconColor="#60a5fa" />
+                  <StatBox label="Active Rules"       value={activeRules}                                                color="#FAFAFA" icon={Zap}          iconColor="#a78bfa" />
                 </div>
               </div>
             </div>

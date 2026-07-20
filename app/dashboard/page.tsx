@@ -216,7 +216,6 @@ function AutomationRow({ icon: Icon, iconColor, label, active }: { icon: any; ic
 const SIDEBAR_NAV = [
   { label: 'Overview',   icon: LayoutDashboard, href: '/dashboard'  },
   { label: 'Live Feed',  icon: Rss,             href: '/live-feed'  },
-  { label: 'Comments',   icon: MessageSquare,   href: '/comments'   },
   { label: 'Moderation', icon: Shield,          href: '/moderation' },
   { label: 'Automation', icon: Zap,             href: '/automation' },
   { label: 'Analytics',  icon: BarChart2,       href: '/analytics'  },

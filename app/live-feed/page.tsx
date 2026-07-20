@@ -751,7 +751,8 @@ export default function LiveFeedPage() {
           display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.18s;position:relative;flex-shrink:0;}
         .r-icon-btn:hover{background:rgba(255,255,255,0.07);}
         .r-avatar-btn{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
-          border-radius:9px;padding:3px 9px 3px 3px;cursor:pointer;transition:all 0.18s;gap:6px;}
+        border-radius:9px;padding:3px 9px 3px 3px;cursor:pointer;transition:all 0.18s;gap:6px;
+        flex-shrink:0;overflow:visible;}
         .r-avatar-btn:hover{border-color:rgba(255,255,255,0.11);}
 
         .r-mobile-topbar{display:none;position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.96);
@@ -916,7 +917,7 @@ export default function LiveFeedPage() {
               <Bell size={12} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
             </button>
             <button className="r-icon-btn"><Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} /></button>
-            <button className="r-avatar-btn" onClick={() => router.push('/settings')}>
+            <button className="r-avatar-btn" style={{ flexShrink: 0 }} onClick={() => router.push('/settings')}>
               <UserAvatar src={userPhoto} initials={initials} size={25} />
             </button>
           </header>

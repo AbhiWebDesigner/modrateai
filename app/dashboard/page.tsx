@@ -310,7 +310,6 @@ export default function Dashboard() {
   const autoHideSpam    = (automationData?.hideSpam  as boolean) ?? false;
   const autoAiReplies   = (automationData?.aiReplies as boolean) ?? false;
   const autoWelcome     = (automationData?.welcome   as boolean) ?? false;
-  const autoDmReply     = (automationData?.dmReply   as boolean) ?? false;
 
   const trialEndsAt   = userData?.trial_ends_at?.toDate?.() as Date | undefined;
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000)) : null;

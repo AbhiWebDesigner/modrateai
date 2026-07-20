@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import {
   Bell, Send, LayoutDashboard, BarChart2, Zap, Settings,
-MoreHorizontal, CreditCard, Layers, LogOut, Rss, Shield, MessageSquare}
+MoreHorizontal, CreditCard, Layers, LogOut, Rss, Shield, MessageSquare,}
 from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -20,11 +20,11 @@ const BOTTOM_NAV = [
 const SIDEBAR_NAV = [
   { href: '/dashboard',        icon: LayoutDashboard, label: 'Overview'        },
   { href: '/live-feed',        icon: Rss,             label: 'Live Feed'       },
-  { href: '/analytics',        icon: BarChart2,       label: 'Analytics'       },
-  { href: '/automation',       icon: Zap,             label: 'Automation'      },
+  { href: '/moderation',       icon: Shield,          label: 'Moderation'      },
+  { href: '/automation',       icon: Zap,             label: 'Automation'       },
   { href: '/alerts',           icon: Bell,            label: 'Alerts'          },
+  { href: '/analytics',        icon: BarChart2,       label: 'Analytics'       },
   { href: '/billing',          icon: CreditCard,      label: 'Billing'         },
-  { href: '/human-ai-replies', icon: MessageSquare,   label: 'Human-AI Replies'},
   { href: '/settings',         icon: Settings,        label: 'Settings'        },
 ];
 
@@ -32,7 +32,7 @@ const MORE_ITEMS = [
   { href: '/billing',         icon: CreditCard,    label: 'Billing',          color: '#F59E0B' },
   { href: '/channels',        icon: Layers,        label: 'Channels',         color: '#60a5fa' },
   { href: '/analytics',       icon: BarChart2,     label: 'Analytics',        color: '#a78bfa' },
-  { href: '/human-ai-replies',icon: MessageSquare, label: 'Human-AI Replies', color: '#34d399' },
+  { href: '/moderation',      icon: Shield,        label: 'Moderation',       color: '#34d399' },
   { href: '/notifications',   icon: Bell,          label: 'Notifications',    color: '#f87171' },
   { href: '/settings',        icon: Settings,      label: 'Settings',         color: '#94a3b8' },
 ];

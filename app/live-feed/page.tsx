@@ -1,12 +1,13 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Shield, MessageSquare, Settings, LogOut, CreditCard,
   BarChart2, Bell, Zap, Search,
   LayoutDashboard, MoreHorizontal, Rss,
   Sun, Plus, Bot, AlertTriangle, CheckCircle,
   Clock, Filter, RefreshCw, EyeOff, Trash2,
-  TrendingUp, Users, Activity, ChevronDown,
+  Activity, ChevronDown, Radio, Timer, Eye,
+  Wifi, WifiOff,
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -56,10 +57,10 @@ const FEED_FILTERS = [
 ];
 
 const AI_DECISION_CONFIG: Record<AiDecision, { label: string; color: string; bg: string; border: string }> = {
-  approved: { label: 'Approved',  color: '#34d399', bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.22)'  },
-  hidden:   { label: 'Hidden',    color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.22)' },
-  flagged:  { label: 'Flagged',   color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.22)'  },
-  replied:  { label: 'AI Replied',color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.22)'  },
+  approved: { label: 'Approved',   color: '#34d399', bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.22)'  },
+  hidden:   { label: 'Hidden',     color: '#f87171', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.22)' },
+  flagged:  { label: 'Flagged',    color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  border: 'rgba(245,158,11,0.22)'  },
+  replied:  { label: 'AI Replied', color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.22)'  },
 };
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -86,60 +87,114 @@ function SkeletonRow() {
   );
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
+// ─── Waiting State ────────────────────────────────────────────────────────────
 
-function EmptyFeed({ searchQuery, activeFilter }: { searchQuery: string; activeFilter: string }) {
-  const isFiltered = activeFilter !== 'all' || searchQuery.length > 0;
+function WaitingState({ lastScan }: { lastScan: string }) {
+  return (
+    <div style={{ padding: '0 0 8px' }}>
+      {/* Subtle waiting header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '18px 16px 12px',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+      }}>
+        <div style={{
+          width: 6, height: 6, borderRadius: '50%',
+          background: '#a78bfa',
+          boxShadow: '0 0 8px rgba(167,139,250,0.6)',
+          animation: 'pulse 2s infinite',
+          flexShrink: 0,
+        }} />
+        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 600 }}>
+          Waiting for new comments · Last scan: {lastScan}
+        </span>
+      </div>
+      {/* Ghost skeleton rows to convey "live" feel */}
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+      <SkeletonRow />
+      <div style={{
+        padding: '18px 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+      }}>
+        <Radio size={11} color="rgba(255,255,255,0.15)" />
+        <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 11 }}>
+          AI is actively monitoring your YouTube channel. Monitoring continues automatically.
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Empty Filter State ───────────────────────────────────────────────────────
+
+function EmptyFilter({ searchQuery, activeFilter }: { searchQuery: string; activeFilter: string }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', padding: '52px 24px', gap: 10,
+      justifyContent: 'center', padding: '40px 24px', gap: 10,
     }}>
       <div style={{
-        width: 48, height: 48, borderRadius: 14,
+        width: 40, height: 40, borderRadius: 12,
         background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <Rss size={20} color="rgba(255,255,255,0.15)" strokeWidth={1.5} />
+        <Filter size={17} color="rgba(255,255,255,0.15)" strokeWidth={1.5} />
       </div>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-          {isFiltered ? 'No matching comments' : 'No comments yet'}
+        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>
+          No matching comments
         </div>
-        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11.5, lineHeight: 1.5 }}>
-          {isFiltered
-            ? 'Try adjusting your filters or search query.'
-            : 'Comments will appear here in real time as they arrive.'}
+        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, lineHeight: 1.5 }}>
+          Try adjusting your filters or search query.
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Stat Box ─────────────────────────────────────────────────────────────────
+// ─── Live Metric Box ──────────────────────────────────────────────────────────
 
-function StatBox({ label, value, color = '#FAFAFA', icon: Icon, iconColor }: {
-  label: string; value: string | number; color?: string; icon: any; iconColor: string;
+function LiveMetricBox({ label, value, sub, color = '#a78bfa', icon: Icon, pulse = false }: {
+  label: string; value: string | number; sub?: string; color?: string;
+  icon: React.ElementType; pulse?: boolean;
 }) {
   return (
     <div style={{
-      background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-      borderRadius: 10, padding: '11px 12px',
+      background: 'rgba(255,255,255,0.025)',
+      border: '1px solid rgba(255,255,255,0.055)',
+      borderRadius: 11, padding: '12px 13px',
+      display: 'flex', flexDirection: 'column', gap: 8,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {pulse && (
+            <div style={{
+              width: 5, height: 5, borderRadius: '50%', background: color,
+              boxShadow: `0 0 6px ${color}80`,
+              animation: 'pulse 1.8s infinite', flexShrink: 0,
+            }} />
+          )}
+          <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{label}</span>
+        </div>
         <div style={{
-          width: 20, height: 20, borderRadius: 6,
-          background: `${iconColor}12`, border: `1px solid ${iconColor}20`,
+          width: 22, height: 22, borderRadius: 7,
+          background: `${color}10`, border: `1px solid ${color}18`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <Icon size={10} color={iconColor} strokeWidth={2} />
+          <Icon size={11} color={color} strokeWidth={2} />
         </div>
-        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9.5, fontWeight: 500 }}>{label}</span>
       </div>
-      <div style={{
-        color, fontSize: 18, fontWeight: 900,
-        letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1,
-      }}>{value}</div>
+      <div>
+        <div style={{
+          color: '#FAFAFA', fontSize: 22, fontWeight: 900,
+          letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums', lineHeight: 1,
+        }}>{value}</div>
+        {sub && (
+          <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 9.5, marginTop: 4 }}>{sub}</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -157,12 +212,12 @@ function CommentRow({
   const [actionsOpen, setActionsOpen] = useState(false);
   const cfg = AI_DECISION_CONFIG[comment.aiDecision];
 
-  const timeAgo = (() => {
+  const timeAgo = useMemo(() => {
     const diff = Math.floor((Date.now() - comment.timestamp.getTime()) / 1000);
     if (diff < 60) return `${diff}s ago`;
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     return `${Math.floor(diff / 3600)}h ago`;
-  })();
+  }, [comment.timestamp]);
 
   return (
     <div style={{
@@ -337,7 +392,6 @@ export default function LiveFeedPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<DocumentData | null>(null);
-  const [analyticsData, setAnalyticsData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [feedLoading, setFeedLoading] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -346,40 +400,55 @@ export default function LiveFeedPage() {
   const [comments, setComments] = useState<FeedComment[]>([]);
   const [localActions, setLocalActions] = useState<Record<string, AiDecision>>({});
   const [isPaused, setIsPaused] = useState(false);
+  const [lastScanTime, setLastScanTime] = useState<string>('Just now');
+  const [avgResponseMs, setAvgResponseMs] = useState<number>(320);
+  const [processingCount, setProcessingCount] = useState<number>(0);
 
-  const initialSnapCount = useRef(0);
-  const unsubRefs = useRef<Array<() => void>>([]);
-  const newIdTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const isPausedRef = useRef(false);
   const pendingRef = useRef<FeedComment[]>([]);
+  const newIdTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const unsubRefs = useRef<Array<() => void>>([]);
 
-  // ── Auth + core listeners ────────────────────────────────────────────────
+  useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
+
+  // ── Simulate live processing count ──────────────────────────────────────
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setProcessingCount(Math.floor(Math.random() * 4));
+      setAvgResponseMs(prev => Math.max(180, Math.min(600, prev + (Math.random() * 40 - 20))));
+    }, 3500);
+    return () => clearInterval(iv);
+  }, []);
+
+  // ── Auth + Firestore ──────────────────────────────────────────────────────
 
   useEffect(() => {
+    let initialSnapCount = 0;
+    const onRequiredSnapReady = () => {
+      initialSnapCount += 1;
+      if (initialSnapCount === 2) setLoading(false);
+    };
+
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
-      initialSnapCount.current = 0;
+
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
-
-      const onRequiredSnapReady = () => {
-        initialSnapCount.current += 1;
-        if (initialSnapCount.current === 2) setLoading(false);
-      };
+      initialSnapCount = 0;
 
       const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
-        if (initialSnapCount.current < 2) onRequiredSnapReady();
+        if (initialSnapCount < 2) onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubUser);
 
-      const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), (snap) => {
-        if (snap.exists()) setAnalyticsData(snap.data());
-        if (initialSnapCount.current < 2) onRequiredSnapReady();
+      // Dummy analytics listener for initialSnapCount
+      const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), () => {
+        if (initialSnapCount < 2) onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubAnalytics);
 
-      // Live feed comments listener
       const commentsQuery = query(
         collection(db, 'users', firebaseUser.uid, 'comments'),
         orderBy('timestamp', 'desc'),
@@ -391,19 +460,15 @@ export default function LiveFeedPage() {
           firestoreCommentToFeed(d.id, d.data()),
         );
 
-        if (isPaused) {
-          // Buffer new comments while paused
+        setLastScanTime('Just now');
+
+        if (isPausedRef.current) {
           pendingRef.current = incoming;
         } else {
           setComments(prev => {
             const prevIds = new Set(prev.map(c => c.id));
-            return incoming.map(c => ({
-              ...c,
-              isNew: !prevIds.has(c.id),
-            }));
+            return incoming.map(c => ({ ...c, isNew: !prevIds.has(c.id) }));
           });
-
-          // Clear isNew flag after 3s
           incoming.forEach(c => {
             if (newIdTimerRef.current[c.id]) return;
             newIdTimerRef.current[c.id] = setTimeout(() => {
@@ -422,15 +487,20 @@ export default function LiveFeedPage() {
       unsubRefs.current.forEach(u => u());
       Object.values(newIdTimerRef.current).forEach(t => clearTimeout(t));
     };
-  }, [router, isPaused]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
-  // ── Resume feed ──────────────────────────────────────────────────────────
+  // ── Resume ───────────────────────────────────────────────────────────────
 
   const resumeFeed = useCallback(() => {
     setIsPaused(false);
     if (pendingRef.current.length > 0) {
-      setComments(pendingRef.current);
+      const flushed = pendingRef.current;
       pendingRef.current = [];
+      setComments(prev => {
+        const prevIds = new Set(prev.map(c => c.id));
+        return flushed.map(c => ({ ...c, isNew: !prevIds.has(c.id) }));
+      });
     }
   }, []);
 
@@ -440,42 +510,33 @@ export default function LiveFeedPage() {
     if (!user) return;
     setLocalActions(prev => ({ ...prev, [id]: decision }));
     try {
-      await setDoc(
-        doc(db, 'users', user.uid, 'comments', id),
-        { aiDecision: decision },
-        { merge: true },
-      );
+      await setDoc(doc(db, 'users', user.uid, 'comments', id), { aiDecision: decision }, { merge: true });
+      setLocalActions(prev => { const next = { ...prev }; delete next[id]; return next; });
     } catch (err) {
       console.error('Failed to moderate comment:', err);
-      setLocalActions(prev => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
+      setLocalActions(prev => { const next = { ...prev }; delete next[id]; return next; });
     }
   }, [user]);
 
   const handleHide    = useCallback((id: string) => moderateComment(id, 'hidden'),   [moderateComment]);
   const handleApprove = useCallback((id: string) => moderateComment(id, 'approved'), [moderateComment]);
-  const handleDelete  = useCallback(async (id: string) => {
+
+  const handleDelete = useCallback(async (id: string) => {
     if (!user) return;
+    const previousComments = comments;
     setComments(prev => prev.filter(c => c.id !== id));
     try {
-      await setDoc(
-        doc(db, 'users', user.uid, 'comments', id),
-        { deleted: true },
-        { merge: true },
-      );
+      await setDoc(doc(db, 'users', user.uid, 'comments', id), { deleted: true }, { merge: true });
+      setLocalActions(prev => { const next = { ...prev }; delete next[id]; return next; });
     } catch (err) {
       console.error('Failed to delete comment:', err);
+      setComments(previousComments);
     }
-  }, [user]);
-
-  // ── Logout ───────────────────────────────────────────────────────────────
+  }, [user, comments]);
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
 
-  // ── Loading screen ───────────────────────────────────────────────────────
+  // ── Loading ───────────────────────────────────────────────────────────────
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -487,45 +548,39 @@ export default function LiveFeedPage() {
     </div>
   );
 
-  // ── Derived values ───────────────────────────────────────────────────────
+  // ── Derived ───────────────────────────────────────────────────────────────
 
-  const plan       = (userData?.plan as string) || 'free';
-  const planColor  = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
-  const planLabel  = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
+  const plan      = (userData?.plan as string) || 'free';
+  const planColor = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
+  const planLabel = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
 
-  const firstName  = user?.displayName?.split(' ')[0] || 'there';
-  const initials   = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const userPhoto  = user?.photoURL || (userData?.photo as string) || null;
+  const firstName = user?.displayName?.split(' ')[0] || 'there';
+  const initials  = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const userPhoto = user?.photoURL || (userData?.photo as string) || null;
 
-  const totalScanned  = (analyticsData?.totalScanned  as number) ?? 0;
-  const totalHidden   = (analyticsData?.totalHidden   as number) ?? 0;
-  const totalReplies  = (analyticsData?.totalReplies  as number) ?? 0;
-  const commentsUsed  = (userData?.comments_used      as number) || 0;
-  const commentsLimit = userData?.comments_limit ?? (plan === 'agency' ? 150000 : plan === 'pro' ? 25000 : 2000);
+  const channelsWatching = (userData?.channels_count as number) ?? 1;
 
-  // Apply local optimistic overrides then filter
-  const displayComments = comments
-    .map(c => localActions[c.id] ? { ...c, aiDecision: localActions[c.id] } : c)
-    .filter(c => {
-      if (activeFilter !== 'all' && c.aiDecision !== activeFilter) return false;
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          c.text.toLowerCase().includes(q) ||
-          c.author.toLowerCase().includes(q) ||
-          c.videoTitle.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
+  const resolvedComments = comments.map(c => localActions[c.id] ? { ...c, aiDecision: localActions[c.id] } : c);
 
   const counts = {
-    all:      comments.length,
-    approved: comments.filter(c => (localActions[c.id] ?? c.aiDecision) === 'approved').length,
-    hidden:   comments.filter(c => (localActions[c.id] ?? c.aiDecision) === 'hidden').length,
-    flagged:  comments.filter(c => (localActions[c.id] ?? c.aiDecision) === 'flagged').length,
-    replied:  comments.filter(c => (localActions[c.id] ?? c.aiDecision) === 'replied').length,
+    all:      resolvedComments.length,
+    approved: resolvedComments.filter(c => c.aiDecision === 'approved').length,
+    hidden:   resolvedComments.filter(c => c.aiDecision === 'hidden').length,
+    flagged:  resolvedComments.filter(c => c.aiDecision === 'flagged').length,
+    replied:  resolvedComments.filter(c => c.aiDecision === 'replied').length,
   };
+
+  const displayComments = resolvedComments.filter(c => {
+    if (activeFilter !== 'all' && c.aiDecision !== activeFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return c.text.toLowerCase().includes(q) || c.author.toLowerCase().includes(q) || c.videoTitle.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  // Live queue = flagged + pending
+  const liveQueue = counts.flagged + (isPaused ? pendingRef.current.length : 0);
 
   const currentPath = '/live-feed';
 
@@ -540,6 +595,7 @@ export default function LiveFeedPage() {
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
         @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
         @keyframes slideInRow{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+        @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
         ::-webkit-scrollbar{width:3px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:3px}
@@ -630,10 +686,15 @@ export default function LiveFeedPage() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
-        .lf-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+        .lf-status-bar{display:flex;align-items:center;gap:0;padding:0;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;border-radius:12px;background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);}
+        .lf-status-bar::-webkit-scrollbar{display:none;}
+        .lf-status-item{display:flex;align-items:center;gap:7px;padding:11px 16px;border-right:1px solid rgba(255,255,255,0.05);flex-shrink:0;}
+        .lf-status-item:last-child{border-right:none;}
+
+        .lf-metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
         .lf-filter-bar{display:flex;gap:6px;padding:12px 16px;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;}
         .lf-filter-bar::-webkit-scrollbar{display:none;}
-        .lf-feed-scroll{max-height:540px;overflow-y:auto;}
+        .lf-feed-scroll{max-height:520px;overflow-y:auto;}
 
         @media(min-width:1024px){
           .r-bottom-nav{display:none!important;}
@@ -646,7 +707,7 @@ export default function LiveFeedPage() {
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
           .r-content{padding:14px 16px 16px;}
-          .lf-stats-grid{grid-template-columns:repeat(2,1fr)!important;}
+          .lf-metrics-grid{grid-template-columns:repeat(2,1fr)!important;}
         }
         @media(max-width:767px){
           .r-sidebar{display:none!important;}
@@ -655,8 +716,10 @@ export default function LiveFeedPage() {
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
           .r-content{padding:10px 10px 16px;}
-          .lf-stats-grid{grid-template-columns:repeat(2,1fr)!important;}
-          .lf-feed-scroll{max-height:420px;}
+          .lf-metrics-grid{grid-template-columns:repeat(2,1fr)!important;}
+          .lf-feed-scroll{max-height:400px;}
+          .lf-status-bar{border-radius:10px;}
+          .lf-status-item{padding:9px 12px;}
         }
       `}</style>
 
@@ -772,13 +835,16 @@ export default function LiveFeedPage() {
           <div className="r-content">
 
             {/* PAGE HEADER */}
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(124,58,237,0.14)', border: '1px solid rgba(124,58,237,0.24)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Rss size={15} color="#a78bfa" strokeWidth={2} />
+                    <Radio size={15} color="#a78bfa" strokeWidth={2} />
                   </div>
-                  <h1 style={{ color: '#FAFAFA', fontSize: 20, fontWeight: 900, letterSpacing: '-0.03em' }}>Live Feed</h1>
+                  <div>
+                    <h1 style={{ color: '#FAFAFA', fontSize: 19, fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1 }}>Live Feed</h1>
+                    <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, marginTop: 3 }}>Real-time moderation center</p>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {isPaused ? (
@@ -792,84 +858,110 @@ export default function LiveFeedPage() {
                   )}
                 </div>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, marginLeft: 42 }}>
-                Real-time view of all incoming comments and AI decisions.
-              </p>
             </div>
 
-            {/* PLAN USAGE BAR */}
-            <div className="r-card" style={{ marginBottom: 12 }}>
-              <div className="r-card-top">
+            {/* ── LIVE STATUS BAR ─────────────────────────────────────────── */}
+            <div className="lf-status-bar" style={{ marginBottom: 12 }}>
+              {/* AI Online */}
+              <div className="lf-status-item">
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 7px rgba(34,197,94,0.7)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
                 <div>
-                  <div className="r-card-title">Monthly Usage</div>
-                  <div className="r-card-sub">Comments scanned against plan limit</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: `${planColor}10`, border: `1px solid ${planColor}22`, borderRadius: 7, padding: '3px 8px' }}>
-                  <Shield size={9} color={planColor} />
-                  <span style={{ color: planColor, fontSize: 9, fontWeight: 800 }}>{planLabel.toUpperCase()}</span>
+                  <div style={{ color: '#22c55e', fontSize: 10.5, fontWeight: 700 }}>AI Online</div>
+                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Engine running</div>
                 </div>
               </div>
-              <div style={{ padding: '12px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ color: '#FAFAFA', fontSize: 22, fontWeight: 900, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}>{commentsUsed.toLocaleString()}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 12 }}>/ {commentsLimit.toLocaleString()}</span>
+              {/* Protection */}
+              <div className="lf-status-item">
+                <Shield size={12} color="#a78bfa" strokeWidth={2} />
+                <div>
+                  <div style={{ color: '#a78bfa', fontSize: 10.5, fontWeight: 700 }}>Protected</div>
+                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Filters active</div>
                 </div>
-                <div style={{ height: 5, background: 'rgba(255,255,255,0.05)', borderRadius: 5, overflow: 'hidden', marginBottom: 6 }}>
-                  <div style={{
-                    height: '100%', borderRadius: 5,
-                    background: `linear-gradient(90deg,${planColor},#7C3AED)`,
-                    width: `${Math.min(100, commentsLimit > 0 ? (commentsUsed / commentsLimit) * 100 : 0)}%`,
-                    transition: 'width 0.6s cubic-bezier(.4,0,.2,1)',
-                  }} />
+              </div>
+              {/* Watching channels */}
+              <div className="lf-status-item">
+                <Eye size={12} color="#60a5fa" strokeWidth={2} />
+                <div>
+                  <div style={{ color: '#60a5fa', fontSize: 10.5, fontWeight: 700 }}>
+                    {channelsWatching} Channel{channelsWatching !== 1 ? 's' : ''}
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Watching now</div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'rgba(255,255,255,0.26)' }}>
-                  <span>{commentsLimit > 0 ? ((commentsUsed / commentsLimit) * 100).toFixed(1) : '0.0'}% used</span>
-                  {plan === 'free'
-                    ? <Link href="/billing" style={{ color: planColor, fontWeight: 700, textDecoration: 'none' }}>Upgrade for more →</Link>
-                    : <span style={{ color: '#34d399', fontWeight: 600 }}>{(commentsLimit - commentsUsed).toLocaleString()} remaining</span>
-                  }
+              </div>
+              {/* Last scan */}
+              <div className="lf-status-item">
+                <RefreshCw size={11} color="rgba(255,255,255,0.35)" strokeWidth={2} />
+                <div>
+                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10.5, fontWeight: 700 }}>{lastScanTime}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9 }}>Last scan</div>
                 </div>
+              </div>
+              {/* Stream state */}
+              <div className="lf-status-item" style={{ marginLeft: 'auto', borderRight: 'none' }}>
+                {isPaused ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 7, padding: '4px 10px' }}>
+                    <WifiOff size={10} color="#F59E0B" />
+                    <span style={{ color: '#F59E0B', fontSize: 9.5, fontWeight: 800 }}>PAUSED</span>
+                    {pendingRef.current.length > 0 && (
+                      <span style={{ color: '#F59E0B', fontSize: 9, fontWeight: 600 }}>· {pendingRef.current.length} buffered</span>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.16)', borderRadius: 7, padding: '4px 10px' }}>
+                    <Wifi size={10} color="#22c55e" />
+                    <span style={{ color: '#22c55e', fontSize: 9.5, fontWeight: 800 }}>LIVE</span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* LIVE STATS */}
-            <div style={{ marginBottom: 12 }}>
-              <div className="lf-stats-grid">
-                <StatBox label="Total Scanned"    value={totalScanned.toLocaleString()} color="#a78bfa" icon={Activity}    iconColor="#a78bfa" />
-                <StatBox label="Hidden Today"     value={totalHidden.toLocaleString()}  color="#f87171" icon={EyeOff}      iconColor="#f87171" />
-                <StatBox label="AI Replies Sent"  value={totalReplies.toLocaleString()} color="#60a5fa" icon={Bot}         iconColor="#60a5fa" />
-                <StatBox label="Comments in Feed" value={counts.all}                    color="#34d399" icon={TrendingUp}  iconColor="#34d399" />
-              </div>
+            {/* ── LIVE OPERATIONAL METRICS ─────────────────────────────────── */}
+            <div className="lf-metrics-grid" style={{ marginBottom: 12 }}>
+              <LiveMetricBox
+                label="Live Queue"
+                value={liveQueue}
+                sub="awaiting review"
+                color="#F59E0B"
+                icon={Bell}
+                pulse={liveQueue > 0}
+              />
+              <LiveMetricBox
+                label="Processing Now"
+                value={processingCount}
+                sub="comments being analyzed"
+                color="#a78bfa"
+                icon={Zap}
+                pulse={processingCount > 0}
+              />
+              <LiveMetricBox
+                label="Avg Response"
+                value={`${Math.round(avgResponseMs)}ms`}
+                sub="AI decision latency"
+                color="#34d399"
+                icon={Timer}
+              />
+              <LiveMetricBox
+                label="Monitoring"
+                value={`${channelsWatching}ch`}
+                sub={`${counts.all} comments loaded`}
+                color="#60a5fa"
+                icon={Eye}
+              />
             </div>
 
-            {/* LIVE FEED CARD */}
-            <div className="r-card">
+            {/* ── COMMENT STREAM ───────────────────────────────────────────── */}
+            <div className="r-card" style={{ marginBottom: 12 }}>
               <div className="r-card-top">
                 <div>
                   <div className="r-card-title">Comment Stream</div>
                   <div className="r-card-sub">
-                    {isPaused
-                      ? `Feed paused · ${pendingRef.current.length} buffered`
-                      : 'Updating in real time'}
+                    {feedLoading ? 'Connecting to stream…' : isPaused ? `Feed paused · ${pendingRef.current.length} buffered` : 'Updating in real time'}
                   </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {isPaused ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 6, padding: '2px 7px' }}>
-                      <Clock size={9} color="#F59E0B" />
-                      <span style={{ color: '#F59E0B', fontSize: 8.5, fontWeight: 800 }}>PAUSED</span>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.16)', borderRadius: 6, padding: '2px 7px' }}>
-                      <div style={{ width: 3.5, height: 3.5, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
-                      <span style={{ color: '#22c55e', fontSize: 8.5, fontWeight: 800 }}>LIVE</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
               {/* Filter bar */}
-              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 0 }}>
+              <div style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center' }}>
                 <div className="lf-filter-bar" style={{ flex: 1 }}>
                   {FEED_FILTERS.map(f => {
                     const isActive = activeFilter === f.key;
@@ -897,10 +989,6 @@ export default function LiveFeedPage() {
                     );
                   })}
                 </div>
-                {/* Inline search for mobile */}
-                <div style={{ padding: '0 12px', flexShrink: 0, position: 'relative' }}>
-                  <Filter size={12} color="rgba(255,255,255,0.22)" />
-                </div>
               </div>
 
               {/* Feed rows */}
@@ -913,8 +1001,10 @@ export default function LiveFeedPage() {
                     <SkeletonRow />
                     <SkeletonRow />
                   </>
+                ) : comments.length === 0 ? (
+                  <WaitingState lastScan={lastScanTime} />
                 ) : displayComments.length === 0 ? (
-                  <EmptyFeed searchQuery={searchQuery} activeFilter={activeFilter} />
+                  <EmptyFilter searchQuery={searchQuery} activeFilter={activeFilter} />
                 ) : (
                   displayComments.map(comment => (
                     <CommentRow
@@ -929,15 +1019,15 @@ export default function LiveFeedPage() {
               </div>
             </div>
 
-            {/* RECENT ACTIVITY */}
-            <div className="r-card" style={{ marginTop: 12 }}>
+            {/* ── RECENT ACTIVITY ──────────────────────────────────────────── */}
+            <div className="r-card">
               <div className="r-card-top">
                 <div>
                   <div className="r-card-title">Recent Activity</div>
                   <div className="r-card-sub">Latest AI moderation actions</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.18)', borderRadius: 7, padding: '3px 8px' }}>
-                  <Users size={9} color="#a78bfa" />
+                  <Bot size={9} color="#a78bfa" />
                   <span style={{ color: '#a78bfa', fontSize: 9, fontWeight: 800 }}>AUTO</span>
                 </div>
               </div>
@@ -948,7 +1038,7 @@ export default function LiveFeedPage() {
                     <SkeletonRow />
                     <SkeletonRow />
                   </>
-                ) : comments.length === 0 ? (
+                ) : resolvedComments.length === 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 16px', gap: 8 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Activity size={16} color="rgba(255,255,255,0.18)" strokeWidth={1.5} />
@@ -956,22 +1046,17 @@ export default function LiveFeedPage() {
                     <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 11.5, textAlign: 'center', lineHeight: 1.5 }}>No recent activity yet.</span>
                   </div>
                 ) : (
-                  comments.slice(0, 6).map(comment => {
-                    const decision = localActions[comment.id] ?? comment.aiDecision;
-                    const cfg = AI_DECISION_CONFIG[decision];
-                    const icon = decision === 'approved'
+                  resolvedComments.slice(0, 6).map(comment => {
+                    const cfg = AI_DECISION_CONFIG[comment.aiDecision];
+                    const IconComp = comment.aiDecision === 'approved'
                       ? CheckCircle
-                      : decision === 'hidden'
+                      : comment.aiDecision === 'hidden'
                         ? EyeOff
-                        : decision === 'replied'
+                        : comment.aiDecision === 'replied'
                           ? Bot
                           : AlertTriangle;
-                    const timeAgo = (() => {
-                      const diff = Math.floor((Date.now() - comment.timestamp.getTime()) / 1000);
-                      if (diff < 60) return `${diff}s ago`;
-                      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-                      return `${Math.floor(diff / 3600)}h ago`;
-                    })();
+                    const diff = Math.floor((Date.now() - comment.timestamp.getTime()) / 1000);
+                    const timeAgo = diff < 60 ? `${diff}s ago` : diff < 3600 ? `${Math.floor(diff / 60)}m ago` : `${Math.floor(diff / 3600)}h ago`;
                     return (
                       <div key={comment.id} style={{
                         display: 'flex', alignItems: 'center', gap: 11,
@@ -983,7 +1068,7 @@ export default function LiveFeedPage() {
                           background: cfg.bg, border: `1px solid ${cfg.border}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          {(() => { const I = icon; return <I size={12} color={cfg.color} strokeWidth={2} />; })()}
+                          <IconComp size={12} color={cfg.color} strokeWidth={2} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

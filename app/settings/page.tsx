@@ -23,10 +23,13 @@ const TABS: { id: TabId; label: string; icon: typeof UserIcon }[] = [
 
 const NAV_ITEMS = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { href: '/analytics', icon: BarChart2, label: 'Analytics' },
+  { href: '/live-feed', icon: BarChart2, label: 'Live Feed' },
+  { href: '/moderation', icon: Star, label: 'Moderation' },
   { href: '/automation', icon: Zap, label: 'Automation' },
-  { href: '/alerts', icon: Bell, label: 'Alerts' },
-  { href: '/settings', icon: Settings, label: 'Settings' },
+  { href: '/analytics', icon: BarChart2,  label: 'Analytics' },
+  { href: '/alerts',    icon: Bell,       label: 'Alerts' },
+  { href: '/billing',   icon: ExternalLink, label: 'Billing' },
+  { href: '/settings',  icon: Settings, label: 'Settings' },
 ];
 
 export default function SettingsPage() {

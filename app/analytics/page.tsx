@@ -417,7 +417,9 @@ export default function AnalyticsPage() {
               <div style={{ width: 34, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: '6px auto 14px' }} />
               {[
                 { icon: CreditCard, label: 'Billing',         href: '/billing'          },
-                { icon: Star,       label: 'Moderation',      href: '/moderation'       },
+                { icon: BarChart2,  label: 'Analytics',       href: '/analytics'        },
+                { icon: Zap,    label: 'Automation',       href: '/automation'      },
+                { icon:  Star,       label: 'Moderation',      href: '/moderation'       },
                 { icon: Settings,   label: 'Settings',        href: '/settings'         },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}

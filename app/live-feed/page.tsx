@@ -9,6 +9,7 @@ import {
   Activity, ChevronDown, Radio, Timer, Eye,
   Wifi, WifiOff,
 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -17,6 +18,7 @@ import {
   collection, query, orderBy, limit, Timestamp,
 } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
+import { getYouTubeConnected, connectYouTube } from '@/lib/useYouTubeConnection';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -87,7 +89,7 @@ function SkeletonRow() {
   );
 }
 
-// ─── Waiting State (YouTube connected, no comments yet) ───────────────────────
+// ─── Waiting State ────────────────────────────────────────────────────────────
 
 function WaitingState({ lastScan }: { lastScan: string }) {
   return (
@@ -125,7 +127,7 @@ function WaitingState({ lastScan }: { lastScan: string }) {
   );
 }
 
-// ─── Offline State (YouTube not connected) ────────────────────────────────────
+// ─── Offline State ────────────────────────────────────────────────────────────
 
 function OfflineCommentState({ onConnect }: { onConnect: () => void }) {
   return (
@@ -253,13 +255,14 @@ function CommentRow({
   }, [comment.timestamp]);
 
   return (
-    <div style={{
-      padding: '13px 16px',
-      borderBottom: '1px solid rgba(255,255,255,0.04)',
-      transition: 'background 0.18s',
-      background: comment.isNew ? 'rgba(124,58,237,0.04)' : 'transparent',
-      animation: comment.isNew ? 'slideInRow 0.3s ease' : 'none',
-    }}
+    <div
+      style={{
+        padding: '13px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        transition: 'background 0.18s',
+        background: comment.isNew ? 'rgba(124,58,237,0.04)' : 'transparent',
+        animation: comment.isNew ? 'slideInRow 0.3s ease' : 'none',
+      }}
       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.015)')}
       onMouseLeave={e => (e.currentTarget.style.background = comment.isNew ? 'rgba(124,58,237,0.04)' : 'transparent')}
     >
@@ -419,6 +422,41 @@ function firestoreCommentToFeed(id: string, data: DocumentData): FeedComment {
   };
 }
 
+function timeAgoFn(date: Date | null): string {
+  if (!date) return '--';
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+
+function UserAvatar({ src, initials, size }: { src: string | null; initials: string; size: number }) {
+  if (src) {
+    return (
+      <Image
+        src={src}
+        width={size}
+        height={size}
+        alt="User avatar"
+        style={{ borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+      />
+    );
+  }
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      background: 'linear-gradient(135deg,#7C3AED,#F59E0B)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: 'white', fontWeight: 800, fontSize: Math.floor(size * 0.36),
+    }}>
+      {initials}
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LiveFeedPage() {
@@ -440,9 +478,6 @@ export default function LiveFeedPage() {
   const [processingCount, setProcessingCount] = useState<number | null>(null);
   const [avgResponseMs, setAvgResponseMs] = useState<number | null>(null);
 
-  // YouTube connect — exact same handler as Dashboard
-  const handleYouTubeConnect = () => { window.location.href = `/api/auth/youtube?uid=${user?.uid}`; };
-
   const isPausedRef = useRef(false);
   const pendingRef = useRef<FeedComment[]>([]);
   const newIdTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -454,6 +489,7 @@ export default function LiveFeedPage() {
 
   useEffect(() => {
     let initialSnapCount = 0;
+
     const onRequiredSnapReady = () => {
       initialSnapCount += 1;
       if (initialSnapCount === 2) setLoading(false);
@@ -474,14 +510,13 @@ export default function LiveFeedPage() {
       });
       unsubRefs.current.push(unsubUser);
 
-      // Analytics doc — real metrics (queue, processing, avg latency, last scan)
+      // Analytics doc — real metrics only
       const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), (snap) => {
         if (snap.exists()) {
           const d = snap.data();
           setLiveQueueCount(typeof d.liveQueue === 'number' ? d.liveQueue : null);
           setProcessingCount(typeof d.processingNow === 'number' ? d.processingNow : null);
           setAvgResponseMs(typeof d.avgResponseMs === 'number' ? d.avgResponseMs : null);
-          // Real last scan timestamp
           const rawTs = d.last_scan_at ?? d.lastScanAt ?? d.lastScan ?? null;
           if (rawTs) {
             const date = rawTs?.toDate ? rawTs.toDate() : new Date(rawTs);
@@ -504,7 +539,6 @@ export default function LiveFeedPage() {
           firestoreCommentToFeed(d.id, d.data()),
         );
 
-        // lastScanTimestamp is set from real analytics doc — not overridden here
         if (isPausedRef.current) {
           pendingRef.current = incoming;
         } else {
@@ -530,7 +564,6 @@ export default function LiveFeedPage() {
       unsubRefs.current.forEach(u => u());
       Object.values(newIdTimerRef.current).forEach(t => clearTimeout(t));
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   // ── Resume ───────────────────────────────────────────────────────────────
@@ -564,20 +597,23 @@ export default function LiveFeedPage() {
   const handleHide    = useCallback((id: string) => moderateComment(id, 'hidden'),   [moderateComment]);
   const handleApprove = useCallback((id: string) => moderateComment(id, 'approved'), [moderateComment]);
 
+  // FIX: removed `comments` from deps — uses functional updater + setDoc only needs uid
   const handleDelete = useCallback(async (id: string) => {
     if (!user) return;
-    const previousComments = comments;
     setComments(prev => prev.filter(c => c.id !== id));
     try {
       await setDoc(doc(db, 'users', user.uid, 'comments', id), { deleted: true }, { merge: true });
       setLocalActions(prev => { const next = { ...prev }; delete next[id]; return next; });
     } catch (err) {
       console.error('Failed to delete comment:', err);
-      setComments(previousComments);
+      // Firestore listener will restore state on next snapshot if needed
     }
-  }, [user, comments]);
+  }, [user]);
 
-  const handleLogout = async () => { await signOut(auth); router.push('/'); };
+  const handleLogout = useCallback(async () => {
+    await signOut(auth);
+    router.push('/');
+  }, [router]);
 
   // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -595,29 +631,26 @@ export default function LiveFeedPage() {
 
   const plan      = (userData?.plan as string) || 'free';
   const planLabel = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
+  // suppress unused warning until planLabel is wired to UI
+  void planLabel;
 
   const firstName = user?.displayName?.split(' ')[0] || 'there';
   const initials  = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const userPhoto = user?.photoURL || (userData?.photo as string) || null;
 
-  // timeAgo helper — same pattern as Dashboard
-  const timeAgoFn = (date: Date | null): string => {
-    if (!date) return '--';
-    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
-  };
-  const lastScanTime = lastScanTimestamp ? timeAgoFn(lastScanTimestamp) : '--';
+  const lastScanTime = timeAgoFn(lastScanTimestamp);
 
-  // YouTube connection state — exact same field + logic as Dashboard
-  const isYouTubeConnected = (userData?.youtube_connected as boolean) || false;
+  // ── Single source of truth: identical to Dashboard ────────────────────────
+  const isYouTubeConnected = getYouTubeConnected(userData);
+  const handleYouTubeConnect = () => connectYouTube(user?.uid);
+
   const channelsCount: number = isYouTubeConnected
     ? ((userData?.channels_count as number) ?? 1)
     : 0;
 
-  const resolvedComments = comments.map(c => localActions[c.id] ? { ...c, aiDecision: localActions[c.id] } : c);
+  const resolvedComments = comments.map(c =>
+    localActions[c.id] ? { ...c, aiDecision: localActions[c.id] } : c,
+  );
 
   const counts = {
     all:      resolvedComments.length,
@@ -631,12 +664,16 @@ export default function LiveFeedPage() {
     if (activeFilter !== 'all' && c.aiDecision !== activeFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      return c.text.toLowerCase().includes(q) || c.author.toLowerCase().includes(q) || c.videoTitle.toLowerCase().includes(q);
+      return (
+        c.text.toLowerCase().includes(q) ||
+        c.author.toLowerCase().includes(q) ||
+        c.videoTitle.toLowerCase().includes(q)
+      );
     }
     return true;
   });
 
-  // Live queue: prefer real backend value; fallback to flagged count; null = show '--'
+  // Live queue: prefer real backend value; fallback to flagged count; null → '--'
   const liveQueue: number | null = liveQueueCount !== null
     ? liveQueueCount
     : isYouTubeConnected
@@ -645,10 +682,9 @@ export default function LiveFeedPage() {
 
   const currentPath = '/live-feed';
 
-  // Metric display helpers
-  const displayProcessing = processingCount !== null ? processingCount : (isYouTubeConnected ? 0 : null);
-  const displayAvgResponse = avgResponseMs !== null ? `${Math.round(avgResponseMs)}ms` : '--';
-  const displayMonitoring = isYouTubeConnected
+  const displayProcessing  = processingCount !== null ? processingCount : (isYouTubeConnected ? 0 : null);
+  const displayAvgResponse = avgResponseMs   !== null ? `${Math.round(avgResponseMs)}ms` : '--';
+  const displayMonitoring  = isYouTubeConnected
     ? `${channelsCount} ${channelsCount === 1 ? 'Channel' : 'Channels'}`
     : '0 Channels';
 
@@ -832,10 +868,7 @@ export default function LiveFeedPage() {
           )}
           <div className="r-sidebar-bottom">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 11px', marginBottom: 3 }}>
-              {userPhoto
-                ? <img src={userPhoto} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} alt="av" />
-                : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 10, flexShrink: 0 }}>{initials}</div>
-              }
+              <UserAvatar src={userPhoto} initials={initials} size={26} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ color: 'rgba(255,255,255,0.72)', fontWeight: 700, fontSize: 11.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{firstName}</div>
                 <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 9.5 }}>{user?.email?.slice(0, 22)}{(user?.email?.length || 0) > 22 ? '…' : ''}</div>
@@ -862,7 +895,6 @@ export default function LiveFeedPage() {
               />
             </div>
 
-            {/* Connection-aware topbar badges */}
             {isYouTubeConnected ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
@@ -885,10 +917,7 @@ export default function LiveFeedPage() {
             </button>
             <button className="r-icon-btn"><Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} /></button>
             <button className="r-avatar-btn" onClick={() => router.push('/settings')}>
-              {userPhoto
-                ? <img src={userPhoto} style={{ width: 25, height: 25, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
-                : <div style={{ width: 25, height: 25, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 9 }}>{initials}</div>
-              }
+              <UserAvatar src={userPhoto} initials={initials} size={25} />
             </button>
           </header>
 
@@ -902,10 +931,7 @@ export default function LiveFeedPage() {
             </div>
             <div style={{ flex: 1 }} />
             <button className="r-avatar-btn" style={{ padding: '2px 6px 2px 2px' }} onClick={() => router.push('/settings')}>
-              {userPhoto
-                ? <img src={userPhoto} style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
-                : <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 8 }}>{initials}</div>
-              }
+              <UserAvatar src={userPhoto} initials={initials} size={22} />
             </button>
           </header>
 
@@ -940,8 +966,6 @@ export default function LiveFeedPage() {
 
             {/* ── LIVE STATUS BAR ─────────────────────────────────────────── */}
             <div className="lf-status-bar" style={{ marginBottom: 12 }}>
-
-              {/* Status: online vs offline */}
               <div className="lf-status-item">
                 {isYouTubeConnected ? (
                   <>
@@ -962,7 +986,6 @@ export default function LiveFeedPage() {
                 )}
               </div>
 
-              {/* Protection */}
               <div className="lf-status-item">
                 <Shield size={12} color={isYouTubeConnected ? '#a78bfa' : 'rgba(255,255,255,0.2)'} strokeWidth={2} />
                 <div>
@@ -975,7 +998,6 @@ export default function LiveFeedPage() {
                 </div>
               </div>
 
-              {/* Channels */}
               <div className="lf-status-item">
                 <Eye size={12} color={isYouTubeConnected ? '#60a5fa' : 'rgba(255,255,255,0.2)'} strokeWidth={2} />
                 <div>
@@ -990,7 +1012,6 @@ export default function LiveFeedPage() {
                 </div>
               </div>
 
-              {/* Last scan */}
               <div className="lf-status-item">
                 <RefreshCw size={11} color="rgba(255,255,255,0.35)" strokeWidth={2} />
                 <div>
@@ -1001,7 +1022,6 @@ export default function LiveFeedPage() {
                 </div>
               </div>
 
-              {/* Stream state badge */}
               <div className="lf-status-item" style={{ marginLeft: 'auto', borderRight: 'none' }}>
                 {!isYouTubeConnected ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.18)', borderRadius: 7, padding: '4px 10px' }}>
@@ -1191,7 +1211,7 @@ export default function LiveFeedPage() {
                           ? Bot
                           : AlertTriangle;
                     const diff = Math.floor((Date.now() - comment.timestamp.getTime()) / 1000);
-                    const timeAgo = diff < 60 ? `${diff}s ago` : diff < 3600 ? `${Math.floor(diff / 60)}m ago` : `${Math.floor(diff / 3600)}h ago`;
+                    const ago = diff < 60 ? `${diff}s ago` : diff < 3600 ? `${Math.floor(diff / 60)}m ago` : `${Math.floor(diff / 3600)}h ago`;
                     return (
                       <div key={comment.id} style={{
                         display: 'flex', alignItems: 'center', gap: 11,
@@ -1213,7 +1233,7 @@ export default function LiveFeedPage() {
                             {comment.text}
                           </div>
                         </div>
-                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, flexShrink: 0 }}>{timeAgo}</span>
+                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, flexShrink: 0 }}>{ago}</span>
                       </div>
                     );
                   })

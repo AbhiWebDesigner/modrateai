@@ -1,20 +1,33 @@
 "use client";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { DashboardSidebar, DashboardBottomNav } from "@/app/components/DashboardLayout";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type PlanId = "free" | "pro" | "agency";
+
+interface FirestoreUser {
+  plan: PlanId;
+  trial_active?: boolean;
+}
+
+// ─── Plan definitions ─────────────────────────────────────────────────────────
 
 const PLANS = [
   {
-    id: "free",
+    id: "free" as PlanId,
     name: "Free Trial ✦",
     tagline: "Test before you commit",
     price: "₹0",
     period: "/month",
-    badge: null,
+    badge: null as string | null,
     trialNote: "✦ 19-day free trial",
     color: "rgba(255,255,255,0.06)",
     borderColor: "rgba(255,255,255,0.09)",
-    btnStyle: { background: "rgba(255,255,255,0.08)", color: "#FAFAFA" },
+    btnStyle: { background: "rgba(255,255,255,0.08)", color: "#FAFAFA" } as React.CSSProperties,
     btnLabel: "Start free trial →",
     features: [
       "19-day free trial",
@@ -32,16 +45,16 @@ const PLANS = [
     ],
   },
   {
-    id: "pro",
+    id: "pro" as PlanId,
     name: "Pro ✦",
     tagline: "For growing creators",
     price: "₹349",
     period: "/month",
-    badge: "MOST POPULAR",
-    trialNote: null,
+    badge: "MOST POPULAR" as string | null,
+    trialNote: null as string | null,
     color: "rgba(245,158,11,0.07)",
     borderColor: "rgba(245,158,11,0.35)",
-    btnStyle: { background: "linear-gradient(135deg,#F59E0B,#EA580C)", color: "white" },
+    btnStyle: { background: "linear-gradient(135deg,#F59E0B,#EA580C)", color: "white" } as React.CSSProperties,
     btnLabel: "Get Pro →",
     features: [
       "1 YouTube channel",
@@ -62,16 +75,16 @@ const PLANS = [
     ],
   },
   {
-    id: "agency",
+    id: "agency" as PlanId,
     name: "Agency ✦",
     tagline: "Built for businesses & agencies",
     price: "₹2,499",
     period: "/month",
-    badge: null,
-    trialNote: null,
+    badge: null as string | null,
+    trialNote: null as string | null,
     color: "rgba(124,58,237,0.07)",
     borderColor: "rgba(124,58,237,0.30)",
-    btnStyle: { background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "white" },
+    btnStyle: { background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "white" } as React.CSSProperties,
     btnLabel: "Get Agency →",
     features: [
       "2 YouTube channels",
@@ -92,10 +105,41 @@ const PLANS = [
       "Dedicated priority support",
     ],
   },
-];
+] as const;
 
-function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () => void }) {
+type Plan = typeof PLANS[number];
+
+// ─── Plan badge label ─────────────────────────────────────────────────────────
+
+function planBadgeLabel(plan: PlanId, trialActive: boolean): string {
+  if (plan === "free") return trialActive ? "FREE · Trial" : "FREE";
+  if (plan === "pro") return "PRO";
+  return "AGENCY";
+}
+
+// ─── Razorpay modal ───────────────────────────────────────────────────────────
+
+function RazorpayModal({ plan, onClose }: { plan: Plan; onClose: () => void }) {
   const [step, setStep] = useState<"confirm" | "processing" | "done">("confirm");
+  const backdropRef = useRef<HTMLDivElement>(null);
+
+  // Lock body scroll
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // ESC to close
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === backdropRef.current) onClose();
+  };
 
   const handlePay = () => {
     setStep("processing");
@@ -103,7 +147,11 @@ function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () =
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+    <div
+      ref={backdropRef}
+      onClick={handleBackdropClick}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.88)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+    >
       <div style={{ background: "#0D0A1A", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 24, width: "100%", maxWidth: 420, padding: 28, position: "relative" }}>
 
         <div style={{ background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.30)", borderRadius: 10, padding: "8px 14px", marginBottom: 24, display: "flex", alignItems: "center", gap: 8 }}>
@@ -173,10 +221,22 @@ function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () =
 
         {step === "done" && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <div style={{ width: 60, height: 60, background: "rgba(34,197,94,0.15)", border: "2px solid rgba(34,197,94,0.40)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 24 }}>✓</div>
-            <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8, color: "#22c55e" }}>Payment Successful!</div>
-            <div style={{ color: "rgba(255,255,255,0.50)", fontSize: 13, marginBottom: 8 }}>This was a test transaction.</div>
-            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginBottom: 28 }}>No real money was charged.</div>
+            <div style={{ width: 64, height: 64, background: "rgba(34,197,94,0.15)", border: "2px solid rgba(34,197,94,0.40)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: 28 }}>✅</div>
+            <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 12, color: "#22c55e" }}>Test Payment Successful</div>
+            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "14px 18px", marginBottom: 24, textAlign: "left" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
+                <span style={{ fontSize: 14, marginTop: 1 }}>🧪</span>
+                <span style={{ color: "rgba(255,255,255,0.60)", fontSize: 13, lineHeight: 1.5 }}>This is a Razorpay Test Mode simulation.</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
+                <span style={{ fontSize: 14, marginTop: 1 }}>💳</span>
+                <span style={{ color: "rgba(255,255,255,0.60)", fontSize: 13, lineHeight: 1.5 }}>No real payment was processed.</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <span style={{ fontSize: 14, marginTop: 1 }}>🔒</span>
+                <span style={{ color: "rgba(255,255,255,0.60)", fontSize: 13, lineHeight: 1.5 }}>Your subscription has <strong style={{ color: "#FAFAFA" }}>NOT</strong> been upgraded.</span>
+              </div>
+            </div>
             <button onClick={onClose} style={{ background: "linear-gradient(135deg,#F59E0B,#EA580C)", borderRadius: 12, padding: "12px 32px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>
               Back to Billing
             </button>
@@ -188,9 +248,41 @@ function RazorpayModal({ plan, onClose }: { plan: typeof PLANS[0]; onClose: () =
   );
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function BillingPage() {
-  const currentPlan = "free";
-  const [modalPlan, setModalPlan] = useState<typeof PLANS[0] | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<PlanId>("free");
+  const [trialActive, setTrialActive] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [modalPlan, setModalPlan] = useState<Plan | null>(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) { setLoadingUser(false); return; }
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          const data = snap.data() as FirestoreUser;
+          setCurrentPlan(data.plan ?? "free");
+          setTrialActive(data.trial_active ?? false);
+        }
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.error("Failed to load user plan:", err);
+        }
+      } finally {
+        setLoadingUser(false);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const openModal = useCallback((plan: Plan) => {
+    if (plan.id === "free" || plan.id === currentPlan) return;
+    setModalPlan(plan);
+  }, [currentPlan]);
+
+  const closeModal = useCallback(() => setModalPlan(null), []);
 
   return (
     <>
@@ -209,8 +301,6 @@ export default function BillingPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
-      <div className="premium-bg" />
-
       <div className="desktop-sidebar"><DashboardSidebar /></div>
       <div className="bottom-nav-wrap"><DashboardBottomNav /></div>
 
@@ -220,16 +310,24 @@ export default function BillingPage() {
         <div style={{ marginBottom: 32 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: "#FAFAFA", marginBottom: 4 }}>Subscription</h1>
           <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 12 }}>Your current plan & billing</p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 14px" }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>FREE · Trial</span>
-          </div>
+          {loadingUser ? (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 20, padding: "5px 14px" }}>
+              <div style={{ width: 7, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.20)" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.30)" }}>Loading…</span>
+            </div>
+          ) : (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 14px" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>{planBadgeLabel(currentPlan, trialActive)}</span>
+            </div>
+          )}
         </div>
 
         {/* Plans grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 48 }}>
           {PLANS.map(plan => {
             const isCurrentPlan = plan.id === currentPlan;
+            const isDisabled = isCurrentPlan || plan.id === "free";
             return (
               <div key={plan.id} style={{
                 background: plan.color,
@@ -273,13 +371,14 @@ export default function BillingPage() {
                 </div>
 
                 <button
-                  onClick={() => plan.id !== "free" && setModalPlan(plan)}
+                  onClick={() => openModal(plan)}
+                  disabled={isDisabled}
                   style={{
                     ...plan.btnStyle,
                     width: "100%", padding: "12px", borderRadius: 12,
                     fontSize: 14, fontWeight: 700, border: "none",
-                    cursor: plan.id === "free" || isCurrentPlan ? "default" : "pointer",
-                    opacity: isCurrentPlan ? 0.6 : 1,
+                    cursor: isDisabled ? "default" : "pointer",
+                    opacity: isDisabled ? 0.6 : 1,
                   }}
                 >
                   {isCurrentPlan ? "Current Plan" : plan.btnLabel}
@@ -289,25 +388,10 @@ export default function BillingPage() {
           })}
         </div>
 
-        {/* Billing Section */}
+        {/* Invoices */}
         <div>
           <h2 style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA", marginBottom: 4 }}>Billing</h2>
           <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 20 }}>Payment method & invoices</p>
-
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid #27272A", borderRadius: 16, padding: "20px 22px", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid #27272A", borderRadius: 10, width: 44, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="14" viewBox="0 0 24 16" fill="none"><rect width="24" height="16" rx="2" fill="rgba(255,255,255,0.05)"/><rect x="0" y="4" width="24" height="4" fill="rgba(255,255,255,0.15)"/></svg>
-              </div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: "#FAFAFA" }}>No payment method on file</div>
-                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginTop: 2 }}>Add a card to upgrade your plan</div>
-              </div>
-            </div>
-            <button onClick={() => setModalPlan(PLANS[1])} style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 600, color: "#F59E0B", cursor: "pointer" }}>
-              + Add Card
-            </button>
-          </div>
 
           <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid #27272A", borderRadius: 16, padding: "20px 22px" }}>
             <div style={{ fontWeight: 600, fontSize: 14, color: "#FAFAFA", marginBottom: 16 }}>Invoices</div>
@@ -321,7 +405,7 @@ export default function BillingPage() {
 
       </main>
 
-      {modalPlan && <RazorpayModal plan={modalPlan} onClose={() => setModalPlan(null)} />}
+      {modalPlan && <RazorpayModal plan={modalPlan} onClose={closeModal} />}
     </>
   );
 }

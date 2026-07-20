@@ -3,7 +3,7 @@ import { Shield, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from '@/lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -54,6 +54,13 @@ function GoogleIcon() {
   );
 }
 
+/** Compute trial_ends_at as a Firestore Timestamp 19 days from now */
+function getTrialEndsAt(): Timestamp {
+  const d = new Date();
+  d.setDate(d.getDate() + 19);
+  return Timestamp.fromDate(d);
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -62,27 +69,81 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
+
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email,
-          name: user.displayName,
-          photo: user.photoURL,
-          plan: 'free',
-          comments_used: 0,
-          comments_limit: 1500,
-          created_at: new Date().toISOString(),
-          youtube_connected: false,
-        });
+
+      let userSnap;
+      try {
+        userSnap = await getDoc(userRef);
+      } catch (fetchErr) {
+        throw new Error('Failed to fetch user data. Please check your connection and try again.');
       }
+
+      if (userSnap.exists()) {
+        // Existing user — do NOT touch any fields
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Existing user:', user.uid);
+        }
+      } else {
+        // New user — create complete document
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Creating new user:', user.uid);
+        }
+
+        try {
+          await setDoc(userRef, {
+            uid: user.uid,
+            email: user.email ?? '',
+            name: user.displayName ?? '',
+            photo: user.photoURL ?? '',
+
+            // Plan & credits
+            plan: 'free',
+            ai_credits: 250,
+            comments_limit: 2000,
+            comments_used: 0,
+
+            // Analytics counters
+            comments_scanned: 0,
+            comments_hidden: 0,
+            ai_replies: 0,
+
+            // YouTube connection
+            youtube_connected: false,
+            youtube_channel_id: '',
+            youtube_channel_name: '',
+            youtube_channel_handle: '',
+            youtube_channel_thumbnail: '',
+            youtube_subscriber_count: '0',
+            youtube_video_count: '0',
+            youtube_view_count: '0',
+
+            // Trial
+            trial_active: true,
+            trial_days: 19,
+            trial_started_at: serverTimestamp(),
+            trial_ends_at: getTrialEndsAt(),
+
+            // Timestamps
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp(),
+          });
+        } catch (writeErr) {
+          throw new Error('Failed to create your account. Please try again.');
+        }
+      }
+
+      // Firestore write confirmed — safe to redirect
       router.push('/dashboard');
-    } catch {
-      setError('Login failed. Please try again.');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Login failed. Please try again.';
+      setError(message);
       setLoading(false);
     }
   };
@@ -167,12 +228,10 @@ export default function LoginPage() {
         }
       `}</style>
 
-      {/* Full page — single background, no hard split */}
       <main style={{
         minHeight: '100vh',
         display: 'flex',
         position: 'relative',
-        /* Single background with amber top-left, purple bottom-left, dark right */
         background: `
           radial-gradient(ellipse 60% 55% at 5% 15%, rgba(245,158,11,0.38) 0%, transparent 60%),
           radial-gradient(ellipse 65% 60% at 5% 95%, rgba(109,40,217,0.55) 0%, transparent 62%),
@@ -193,7 +252,6 @@ export default function LoginPage() {
             overflow: 'hidden',
           }}
         >
-          {/* Grid overlay left only */}
           <div style={{
             position: 'absolute', inset: 0,
             backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)',
@@ -203,12 +261,10 @@ export default function LoginPage() {
             pointerEvents: 'none',
           }} />
 
-          {/* Logo top */}
           <div style={{ position: 'relative', zIndex: 2 }} className="fade-up-1">
             <Logo />
           </div>
 
-          {/* Content vertically centered */}
           <div style={{
             position: 'relative', zIndex: 2,
             flex: 1, display: 'flex', flexDirection: 'column',
@@ -236,7 +292,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* RIGHT PANEL — dark but not pure black, matches reference */}
+        {/* RIGHT PANEL */}
         <div style={{
           flex: 1,
           display: 'flex',
@@ -248,12 +304,10 @@ export default function LoginPage() {
         }}>
           <div style={{ width: '100%', maxWidth: 420 }}>
 
-            {/* Mobile logo */}
             <div className="mobile-logo fade-up-1" style={{ marginBottom: 32 }}>
               <Logo size={34} />
             </div>
 
-            {/* Badge */}
             <div className="fade-up-1" style={{ marginBottom: 28 }}>
               <span className="badge-pulse" style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -267,7 +321,6 @@ export default function LoginPage() {
               </span>
             </div>
 
-            {/* Heading */}
             <div className="fade-up-2">
               <h2 style={{ fontSize: 40, fontWeight: 800, color: '#FAFAFA', marginBottom: 8, lineHeight: 1.1 }}>
                 Welcome back
@@ -277,7 +330,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Error */}
             {error && (
               <div style={{
                 background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.30)',
@@ -286,7 +338,6 @@ export default function LoginPage() {
               }}>{error}</div>
             )}
 
-            {/* Google button */}
             <div className="fade-up-3">
               <button onClick={handleGoogleLogin} disabled={loading} className="google-btn">
                 {loading ? <div className="spinner" /> : <GoogleIcon />}
@@ -294,14 +345,12 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Divider */}
             <div className="fade-up-4" style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
               <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: 12, fontWeight: 500 }}>OR</span>
               <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.08)' }} />
             </div>
 
-            {/* Email */}
             <div className="fade-up-5">
               <button disabled style={{
                 width: '100%', padding: '14px 24px', borderRadius: 14,
@@ -317,7 +366,6 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Terms */}
             <div className="fade-up-6" style={{ marginTop: 28 }}>
               <p style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.32)', lineHeight: 1.6 }}>
                 By continuing, you agree to our{' '}

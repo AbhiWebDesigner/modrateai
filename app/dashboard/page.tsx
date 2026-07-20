@@ -323,7 +323,9 @@ export default function Dashboard() {
   const userPhoto  = user?.photoURL || (userData?.photo as string) || null;
 
   // Credits — shown for all plans, value from Firestore
-  const aiCredits = (userData?.ai_credits as number) ?? commentsUsed;
+  const aiCredits =
+  (userData?.ai_credits as number) ?? 0;
+  
 
   // ── FIX 3: Upgrade card only for free plan ──
   const showUpgradeCard = plan === 'free';

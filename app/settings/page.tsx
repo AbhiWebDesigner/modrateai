@@ -276,7 +276,7 @@ export default function SettingsPage() {
               <Star size={12} color="#FBBF24" />
               <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: 11 }}>Upgrade to Pro</span>
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginBottom: 8 }}>Unlock unlimited comments and alerts.</p>
+            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginBottom: 8 }}> 25,000 comments scanned / months and Unlimited automation rules , Priority support & 1,900 AI actions / month.</p>
             <button style={{ width: '100%', background: '#FBBF24', color: '#000', border: 'none', borderRadius: 8, padding: '6px 0', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>Upgrade</button>
           </div>
         </aside>

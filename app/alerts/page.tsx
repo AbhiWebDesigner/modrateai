@@ -250,7 +250,7 @@ export default function AlertsPage() {
                 <Zap size={12} color="#F59E0B" />
                 <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 12 }}>Upgrade to Pro</span>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, lineHeight: 1.65, marginBottom: 11 }}>Unlock unlimited hidden comments and Telegram alerts.</p>
+              <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, lineHeight: 1.65, marginBottom: 11 }}> 25,000 comments scanned / months and Unlimited automation rules , Priority support & 1,900 AI actions / month.</p>
               <Link href="/billing" className="r-btn-upgrade">Upgrade</Link>
             </div>
           )}

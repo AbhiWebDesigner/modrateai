@@ -15,6 +15,18 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { doc, onSnapshot, DocumentData, collection, query, orderBy, limit } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
+// ─── Plan defaults (used ONLY when Firestore field is intentionally absent) ───
+const PLAN_CREDITS: Record<string, number> = {
+  free:   250,
+  pro:    1900,
+  agency: 15000,
+};
+const PLAN_COMMENTS_LIMIT: Record<string, number> = {
+  free:   2000,
+  pro:    25000,
+  agency: 150000,
+};
+
 function Sparkline({ color, up = true, width = 72, height = 32 }: { color: string; up?: boolean; width?: number; height?: number }) {
   const points = up
     ? [28, 22, 32, 24, 36, 28, 42, 34, 48, 38, 56, 44, 62]
@@ -224,110 +236,198 @@ const SIDEBAR_NAV = [
   { label: 'Settings',   icon: Settings,        href: '/settings'   },
 ];
 
+// ─── Loading states ───────────────────────────────────────────────────────────
+type LoadState = 'auth' | 'firestore' | 'missing' | 'ready';
+
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<DocumentData | null>(null);
-  const [analyticsData, setAnalyticsData] = useState<DocumentData | null>(null);
+  const [user, setUser]               = useState<User | null>(null);
+  const [userData, setUserData]       = useState<DocumentData | null>(null);
+  const [analyticsData, setAnalyticsData]   = useState<DocumentData | null>(null);
   const [automationData, setAutomationData] = useState<DocumentData | null>(null);
-  const [liveEvents, setLiveEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [chartRange, setChartRange] = useState<'week' | 'month'>('week');
+  const [liveEvents, setLiveEvents]   = useState<any[]>([]);
+
+  // ── Three-phase loading: waiting for auth → waiting for Firestore → ready ──
+  const [loadState, setLoadState]     = useState<LoadState>('auth');
+
+  const [moreOpen, setMoreOpen]       = useState(false);
+  const [notifOpen, setNotifOpen]     = useState(false);
+  const [chartRange, setChartRange]   = useState<'week' | 'month'>('week');
   const unsubRefs = useRef<Array<() => void>>([]);
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      if (!firebaseUser) { router.push('/login'); return; }
+      // ── Unauthenticated: redirect immediately ──
+      if (!firebaseUser) {
+        router.push('/login');
+        return;
+      }
+
       setUser(firebaseUser);
+      setLoadState('firestore'); // auth resolved, now waiting for Firestore
+
+      // Dev log — UID only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Dashboard UID:', firebaseUser.uid);
+      }
+
+      // Clean up any previous listeners
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
-      const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
-        if (snap.exists()) setUserData(snap.data());
-        setLoading(false);
+
+      // ── Primary: users/{uid} ──────────────────────────────────────────────
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const unsubUser = onSnapshot(userDocRef, (snap) => {
+        if (!snap.exists()) {
+          // Document truly missing — show error state, do NOT fall back to defaults
+          setLoadState('missing');
+          return;
+        }
+        const data = snap.data();
+
+        // Dev log — full Firestore payload
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Dashboard Firestore:', data);
+        }
+
+        setUserData(data);
+        setLoadState('ready');
       });
       unsubRefs.current.push(unsubUser);
-      const unsubAnalytics = onSnapshot(doc(db, 'analytics', firebaseUser.uid), (snap) => {
-        if (snap.exists()) setAnalyticsData(snap.data());
-      });
+
+      // ── Secondary listeners (analytics, automations, events) ─────────────
+      const unsubAnalytics = onSnapshot(
+        doc(db, 'analytics', firebaseUser.uid),
+        (snap) => { if (snap.exists()) setAnalyticsData(snap.data()); }
+      );
       unsubRefs.current.push(unsubAnalytics);
-      const unsubAutomation = onSnapshot(doc(db, 'automations', firebaseUser.uid), (snap) => {
-        if (snap.exists()) setAutomationData(snap.data());
-      });
+
+      const unsubAutomation = onSnapshot(
+        doc(db, 'automations', firebaseUser.uid),
+        (snap) => { if (snap.exists()) setAutomationData(snap.data()); }
+      );
       unsubRefs.current.push(unsubAutomation);
+
       const eventsRef = collection(db, 'users', firebaseUser.uid, 'events');
-      const eventsQ = query(eventsRef, orderBy('timestamp', 'desc'), limit(10));
+      const eventsQ   = query(eventsRef, orderBy('timestamp', 'desc'), limit(10));
       const unsubEvents = onSnapshot(eventsQ, (snap) => {
         setLiveEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
       unsubRefs.current.push(unsubEvents);
     });
-    return () => { unsubAuth(); unsubRefs.current.forEach(u => u()); };
+
+    return () => {
+      unsubAuth();
+      unsubRefs.current.forEach(u => u());
+    };
   }, [router]);
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
   const handleYouTubeConnect = () => { window.location.href = `/api/auth/youtube?uid=${user?.uid}`; };
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 36, height: 36, border: '2.5px solid rgba(124,58,237,0.2)', borderTopColor: '#7C3AED', borderRadius: '50%', animation: 'spin 0.75s linear infinite', margin: '0 auto 12px' }} />
-        <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>Loading dashboard…</p>
+  // ── Auth loading screen ───────────────────────────────────────────────────
+  if (loadState === 'auth' || loadState === 'firestore') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 36, height: 36, border: '2.5px solid rgba(124,58,237,0.2)', borderTopColor: '#7C3AED', borderRadius: '50%', animation: 'spin 0.75s linear infinite', margin: '0 auto 12px' }} />
+          <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>
+            {loadState === 'auth' ? 'Authenticating…' : 'Loading dashboard…'}
+          </p>
+        </div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+    );
+  }
 
-  const plan             = (userData?.plan as string) || 'free';
-  const commentsScanned  = (userData?.comments_scanned  as number) ?? null;
-  const hiddenComments   = (userData?.comments_hidden   as number) ?? (userData?.hidden_count as number) ?? null;
-  const aiReplies        = (userData?.ai_replies        as number) ?? null;
-  const avgResponseMs    = (userData?.avg_response_ms   as number) ?? null;
-  const commentsUsed     = (userData?.comments_used     as number) || 0;
-  const commentsLimit    = plan === 'free' ? 2000 : plan === 'pro' ? 5000 : (userData?.comments_limit as number) || 200000;
-  // ── FIX 1: single source of truth for YouTube connection state ──
-  const youtubeConnected = (userData?.youtube_connected as boolean) === true;
-  const channelName      = (userData?.youtube_channel_name as string) || null;
-  const channelHandle    = (userData?.youtube_channel_handle as string) || null;
-  const channelThumbnail = (userData?.youtube_channel_thumbnail as string) || null;
-  const subscriberCount  = (userData?.youtube_subscriber_count as string) || null;
-  const videoCount       = (userData?.youtube_video_count as string) || null;
-  const viewCount        = (userData?.youtube_view_count as string) || null;
+  // ── Firestore document missing ────────────────────────────────────────────
+  if (loadState === 'missing') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', maxWidth: 340, padding: '0 20px' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+            <AlertTriangle size={22} color="#f87171" strokeWidth={1.8} />
+          </div>
+          <h2 style={{ color: '#FAFAFA', fontSize: 16, fontWeight: 800, marginBottom: 8 }}>Account setup incomplete</h2>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12.5, lineHeight: 1.6, marginBottom: 18 }}>
+            Your Firestore user document could not be found. Please contact support or try signing out and back in.
+          </p>
+          <button onClick={handleLogout}
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 9, padding: '9px 20px', color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            Sign Out
+          </button>
+        </div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
+  }
 
-  const moderationAcc   = (analyticsData?.moderationAccuracy as number) ?? (userData?.moderation_accuracy as number) ?? 99.9;
-  const totalScanned    = (analyticsData?.totalScanned as number) ?? 0;
-  const totalHidden     = (analyticsData?.totalHidden as number) ?? 0;
-  const totalReplies    = (analyticsData?.totalReplies as number) ?? 0;
-  const pendingReview   = (analyticsData?.pendingReview as number) ?? (userData?.pending_review as number) ?? 0;
-  const avgResponseTime = (analyticsData?.avgResponseTime as number) ?? avgResponseMs ?? 0;
+  // ── From here: loadState === 'ready' and userData is guaranteed non-null ──
+  // userData is DocumentData — Firestore is the single source of truth.
+  // We only derive plan-based limits as fallback when the field is intentionally absent.
+
+  const plan = (userData!.plan as string) || 'free';
+
+  // ── Fields directly from Firestore — no silent numeric defaults ──────────
+  const commentsScanned  = userData!.comments_scanned  as number | undefined;
+  const hiddenComments   = userData!.comments_hidden   as number | undefined;
+  const aiReplies        = userData!.ai_replies        as number | undefined;
+  const avgResponseMs    = userData!.avg_response_ms   as number | undefined;
+
+  // comments_used: required for usage bar. Default 0 is intentional (no usage yet).
+  const commentsUsed     = (userData!.comments_used    as number) ?? 0;
+
+  // comments_limit: Firestore wins; fall back to plan table if field absent.
+  const commentsLimit    = (userData!.comments_limit   as number) ?? PLAN_COMMENTS_LIMIT[plan] ?? 2000;
+
+  // ai_credits: Firestore wins; fall back to plan table if field absent.
+  const aiCredits        = (userData!.ai_credits       as number) ?? PLAN_CREDITS[plan] ?? 0;
+
+  // YouTube fields
+  const youtubeConnected   = (userData!.youtube_connected        as boolean) === true;
+  const channelName        = (userData!.youtube_channel_name     as string)  || null;
+  const channelHandle      = (userData!.youtube_channel_handle   as string)  || null;
+  const channelThumbnail   = (userData!.youtube_channel_thumbnail as string) || null;
+  const subscriberCount    = (userData!.youtube_subscriber_count as string)  || null;
+  const videoCount         = (userData!.youtube_video_count      as string)  || null;
+  const viewCount          = (userData!.youtube_view_count       as string)  || null;
+
+  // Trial fields
+  const trialActive  = (userData!.trial_active as boolean) ?? false;
+  const trialDays    = (userData!.trial_days   as number)  ?? null;
+  const trialEndsAt  = userData!.trial_ends_at?.toDate?.() as Date | undefined;
+  const trialDaysLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000))
+    : trialDays;
+
+  // ── Analytics (secondary collection) ─────────────────────────────────────
+  const moderationAcc   = (analyticsData?.moderationAccuracy as number) ?? (userData!.moderation_accuracy as number) ?? 99.9;
+  const totalScanned    = (analyticsData?.totalScanned       as number) ?? 0;
+  const totalHidden     = (analyticsData?.totalHidden        as number) ?? 0;
+  const totalReplies    = (analyticsData?.totalReplies       as number) ?? 0;
+  const pendingReview   = (analyticsData?.pendingReview      as number) ?? (userData!.pending_review as number) ?? 0;
+  const avgResponseTime = (analyticsData?.avgResponseTime    as number) ?? avgResponseMs ?? 0;
 
   const weeklyScanned  = (analyticsData?.weekly?.scanned  as number[]) ?? [];
   const weeklyReplies  = (analyticsData?.weekly?.replies  as number[]) ?? [];
   const weeklyHidden   = (analyticsData?.weekly?.hidden   as number[]) ?? [];
   const hasChartData   = weeklyScanned.some(v => v > 0) || weeklyReplies.some(v => v > 0);
 
-  const autoHideToxic   = (automationData?.hideToxic as boolean) ?? false;
-  const autoHideSpam    = (automationData?.hideSpam  as boolean) ?? false;
-  const autoAiReplies   = (automationData?.aiReplies as boolean) ?? false;
-  const autoWelcome     = (automationData?.welcome   as boolean) ?? false;
+  // ── Automation fields ─────────────────────────────────────────────────────
+  const autoHideToxic = (automationData?.hideToxic as boolean) ?? false;
+  const autoHideSpam  = (automationData?.hideSpam  as boolean) ?? false;
+  const autoAiReplies = (automationData?.aiReplies as boolean) ?? false;
+  const autoWelcome   = (automationData?.welcome   as boolean) ?? false;
 
-  const trialEndsAt   = userData?.trial_ends_at?.toDate?.() as Date | undefined;
-  const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000)) : null;
-  const usagePct      = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
+  // ── Derived display values ────────────────────────────────────────────────
+  const usagePct = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
 
   const firstName  = user?.displayName?.split(' ')[0] || 'there';
   const initials   = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const planLabel  = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
   const planColor  = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
-  const userPhoto  = user?.photoURL || (userData?.photo as string) || null;
+  const userPhoto  = user?.photoURL || (userData!.photo as string) || null;
 
-  // Credits — shown for all plans, value from Firestore
-  const aiCredits =
-  (userData?.ai_credits as number) ?? 0;
-  
-
-  // ── FIX 3: Upgrade card only for free plan ──
   const showUpgradeCard = plan === 'free';
 
   const youtubeChannelUrl = channelHandle
@@ -340,12 +440,34 @@ export default function Dashboard() {
   const trendResponse = (analyticsData?.trends?.response  as number) ?? null;
   const pendingTrend  = (analyticsData?.trends?.pending   as number) ?? null;
 
+  // ── Stat cards — resolve value from Firestore then analytics, never invent ─
   const statCards = [
-    { label: 'Comments Scanned',   value: fmt(commentsScanned ?? totalScanned), raw: commentsScanned ?? totalScanned, up: true,  color: '#a78bfa', pct: trendScanned,  icon: MessageSquare },
-    { label: 'AI Replies Sent',    value: fmt(aiReplies ?? totalReplies),        raw: aiReplies ?? totalReplies,       up: true,  color: '#F59E0B', pct: trendReplies,  icon: Bot           },
-    { label: 'Hidden Toxic',       value: fmt(hiddenComments ?? totalHidden),    raw: hiddenComments ?? totalHidden,   up: false, color: '#f87171', pct: trendHidden,   icon: EyeIcon       },
-    { label: 'Avg. Response Time', value: fmtMs(avgResponseTime),                raw: avgResponseTime,                 up: false, color: '#34d399', pct: trendResponse, icon: Activity      },
+    {
+      label: 'Comments Scanned',
+      value: fmt(commentsScanned ?? (totalScanned > 0 ? totalScanned : undefined)),
+      raw:   commentsScanned ?? (totalScanned > 0 ? totalScanned : undefined),
+      up:    true,  color: '#a78bfa', pct: trendScanned,  icon: MessageSquare,
+    },
+    {
+      label: 'AI Replies Sent',
+      value: fmt(aiReplies ?? (totalReplies > 0 ? totalReplies : undefined)),
+      raw:   aiReplies ?? (totalReplies > 0 ? totalReplies : undefined),
+      up:    true,  color: '#F59E0B', pct: trendReplies,  icon: Bot,
+    },
+    {
+      label: 'Hidden Toxic',
+      value: fmt(hiddenComments ?? (totalHidden > 0 ? totalHidden : undefined)),
+      raw:   hiddenComments ?? (totalHidden > 0 ? totalHidden : undefined),
+      up:    false, color: '#f87171', pct: trendHidden,   icon: EyeIcon,
+    },
+    {
+      label: 'Avg. Response Time',
+      value: fmtMs(avgResponseTime > 0 ? avgResponseTime : undefined),
+      raw:   avgResponseTime > 0 ? avgResponseTime : undefined,
+      up:    false, color: '#34d399', pct: trendResponse, icon: Activity,
+    },
   ];
+
   const chartLabels = ['11 Jul', '12 Jul', '13 Jul', '14 Jul', '15 Jul', '17 Jul'];
   const chartData = [
     { label: 'Comments Scanned', color: '#a78bfa', values: weeklyScanned.length >= 6 ? weeklyScanned.slice(-6) : [0,0,0,0,0,0] },
@@ -376,7 +498,6 @@ export default function Dashboard() {
 
   const requestVolumeBars = (analyticsData?.requestVolume12h as number[]) ?? [];
 
-  // ── FIX 1 continued: Hero status badges — gated on youtubeConnected ──
   const heroBadges = youtubeConnected
     ? [
         { label: 'All systems operational', color: '#22c55e', bg: 'rgba(34,197,94,0.07)', border: 'rgba(34,197,94,0.16)', dot: true },
@@ -391,7 +512,6 @@ export default function Dashboard() {
       <>
         <div style={{ padding: '14px 16px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ color: '#FAFAFA', fontSize: 13, fontWeight: 700 }}>Live Activity</span>
-          {/* ── FIX 1: LIVE badge only when YouTube is connected ── */}
           {youtubeConnected ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 7, padding: '3px 8px' }}>
               <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 1.5s infinite' }} />
@@ -681,7 +801,6 @@ export default function Dashboard() {
             })}
           </nav>
 
-          {/* ── FIX 3: Upgrade card only for free plan ── */}
           {showUpgradeCard && (
             <div className="r-upgrade">
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
@@ -727,7 +846,6 @@ export default function Dashboard() {
               <span style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, padding: '1.5px 4px', fontSize: 9, color: 'rgba(255,255,255,0.16)', fontWeight: 600 }}>⌘K</span>
             </div>
 
-            {/* ── FIX 1: AI Online badge — only when connected ── */}
             {youtubeConnected && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
                 <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
@@ -735,7 +853,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* ── FIX 1: Protection Active badge — only when connected ── */}
             {youtubeConnected && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
                 <Shield size={9} strokeWidth={2} /> Protection Active
@@ -801,14 +918,12 @@ export default function Dashboard() {
               <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13, letterSpacing: '-0.02em' }}>ModerateAI</span>
             </div>
             <div style={{ flex: 1 }} />
-            {/* ── FIX 1: Mobile AI Online — only when connected ── */}
             {youtubeConnected && (
               <div className="r-mob-ai-badge" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 14, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.14)', fontSize: 9.5, fontWeight: 700, color: '#22c55e', flexShrink: 0, whiteSpace: 'nowrap' }}>
                 <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
                 AI Online
               </div>
             )}
-            {/* ── FIX 1: Mobile Protection badge — only when connected ── */}
             {youtubeConnected && (
               <div className="r-mob-protect-badge" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 7px', borderRadius: 14, background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 9.5, fontWeight: 700, color: '#a78bfa', flexShrink: 0, whiteSpace: 'nowrap' }}>
                 <Shield size={8} strokeWidth={2.2} /> Protection
@@ -832,7 +947,6 @@ export default function Dashboard() {
           </header>
 
           {/* MOBILE STATUS BAR */}
-          {/* ── FIX 1: Status bar — only when connected ── */}
           {youtubeConnected && (
             <div className="r-mobile-status-bar">
               {[
@@ -852,7 +966,6 @@ export default function Dashboard() {
 
             {/* HERO */}
             <div className="r-hero">
-              {/* ── FIX 1: Hero badges — driven by heroBadges computed above ── */}
               <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
                 {heroBadges.map(p => (
                   <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 4, background: p.bg, border: `1px solid ${p.border}`, borderRadius: 18, padding: '3px 9px', fontSize: 10, fontWeight: 600, color: p.color }}>
@@ -968,10 +1081,10 @@ export default function Dashboard() {
                             <s.icon size={12} color={s.color} strokeWidth={2} />
                           </div>
                           {hasReal && s.pct !== null && (
-                          s.up
-                          ? <span className="r-stat-pct-up"><TrendingUp size={8} />↑ {s.pct}%</span>
-                          : <span className="r-stat-pct-down"><TrendingDown size={8} />↓ {s.pct}%</span>
-                           )}
+                            s.up
+                              ? <span className="r-stat-pct-up"><TrendingUp size={8} />↑ {s.pct}%</span>
+                              : <span className="r-stat-pct-down"><TrendingDown size={8} />↓ {s.pct}%</span>
+                          )}
                         </div>
                         <div className="r-stat-label">{s.label}</div>
                         {isNull
@@ -1162,9 +1275,9 @@ export default function Dashboard() {
                           </div>
                         </div>
                         {requestVolumeBars.length > 0
-                      ? <MiniBarChart values={requestVolumeBars} color="#a78bfa" />
-                      : <EmptyState icon={Activity} message="No request data yet." />
-                      }
+                          ? <MiniBarChart values={requestVolumeBars} color="#a78bfa" />
+                          : <EmptyState icon={Activity} message="No request data yet." />
+                        }
                       </div>
                     </div>
 

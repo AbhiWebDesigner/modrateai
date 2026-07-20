@@ -226,7 +226,7 @@ export default function AnalyticsPage() {
                 <Star size={14} color="#F59E0B" />
                 <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 13 }}>Upgrade to Pro</span>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}>Unlock unlimited hidden comments and Telegram alerts.</p>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 12, lineHeight: 1.5 }}> 25,000 comments scanned / months and Unlimited automation rules , Priority support & 1,900 AI actions / month.</p>
               <Link href="/pricing"><button className="upgrade-btn">Upgrade — ₹349/mo</button></Link>
             </div>
             <button onClick={() => signOut(auth).then(() => router.push('/login'))} className="logout-btn">

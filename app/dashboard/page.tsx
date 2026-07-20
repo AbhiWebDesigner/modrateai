@@ -286,7 +286,7 @@ export default function Dashboard() {
   const aiReplies        = (userData?.ai_replies        as number) ?? null;
   const avgResponseMs    = (userData?.avg_response_ms   as number) ?? null;
   const commentsUsed     = (userData?.comments_used     as number) || 0;
-  const commentsLimit    = plan === 'free' ? 1500 : plan === 'pro' ? 5000 : (userData?.comments_limit as number) || 200000;
+  const commentsLimit    = plan === 'free' ? 2000 : plan === 'pro' ? 5000 : (userData?.comments_limit as number) || 200000;
   const youtubeConnected = (userData?.youtube_connected as boolean) || false;
   const channelName      = (userData?.youtube_channel_name as string) || null;
   const channelHandle    = (userData?.youtube_channel_handle as string) || null;
@@ -1101,7 +1101,7 @@ export default function Dashboard() {
                         {[
                           { label: 'Uptime', value: analyticsData?.uptime != null ? `${analyticsData.uptime}%` : '—', sub: '30 days', color: '#34d399' },
                           { label: 'Response Time', value: fmtMs(avgResponseTime) || '—', sub: 'Average', color: '#a78bfa' },
-                          { label: 'Requests Today', value: (analyticsData?.requestsToday as number ?? 0).toLocaleString() || '0', sub: analyticsData?.requestsTodayTrend ? `↑ ${analyticsData.requestsTodayTrend}%` : '—', color: '#FAFAFA' },
+                          { label: 'Requests Today', value: (analyticsData?.commentsToday as number ?? 0).toLocaleString() || '0', sub: analyticsData?.requestsTodayTrend ? `↑ ${analyticsData.requestsTodayTrend}%` : '—', color: '#FAFAFA' },
                           { label: 'Error Rate', value: `${(analyticsData?.falsePositiveRate as number ?? 0).toFixed(2)}%`, sub: analyticsData?.errorRateTrend ? `↓ ${analyticsData.errorRateTrend}%` : '—', color: '#F59E0B' },
                         ].map(s => (
                           <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 9, padding: '9px 10px' }}>

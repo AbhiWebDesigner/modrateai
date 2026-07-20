@@ -276,9 +276,9 @@ export default function Dashboard() {
          unsubRefs.current = [];
 
 // ── Auto-refresh YouTube stats every 30s (AFTER cleanup) ─────────────
-      fetch(`/api/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
+      fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
      const statsInterval = setInterval(() => {
-  fetch(`/api/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
+  fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
  }, 30_000);
  unsubRefs.current.push(() => clearInterval(statsInterval));
 

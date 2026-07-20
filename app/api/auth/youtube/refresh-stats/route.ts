@@ -67,10 +67,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'No channel found' }, { status: 404 });
   }
 
-  const hiddenSubs      = channel.statistics?.hiddenSubscriberCount === true;
-  const subscriberCount = hiddenSubs ? '0' : (channel.statistics?.subscriberCount || '0');
-  const videoCount      = channel.statistics?.videoCount || '0';
-  const viewCount       = channel.statistics?.viewCount  || '0';
+  const subscriberCount = channel.statistics?.subscriberCount || '0';
+  const videoCount      = channel.statistics?.videoCount      || '0';
+  const viewCount       = channel.statistics?.viewCount       || '0';
 
   // ── 4. Write fresh stats back to Firestore ────────────────────────────────
   const patchUrl =

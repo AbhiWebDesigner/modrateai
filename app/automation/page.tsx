@@ -132,7 +132,9 @@ function Sidebar({ pathname }: { pathname: string }) {
         </nav>
         <div style={{ background: "rgba(124,58,237,.1)", border: "1px solid rgba(124,58,237,.22)", borderRadius: 14, padding: "14px", marginTop: 12 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#FAFAFA", marginBottom: 4 }}>Upgrade to Pro 🚀</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,.42)", marginBottom: 10 }}> 25,000 comments scanned / months and Unlimited automation rules , Priority support & 1,900 AI actions / month.</div>
+            {['25,000 comments / month', 'Unlimited automation rules', 'Priority support', '1,900 AI actions / month'].map(f => (
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>{f}</div>
+                ))}
           <button style={{ background: "linear-gradient(135deg,#F59E0B,#FBBF24)", borderRadius: 9, width: "100%", fontSize: 11.5, padding: "8px 0", fontWeight: 700, color: "#080808", border: "none", cursor: "pointer" }}>Upgrade — ₹349/mo</button>
         </div>
       </div>

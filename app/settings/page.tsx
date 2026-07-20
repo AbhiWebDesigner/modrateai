@@ -4,46 +4,49 @@ import {
   Check, Lock, Key, Smartphone,
   User as UserIcon, ExternalLink, Pencil,
   Bell, LayoutDashboard, BarChart2, Zap, Settings, Star,
-  Monitor, Globe, LogOut,
+  Monitor, Globe, LogOut, Shield, Rss,
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 
 type TabId = 'profile' | 'security' | '2fa' | 'encryption';
 
 const TABS: { id: TabId; label: string; icon: typeof UserIcon }[] = [
-  { id: 'profile', label: 'Profile', icon: UserIcon },
-  { id: 'security', label: 'Security', icon: Lock },
-  { id: '2fa', label: '2FA', icon: Smartphone },
-  { id: 'encryption', label: 'Encryption', icon: Key },
+  { id: 'profile',    label: 'Profile',     icon: UserIcon   },
+  { id: 'security',   label: 'Security',    icon: Lock       },
+  { id: '2fa',        label: '2FA',         icon: Smartphone },
+  { id: 'encryption', label: 'Encryption',  icon: Key        },
 ];
 
 const NAV_ITEMS = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { href: '/live-feed', icon: BarChart2, label: 'Live Feed' },
-  { href: '/moderation', icon: Star, label: 'Moderation' },
-  { href: '/automation', icon: Zap, label: 'Automation' },
-  { href: '/analytics', icon: BarChart2,  label: 'Analytics' },
-  { href: '/alerts',    icon: Bell,       label: 'Alerts' },
-  { href: '/billing',   icon: ExternalLink, label: 'Billing' },
-  { href: '/settings',  icon: Settings, label: 'Settings' },
+  { href: '/dashboard',  icon: LayoutDashboard, label: 'Overview'   },
+  { href: '/live-feed',  icon: Rss,             label: 'Live Feed'  },
+  { href: '/moderation', icon: Shield,           label: 'Moderation' },
+  { href: '/automation', icon: Zap,              label: 'Automation' },
+  { href: '/analytics',  icon: BarChart2,        label: 'Analytics'  },
+  { href: '/alerts',     icon: Bell,             label: 'Alerts'     },
+  { href: '/billing',    icon: ExternalLink,     label: 'Billing'    },
+  { href: '/settings',   icon: Settings,         label: 'Settings'   },
 ];
 
 export default function SettingsPage() {
-  const router = useRouter();
+  const router   = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TabId>('profile');
-  const [userPlan, setUserPlan] = useState('free');
-  const [fullName, setFullName] = useState('');
-  const [youtubeChannel, setYoutubeChannel] = useState('');
-  const [profileSaved, setProfileSaved] = useState(false);
+
+  const [user, setUser]                         = useState<User | null>(null);
+  const [loading, setLoading]                   = useState(true);
+  const [activeTab, setActiveTab]               = useState<TabId>('profile');
+  const [userPlan, setUserPlan]                 = useState('free');
+  const [fullName, setFullName]                 = useState('');
+  const [youtubeChannel, setYoutubeChannel]     = useState('');
+  const [youtubeConnected, setYoutubeConnected] = useState(false);
+  const [profileSaved, setProfileSaved]         = useState(false);
+  const [disconnecting, setDisconnecting]       = useState(false);
   const [encryptionEnabled, setEncryptionEnabled] = useState(true);
-  const [memberSince, setMemberSince] = useState('');
+  const [memberSince, setMemberSince]           = useState('');
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -57,12 +60,13 @@ export default function SettingsPage() {
       try {
         const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (snap.exists()) {
-        const data = snap.data();
-        setUserPlan(data.plan || 'free');
-       const channelName = data.youtube_channel_name || data.youtube_channel_handle || '';
-       const isConnected = data.youtube_connected === true;
-       if (isConnected && channelName) setYoutubeChannel(channelName);
-}
+          const data = snap.data();
+          setUserPlan(data.plan || 'free');
+          const isConnected = data.youtube_connected === true;
+          const channelName = data.youtube_channel_name || data.youtube_channel_handle || '';
+          setYoutubeConnected(isConnected);
+          if (isConnected && channelName) setYoutubeChannel(channelName);
+        }
       } catch {}
       setLoading(false);
     });
@@ -72,10 +76,41 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     if (!user) return;
     try {
-      await setDoc(doc(db, 'users', user.uid), { displayName: fullName, youtubeChannel }, { merge: true });
+      await setDoc(doc(db, 'users', user.uid), { displayName: fullName }, { merge: true });
     } catch {}
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 2000);
+  };
+
+  const handleDisconnectYouTube = async () => {
+    if (!user) return;
+    setDisconnecting(true);
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        youtube_connected:          false,
+        youtube_access_token:       '',
+        youtube_refresh_token:      '',
+        youtube_channel_id:         '',
+        youtube_channel_name:       '',
+        youtube_channel_handle:     '',
+        youtube_channel_thumbnail:  '',
+        youtube_subscriber_count:   '0',
+        youtube_video_count:        '0',
+        youtube_view_count:         '0',
+      });
+      setYoutubeConnected(false);
+      setYoutubeChannel('');
+    } catch {}
+    setDisconnecting(false);
+  };
+
+  const handleConnectYouTube = () => {
+    window.location.href = `/api/auth/youtube?uid=${user?.uid}`;
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/');
   };
 
   if (loading) return (
@@ -85,7 +120,7 @@ export default function SettingsPage() {
     </div>
   );
 
-  const initial = user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U';
+  const initial  = user?.displayName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U';
   const planLabel = userPlan === 'agency' ? 'Agency plan' : userPlan === 'pro' ? 'Pro plan' : 'Free plan';
 
   return (
@@ -94,6 +129,7 @@ export default function SettingsPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; box-sizing: border-box; margin: 0; padding: 0; }
         html, body { background: #08080A; }
+        meta[name="viewport"] { content: "width=device-width, initial-scale=1"; }
 
         .s-bg { position: fixed; inset: 0; z-index: 0; background: #08080A; overflow: hidden; }
         .s-bg::before {
@@ -115,7 +151,6 @@ export default function SettingsPage() {
         @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
         .fade-up { animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards; }
 
-        /* Page layout */
         .page-wrap { display: flex; min-height: 100vh; position: relative; z-index: 10; }
 
         /* Sidebar */
@@ -127,7 +162,7 @@ export default function SettingsPage() {
           position: fixed; top: 0; left: 0; bottom: 0; z-index: 30;
         }
         .sidebar-logo { padding: 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 8px; }
-        .sidebar-nav { padding: 12px 8px; flex: 1; }
+        .sidebar-nav { padding: 12px 8px; flex: 1; overflow-y: auto; }
         .s-nav-link {
           display: flex; align-items: center; gap: 10px;
           padding: 10px 12px; border-radius: 10px; margin-bottom: 2px;
@@ -138,9 +173,10 @@ export default function SettingsPage() {
         .s-nav-link:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
         .s-nav-link.active { background: rgba(255,255,255,0.08); color: #FAFAFA; }
         .sidebar-upgrade { margin: 12px; padding: 12px; border-radius: 12px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.18); }
+        .sidebar-bottom { padding: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
 
         /* Main */
-        .main { flex: 1; margin-left: 224px; display: flex; flex-direction: column; }
+        .main { flex: 1; margin-left: 224px; display: flex; flex-direction: column; min-width: 0; }
 
         /* Header */
         .top-bar {
@@ -149,6 +185,7 @@ export default function SettingsPage() {
           border-bottom: 1px solid rgba(255,255,255,0.06);
           position: sticky; top: 0; z-index: 20;
           background: rgba(8,8,10,0.85); backdrop-filter: blur(20px);
+          gap: 12px;
         }
         .search-box {
           display: flex; align-items: center; gap: 8px;
@@ -157,13 +194,12 @@ export default function SettingsPage() {
         }
         .search-box input { background: transparent; border: none; outline: none; color: #FAFAFA; font-size: 13px; width: 180px; }
         .search-box input::placeholder { color: rgba(255,255,255,0.35); }
-        .yt-btn { display: flex; align-items: center; gap: 6px; background: #FBBF24; color: #0A0A0B; border: none; border-radius: 10px; padding: 8px 14px; font-weight: 800; font-size: 13px; cursor: pointer; }
 
         /* Content area */
-        .content-area { flex: 1; padding: 32px 32px 40px; max-width: 1100px; }
+        .content-area { flex: 1; padding: 32px 32px 40px; max-width: 1100px; width: 100%; }
 
         /* Tabs */
-        .tabs-row { display: flex; gap: 6px; margin-bottom: 28px; }
+        .tabs-row { display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: wrap; }
         .tab-btn {
           display: flex; align-items: center; gap: 7px;
           padding: 9px 18px; border-radius: 10px;
@@ -171,6 +207,7 @@ export default function SettingsPage() {
           border: 1px solid transparent;
           cursor: pointer; transition: all 0.2s;
           background: transparent; color: rgba(255,255,255,0.45);
+          white-space: nowrap;
         }
         .tab-btn:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8); }
         .tab-btn.active { background: rgba(245,158,11,0.12); color: #FBBF24; border-color: rgba(245,158,11,0.25); }
@@ -210,14 +247,18 @@ export default function SettingsPage() {
         .btn-primary.saved { background: linear-gradient(135deg, #10B981, #059669); color: white; }
         .btn-google { width: 100%; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.05); color: #FAFAFA; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; text-decoration: none; }
         .btn-google:hover { background: rgba(255,255,255,0.08); }
+        .btn-danger { width: 100%; padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; border: 1px solid rgba(248,113,113,0.25); background: rgba(248,113,113,0.08); color: #f87171; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .btn-danger:hover { background: rgba(248,113,113,0.14); border-color: rgba(248,113,113,0.4); }
+        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Status badges */
-        .badge-green { background: rgba(52,211,153,0.12); color: #34D399; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .badge-gray { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .badge-yellow { background: rgba(245,158,11,0.12); color: #FBBF24; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-green  { background: rgba(52,211,153,0.12);  color: #34D399; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-gray   { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-yellow { background: rgba(245,158,11,0.12);  color: #FBBF24; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-red    { background: rgba(248,113,113,0.12); color: #f87171; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
 
         /* Toggle */
-        .toggle { width: 44px; height: 24px; border-radius: 100px; border: none; cursor: pointer; position: relative; transition: background 0.2s; }
+        .toggle { width: 44px; height: 24px; border-radius: 100px; border: none; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
         .toggle-thumb { position: absolute; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: white; transition: left 0.2s; }
 
         /* Session card */
@@ -229,26 +270,38 @@ export default function SettingsPage() {
         /* Mobile bottom nav */
         .mob-nav { display: none; }
 
+        /* ── Responsive ─────────────────────────────────────────── */
         @media (max-width: 1024px) {
-          .sidebar { display: none; }
-          .main { margin-left: 0; }
-          .search-box { display: none; }
-          .yt-btn { display: none; }
-          .profile-text { display: none; }
+          .sidebar        { display: none; }
+          .main           { margin-left: 0; }
+          .search-box     { display: none; }
+          .profile-text   { display: none; }
+          .content-area   { padding: 20px 16px 100px; max-width: 100%; }
+          .cards-grid     { grid-template-columns: 1fr; }
+          .card-full      { grid-column: 1; }
           .mob-nav {
             display: flex; position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(17,17,17,0.95); backdrop-filter: blur(20px);
+            background: rgba(17,17,17,0.97); backdrop-filter: blur(20px);
             border-top: 1px solid rgba(255,255,255,0.08);
-            padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+            padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
             z-index: 50; justify-content: space-around;
           }
-          .mob-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.45); font-size: 10px; font-weight: 600; padding: 6px 10px; border-radius: 10px; text-decoration: none; }
+          .mob-nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            background: none; border: none; cursor: pointer;
+            color: rgba(255,255,255,0.4); font-size: 9px; font-weight: 600;
+            padding: 4px 6px; border-radius: 10px; text-decoration: none;
+            flex: 1; min-width: 0;
+          }
           .mob-nav-item.active { color: #FBBF24; }
-          .content-area { padding: 20px 16px 100px; }
-          .cards-grid { grid-template-columns: 1fr; }
-          .card-full { grid-column: 1; }
-          .tabs-row { overflow-x: auto; padding-bottom: 4px; }
-          .tab-btn { white-space: nowrap; }
+          .top-bar { padding: 12px 16px; }
+        }
+
+        @media (max-width: 480px) {
+          .content-area { padding: 16px 12px 96px; }
+          .card { padding: 16px; }
+          .tabs-row { gap: 4px; }
+          .tab-btn { padding: 8px 12px; font-size: 12px; }
         }
       `}</style>
 
@@ -256,7 +309,7 @@ export default function SettingsPage() {
 
       <div className="page-wrap">
 
-        {/* Sidebar */}
+        {/* ── Sidebar ── */}
         <aside className="sidebar">
           <div className="sidebar-logo">
             <div style={{ width: 30, height: 30, background: '#FBBF24', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -271,17 +324,24 @@ export default function SettingsPage() {
               </Link>
             ))}
           </nav>
-          <div className="sidebar-upgrade">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <Star size={12} color="#FBBF24" />
-              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: 11 }}>Upgrade to Pro</span>
+          {userPlan === 'free' && (
+            <div className="sidebar-upgrade">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <Star size={12} color="#FBBF24" />
+                <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: 11 }}>Upgrade to Pro</span>
+              </div>
+              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginBottom: 8 }}>25,000 comments/month, unlimited automation rules, priority support & 1,900 AI actions/month.</p>
+              <Link href="/billing" style={{ display: 'block', width: '100%', background: '#FBBF24', color: '#000', border: 'none', borderRadius: 8, padding: '6px 0', fontWeight: 800, fontSize: 11, cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}>Upgrade</Link>
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginBottom: 8 }}> 25,000 comments scanned / months and Unlimited automation rules , Priority support & 1,900 AI actions / month.</p>
-            <button style={{ width: '100%', background: '#FBBF24', color: '#000', border: 'none', borderRadius: 8, padding: '6px 0', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>Upgrade</button>
+          )}
+          <div className="sidebar-bottom">
+            <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: 600, padding: '8px 4px', width: '100%' }}>
+              <LogOut size={13} /> Sign out
+            </button>
           </div>
         </aside>
 
-        {/* Main */}
+        {/* ── Main ── */}
         <div className="main">
 
           {/* Header */}
@@ -297,9 +357,7 @@ export default function SettingsPage() {
               </div>
               <button style={{ position: 'relative', width: 36, height: 36, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                 <Bell size={15} color="rgba(255,255,255,0.7)" />
-                <span style={{ position: 'absolute', top: 6, right: 6, width: 6, height: 6, background: '#FBBF24', borderRadius: '50%' }} />
               </button>
-              <button className="yt-btn">▶ Connect YouTube</button>
               <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
                 <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #7C3AED, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, color: 'white', flexShrink: 0 }}>
                   {initial}
@@ -324,9 +382,11 @@ export default function SettingsPage() {
               ))}
             </div>
 
-            {/* PROFILE TAB */}
+            {/* ── PROFILE TAB ── */}
             {activeTab === 'profile' && (
               <div className="cards-grid fade-up">
+
+                {/* Personal info */}
                 <div className="card">
                   <p className="card-title">Personal information</p>
                   <p className="card-sub">Update your profile details</p>
@@ -354,35 +414,60 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
+                {/* YouTube channel */}
                 <div className="card">
                   <p className="card-title">YouTube channel</p>
                   <p className="card-sub">Connect your YouTube channel</p>
-                  <div style={{ marginBottom: 14 }}>
-                    <label className="field-label">Channel URL</label>
-                    <div style={{ position: 'relative' }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }}>
-                        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="rgba(255,255,255,0.3)" />
+
+                  {youtubeConnected && youtubeChannel && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 10, marginBottom: 14 }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24">
+                        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="#f87171" />
                         <path d="M9.8 15.6V8.4l6.2 3.6-6.2 3.6z" fill="white" />
                       </svg>
-                      <input className="field-input" type="text" value={youtubeChannel} onChange={(e) => setYoutubeChannel(e.target.value)} placeholder="Not connected" style={{ paddingLeft: 36 }} />
+                      <span style={{ color: '#FAFAFA', fontSize: 13, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{youtubeChannel}</span>
+                      <span className="badge-green">Connected</span>
                     </div>
-                  </div>
+                  )}
+
                   <div className="info-row">
                     <span className="info-label"><Globe size={13} /> Status</span>
-                    <span className={youtubeChannel ? 'badge-green' : 'badge-gray'}>{youtubeChannel ? 'Connected' : 'Not connected'}</span>
+                    <span className={youtubeConnected ? 'badge-green' : 'badge-red'}>
+                      {youtubeConnected ? 'Connected' : 'Not connected'}
+                    </span>
                   </div>
-                  <div className="info-row">
+                  <div className="info-row" style={{ marginBottom: 16 }}>
                     <span className="info-label">Plan</span>
                     <span className="badge-yellow">{planLabel}</span>
                   </div>
-                  <button onClick={handleSaveProfile} className="btn-primary" style={{ marginTop: 16 }}>
-                    Save channel
-                  </button>
+
+                  {youtubeConnected ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <button onClick={handleConnectYouTube} className="btn-google">
+                        <svg width="14" height="14" viewBox="0 0 24 24">
+                          <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="#f87171" />
+                          <path d="M9.8 15.6V8.4l6.2 3.6-6.2 3.6z" fill="white" />
+                        </svg>
+                        Reconnect YouTube
+                      </button>
+                      <button onClick={handleDisconnectYouTube} className="btn-danger" disabled={disconnecting}>
+                        {disconnecting ? 'Disconnecting…' : 'Disconnect YouTube'}
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={handleConnectYouTube} className="btn-primary">
+                      <svg width="14" height="14" viewBox="0 0 24 24">
+                        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="#000" />
+                        <path d="M9.8 15.6V8.4l6.2 3.6-6.2 3.6z" fill="white" />
+                      </svg>
+                      Connect YouTube
+                    </button>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* SECURITY TAB */}
+            {/* ── SECURITY TAB ── */}
             {activeTab === 'security' && (
               <div className="cards-grid fade-up">
                 <div className="card">
@@ -405,7 +490,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="info-row">
                     <span className="info-label">📧 Email</span>
-                    <span className="info-value">{user?.email}</span>
+                    <span className="info-value" style={{ fontSize: 12 }}>{user?.email}</span>
                   </div>
                   <div className="info-row">
                     <span className="info-label">📅 Member since</span>
@@ -431,13 +516,13 @@ export default function SettingsPage() {
                   <span className="badge-gray" style={{ marginBottom: 16, display: 'inline-block' }}>Read only</span>
                   <a href="https://myaccount.google.com/security" target="_blank" rel="noopener noreferrer" className="btn-google">
                     <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
-                    Manage Google account →
+                    Change password via Google →
                   </a>
                 </div>
               </div>
             )}
 
-            {/* 2FA TAB */}
+            {/* ── 2FA TAB ── */}
             {activeTab === '2fa' && (
               <div className="cards-grid fade-up">
                 <div className="card">
@@ -474,7 +559,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* ENCRYPTION TAB */}
+            {/* ── ENCRYPTION TAB ── */}
             {activeTab === 'encryption' && (
               <div className="cards-grid fade-up">
                 <div className="card card-full">
@@ -482,13 +567,13 @@ export default function SettingsPage() {
                   <p className="card-sub">Your data security settings</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {[
-                      { title: 'End-to-end encryption', desc: 'All data encrypted in transit and at rest', locked: true },
-                      { title: 'YouTube token encryption', desc: 'Access tokens encrypted with AES-256', locked: true },
-                      { title: 'Comment data encryption', desc: 'Hidden comments stored with encryption', locked: false },
+                      { title: 'End-to-end encryption',     desc: 'All data encrypted in transit and at rest',   locked: true  },
+                      { title: 'YouTube token encryption',  desc: 'Access tokens encrypted with AES-256',        locked: true  },
+                      { title: 'Comment data encryption',   desc: 'Hidden comments stored with encryption',      locked: false },
                     ].map((item) => (
                       <div key={item.title} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 9, background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <Key size={15} color="#34D399" />
                           </div>
                           <div>
@@ -516,18 +601,20 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>
 
-      {/* Mobile Bottom Nav */}
+      {/* ── Mobile Bottom Nav ── */}
       <nav className="mob-nav">
         {NAV_ITEMS.map(({ href, icon: Icon, label }) => (
           <Link key={href} href={href} className={`mob-nav-item ${pathname === href ? 'active' : ''}`}>
-            <Icon size={19} />{label}
+            <Icon size={18} />
+            <span>{label}</span>
           </Link>
         ))}
       </nav>
     </>
   );
-}
+} 

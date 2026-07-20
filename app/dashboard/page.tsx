@@ -263,8 +263,17 @@ export default function Dashboard() {
         return;
       }
 
-      setUser(firebaseUser);
-      setLoadState('firestore'); // auth resolved, now waiting for Firestore
+       setUser(firebaseUser);
+        setLoadState('firestore'); // auth resolved, now waiting for Firestore
+
+// ── Auto-refresh YouTube stats every 60s ──────────────────────────────
+       const statsInterval = setInterval(() => {
+       fetch(`/api/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
+        } , 60_000);
+      unsubRefs.current.push(() => clearInterval(statsInterval));
+
+// Refresh immediately on load too
+     fetch(`/api/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
 
       // Dev log — UID only in development
       if (process.env.NODE_ENV === 'development') {

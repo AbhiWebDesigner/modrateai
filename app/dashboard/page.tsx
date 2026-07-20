@@ -327,13 +327,18 @@ export default function Dashboard() {
     ? `https://www.youtube.com/@${channelHandle.replace('@', '')}`
     : `https://www.youtube.com`;
 
-  const statCards = [
-    { label: 'Comments Scanned',    value: fmt(commentsScanned ?? totalScanned),  raw: commentsScanned ?? totalScanned,  up: true,  color: '#a78bfa', pct: '18.2', icon: MessageSquare },
-    { label: 'AI Replies Sent',     value: fmt(aiReplies ?? totalReplies),         raw: aiReplies ?? totalReplies,         up: true,  color: '#F59E0B', pct: '24.1', icon: Bot           },
-    { label: 'Hidden Toxic',        value: fmt(hiddenComments ?? totalHidden),     raw: hiddenComments ?? totalHidden,     up: false, color: '#f87171', pct: '12.7', icon: EyeIcon       },
-    { label: 'Avg. Response Time',  value: fmtMs(avgResponseTime),                 raw: avgResponseTime,                   up: false, color: '#34d399', pct: '8.3',  icon: Activity      },
-  ];
+  const trendScanned  = (analyticsData?.trends?.scanned   as number) ?? null;
+  const trendReplies  = (analyticsData?.trends?.replies   as number) ?? null;
+  const trendHidden   = (analyticsData?.trends?.hidden    as number) ?? null;
+  const trendResponse = (analyticsData?.trends?.response  as number) ?? null;
+  const pendingTrend  = (analyticsData?.trends?.pending   as number) ?? null;
 
+  const statCards = [
+    { label: 'Comments Scanned',   value: fmt(commentsScanned ?? totalScanned), raw: commentsScanned ?? totalScanned, up: true,  color: '#a78bfa', pct: trendScanned,  icon: MessageSquare },
+    { label: 'AI Replies Sent',    value: fmt(aiReplies ?? totalReplies),        raw: aiReplies ?? totalReplies,       up: true,  color: '#F59E0B', pct: trendReplies,  icon: Bot           },
+    { label: 'Hidden Toxic',       value: fmt(hiddenComments ?? totalHidden),    raw: hiddenComments ?? totalHidden,   up: false, color: '#f87171', pct: trendHidden,   icon: EyeIcon       },
+    { label: 'Avg. Response Time', value: fmtMs(avgResponseTime),                raw: avgResponseTime,                 up: false, color: '#34d399', pct: trendResponse, icon: Activity      },
+  ];
   const chartLabels = ['11 Jul', '12 Jul', '13 Jul', '14 Jul', '15 Jul', '17 Jul'];
   const chartData = [
     { label: 'Comments Scanned', color: '#a78bfa', values: weeklyScanned.length >= 6 ? weeklyScanned.slice(-6) : [0,0,0,0,0,0] },
@@ -362,7 +367,7 @@ export default function Dashboard() {
   const correctActionsCalc = totalActionsCalc ? Math.round((moderationAcc / 100) * totalActionsCalc) : null;
   const falsePositivesCalc = totalActionsCalc ? totalActionsCalc - (correctActionsCalc ?? 0) : null;
 
-  const systemHealthBars = [3, 5, 4, 7, 6, 8, 7, 9, 8, 10, 9, 8];
+  const requestVolumeBars = (analyticsData?.requestVolume12h as number[]) ?? [];
 
   function LiveActivityContent() {
     return (
@@ -660,7 +665,7 @@ export default function Dashboard() {
                 <span style={{ color: '#a78bfa', fontWeight: 700, fontSize: 11 }}>Upgrade to Pro</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 9 }}>
-                {['Unlimited comments', 'Advanced AI models', 'Priority support', 'Team members'].map(f => (
+                {[' 25,000 comments scanned / months', 'Unlimited automation rules', 'Priority support', '1,900 AI actions / month'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,0.32)', fontSize: 10 }}>
                     <div style={{ width: 3, height: 3, borderRadius: '50%', background: '#a78bfa', flexShrink: 0 }} />{f}
                   </div>
@@ -919,11 +924,11 @@ export default function Dashboard() {
                           <div style={{ width: 24, height: 24, borderRadius: 7, background: `${s.color}12`, border: `1px solid ${s.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <s.icon size={12} color={s.color} strokeWidth={2} />
                           </div>
-                          {hasReal && (
-                            s.up
-                              ? <span className="r-stat-pct-up"><TrendingUp size={8} />↑ {s.pct}%</span>
-                              : <span className="r-stat-pct-down"><TrendingDown size={8} />↓ {s.pct}%</span>
-                          )}
+                          {hasReal && s.pct !== null && (
+                          s.up
+                          ? <span className="r-stat-pct-up"><TrendingUp size={8} />↑ {s.pct}%</span>
+                          : <span className="r-stat-pct-down"><TrendingDown size={8} />↓ {s.pct}%</span>
+                           )}
                         </div>
                         <div className="r-stat-label">{s.label}</div>
                         {isNull
@@ -954,7 +959,7 @@ export default function Dashboard() {
                     <div style={{ padding: '14px 16px 12px' }}>
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, marginBottom: 8 }}>
                         <span style={{ color: '#FAFAFA', fontSize: 36, fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{pendingReview}</span>
-                        {pendingReview > 0 && <span className="r-stat-pct-up" style={{ marginBottom: 4 }}><TrendingUp size={8} />↑ 7.3%</span>}
+                        {pendingReview > 0 && pendingTrend !== null && <span className="r-stat-pct-up" style={{ marginBottom: 4 }}><TrendingUp size={8} />↑ {pendingTrend}%</span>}
                       </div>
                       <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 10.5, marginBottom: 10 }}>vs yesterday</div>
                       <Sparkline color="#F59E0B" up={true} width={120} height={38} />
@@ -1055,16 +1060,7 @@ export default function Dashboard() {
                           );
                         })
                       ) : (
-                        [['scam', 324], ['subscribe my channel', 298], ['fake giveaway', 276], ['hate speech', 198], ['bad words', 174]].map(([kw, count], i) => (
-                          <div key={i} className="r-keyword-row">
-                            <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 10, fontWeight: 700, width: 16, flexShrink: 0 }}>{String(i + 1).padStart(2, '0')}</span>
-                            <span style={{ flex: 1, color: 'rgba(255,255,255,0.22)', fontSize: 12, fontWeight: 600, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{kw}</span>
-                            <div style={{ width: 70, height: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 4, overflow: 'hidden', flexShrink: 0 }}>
-                              <div style={{ height: '100%', borderRadius: 4, background: 'linear-gradient(90deg,rgba(167,139,250,0.3),rgba(124,58,237,0.3))', width: `${((count as number) / 324) * 100}%` }} />
-                            </div>
-                            <span style={{ color: 'rgba(255,255,255,0.16)', fontSize: 10.5, fontWeight: 700, flexShrink: 0, minWidth: 28, textAlign: 'right' }}>–{count}</span>
-                          </div>
-                        ))
+                        <EmptyState icon={Hash} message="No toxic keywords detected yet." />
                       )}
                       <Link href="/analytics" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, color: '#a78bfa', fontSize: 11, fontWeight: 600, textDecoration: 'none', marginTop: 10 }}>
                         View All Keywords <ChevronRight size={11} />
@@ -1103,10 +1099,10 @@ export default function Dashboard() {
                       </div>
                       <div style={{ padding: '10px 14px 4px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                         {[
-                          { label: 'Uptime', value: '100%', sub: '30 days', color: '#34d399' },
-                          { label: 'Response Time', value: fmtMs(avgResponseTime) || '42ms', sub: 'Average', color: '#a78bfa' },
-                          { label: 'Requests Today', value: (analyticsData?.requestsToday as number ?? 0).toLocaleString() || '0', sub: '↑ 23.7%', color: '#FAFAFA' },
-                          { label: 'Error Rate', value: `${(analyticsData?.falsePositiveRate as number ?? 0).toFixed(2)}%`, sub: '↓ 98.1%', color: '#F59E0B' },
+                          { label: 'Uptime', value: analyticsData?.uptime != null ? `${analyticsData.uptime}%` : '—', sub: '30 days', color: '#34d399' },
+                          { label: 'Response Time', value: fmtMs(avgResponseTime) || '—', sub: 'Average', color: '#a78bfa' },
+                          { label: 'Requests Today', value: (analyticsData?.requestsToday as number ?? 0).toLocaleString() || '0', sub: analyticsData?.requestsTodayTrend ? `↑ ${analyticsData.requestsTodayTrend}%` : '—', color: '#FAFAFA' },
+                          { label: 'Error Rate', value: `${(analyticsData?.falsePositiveRate as number ?? 0).toFixed(2)}%`, sub: analyticsData?.errorRateTrend ? `↓ ${analyticsData.errorRateTrend}%` : '—', color: '#F59E0B' },
                         ].map(s => (
                           <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 9, padding: '9px 10px' }}>
                             <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 9.5, marginBottom: 3 }}>{s.label}</div>
@@ -1123,7 +1119,10 @@ export default function Dashboard() {
                             <span style={{ color: '#22c55e', fontSize: 8.5, fontWeight: 800 }}>HEALTHY</span>
                           </div>
                         </div>
-                        <MiniBarChart values={systemHealthBars} color="#a78bfa" />
+                        {requestVolumeBars.length > 0
+                      ? <MiniBarChart values={requestVolumeBars} color="#a78bfa" />
+                      : <EmptyState icon={Activity} message="No request data yet." />
+                      }
                       </div>
                     </div>
 

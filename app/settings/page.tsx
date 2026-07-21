@@ -52,8 +52,16 @@ export default function SettingsPage() {
   const [memberSince, setMemberSince]             = useState('');
   const [moreOpen, setMoreOpen]                   = useState(false);
   const [notifOpen, setNotifOpen]                 = useState(false);
+  const [isPhone, setIsPhone]                     = useState(false);
 
   const currentPath = '/settings';
+
+  useEffect(() => {
+    // Detect real phone via UA — unaffected by Chrome Desktop Site
+    const ua = navigator.userAgent;
+    const phone = /Android.*Mobile|iPhone|iPod|Windows Phone/i.test(ua);
+    setIsPhone(phone);
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -301,61 +309,80 @@ export default function SettingsPage() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
-        /* ── DESKTOP (≥1024px) ── */
+        /* ── DESKTOP (sidebar visible, no bottom nav) ── */
+        /* Only applies when JS confirms not a phone */
+        .desktop-layout .r-bottom-nav{display:none!important;}
+        .desktop-layout .r-mobile-topbar{display:none!important;}
+        .desktop-layout .r-sidebar{display:flex!important;}
+        .desktop-layout .r-main{margin-left:216px!important;width:calc(100% - 216px)!important;padding-bottom:0!important;}
+        .desktop-layout .r-topbar{display:flex!important;}
+        .desktop-layout .cards-grid{grid-template-columns:1fr 1fr;}
+        .desktop-layout .tab-label-short{display:none!important;}
+        .desktop-layout .tab-label-full{display:inline!important;}
+        .desktop-layout .tab-btn{flex:none;padding:8px 16px;font-size:12.5px;gap:7px;min-height:unset;width:auto;}
+        .desktop-layout .tab-btn svg{width:13px!important;height:13px!important;}
+        .desktop-layout .tabs-row{display:flex;overflow-x:auto;}
+
+        /* ── PHONE (bottom nav, mobile topbar, no sidebar) ── */
+        /* Applies when JS confirms phone — regardless of viewport width */
+        .phone-layout .r-sidebar{display:none!important;}
+        .phone-layout .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;min-height:0!important;}
+        .phone-layout .r-bottom-nav{display:flex!important;}
+        .phone-layout .r-topbar{display:none!important;}
+        .phone-layout .r-mobile-topbar{display:flex!important;}
+        .phone-layout .r-content{padding:16px 14px 20px!important;}
+        .phone-layout .cards-grid{grid-template-columns:1fr!important;}
+        .phone-layout .card-full{grid-column:1!important;}
+        .phone-layout .tabs-row{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:5px!important;overflow-x:visible!important;}
+        .phone-layout .tab-btn{flex:none!important;width:100%!important;justify-content:center!important;
+          padding:0 4px!important;min-height:40px!important;font-size:12px!important;gap:4px!important;white-space:nowrap!important;}
+        .phone-layout .tab-btn svg{width:12px!important;height:12px!important;flex-shrink:0!important;}
+        .phone-layout .tab-label-short{display:inline!important;}
+        .phone-layout .tab-label-full{display:none!important;}
+
+        /* ── SMALL PHONES (≤430px physical width) ── */
+        @media(max-width:430px){
+          .phone-layout .s-card{padding:14px;}
+          .phone-layout .r-content{padding:12px 10px 16px!important;}
+          .phone-layout .tabs-row{gap:3px!important;}
+          .phone-layout .tab-btn{font-size:11.5px!important;}
+        }
+
+        /* ── VERY SMALL PHONES (≤359px) ── */
+        @media(max-width:359px){
+          .phone-layout .tabs-row{grid-template-columns:repeat(5,minmax(52px,1fr))!important;overflow-x:auto!important;}
+          .phone-layout .tab-btn{font-size:10.5px!important;gap:2px!important;}
+          .phone-layout .tab-btn svg{width:10px!important;height:10px!important;}
+        }
+
+        /* ── SSR / JS-not-yet-run fallback: use viewport width ── */
+        /* Overridden immediately once isPhone resolves on client */
+        @media(max-width:1023px){
+          .r-sidebar{display:none;}
+          .r-main{margin-left:0;width:100%;padding-bottom:76px;}
+          .r-bottom-nav{display:flex;}
+          .r-topbar{display:none;}
+          .r-mobile-topbar{display:flex;}
+          .r-content{padding:16px 14px 20px;}
+          .cards-grid{grid-template-columns:1fr;}
+          .card-full{grid-column:1;}
+          .tabs-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;overflow-x:visible;}
+          .tab-btn{flex:none;width:100%;justify-content:center;padding:0 4px;min-height:40px;font-size:12px;gap:4px;white-space:nowrap;}
+          .tab-btn svg{width:12px!important;height:12px!important;}
+          .tab-label-short{display:inline;}
+          .tab-label-full{display:none;}
+        }
         @media(min-width:1024px){
-          .r-bottom-nav{display:none!important;}
-          .r-mobile-topbar{display:none!important;}
+          .r-bottom-nav{display:none;}
+          .r-mobile-topbar{display:none;}
           .cards-grid{grid-template-columns:1fr 1fr;}
           .tab-label-short{display:none;}
           .tab-label-full{display:inline;}
           .tab-btn{flex:none;}
         }
-
-        /* ── NARROW VIEWPORT (≤1023px) — covers both Desktop Site ON and OFF ── */
-        @media(max-width:1023px){
-          .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;}
-          .r-bottom-nav{display:flex!important;}
-          .r-topbar{display:none!important;}
-          .r-mobile-topbar{display:flex!important;}
-          .r-content{padding:16px 14px 20px;}
-          .cards-grid{grid-template-columns:1fr;}
-          .card-full{grid-column:1;}
-          /* Tabs: equal-width grid — fills the row exactly, no gaps, no overflow */
-          .tabs-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;overflow-x:visible;}
-          .tab-btn{flex:none;width:100%;justify-content:center;padding:0 4px;min-height:40px;
-            font-size:12px;gap:4px;flex-shrink:unset;white-space:nowrap;}
-          .tab-btn svg{width:12px!important;height:12px!important;flex-shrink:0;}
-          .tab-label-short{display:inline;}
-          .tab-label-full{display:none;}
-        }
-
-        /* ── WIDE TABLET / DESKTOP SITE ON (≥600px and ≤1023px) ── */
-        @media(min-width:600px) and (max-width:1023px){
-          .tabs-row{display:flex;overflow-x:auto;}
-          .tab-btn{flex:none;width:auto;padding:8px 16px;font-size:12.5px;gap:7px;min-height:unset;}
-          .tab-btn svg{width:13px!important;height:13px!important;}
-          .tab-label-short{display:none;}
-          .tab-label-full{display:inline;}
-        }
-
-        /* ── SMALL PHONES (≤430px) ── */
-        @media(max-width:430px){
-          .s-card{padding:14px;}
-          .r-content{padding:12px 10px 16px;}
-          .tabs-row{gap:3px;}
-          .tab-btn{font-size:11.5px;}
-        }
-
-        /* ── VERY SMALL (≤359px) — allow scroll if needed ── */
-        @media(max-width:359px){
-          .tabs-row{grid-template-columns:repeat(5,minmax(52px,1fr));overflow-x:auto;-webkit-overflow-scrolling:touch;}
-          .tab-btn{font-size:10.5px;gap:2px;}
-          .tab-btn svg{width:10px!important;height:10px!important;}
-        }
       `}</style>
 
-      <div className="r-bg" style={{ display: 'flex' }}>
+      <div className={`r-bg ${isPhone ? 'phone-layout' : 'desktop-layout'}`} style={{ display: 'flex' }}>
 
         {/* ── SIDEBAR ── */}
         <aside className="r-sidebar">

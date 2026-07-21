@@ -302,6 +302,8 @@ export default function SettingsPage() {
         .r-bnav-fab:active{transform:scale(0.93);}
 
         /* RESPONSIVE */
+
+        /* ── TRUE DESKTOP (laptop/desktop with mouse) ── */
         @media(min-width:1024px){
           .r-bottom-nav{display:none!important;}
           .r-mobile-topbar{display:none!important;}
@@ -310,7 +312,9 @@ export default function SettingsPage() {
           .tab-label-full{display:inline;}
         }
 
-        @media(max-width:1023px){
+        /* ── MOBILE LAYOUT (touch devices, Desktop Site OFF) ── */
+        /* Only apply when: narrow viewport AND touch input (not Desktop Site ON) */
+        @media(max-width:1023px) and (hover:none) and (pointer:coarse){
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;min-height:0!important;}
           .r-bg{min-height:0!important;height:auto!important;}
@@ -320,24 +324,44 @@ export default function SettingsPage() {
           .r-content{padding:16px 14px 20px;flex:none!important;}
           .cards-grid{grid-template-columns:1fr;}
           .card-full{grid-column:1;}
-          .tabs-row{gap:4px;}
-          .tab-btn{padding:0 9px;font-size:11.5px;gap:5px;min-height:40px;flex-shrink:1;min-width:0;}
+          /* tabs: slightly wider, fill the row, 40px touch height */
+          .tabs-row{gap:4px;justify-content:stretch;}
+          .tab-btn{flex:1;justify-content:center;padding:0 6px;font-size:11.5px;gap:4px;min-height:40px;flex-shrink:1;min-width:0;}
           .tab-btn svg{width:12px!important;height:12px!important;flex-shrink:0;}
           .tab-label-short{display:inline;}
           .tab-label-full{display:none;}
         }
 
-        @media(max-width:430px){
+        /* ── DESKTOP SITE ON (mouse/trackpad on narrow viewport) ── */
+        /* Treat like desktop: full tab sizes, no mobile compression */
+        @media(max-width:1023px) and (hover:hover) and (pointer:fine){
+          .r-sidebar{display:none!important;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;min-height:0!important;}
+          .r-bg{min-height:0!important;height:auto!important;}
+          .r-bottom-nav{display:flex!important;}
+          .r-topbar{display:none!important;}
+          .r-mobile-topbar{display:flex!important;}
+          .r-content{padding:16px 14px 20px;flex:none!important;}
+          .cards-grid{grid-template-columns:1fr;}
+          .card-full{grid-column:1;}
+          /* tabs: keep full desktop sizing */
+          .tab-label-short{display:none;}
+          .tab-label-full{display:inline;}
+        }
+
+        /* ── SMALL PHONES (360px–430px, touch only) ── */
+        @media(max-width:430px) and (hover:none) and (pointer:coarse){
           .tabs-row{gap:3px;}
-          .tab-btn{padding:0 7px;font-size:11px;gap:4px;}
+          .tab-btn{font-size:11px;gap:3px;}
           .tab-btn svg{width:11px!important;height:11px!important;}
           .s-card{padding:14px;}
           .r-content{padding:12px 10px 16px;}
         }
 
-        @media(max-width:359px){
-          .tabs-row{gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-          .tab-btn{padding:0 6px;font-size:10.5px;gap:3px;flex-shrink:0;}
+        /* ── VERY SMALL PHONES (≤359px, touch only) — scroll fallback ── */
+        @media(max-width:359px) and (hover:none) and (pointer:coarse){
+          .tabs-row{gap:2px;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+          .tab-btn{flex:none;flex-shrink:0;padding:0 8px;font-size:10.5px;gap:3px;}
           .tab-btn svg{width:10px!important;height:10px!important;}
         }
       `}</style>

@@ -277,40 +277,42 @@ export default function SettingsPage() {
            Compact tabs that fit without overflow or clipping.
         ══════════════════════════════════════════════════════ */
         @media(max-width:599px){
-          .r-sidebar{display:none!important;}
-          .r-topbar{display:none!important;}
-          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
-          .r-mobile-topbar{display:flex!important;}
-          .r-bottom-nav{display:flex!important;}
-          .r-content{padding:14px 12px 20px!important;}
-          /* Compact tabs — balanced, not oversized */
-          .tabs-row{gap:5px!important;}
-          .tab-btn{padding:6px 11px!important;font-size:11.5px!important;gap:5px!important;border-radius:9px!important;}
-          .cards-grid{grid-template-columns:1fr!important;}
-          .card-full{grid-column:1!important;}
-          .s-card{padding:14px!important;}
-        }
+  .r-sidebar{display:none!important;}
+  .r-topbar{display:none!important;}
+  .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
+  .r-mobile-topbar{display:flex!important;}
+  .r-bottom-nav{display:flex!important;}
+  .r-content{padding:14px 12px 20px!important;}
+  /* Tabs scroll horizontally — no clipping, touch-friendly */
+  .tabs-row{gap:6px!important;flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important;}
+  .tab-btn{padding:8px 14px!important;font-size:12px!important;gap:6px!important;border-radius:9px!important;flex-shrink:0!important;}
+  .cards-grid{grid-template-columns:1fr!important;}
+  .card-full{grid-column:1!important;}
+  .s-card{padding:14px!important;}
+}
 
         /* ══════════════════════════════════════════════════════
            MID RANGE  600px – 1023px  (Chrome Desktop Site ON on phone,
            or small tablets). Mobile nav + topbar, NO sidebar,
            desktop-style card widths, full tab labels, no blank space.
         ══════════════════════════════════════════════════════ */
-        @media(min-width:600px) and (max-width:1023px){
-          .r-sidebar{display:none!important;}
-          .r-topbar{display:none!important;}
-          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
-          .r-mobile-topbar{display:flex!important;}
-          .r-bottom-nav{display:flex!important;}
-          /* Wider content, desktop-style cards */
-          .r-content{padding:20px 22px 28px!important;}
-          /* Two-column cards like desktop */
-          .cards-grid{grid-template-columns:1fr 1fr!important;}
-          .card-full{grid-column:1 / -1!important;}
-          /* Full-width tabs, comfortable sizing */
-          .tabs-row{gap:7px!important;flex-wrap:nowrap!important;}
-          .tab-btn{padding:8px 14px!important;font-size:12.5px!important;}
-        }
+     @media(min-width:600px) and (max-width:1023px){
+    .r-sidebar{display:none!important;}
+    .r-topbar{display:none!important;}
+    .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
+    .r-mobile-topbar{display:flex!important;}
+    .r-bottom-nav{display:flex!important;}
+     /* Full-width content, natural height — no blank space */
+     .r-bg{min-height:0!important;height:auto!important;}
+     .r-content{padding:20px 20px 32px!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
+      /* Two-column cards */
+      .cards-grid{grid-template-columns:1fr 1fr!important;width:100%!important;}
+      .card-full{grid-column:1 / -1!important;}
+      .s-card{padding:18px!important;width:100%!important;box-sizing:border-box!important;}
+      /* Tabs — scrollable, full labels, no wrapping */
+     .tabs-row{gap:7px!important;flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important;}
+     .tab-btn{padding:8px 15px!important;font-size:12.5px!important;flex-shrink:0!important;}
+  }
 
         /* ══════════════════════════════════════════════════════
            DESKTOP  ≥ 1024px

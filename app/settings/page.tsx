@@ -52,23 +52,8 @@ export default function SettingsPage() {
   const [memberSince, setMemberSince]             = useState('');
   const [moreOpen, setMoreOpen]                   = useState(false);
   const [notifOpen, setNotifOpen]                 = useState(false);
-  // 'phone' | 'phone-desktop' | 'desktop'
-  const [layoutMode, setLayoutMode]               = useState<'phone'|'phone-desktop'|'desktop'>('phone');
 
   const currentPath = '/settings';
-
-  useEffect(() => {
-    const ua = navigator.userAgent;
-    const isPhone = /Android.*Mobile|iPhone|iPod|Windows Phone/i.test(ua);
-    if (!isPhone) {
-      setLayoutMode('desktop');
-    } else if (window.innerWidth >= 600) {
-      // Phone but Desktop Site ON inflated the viewport
-      setLayoutMode('phone-desktop');
-    } else {
-      setLayoutMode('phone');
-    }
-  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -157,7 +142,7 @@ export default function SettingsPage() {
           background-image:linear-gradient(rgba(255,255,255,0.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.011) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        /* SIDEBAR */
+        /* SIDEBAR — desktop only */
         .r-sidebar{width:216px;min-width:216px;background:#0c0c14;border-right:1px solid rgba(124,58,237,0.11);
           display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;}
         .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
@@ -188,7 +173,7 @@ export default function SettingsPage() {
         /* MAIN */
         .r-main{margin-left:216px;min-height:0;display:flex;flex-direction:column;position:relative;z-index:1;width:calc(100% - 216px);}
 
-        /* TOPBAR */
+        /* DESKTOP TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(24px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 22px;height:56px;
           display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,0.25);}
@@ -199,54 +184,30 @@ export default function SettingsPage() {
         .r-icon-btn{width:33px;height:33px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.18s;position:relative;flex-shrink:0;}
         .r-icon-btn:hover{background:rgba(255,255,255,0.07);}
-        .r-credits-btn{display:flex;align-items:center;gap:5px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.16);
-          border-radius:8px;padding:0 11px;height:33px;color:#F59E0B;font-weight:700;font-size:11.5px;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
         .r-avatar-btn{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:9px;padding:3px 9px 3px 3px;cursor:pointer;transition:all 0.18s;gap:6px;}
         .r-avatar-btn:hover{border-color:rgba(255,255,255,0.11);}
 
         /* MOBILE TOPBAR */
-        .r-mobile-topbar{display:none;position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.96);
+        .r-mobile-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.96);
           backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.05);
-          padding:0 12px;height:52px;align-items:center;gap:5px;box-shadow:0 2px 16px rgba(0,0,0,0.3);}
+          padding:0 12px;height:52px;display:flex;align-items:center;gap:5px;box-shadow:0 2px 16px rgba(0,0,0,0.3);}
 
         /* CONTENT */
         .r-content{padding:24px 24px 32px;flex:1;animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;}
 
         /* TABS */
-        .tabs-row{display:flex;gap:6px;margin-bottom:24px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;width:100%;}
+        .tabs-row{display:flex;gap:6px;margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;width:100%;}
         .tabs-row::-webkit-scrollbar{display:none;}
-        .tab-btn{
-          display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;
+        .tab-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;
           font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;
-          background:transparent;
-          color:rgba(255,255,255,0.38);
-          border:1px solid transparent;
-          box-shadow:none;
-          transform:translateY(0);
+          background:transparent;color:rgba(255,255,255,0.38);border:1px solid transparent;
           transition:background 240ms ease,border-color 240ms ease,color 240ms ease,box-shadow 240ms ease,transform 200ms ease;
-          will-change:background,border-color,box-shadow;
-          position:relative;
-          text-decoration:none;
-        }
-        .tab-btn:hover{
-          background:rgba(255,255,255,0.045);
-          border-color:rgba(255,255,255,0.08);
-          color:rgba(255,255,255,0.72);
-          transform:translateY(-1px);
-          box-shadow:0 1px 6px rgba(0,0,0,0.18);
-        }
-        .tab-btn.active{
-          background:linear-gradient(160deg,rgba(124,58,237,0.18) 0%,rgba(109,40,217,0.11) 100%);
-          color:#c4b5fd;
-          border-color:rgba(139,92,246,0.32);
-          box-shadow:0 0 0 1px rgba(139,92,246,0.12),0 2px 8px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.05);
-          transform:translateY(0);
-        }
-        .tab-btn:active{transform:translateY(0)!important;}
-        @media(prefers-reduced-motion:reduce){
-          .tab-btn{transition:none!important;}
-        }
+          position:relative;text-decoration:none;}
+        .tab-btn:hover{background:rgba(255,255,255,0.045);border-color:rgba(255,255,255,0.08);color:rgba(255,255,255,0.72);transform:translateY(-1px);}
+        .tab-btn.active{background:linear-gradient(160deg,rgba(124,58,237,0.18) 0%,rgba(109,40,217,0.11) 100%);
+          color:#c4b5fd;border-color:rgba(139,92,246,0.32);
+          box-shadow:0 0 0 1px rgba(139,92,246,0.12),0 2px 8px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.05);}
 
         /* CARDS */
         .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -301,6 +262,39 @@ export default function SettingsPage() {
         /* WARN BOX */
         .warn-box{padding:13px 15px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.16);border-radius:11px;display:flex;align-items:flex-start;gap:9px;}
 
+        /* ══════════════════════════════════
+           MOBILE  ≤1023px
+        ══════════════════════════════════ */
+        @media(max-width:1023px){
+          .r-sidebar{display:none!important;}
+          .r-topbar{display:none!important;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
+          .r-mobile-topbar{display:flex!important;}
+          .r-bottom-nav{display:flex!important;}
+          .r-content{padding:16px 14px 20px!important;}
+          .cards-grid{grid-template-columns:1fr!important;}
+          .card-full{grid-column:1!important;}
+          .tabs-row{overflow-x:auto!important;flex-wrap:nowrap!important;gap:6px!important;}
+          .tab-btn{flex-shrink:0!important;padding:8px 13px!important;font-size:12px!important;}
+        }
+        @media(max-width:430px){
+          .s-card{padding:14px!important;}
+          .r-content{padding:12px 10px 16px!important;}
+        }
+
+        /* ══════════════════════════════════
+           DESKTOP  ≥1024px
+        ══════════════════════════════════ */
+        @media(min-width:1024px){
+          .r-sidebar{display:flex!important;}
+          .r-topbar{display:flex!important;}
+          .r-mobile-topbar{display:none!important;}
+          .r-bottom-nav{display:none!important;}
+          .r-main{margin-left:216px!important;width:calc(100% - 216px)!important;padding-bottom:0!important;}
+          .cards-grid{grid-template-columns:1fr 1fr!important;}
+          .card-full{grid-column:1 / -1!important;}
+        }
+
         /* BOTTOM NAV */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
@@ -315,106 +309,9 @@ export default function SettingsPage() {
           display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
-
-        /* ═══════════════════════════════════════════
-           LAYOUT MODES — set by JS on mount via UA
-           Overrides any CSS media query behaviour
-        ═══════════════════════════════════════════ */
-
-        /* ── 1. REAL DESKTOP / LAPTOP ── */
-        .desktop-layout .r-bottom-nav{display:none!important;}
-        .desktop-layout .r-mobile-topbar{display:none!important;}
-        .desktop-layout .r-sidebar{display:flex!important;}
-        .desktop-layout .r-main{margin-left:216px!important;width:calc(100% - 216px)!important;padding-bottom:0!important;}
-        .desktop-layout .r-topbar{display:flex!important;}
-        .desktop-layout .cards-grid{grid-template-columns:1fr 1fr!important;}
-        .desktop-layout .card-full{grid-column:1 / -1!important;}
-        .desktop-layout .tab-label-short{display:none!important;}
-        .desktop-layout .tab-label-full{display:inline!important;}
-        .desktop-layout .tabs-row{display:flex!important;overflow-x:auto!important;grid-template-columns:unset!important;}
-        .desktop-layout .tab-btn{flex:none!important;width:auto!important;padding:8px 16px!important;
-          font-size:12.5px!important;gap:7px!important;min-height:unset!important;justify-content:unset!important;}
-        .desktop-layout .tab-btn svg{width:13px!important;height:13px!important;}
-
-        /* ── 2. PHONE + DESKTOP SITE ON ── */
-        /* Mobile navigation, desktop-style content */
-        .phone-desktop-layout .r-sidebar{display:none!important;}
-        .phone-desktop-layout .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;min-height:0!important;}
-        .phone-desktop-layout .r-bottom-nav{display:flex!important;}
-        .phone-desktop-layout .r-topbar{display:none!important;}
-        .phone-desktop-layout .r-mobile-topbar{display:flex!important;}
-        .phone-desktop-layout .r-content{padding:16px 14px 20px!important;}
-        /* Content: desktop-style (wider cards, 2-col grid) */
-        .phone-desktop-layout .cards-grid{grid-template-columns:1fr 1fr!important;}
-        .phone-desktop-layout .card-full{grid-column:1 / -1!important;}
-        /* Tabs: full desktop labels, flex row */
-        .phone-desktop-layout .tabs-row{display:flex!important;overflow-x:auto!important;grid-template-columns:unset!important;}
-        .phone-desktop-layout .tab-btn{flex:none!important;width:auto!important;padding:8px 14px!important;
-          font-size:12px!important;gap:6px!important;min-height:unset!important;justify-content:unset!important;}
-        .phone-desktop-layout .tab-btn svg{width:13px!important;height:13px!important;}
-        .phone-desktop-layout .tab-label-short{display:none!important;}
-        .phone-desktop-layout .tab-label-full{display:inline!important;}
-
-        /* ── 3. PHONE + DESKTOP SITE OFF (narrow viewport) ── */
-        .phone-layout .r-sidebar{display:none!important;}
-        .phone-layout .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;min-height:0!important;}
-        .phone-layout .r-bottom-nav{display:flex!important;}
-        .phone-layout .r-topbar{display:none!important;}
-        .phone-layout .r-mobile-topbar{display:flex!important;}
-        .phone-layout .r-content{padding:16px 14px 20px!important;}
-        .phone-layout .cards-grid{grid-template-columns:1fr!important;}
-        .phone-layout .card-full{grid-column:1!important;}
-        /* Tabs: equal-width grid, short labels */
-        .phone-layout .tabs-row{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:5px!important;overflow-x:visible!important;}
-        .phone-layout .tab-btn{flex:none!important;width:100%!important;justify-content:center!important;
-          padding:0 4px!important;min-height:40px!important;font-size:12px!important;gap:4px!important;white-space:nowrap!important;}
-        .phone-layout .tab-btn svg{width:12px!important;height:12px!important;flex-shrink:0!important;}
-        .phone-layout .tab-label-short{display:inline!important;}
-        .phone-layout .tab-label-full{display:none!important;}
-
-        /* Small phone tweaks */
-        @media(max-width:430px){
-          .phone-layout .s-card{padding:14px;}
-          .phone-layout .r-content{padding:12px 10px 16px!important;}
-          .phone-layout .tabs-row{gap:3px!important;}
-          .phone-layout .tab-btn{font-size:11.5px!important;}
-        }
-        @media(max-width:359px){
-          .phone-layout .tabs-row{grid-template-columns:repeat(5,minmax(52px,1fr))!important;overflow-x:auto!important;}
-          .phone-layout .tab-btn{font-size:10.5px!important;gap:2px!important;}
-          .phone-layout .tab-btn svg{width:10px!important;height:10px!important;}
-        }
-
-        /* ── SSR / pre-hydration fallback (viewport-based, overridden once JS runs) ── */
-        @media(max-width:1023px){
-          .r-sidebar{display:none;}
-          .r-main{margin-left:0;width:100%;padding-bottom:76px;min-height:0;}
-          .r-bottom-nav{display:flex;}
-          .r-topbar{display:none;}
-          .r-mobile-topbar{display:flex;}
-          .r-content{padding:16px 14px 20px;}
-          .cards-grid{grid-template-columns:1fr;}
-          .card-full{grid-column:1;}
-          .tabs-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;overflow-x:visible;}
-          .tab-btn{flex:none;width:100%;justify-content:center;padding:0 4px;min-height:40px;font-size:12px;gap:4px;white-space:nowrap;}
-          .tab-btn svg{width:12px!important;height:12px!important;}
-          .tab-label-short{display:inline;}
-          .tab-label-full{display:none;}
-        }
-        @media(min-width:1024px){
-          .r-bottom-nav{display:none;}
-          .r-mobile-topbar{display:none;}
-          .r-sidebar{display:flex;}
-          .r-main{margin-left:216px;width:calc(100% - 216px);padding-bottom:0;}
-          .r-topbar{display:flex;}
-          .cards-grid{grid-template-columns:1fr 1fr;}
-          .tab-label-short{display:none;}
-          .tab-label-full{display:inline;}
-          .tab-btn{flex:none;}
-        }
       `}</style>
 
-      <div className={`r-bg ${layoutMode === 'desktop' ? 'desktop-layout' : layoutMode === 'phone-desktop' ? 'phone-desktop-layout' : 'phone-layout'}`} style={{ display: 'flex' }}>
+      <div className="r-bg" style={{ display: 'flex' }}>
 
         {/* ── SIDEBAR ── */}
         <aside className="r-sidebar">
@@ -554,20 +451,15 @@ export default function SettingsPage() {
 
             {/* TABS */}
             <div className="tabs-row">
-              {TABS.map(({ id, label, icon: Icon }) => {
-                const short: Record<string, string> = { profile: 'Profile', security: 'Security', '2fa': '2FA', encryption: 'Encrypt' };
-                return (
-                  <button key={id} onClick={() => setActiveTab(id)} className={`tab-btn${activeTab === id ? ' active' : ''}`}>
-                    <Icon size={13} />
-                    <span className="tab-label-full">{label}</span>
-                    <span className="tab-label-short">{short[id] ?? label}</span>
-                  </button>
-                );
-              })}
+              {TABS.map(({ id, label, icon: Icon }) => (
+                <button key={id} onClick={() => setActiveTab(id)} className={`tab-btn${activeTab === id ? ' active' : ''}`}>
+                  <Icon size={13} />
+                  {label}
+                </button>
+              ))}
               <Link href={API_ACCESS_TAB.href} className="tab-btn" style={{ textDecoration: 'none' }}>
                 <API_ACCESS_TAB.icon size={13} />
-                <span className="tab-label-full">{API_ACCESS_TAB.label}</span>
-                <span className="tab-label-short">API</span>
+                {API_ACCESS_TAB.label}
               </Link>
             </div>
 
@@ -636,7 +528,6 @@ export default function SettingsPage() {
                     </button>
                   )}
                 </div>
-
               </div>
             )}
 

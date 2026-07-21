@@ -216,9 +216,38 @@ async function ensureParentDoc(uid: string) {
 
 async function fetchYouTubeVideos(uid: string): Promise<YouTubeVideo[]> {
   try {
-    const tokenDoc = await getDoc(doc(db, "youtube_tokens", uid));
-    if (!tokenDoc.exists()) return [];
-    const { access_token } = tokenDoc.data() as { access_token: string };
+    // ── 1. Read tokens from users/{uid} (same as Dashboard) ──
+    const userDoc = await getDoc(doc(db, "users", uid));
+    if (!userDoc.exists()) return [];
+    const data = userDoc.data() as {
+      youtube_access_token?: string;
+      youtube_refresh_token?: string;
+    };
+
+    let access_token = data.youtube_access_token || "";
+    const refresh_token = data.youtube_refresh_token || "";
+
+    if (!access_token && !refresh_token) return [];
+
+    // ── 2. Refresh the token if refresh_token exists ──
+    if (refresh_token) {
+      const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id:     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+          refresh_token,
+          grant_type:    "refresh_token",
+        }),
+      });
+      const tokenData = await tokenRes.json();
+      if (tokenData.access_token) {
+        access_token = tokenData.access_token;
+      }
+    }
+
+    // ── 3. Fetch uploads playlist ID ──
     const channelRes = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true`,
       { headers: { Authorization: `Bearer ${access_token}` } }
@@ -227,6 +256,8 @@ async function fetchYouTubeVideos(uid: string): Promise<YouTubeVideo[]> {
     const channelData = await channelRes.json();
     const uploadsId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
     if (!uploadsId) return [];
+
+    // ── 4. Fetch playlist items ──
     const playlistRes = await fetch(
       `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=50`,
       { headers: { Authorization: `Bearer ${access_token}` } }
@@ -237,18 +268,20 @@ async function fetchYouTubeVideos(uid: string): Promise<YouTubeVideo[]> {
       (item: { contentDetails: { videoId: string } }) => item.contentDetails.videoId
     );
     if (!videoIds.length) return [];
+
+    // ── 5. Fetch video stats ──
     const statsRes = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails,liveStreamingDetails&id=${videoIds.join(",")}`,
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
     if (!statsRes.ok) return [];
     const statsData = await statsRes.json();
+
     return (statsData.items ?? []).map((v: {
       id: string;
       snippet: { title: string; publishedAt: string; thumbnails?: { medium?: { url: string }; default?: { url: string } }; liveBroadcastContent?: string };
       statistics: { viewCount?: string; commentCount?: string };
       contentDetails: { duration: string };
-      liveStreamingDetails?: unknown;
     }): YouTubeVideo => ({
       id: v.id,
       title: v.snippet.title,

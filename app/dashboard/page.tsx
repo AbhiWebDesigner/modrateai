@@ -26,7 +26,7 @@ const PLAN_COMMENTS_LIMIT: Record<string, number> = { free: 2000, pro: 25000, ag
 interface AutomationRule {
   id: string;
   name: string;
-  active: boolean;           // ← boolean, same as Automation page
+  active: boolean;
   keywords?: string[];
   video?: { id: string; title: string } | null;
   replyMode?: string;
@@ -216,16 +216,12 @@ function LiveItem({ icon: Icon, iconColor, title, sub, time, bg }: {
 }
 
 // ─── Real-time Automation Row ────────────────────────────────────────────────
-// Reads from automations/{uid}/rules/{ruleId} — same as Automation page
-// active: true → "Live", active: false → "Disabled"
 function RealAutomationRow({ rule, uid }: { rule: AutomationRule; uid: string }) {
   const [toggling, setToggling] = useState(false);
 
   const isLive = rule.active === true;
-
   const statusColor = isLive ? '#34d399' : '#f87171';
   const statusLabel = isLive ? 'Live' : 'Disabled';
-
   const keywordsCount = Array.isArray(rule.keywords) ? rule.keywords.length : 0;
   const videoLabel = rule.video?.title || rule.video?.id || 'All Videos';
   const updatedLabel = rule.updatedAt ? timeAgo(rule.updatedAt) : rule.createdAt ? timeAgo(rule.createdAt) : '—';
@@ -234,9 +230,9 @@ function RealAutomationRow({ rule, uid }: { rule: AutomationRule; uid: string })
     if (toggling) return;
     setToggling(true);
     try {
-      // Same path as Automation page: automations/{uid}/rules/{ruleId}
       const ref = doc(db, 'automations', uid, 'rules', rule.id);
-      await updateDoc(ref, { active: !isLive });
+      // FIX: also write updatedAt so the updatedAt desc query re-sorts correctly
+      await updateDoc(ref, { active: !isLive, updatedAt: serverTimestamp() });
     } catch (e) {
       console.error('Toggle failed:', e);
     } finally {
@@ -290,10 +286,7 @@ function RealAutomationRow({ rule, uid }: { rule: AutomationRule; uid: string })
       </div>
 
       <div style={{ display: 'flex', gap: 10, paddingLeft: 15, flexWrap: 'wrap' }}>
-        <span style={{
-          color: 'rgba(255,255,255,0.28)', fontSize: 10,
-          display: 'flex', alignItems: 'center', gap: 3,
-        }}>
+        <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10, display: 'flex', alignItems: 'center', gap: 3 }}>
           <Hash size={9} strokeWidth={2} color="rgba(255,255,255,0.22)" />
           {keywordsCount} {keywordsCount === 1 ? 'Keyword' : 'Keywords'}
         </span>
@@ -305,10 +298,7 @@ function RealAutomationRow({ rule, uid }: { rule: AutomationRule; uid: string })
           <YTIcon color="rgba(255,255,255,0.22)" size={9} />
           {videoLabel}
         </span>
-        <span style={{
-          color: 'rgba(255,255,255,0.22)', fontSize: 10,
-          display: 'flex', alignItems: 'center', gap: 3, marginLeft: 'auto',
-        }}>
+        <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 10, display: 'flex', alignItems: 'center', gap: 3, marginLeft: 'auto' }}>
           <Clock size={9} strokeWidth={2} color="rgba(255,255,255,0.16)" />
           {updatedLabel}
         </span>
@@ -318,7 +308,8 @@ function RealAutomationRow({ rule, uid }: { rule: AutomationRule; uid: string })
 }
 
 // ─── Recent Automations widget ───────────────────────────────────────────────
-// Collection: automations/{uid}/rules — same as Automation page
+// Collection: automations/{uid}/rules
+// FIX: orderBy('updatedAt', 'desc') so most-recently-modified rules surface first
 function RecentAutomations({ uid }: { uid: string }) {
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -326,9 +317,8 @@ function RecentAutomations({ uid }: { uid: string }) {
   useEffect(() => {
     if (!uid) return;
 
-    // ✅ Correct path: automations/{uid}/rules (matches Automation page)
     const ref = collection(db, 'automations', uid, 'rules');
-    const q = query(ref, orderBy('createdAt', 'desc'), limit(4));
+    const q = query(ref, orderBy('updatedAt', 'desc'), limit(4));
 
     const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as AutomationRule));

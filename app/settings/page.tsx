@@ -23,6 +23,8 @@ const TABS: { id: TabId; label: string; icon: typeof UserIcon }[] = [
   { id: 'encryption', label: 'Encryption', icon: Key        },
 ];
 
+const API_ACCESS_TAB = { label: 'API Access', icon: ExternalLink, href: '/dashboard/settings/api-access' };
+
 const SIDEBAR_NAV = [
   { label: 'Overview',   icon: LayoutDashboard, href: '/dashboard'  },
   { label: 'Live Feed',  icon: Rss,             href: '/live-feed'  },
@@ -140,6 +142,7 @@ export default function SettingsPage() {
           background-image:linear-gradient(rgba(255,255,255,0.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.011) 1px,transparent 1px);
           background-size:44px 44px;}
 
+        /* SIDEBAR */
         .r-sidebar{width:216px;min-width:216px;background:#0c0c14;border-right:1px solid rgba(124,58,237,0.11);
           display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;}
         .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
@@ -167,8 +170,10 @@ export default function SettingsPage() {
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;font-weight:700;font-size:11.5px;
           padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;display:block;}
 
+        /* MAIN */
         .r-main{margin-left:216px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;width:calc(100% - 216px);}
 
+        /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(24px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 22px;height:56px;
           display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,0.25);}
@@ -179,16 +184,21 @@ export default function SettingsPage() {
         .r-icon-btn{width:33px;height:33px;border-radius:8px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.18s;position:relative;flex-shrink:0;}
         .r-icon-btn:hover{background:rgba(255,255,255,0.07);}
+        .r-credits-btn{display:flex;align-items:center;gap:5px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.16);
+          border-radius:8px;padding:0 11px;height:33px;color:#F59E0B;font-weight:700;font-size:11.5px;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
         .r-avatar-btn{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:9px;padding:3px 9px 3px 3px;cursor:pointer;transition:all 0.18s;gap:6px;}
         .r-avatar-btn:hover{border-color:rgba(255,255,255,0.11);}
 
+        /* MOBILE TOPBAR */
         .r-mobile-topbar{display:none;position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.96);
           backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,0.05);
           padding:0 12px;height:52px;align-items:center;gap:5px;box-shadow:0 2px 16px rgba(0,0,0,0.3);}
 
+        /* CONTENT */
         .r-content{padding:24px 24px 32px;flex:1;animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;}
 
+        /* TABS */
         .tabs-row{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;}
         .tab-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;
           font-size:12.5px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:all 0.2s;
@@ -196,12 +206,14 @@ export default function SettingsPage() {
         .tab-btn:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);}
         .tab-btn.active{background:rgba(124,58,237,0.14);color:#a78bfa;border-color:rgba(124,58,237,0.25);}
 
+        /* CARDS */
         .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
         .card-full{grid-column:1 / -1;}
         .s-card{background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px;}
         .card-title{color:#FAFAFA;font-weight:700;font-size:14px;margin-bottom:3px;}
         .card-sub{color:rgba(255,255,255,0.3);font-size:11.5px;margin-bottom:16px;}
 
+        /* FORM */
         .field-label{display:block;color:rgba(255,255,255,0.38);font-size:10.5px;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em;}
         .field-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:9px;
           padding:10px 13px;font-size:13px;color:#FAFAFA;transition:border-color 0.2s,background 0.2s;outline:none;}
@@ -209,6 +221,7 @@ export default function SettingsPage() {
         .field-input:focus{border-color:rgba(124,58,237,0.4);background:rgba(255,255,255,0.045);}
         .field-input:disabled{color:rgba(255,255,255,0.28);cursor:not-allowed;}
 
+        /* BUTTONS */
         .btn-primary{width:100%;padding:11px 18px;border-radius:9px;font-size:13px;font-weight:700;border:none;cursor:pointer;
           background:linear-gradient(135deg,#7C3AED,#6D28D9);color:#fff;display:flex;align-items:center;justify-content:center;gap:7px;
           transition:all 0.18s;box-shadow:0 2px 10px rgba(124,58,237,0.25);}
@@ -224,23 +237,29 @@ export default function SettingsPage() {
         .btn-danger:hover{background:rgba(248,113,113,0.13);border-color:rgba(248,113,113,0.38);}
         .btn-danger:disabled{opacity:0.45;cursor:not-allowed;}
 
+        /* INFO ROW */
         .info-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
         .info-row:last-of-type{border-bottom:none;}
         .info-label{color:rgba(255,255,255,0.38);font-size:12.5px;display:flex;align-items:center;gap:7px;}
         .info-value{color:#FAFAFA;font-size:12.5px;font-weight:600;}
 
+        /* BADGES */
         .badge-green{background:rgba(52,211,153,0.1);color:#34D399;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;border:1px solid rgba(52,211,153,0.2);}
         .badge-gray{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.45);padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;}
         .badge-yellow{background:rgba(245,158,11,0.1);color:#FBBF24;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;border:1px solid rgba(245,158,11,0.2);}
         .badge-red{background:rgba(248,113,113,0.1);color:#f87171;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;border:1px solid rgba(248,113,113,0.2);}
 
+        /* TOGGLE */
         .toggle{width:42px;height:23px;border-radius:100px;border:none;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
         .toggle-thumb{position:absolute;top:2px;width:19px;height:19px;border-radius:50%;background:white;transition:left 0.2s;}
 
+        /* SESSION CARD */
         .session-card{display:flex;align-items:center;gap:11px;padding:13px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:11px;}
 
+        /* WARN BOX */
         .warn-box{padding:13px 15px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.16);border-radius:11px;display:flex;align-items:flex-start;gap:9px;}
 
+        /* BOTTOM NAV */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
           backdrop-filter:blur(24px);padding:6px 4px env(safe-area-inset-bottom,6px);}
@@ -255,9 +274,7 @@ export default function SettingsPage() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
-        .api-access-card{transition:border-color 0.2s,background 0.2s;}
-        .api-access-card:hover{border-color:rgba(124,58,237,0.22)!important;background:rgba(124,58,237,0.04)!important;cursor:pointer;}
-
+        /* RESPONSIVE */
         @media(min-width:1024px){
           .r-bottom-nav{display:none!important;}
           .r-mobile-topbar{display:none!important;}
@@ -428,6 +445,9 @@ export default function SettingsPage() {
                   <Icon size={13} />{label}
                 </button>
               ))}
+              <Link href={API_ACCESS_TAB.href} className="tab-btn" style={{ textDecoration: 'none' }}>
+                <API_ACCESS_TAB.icon size={13} />{API_ACCESS_TAB.label}
+              </Link>
             </div>
 
             {/* ── PROFILE TAB ── */}
@@ -494,25 +514,6 @@ export default function SettingsPage() {
                       Connect YouTube
                     </button>
                   )}
-                </div>
-
-                {/* ── API ACCESS CARD ── */}
-                <div
-                  className="s-card card-full api-access-card"
-                  onClick={() => router.push('/dashboard/settings/api-access')}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 11, background: 'rgba(124,58,237,0.09)', border: '1px solid rgba(124,58,237,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Key size={17} color="#a78bfa" strokeWidth={1.8} />
-                      </div>
-                      <div>
-                        <p className="card-title" style={{ marginBottom: 2 }}>🔌 API Access</p>
-                        <p className="card-sub" style={{ marginBottom: 0 }}>Manage your YouTube API connection, Google Cloud Project and API credentials.</p>
-                      </div>
-                    </div>
-                    <ChevronRight size={16} color="rgba(255,255,255,0.22)" strokeWidth={1.8} style={{ flexShrink: 0, marginLeft: 14 }} />
-                  </div>
                 </div>
 
               </div>

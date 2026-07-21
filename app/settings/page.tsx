@@ -199,10 +199,11 @@ export default function SettingsPage() {
         .r-content{padding:24px 24px 32px;flex:1;animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;}
 
         /* TABS */
-        .tabs-row{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;}
+        .tabs-row{display:flex;gap:6px;margin-bottom:24px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;}
+        .tabs-row::-webkit-scrollbar{display:none;}
         .tab-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;
           font-size:12.5px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:all 0.2s;
-          background:transparent;color:rgba(255,255,255,0.38);white-space:nowrap;}
+          background:transparent;color:rgba(255,255,255,0.38);white-space:nowrap;flex-shrink:0;}
         .tab-btn:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);}
         .tab-btn.active{background:rgba(124,58,237,0.14);color:#a78bfa;border-color:rgba(124,58,237,0.25);}
 
@@ -279,24 +280,39 @@ export default function SettingsPage() {
           .r-bottom-nav{display:none!important;}
           .r-mobile-topbar{display:none!important;}
           .cards-grid{grid-template-columns:1fr 1fr;}
+          .tab-label-short{display:none;}
+          .tab-label-full{display:inline;}
         }
 
         @media(max-width:1023px){
           .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;min-height:0!important;}
+          .r-bg{min-height:0!important;height:auto!important;}
           .r-bottom-nav{display:flex!important;}
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
-          .r-content{padding:16px 14px 20px;}
+          .r-content{padding:16px 14px 20px;flex:none!important;}
           .cards-grid{grid-template-columns:1fr;}
           .card-full{grid-column:1;}
+          .tabs-row{gap:4px;}
+          .tab-btn{padding:0 9px;font-size:11.5px;gap:5px;min-height:40px;flex-shrink:1;min-width:0;}
+          .tab-btn svg{width:12px!important;height:12px!important;flex-shrink:0;}
+          .tab-label-short{display:inline;}
+          .tab-label-full{display:none;}
         }
 
-        @media(max-width:480px){
-          .r-content{padding:12px 10px 16px;}
+        @media(max-width:430px){
+          .tabs-row{gap:3px;}
+          .tab-btn{padding:0 7px;font-size:11px;gap:4px;}
+          .tab-btn svg{width:11px!important;height:11px!important;}
           .s-card{padding:14px;}
-          .tabs-row{gap:4px;}
-          .tab-btn{padding:7px 10px;font-size:11.5px;}
+          .r-content{padding:12px 10px 16px;}
+        }
+
+        @media(max-width:359px){
+          .tabs-row{gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+          .tab-btn{padding:0 6px;font-size:10.5px;gap:3px;flex-shrink:0;}
+          .tab-btn svg{width:10px!important;height:10px!important;}
         }
       `}</style>
 
@@ -440,13 +456,20 @@ export default function SettingsPage() {
 
             {/* TABS */}
             <div className="tabs-row">
-              {TABS.map(({ id, label, icon: Icon }) => (
-                <button key={id} onClick={() => setActiveTab(id)} className={`tab-btn${activeTab === id ? ' active' : ''}`}>
-                  <Icon size={13} />{label}
-                </button>
-              ))}
+              {TABS.map(({ id, label, icon: Icon }) => {
+                const short: Record<string, string> = { profile: 'Profile', security: 'Security', '2fa': '2FA', encryption: 'Encrypt' };
+                return (
+                  <button key={id} onClick={() => setActiveTab(id)} className={`tab-btn${activeTab === id ? ' active' : ''}`}>
+                    <Icon size={13} />
+                    <span className="tab-label-full">{label}</span>
+                    <span className="tab-label-short">{short[id] ?? label}</span>
+                  </button>
+                );
+              })}
               <Link href={API_ACCESS_TAB.href} className="tab-btn" style={{ textDecoration: 'none' }}>
-                <API_ACCESS_TAB.icon size={13} />{API_ACCESS_TAB.label}
+                <API_ACCESS_TAB.icon size={13} />
+                <span className="tab-label-full">{API_ACCESS_TAB.label}</span>
+                <span className="tab-label-short">API</span>
               </Link>
             </div>
 

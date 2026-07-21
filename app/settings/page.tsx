@@ -171,7 +171,7 @@ export default function SettingsPage() {
           padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;display:block;}
 
         /* MAIN */
-        .r-main{margin-left:216px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;width:calc(100% - 216px);}
+        .r-main{margin-left:216px;min-height:0;display:flex;flex-direction:column;position:relative;z-index:1;width:calc(100% - 216px);}
 
         /* TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(24px);
@@ -199,7 +199,7 @@ export default function SettingsPage() {
         .r-content{padding:24px 24px 32px;flex:1;animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;}
 
         /* TABS */
-        .tabs-row{display:flex;gap:6px;margin-bottom:24px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;}
+        .tabs-row{display:flex;gap:6px;margin-bottom:24px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;width:100%;}
         .tabs-row::-webkit-scrollbar{display:none;}
         .tab-btn{
           display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;
@@ -301,67 +301,56 @@ export default function SettingsPage() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
-        /* RESPONSIVE */
-
-        /* ── TRUE DESKTOP (laptop/desktop with mouse) ── */
+        /* ── DESKTOP (≥1024px) ── */
         @media(min-width:1024px){
           .r-bottom-nav{display:none!important;}
           .r-mobile-topbar{display:none!important;}
           .cards-grid{grid-template-columns:1fr 1fr;}
           .tab-label-short{display:none;}
           .tab-label-full{display:inline;}
+          .tab-btn{flex:none;}
         }
 
-        /* ── MOBILE LAYOUT (touch devices, Desktop Site OFF) ── */
-        /* Only apply when: narrow viewport AND touch input (not Desktop Site ON) */
-        @media(max-width:1023px) and (hover:none) and (pointer:coarse){
+        /* ── NARROW VIEWPORT (≤1023px) — covers both Desktop Site ON and OFF ── */
+        @media(max-width:1023px){
           .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;min-height:0!important;}
-          .r-bg{min-height:0!important;height:auto!important;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;}
           .r-bottom-nav{display:flex!important;}
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
-          .r-content{padding:16px 14px 20px;flex:none!important;}
+          .r-content{padding:16px 14px 20px;}
           .cards-grid{grid-template-columns:1fr;}
           .card-full{grid-column:1;}
-          /* tabs: slightly wider, fill the row, 40px touch height */
-          .tabs-row{gap:4px;justify-content:stretch;}
-          .tab-btn{flex:1;justify-content:center;padding:0 6px;font-size:11.5px;gap:4px;min-height:40px;flex-shrink:1;min-width:0;}
+          /* Tabs: equal-width grid — fills the row exactly, no gaps, no overflow */
+          .tabs-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;overflow-x:visible;}
+          .tab-btn{flex:none;width:100%;justify-content:center;padding:0 4px;min-height:40px;
+            font-size:12px;gap:4px;flex-shrink:unset;white-space:nowrap;}
           .tab-btn svg{width:12px!important;height:12px!important;flex-shrink:0;}
           .tab-label-short{display:inline;}
           .tab-label-full{display:none;}
         }
 
-        /* ── DESKTOP SITE ON (mouse/trackpad on narrow viewport) ── */
-        /* Treat like desktop: full tab sizes, no mobile compression */
-        @media(max-width:1023px) and (hover:hover) and (pointer:fine){
-          .r-sidebar{display:none!important;}
-          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;min-height:0!important;}
-          .r-bg{min-height:0!important;height:auto!important;}
-          .r-bottom-nav{display:flex!important;}
-          .r-topbar{display:none!important;}
-          .r-mobile-topbar{display:flex!important;}
-          .r-content{padding:16px 14px 20px;flex:none!important;}
-          .cards-grid{grid-template-columns:1fr;}
-          .card-full{grid-column:1;}
-          /* tabs: keep full desktop sizing */
+        /* ── WIDE TABLET / DESKTOP SITE ON (≥600px and ≤1023px) ── */
+        @media(min-width:600px) and (max-width:1023px){
+          .tabs-row{display:flex;overflow-x:auto;}
+          .tab-btn{flex:none;width:auto;padding:8px 16px;font-size:12.5px;gap:7px;min-height:unset;}
+          .tab-btn svg{width:13px!important;height:13px!important;}
           .tab-label-short{display:none;}
           .tab-label-full{display:inline;}
         }
 
-        /* ── SMALL PHONES (360px–430px, touch only) ── */
-        @media(max-width:430px) and (hover:none) and (pointer:coarse){
-          .tabs-row{gap:3px;}
-          .tab-btn{font-size:11px;gap:3px;}
-          .tab-btn svg{width:11px!important;height:11px!important;}
+        /* ── SMALL PHONES (≤430px) ── */
+        @media(max-width:430px){
           .s-card{padding:14px;}
           .r-content{padding:12px 10px 16px;}
+          .tabs-row{gap:3px;}
+          .tab-btn{font-size:11.5px;}
         }
 
-        /* ── VERY SMALL PHONES (≤359px, touch only) — scroll fallback ── */
-        @media(max-width:359px) and (hover:none) and (pointer:coarse){
-          .tabs-row{gap:2px;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-          .tab-btn{flex:none;flex-shrink:0;padding:0 8px;font-size:10.5px;gap:3px;}
+        /* ── VERY SMALL (≤359px) — allow scroll if needed ── */
+        @media(max-width:359px){
+          .tabs-row{grid-template-columns:repeat(5,minmax(52px,1fr));overflow-x:auto;-webkit-overflow-scrolling:touch;}
+          .tab-btn{font-size:10.5px;gap:2px;}
           .tab-btn svg{width:10px!important;height:10px!important;}
         }
       `}</style>

@@ -201,11 +201,37 @@ export default function SettingsPage() {
         /* TABS */
         .tabs-row{display:flex;gap:6px;margin-bottom:24px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;}
         .tabs-row::-webkit-scrollbar{display:none;}
-        .tab-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;
-          font-size:12.5px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:all 0.2s;
-          background:transparent;color:rgba(255,255,255,0.38);white-space:nowrap;flex-shrink:0;}
-        .tab-btn:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);}
-        .tab-btn.active{background:rgba(124,58,237,0.14);color:#a78bfa;border-color:rgba(124,58,237,0.25);}
+        .tab-btn{
+          display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;
+          font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;
+          background:transparent;
+          color:rgba(255,255,255,0.38);
+          border:1px solid transparent;
+          box-shadow:none;
+          transform:translateY(0);
+          transition:background 240ms ease,border-color 240ms ease,color 240ms ease,box-shadow 240ms ease,transform 200ms ease;
+          will-change:background,border-color,box-shadow;
+          position:relative;
+          text-decoration:none;
+        }
+        .tab-btn:hover{
+          background:rgba(255,255,255,0.045);
+          border-color:rgba(255,255,255,0.08);
+          color:rgba(255,255,255,0.72);
+          transform:translateY(-1px);
+          box-shadow:0 1px 6px rgba(0,0,0,0.18);
+        }
+        .tab-btn.active{
+          background:linear-gradient(160deg,rgba(124,58,237,0.18) 0%,rgba(109,40,217,0.11) 100%);
+          color:#c4b5fd;
+          border-color:rgba(139,92,246,0.32);
+          box-shadow:0 0 0 1px rgba(139,92,246,0.12),0 2px 8px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.05);
+          transform:translateY(0);
+        }
+        .tab-btn:active{transform:translateY(0)!important;}
+        @media(prefers-reduced-motion:reduce){
+          .tab-btn{transition:none!important;}
+        }
 
         /* CARDS */
         .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}

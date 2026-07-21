@@ -5,7 +5,7 @@ import {
   Shield, CheckCircle, ChevronRight, ChevronLeft, Copy, Eye, EyeOff,
   Play, ExternalLink, Video, Check, Lock, Wifi, WifiOff, RotateCcw,
   Trash2, RefreshCw, AlertTriangle, Activity, Clock, Zap, BarChart2, X,
-  Cloud, Server, Youtube,
+  Cloud, Server,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -267,7 +267,7 @@ function Step6({ onPrev }: { onPrev: () => void }) {
       </div>
       <div className="rounded-2xl border border-white/10 bg-white/5 p-8 flex flex-col items-center gap-5">
         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 ${connected ? "bg-green-500/20 border border-green-500/30" : "bg-red-500/10 border border-red-500/20"}`}>
-          {connected ? <CheckCircle size={32} className="text-green-400" /> : <Youtube size={32} className="text-red-400" />}
+          {connected ? <CheckCircle size={32} className="text-green-400" /> : <svg width="32" height="32" viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="#f87171"/><path d="M9.8 15.6V8.4l6.2 3.6-6.2 3.6z" fill="white"/></svg>}
         </div>
         <div className="text-center">
           <p className="text-white font-semibold mb-1">{connected ? "YouTube Connected" : "YouTube Not Connected"}</p>
@@ -278,7 +278,7 @@ function Step6({ onPrev }: { onPrev: () => void }) {
             className="flex items-center gap-2 px-8 py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/40 disabled:opacity-60 hover:scale-[1.02]">
             {connecting
               ? <><div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Connecting…</>
-              : <><Youtube size={16} /> Connect YouTube</>}
+              : <><svg width="16" height="16" viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="white"/><path d="M9.8 15.6V8.4l6.2 3.6-6.2 3.6z" fill="white"/></svg> Connect YouTube</>}
           </button>
         )}
       </div>

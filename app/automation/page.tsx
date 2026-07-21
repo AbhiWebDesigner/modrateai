@@ -7,7 +7,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import {
   collection, doc, addDoc, deleteDoc, updateDoc,
   onSnapshot, increment, query, orderBy, serverTimestamp,
-  setDoc, getDoc,
+  setDoc,
 } from "firebase/firestore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ const NAV_LINKS = [
 const SIDEBAR_LINKS = [
   { href: "/dashboard",  label: "Overview",   icon: (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>) },
   { href: "/live-feed",  label: "Live Feed",  icon: (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 4.93a10 10 0 0 0 0 14.14"/></svg>) },
-  { href: "/moderation", label: "Moderation",icon: (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>) },
+  { href: "/moderation", label: "Moderation", icon: (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>) },
   { href: "/automation", label: "Automation", icon: (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>) },
   { href: "/alerts",     label: "Alerts",     icon: (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>) },
   { href: "/analytics",  label: "Analytics",  icon: (<svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>) },
@@ -214,84 +214,13 @@ async function ensureParentDoc(uid: string) {
   await setDoc(parentRef, { totalRules: 0, activeRules: 0, totalRepliesSent: 0, moderationMode: "auto", notifications: true, schedule: { enabled: false } }, { merge: true });
 }
 
+// ── FIXED: now calls the API route instead of reading youtube_tokens directly ──
 async function fetchYouTubeVideos(uid: string): Promise<YouTubeVideo[]> {
   try {
-    // ── 1. Read tokens from users/{uid} (same as Dashboard) ──
-    const userDoc = await getDoc(doc(db, "users", uid));
-    if (!userDoc.exists()) return [];
-    const data = userDoc.data() as {
-      youtube_access_token?: string;
-      youtube_refresh_token?: string;
-    };
-
-    let access_token = data.youtube_access_token || "";
-    const refresh_token = data.youtube_refresh_token || "";
-
-    if (!access_token && !refresh_token) return [];
-
-    // ── 2. Refresh the token if refresh_token exists ──
-    if (refresh_token) {
-      const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          client_id:     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-          refresh_token,
-          grant_type:    "refresh_token",
-        }),
-      });
-      const tokenData = await tokenRes.json();
-      if (tokenData.access_token) {
-        access_token = tokenData.access_token;
-      }
-    }
-
-    // ── 3. Fetch uploads playlist ID ──
-    const channelRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true`,
-      { headers: { Authorization: `Bearer ${access_token}` } }
-    );
-    if (!channelRes.ok) return [];
-    const channelData = await channelRes.json();
-    const uploadsId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
-    if (!uploadsId) return [];
-
-    // ── 4. Fetch playlist items ──
-    const playlistRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=50`,
-      { headers: { Authorization: `Bearer ${access_token}` } }
-    );
-    if (!playlistRes.ok) return [];
-    const playlistData = await playlistRes.json();
-    const videoIds: string[] = (playlistData.items ?? []).map(
-      (item: { contentDetails: { videoId: string } }) => item.contentDetails.videoId
-    );
-    if (!videoIds.length) return [];
-
-    // ── 5. Fetch video stats ──
-    const statsRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails,liveStreamingDetails&id=${videoIds.join(",")}`,
-      { headers: { Authorization: `Bearer ${access_token}` } }
-    );
-    if (!statsRes.ok) return [];
-    const statsData = await statsRes.json();
-
-    return (statsData.items ?? []).map((v: {
-      id: string;
-      snippet: { title: string; publishedAt: string; thumbnails?: { medium?: { url: string }; default?: { url: string } }; liveBroadcastContent?: string };
-      statistics: { viewCount?: string; commentCount?: string };
-      contentDetails: { duration: string };
-    }): YouTubeVideo => ({
-      id: v.id,
-      title: v.snippet.title,
-      publishedAt: v.snippet.publishedAt,
-      viewCount: v.statistics.viewCount ?? "0",
-      commentCount: v.statistics.commentCount ?? "0",
-      duration: v.contentDetails.duration,
-      thumbnail: v.snippet.thumbnails?.medium?.url ?? v.snippet.thumbnails?.default?.url ?? "",
-      isLive: v.snippet.liveBroadcastContent === "live",
-    }));
+    const res = await fetch(`/api/youtube/videos?uid=${uid}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.videos ?? [];
   } catch {
     return [];
   }
@@ -520,25 +449,16 @@ function MobilePreviewSheet({ open, onClose, selectedVideo, keywords, replies, r
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    startYRef.current = e.touches[0].clientY;
-  };
-
+  const handleTouchStart = (e: React.TouchEvent) => { startYRef.current = e.touches[0].clientY; };
   const handleTouchMove = (e: React.TouchEvent) => {
     if (startYRef.current === null) return;
     const delta = e.touches[0].clientY - startYRef.current;
     currentYRef.current = delta;
-    if (delta > 0 && sheetRef.current) {
-      sheetRef.current.style.transform = `translateY(${delta}px)`;
-    }
+    if (delta > 0 && sheetRef.current) sheetRef.current.style.transform = `translateY(${delta}px)`;
   };
-
   const handleTouchEnd = () => {
-    if (currentYRef.current > 80) {
-      onClose();
-    } else if (sheetRef.current) {
-      sheetRef.current.style.transform = "translateY(0)";
-    }
+    if (currentYRef.current > 80) { onClose(); }
+    else if (sheetRef.current) sheetRef.current.style.transform = "translateY(0)";
     startYRef.current = null;
     currentYRef.current = 0;
   };
@@ -547,42 +467,16 @@ function MobilePreviewSheet({ open, onClose, selectedVideo, keywords, replies, r
 
   return (
     <>
-      <div
-        onClick={onClose}
-        style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.70)", backdropFilter: "blur(6px)", animation: "fadeInBg 0.25s ease" }}
-      />
-      <div
-        ref={sheetRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 210,
-          background: "linear-gradient(180deg, #110d1a 0%, #0d0a14 100%)",
-          border: "1px solid rgba(255,255,255,0.09)",
-          borderBottom: "none",
-          borderRadius: "24px 24px 0 0",
-          maxHeight: "88vh",
-          display: "flex",
-          flexDirection: "column",
-          animation: "slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
-          transition: "transform 0.15s ease",
-          willChange: "transform",
-        }}
-      >
-        {/* Drag handle */}
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.70)", backdropFilter: "blur(6px)", animation: "fadeInBg 0.25s ease" }} />
+      <div ref={sheetRef} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
+        style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 210, background: "linear-gradient(180deg, #110d1a 0%, #0d0a14 100%)", border: "1px solid rgba(255,255,255,0.09)", borderBottom: "none", borderRadius: "24px 24px 0 0", maxHeight: "88vh", display: "flex", flexDirection: "column", animation: "slideUpSheet 0.3s cubic-bezier(0.32, 0.72, 0, 1)", transition: "transform 0.15s ease", willChange: "transform" }}>
         <div style={{ padding: "14px 24px 0", flexShrink: 0 }}>
           <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 4, margin: "0 auto 16px" }} />
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <div style={{ fontWeight: 700, fontSize: 16 }}>Rule Preview</div>
-            <button
-              onClick={onClose}
-              style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.6)", fontSize: 16 }}
-            >✕</button>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.08)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "rgba(255,255,255,0.6)", fontSize: 16 }}>✕</button>
           </div>
         </div>
-
-        {/* Scrollable content */}
         <div style={{ overflowY: "auto", flex: 1, padding: "0 16px 32px", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
           <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} />
           <LivePreview selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} />
@@ -629,7 +523,7 @@ export default function AutomationPage() {
   const [ruleActive, setRuleActive] = useState(true);
   const [replyDelay, setReplyDelay] = useState(20);
 
-  const [moreOpen,         setMoreOpen]         = useState(false);
+  const [moreOpen,          setMoreOpen]          = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
   useEffect(() => {
@@ -763,88 +657,49 @@ export default function AutomationPage() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.015em; box-sizing: border-box; margin: 0; padding: 0; }
         html, body { background: #07030F; color: white; }
-
-        /* Layout */
         .desktop-sidebar { display: none !important; }
         .bottom-nav      { display: flex !important; }
         .main-content    { margin-left: 0 !important; padding: 20px 16px 160px !important; }
-
         @media (min-width: 1024px) {
-          .desktop-sidebar   { display: flex !important; }
-          .bottom-nav        { display: none !important; }
-          .main-content      { margin-left: 228px !important; padding: 32px 40px 60px !important; }
-          .preview-panel     { display: block !important; }
+          .desktop-sidebar    { display: flex !important; }
+          .bottom-nav         { display: none !important; }
+          .main-content       { margin-left: 228px !important; padding: 32px 40px 60px !important; }
+          .preview-panel      { display: block !important; }
           .mobile-preview-fab { display: none !important; }
-          .sticky-mobile-cta { display: none !important; }
+          .sticky-mobile-cta  { display: none !important; }
         }
-
-        /* Template scroll — mobile horizontal, desktop wrap */
-        .template-scroll {
-          display: flex;
-          gap: 8px;
-          overflow-x: auto;
-          padding-bottom: 4px;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-        }
+        .template-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .template-scroll::-webkit-scrollbar { display: none; }
-        @media (min-width: 1024px) {
-          .template-scroll {
-            flex-wrap: wrap;
-            overflow-x: visible;
-          }
-        }
+        @media (min-width: 1024px) { .template-scroll { flex-wrap: wrap; overflow-x: visible; } }
         .template-chip { flex-shrink: 0; }
-
-        /* Video grid */
-        .video-option-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-          margin-bottom: 20px;
-        }
-        @media (min-width: 640px) {
-          .video-option-grid { grid-template-columns: 1fr 1fr; }
-        }
-
-        /* Inputs */
+        .video-option-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
+        @media (min-width: 640px) { .video-option-grid { grid-template-columns: 1fr 1fr; } }
         input:focus, textarea:focus, select:focus { border-color: rgba(245,158,11,0.5) !important; outline: none; }
         input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.25); }
         select option { background: #1a1a2e; color: white; }
         input, textarea, select { -webkit-appearance: none; }
-
-        /* Animations */
-        @keyframes spin        { to { transform: rotate(360deg); } }
-        @keyframes fadeIn      { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp     { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin         { to { transform: rotate(360deg); } }
+        @keyframes fadeIn       { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp      { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        @keyframes fadeInBg    { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes shimmer     { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-
-        /* Hover states */
+        @keyframes fadeInBg     { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes shimmer      { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         .rule-card { animation: fadeIn 0.2s ease; }
         .rule-card:hover { border-color: rgba(245,158,11,0.18) !important; background: rgba(255,255,255,0.045) !important; }
         .template-btn:hover { border-color: rgba(245,158,11,0.30) !important; background: rgba(245,158,11,0.08) !important; color: #F59E0B !important; }
         .suggestion-chip:hover { background: rgba(245,158,11,0.18) !important; }
-
-        /* Mobile-only elements */
         .mobile-preview-fab { display: flex; }
         .sticky-mobile-cta  { display: flex; }
         .preview-panel      { display: none; }
-
-        /* Fix overflow */
         .keyword-chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 32px; }
         .step-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .step-scroll::-webkit-scrollbar { display: none; }
-
-        /* Working hours responsive */
         .working-hours-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .cooldown-row { display: flex; gap: 8px; flex-wrap: wrap; }
         .delay-row { display: flex; gap: 8px; }
         .max-replies-row { display: flex; gap: 8px; flex-wrap: wrap; }
       `}</style>
 
-      {/* Background */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, background: "radial-gradient(ellipse 55% 50% at 5% 15%, rgba(245,158,11,0.10) 0%, transparent 60%), radial-gradient(ellipse 60% 55% at 5% 95%, rgba(109,40,217,0.18) 0%, transparent 62%), #07030F" }} />
 
       <div className="desktop-sidebar" style={{ flexDirection: "column" }}>
@@ -856,7 +711,6 @@ export default function AutomationPage() {
 
       <main className="main-content" style={{ position: "relative", zIndex: 10, minHeight: "100vh" }}>
 
-        {/* ── Rules List ── */}
         {!showBuilder ? (
           <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
@@ -864,10 +718,7 @@ export default function AutomationPage() {
                 <h1 style={{ fontSize: 20, fontWeight: 800, color: "#FAFAFA", marginBottom: 3 }}>Automation Rules</h1>
                 <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>Rules run in order — higher rules have higher priority</p>
               </div>
-              <button
-                onClick={() => setShowBuilder(true)}
-                style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(245,158,11,0.25)", whiteSpace: "nowrap" }}
-              >
+              <button onClick={() => setShowBuilder(true)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(245,158,11,0.25)", whiteSpace: "nowrap" }}>
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 Create Rule
               </button>
@@ -882,10 +733,7 @@ export default function AutomationPage() {
                 <div style={{ width: 72, height: 72, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 16px" }}>⚡</div>
                 <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>No automation rules yet</h2>
                 <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 24, maxWidth: 300, margin: "0 auto 24px", lineHeight: 1.5 }}>Create your first rule to automatically reply to YouTube comments when keywords are matched.</p>
-                <button
-                  onClick={() => setShowBuilder(true)}
-                  style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px 28px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", boxShadow: "0 4px 24px rgba(245,158,11,0.30)" }}
-                >
+                <button onClick={() => setShowBuilder(true)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px 28px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", boxShadow: "0 4px 24px rgba(245,158,11,0.30)" }}>
                   ⚡ Create Your First Rule
                 </button>
               </div>
@@ -914,13 +762,9 @@ export default function AutomationPage() {
             )}
           </>
         ) : (
-
-        /* ── Builder ── */
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-            {/* Left/Main column */}
             <div style={{ flex: 1, minWidth: 0 }}>
 
-              {/* Builder header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                   <button onClick={resetBuilder} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", fontSize: 14, flexShrink: 0 }}>←</button>
@@ -929,21 +773,15 @@ export default function AutomationPage() {
                     <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ruleName || "Untitled Rule"}</div>
                   </div>
                 </div>
-                {/* Desktop-only Go Live in header */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                   <span className="preview-panel" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", borderRadius: 20, padding: "4px 10px", fontSize: 11, display: "none" }}>● Live</span>
-                  <button
-                    onClick={goLive}
-                    disabled={saving || !ruleName || !selectedVideo}
-                    className="preview-panel"
-                    style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "9px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "none", alignItems: "center", gap: 6 }}
-                  >
+                  <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} className="preview-panel"
+                    style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "9px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "none", alignItems: "center", gap: 6 }}>
                     {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live"}
                   </button>
                 </div>
               </div>
 
-              {/* Step indicators */}
               <div className="step-scroll" style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 20, paddingBottom: 4 }}>
                 {STEPS.map((step, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
@@ -958,25 +796,16 @@ export default function AutomationPage() {
                 ))}
               </div>
 
-              {/* Step content card */}
               <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "20px 16px", animation: "fadeIn 0.18s ease" }}>
 
-                {/* ── Step 0: Select Video ── */}
                 {currentStep === 0 && (
                   <div>
                     <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Select YouTube Video</h2>
                     <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 20 }}>Choose which video to monitor for comments</p>
-
                     <div style={{ marginBottom: 16 }}>
                       <label style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.55)", display: "block", marginBottom: 7 }}>Rule Name</label>
-                      <input
-                        value={ruleName}
-                        onChange={e => setRuleName(e.target.value)}
-                        placeholder="e.g. Spam Filter Rule"
-                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14 }}
-                      />
+                      <input value={ruleName} onChange={e => setRuleName(e.target.value)} placeholder="e.g. Spam Filter Rule" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14 }} />
                     </div>
-
                     <div className="video-option-grid">
                       <button onClick={() => setShowVideoSelector(true)} style={{ background: selectedVideo ? "rgba(245,158,11,0.10)" : "rgba(255,255,255,0.04)", border: `1px solid ${selectedVideo ? "rgba(245,158,11,0.35)" : "rgba(255,255,255,0.08)"}`, borderRadius: 14, padding: 14, textAlign: "left", cursor: "pointer", color: "white", transition: "all 0.2s", minHeight: 90 }}>
                         {selectedVideo ? (
@@ -1001,20 +830,16 @@ export default function AutomationPage() {
                         </div>
                       ))}
                     </div>
-
                     <button onClick={() => setCurrentStep(1)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", width: "100%" }}>
                       Next — Set Keywords →
                     </button>
                   </div>
                 )}
 
-                {/* ── Step 1: Keywords ── */}
                 {currentStep === 1 && (
                   <div>
                     <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Keyword Triggers</h2>
                     <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 18 }}>Comments matching these keywords will trigger auto-reply</p>
-
-                    {/* Templates horizontal scroll on mobile */}
                     <div style={{ marginBottom: 18 }}>
                       <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.40)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.6 }}>Quick Templates</div>
                       <div className="template-scroll">
@@ -1025,8 +850,6 @@ export default function AutomationPage() {
                         ))}
                       </div>
                     </div>
-
-                    {/* AI detection toggle */}
                     <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", marginBottom: 16, gap: 12 }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: 13 }}>AI Intent Detection</div>
@@ -1036,19 +859,10 @@ export default function AutomationPage() {
                         <div style={{ background: "white", borderRadius: "50%", width: 18, height: 18, position: "absolute", top: 3, left: aiDetection ? 23 : 3, transition: "all 0.2s" }} />
                       </button>
                     </div>
-
-                    {/* Keyword input */}
                     <div style={{ display: "flex", gap: 8, marginBottom: suggestions.length > 0 ? 10 : 14 }}>
-                      <input
-                        value={keywordInput}
-                        onChange={e => setKeywordInput(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && addKeyword()}
-                        placeholder="Type keyword and press Enter"
-                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", flex: 1, padding: "11px 14px", fontSize: 14, minWidth: 0 }}
-                      />
+                      <input value={keywordInput} onChange={e => setKeywordInput(e.target.value)} onKeyDown={e => e.key === "Enter" && addKeyword()} placeholder="Type keyword and press Enter" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", flex: 1, padding: "11px 14px", fontSize: 14, minWidth: 0 }} />
                       <button onClick={() => addKeyword()} style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 10, padding: "11px 14px", fontSize: 13, fontWeight: 600, color: "#F59E0B", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>+ Add</button>
                     </div>
-
                     {suggestions.length > 0 && (
                       <div style={{ marginBottom: 14 }}>
                         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 6 }}>💡 Suggestions</div>
@@ -1059,7 +873,6 @@ export default function AutomationPage() {
                         </div>
                       </div>
                     )}
-
                     <div className="keyword-chips" style={{ marginBottom: 20 }}>
                       {keywords.map(kw => (
                         <span key={kw} style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, color: "#FBBF24", display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", fontSize: 13 }}>
@@ -1069,7 +882,6 @@ export default function AutomationPage() {
                       ))}
                       {keywords.length === 0 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>No keywords added yet</span>}
                     </div>
-
                     <div style={{ display: "flex", gap: 10 }}>
                       <button onClick={() => setCurrentStep(0)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
                       <button onClick={() => setCurrentStep(2)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next →</button>
@@ -1077,12 +889,10 @@ export default function AutomationPage() {
                   </div>
                 )}
 
-                {/* ── Step 2: Auto Reply ── */}
                 {currentStep === 2 && (
                   <div>
                     <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Auto Reply Settings</h2>
                     <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 20 }}>Configure how the bot replies to matched comments</p>
-
                     <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
                       {(["random", "ai"] as const).map(mode => (
                         <button key={mode} onClick={() => setReplyMode(mode)} style={{ flex: 1, padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: replyMode === mode ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.05)", color: replyMode === mode ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyMode === mode ? "1px solid rgba(245,158,11,0.30)" : "none" }}>
@@ -1090,18 +900,12 @@ export default function AutomationPage() {
                         </button>
                       ))}
                     </div>
-
                     {replyMode === "random" ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
                         {replies.map((r, i) => (
                           <div key={i}>
                             <label style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", display: "block", marginBottom: 6 }}>Reply {i + 1}</label>
-                            <input
-                              value={r}
-                              onChange={e => { const arr = [...replies]; arr[i] = e.target.value; setReplies(arr); }}
-                              placeholder={`Template reply ${i + 1}...`}
-                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14 }}
-                            />
+                            <input value={r} onChange={e => { const arr = [...replies]; arr[i] = e.target.value; setReplies(arr); }} placeholder={`Template reply ${i + 1}...`} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14 }} />
                           </div>
                         ))}
                         <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>Use {"{{username}}"} to mention the commenter</div>
@@ -1109,16 +913,9 @@ export default function AutomationPage() {
                     ) : (
                       <div style={{ marginBottom: 20 }}>
                         <label style={{ fontSize: 11, color: "rgba(255,255,255,0.40)", display: "block", marginBottom: 6 }}>AI Instruction</label>
-                        <textarea
-                          value={aiInstruction}
-                          onChange={e => setAiInstruction(e.target.value)}
-                          placeholder="e.g. Reply politely in Telugu, thank them for watching..."
-                          rows={4}
-                          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14, resize: "vertical" }}
-                        />
+                        <textarea value={aiInstruction} onChange={e => setAiInstruction(e.target.value)} placeholder="e.g. Reply politely in Telugu, thank them for watching..." rows={4} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "11px 14px", fontSize: 14, resize: "vertical" }} />
                       </div>
                     )}
-
                     <div style={{ display: "flex", gap: 10 }}>
                       <button onClick={() => setCurrentStep(1)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
                       <button onClick={() => setCurrentStep(3)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next →</button>
@@ -1126,15 +923,12 @@ export default function AutomationPage() {
                   </div>
                 )}
 
-                {/* ── Step 3: Advanced ── */}
                 {currentStep === 3 && (
                   <div>
                     <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Advanced Settings</h2>
                     <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 12, marginBottom: 20 }}>Fine-tune your automation rule</p>
-
                     <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
 
-                      {/* Rule status */}
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", gap: 12 }}>
                         <div>
                           <div style={{ fontWeight: 600, fontSize: 14 }}>Rule Status</div>
@@ -1145,7 +939,6 @@ export default function AutomationPage() {
                         </button>
                       </div>
 
-                      {/* Reply Delay */}
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>Reply Delay</div>
                         <div className="delay-row">
@@ -1155,7 +948,6 @@ export default function AutomationPage() {
                         </div>
                       </div>
 
-                      {/* Max replies per user */}
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Max Replies per User</div>
                         <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Limit replies to same user</div>
@@ -1166,7 +958,6 @@ export default function AutomationPage() {
                         </div>
                       </div>
 
-                      {/* Cooldown */}
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Cooldown Period</div>
                         <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Wait before replying to same user again</div>
@@ -1177,7 +968,6 @@ export default function AutomationPage() {
                         </div>
                       </div>
 
-                      {/* Working hours */}
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>Working Hours</div>
                         <div className="working-hours-row">
@@ -1196,7 +986,6 @@ export default function AutomationPage() {
                         </div>
                       </div>
 
-                      {/* Min comment length */}
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Min Comment Length</div>
                         <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Ignore very short comments</div>
@@ -1207,7 +996,6 @@ export default function AutomationPage() {
                         </div>
                       </div>
 
-                      {/* Language filter */}
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Language Filter</div>
                         <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Only reply to comments in this language</div>
@@ -1216,12 +1004,11 @@ export default function AutomationPage() {
                         </select>
                       </div>
 
-                      {/* Toggle options */}
                       {[
-                        { key: "enableWeekends",   label: "Enable Weekends",         sub: "Reply on Saturdays and Sundays" },
+                        { key: "enableWeekends",   label: "Enable Weekends",            sub: "Reply on Saturdays and Sundays" },
                         { key: "ignoreLinks",      label: "Ignore Comments with Links", sub: "Skip comments containing URLs" },
-                        { key: "ignoreEmojisOnly", label: "Ignore Emoji-only",        sub: "Skip emoji-only comments" },
-                        { key: "ignoreBots",       label: "Ignore Bots",             sub: "Auto-detect and skip bot comments" },
+                        { key: "ignoreEmojisOnly", label: "Ignore Emoji-only",          sub: "Skip emoji-only comments" },
+                        { key: "ignoreBots",       label: "Ignore Bots",               sub: "Auto-detect and skip bot comments" },
                       ].map(item => (
                         <div key={item.key} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", gap: 12 }}>
                           <div style={{ minWidth: 0 }}>
@@ -1237,13 +1024,8 @@ export default function AutomationPage() {
 
                     <div style={{ display: "flex", gap: 10 }}>
                       <button onClick={() => setCurrentStep(2)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
-                      {/* Desktop go live inside step */}
-                      <button
-                        onClick={goLive}
-                        disabled={saving || !ruleName || !selectedVideo}
-                        className="preview-panel"
-                        style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "none", alignItems: "center", justifyContent: "center", gap: 6 }}
-                      >
+                      <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} className="preview-panel"
+                        style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "none", alignItems: "center", justifyContent: "center", gap: 6 }}>
                         {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live!"}
                       </button>
                     </div>
@@ -1252,7 +1034,6 @@ export default function AutomationPage() {
               </div>
             </div>
 
-            {/* ── Right Panel — Desktop only ── */}
             <div style={{ width: 280, flexShrink: 0, display: "none", position: "sticky", top: 24 }} className="preview-panel">
               <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} />
               <LivePreview selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} />
@@ -1261,105 +1042,30 @@ export default function AutomationPage() {
         )}
       </main>
 
-      {/* ── Mobile: Floating Preview Button — only in builder ── */}
       {showBuilder && (
-        <button
-          className="mobile-preview-fab"
-          onClick={() => setMobilePreviewOpen(true)}
-          style={{
-            position: "fixed",
-            bottom: 88,
-            right: 16,
-            zIndex: 48,
-            background: "rgba(14,10,24,0.96)",
-            border: "1px solid rgba(245,158,11,0.35)",
-            borderRadius: 20,
-            padding: "10px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 13,
-            fontWeight: 700,
-            color: "#F59E0B",
-            cursor: "pointer",
-            boxShadow: "0 4px 24px rgba(245,158,11,0.20), 0 2px 8px rgba(0,0,0,0.5)",
-            backdropFilter: "blur(12px)",
-          }}
-        >
+        <button className="mobile-preview-fab" onClick={() => setMobilePreviewOpen(true)}
+          style={{ position: "fixed", bottom: 88, right: 16, zIndex: 48, background: "rgba(14,10,24,0.96)", border: "1px solid rgba(245,158,11,0.35)", borderRadius: 20, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: "#F59E0B", cursor: "pointer", boxShadow: "0 4px 24px rgba(245,158,11,0.20), 0 2px 8px rgba(0,0,0,0.5)", backdropFilter: "blur(12px)" }}>
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           Preview
         </button>
       )}
 
-      {/* ── Mobile: Sticky CTA — only in builder ── */}
       {showBuilder && (
-        <div
-          className="sticky-mobile-cta"
-          style={{
-            position: "fixed",
-            bottom: 60,
-            left: 0,
-            right: 0,
-            zIndex: 46,
-            background: "linear-gradient(180deg, transparent 0%, rgba(7,3,15,0.95) 35%, rgba(7,3,15,1) 100%)",
-            padding: "12px 16px 10px",
-            display: "flex",
-            gap: 10,
-          }}
-        >
-          <button
-            onClick={goLive}
-            disabled={saving || !ruleName || !selectedVideo}
-            style={{
-              background: saving || !ruleName || !selectedVideo
-                ? "rgba(255,255,255,0.07)"
-                : "linear-gradient(135deg, #F59E0B, #EA580C)",
-              borderRadius: 14,
-              flex: 1,
-              padding: "14px",
-              fontSize: 14,
-              fontWeight: 700,
-              color: saving || !ruleName || !selectedVideo ? "rgba(255,255,255,0.30)" : "white",
-              border: "none",
-              cursor: saving || !ruleName || !selectedVideo ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              boxShadow: (!saving && ruleName && selectedVideo) ? "0 4px 20px rgba(245,158,11,0.30)" : "none",
-              transition: "all 0.2s",
-            }}
-          >
+        <div className="sticky-mobile-cta"
+          style={{ position: "fixed", bottom: 60, left: 0, right: 0, zIndex: 46, background: "linear-gradient(180deg, transparent 0%, rgba(7,3,15,0.95) 35%, rgba(7,3,15,1) 100%)", padding: "12px 16px 10px", display: "flex", gap: 10 }}>
+          <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo}
+            style={{ background: saving || !ruleName || !selectedVideo ? "rgba(255,255,255,0.07)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 14, flex: 1, padding: "14px", fontSize: 14, fontWeight: 700, color: saving || !ruleName || !selectedVideo ? "rgba(255,255,255,0.30)" : "white", border: "none", cursor: saving || !ruleName || !selectedVideo ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: (!saving && ruleName && selectedVideo) ? "0 4px 20px rgba(245,158,11,0.30)" : "none", transition: "all 0.2s" }}>
             {saving ? (
-              <>
-                <div style={{ width: 16, height: 16, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                Saving…
-              </>
+              <><div style={{ width: 16, height: 16, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />Saving…</>
             ) : (
-              <>
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                {!ruleName ? "Enter rule name to save" : !selectedVideo ? "Select a video to save" : "Save Automation"}
-              </>
+              <><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>{!ruleName ? "Enter rule name to save" : !selectedVideo ? "Select a video to save" : "Save Automation"}</>
             )}
           </button>
         </div>
       )}
 
-      {/* ── Mobile Preview Bottom Sheet ── */}
-      <MobilePreviewSheet
-        open={mobilePreviewOpen}
-        onClose={() => setMobilePreviewOpen(false)}
-        selectedVideo={selectedVideo}
-        keywords={keywords}
-        replies={replies}
-        replyMode={replyMode}
-        aiInstruction={aiInstruction}
-        replyDelay={replyDelay}
-        ruleName={ruleName}
-        ruleActive={ruleActive}
-      />
+      <MobilePreviewSheet open={mobilePreviewOpen} onClose={() => setMobilePreviewOpen(false)} selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} ruleName={ruleName} ruleActive={ruleActive} />
 
-      {/* ── Video Selector Modal ── */}
       {showVideoSelector && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "0" }}>
           <div style={{ background: "#0D0A1A", border: "1px solid rgba(255,255,255,0.09)", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 520, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", animation: "slideUpSheet 0.25s cubic-bezier(0.32, 0.72, 0, 1)" }}>
@@ -1374,7 +1080,6 @@ export default function AutomationPage() {
                 <input value={videoSearch} onChange={e => setVideoSearch(e.target.value)} placeholder="Search by title or video ID…" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, color: "white", width: "100%", padding: "10px 14px 10px 36px", fontSize: 13 }} />
               </div>
             </div>
-
             <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 16px", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
               {videosLoading ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1394,7 +1099,6 @@ export default function AutomationPage() {
                 </div>
               )}
             </div>
-
             <div style={{ padding: "10px 16px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", gap: 10, flexShrink: 0, paddingBottom: "max(20px, env(safe-area-inset-bottom, 20px))" }}>
               <button onClick={() => { setShowVideoSelector(false); setVideoSearch(""); }} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>Cancel</button>
               <button onClick={() => { setShowVideoSelector(false); setVideoSearch(""); }} disabled={!selectedVideo} style={{ background: selectedVideo ? "linear-gradient(135deg, #F59E0B, #EA580C)" : "rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: selectedVideo ? "white" : "rgba(255,255,255,0.30)", border: "none", cursor: selectedVideo ? "pointer" : "not-allowed" }}>Confirm</button>
@@ -1403,7 +1107,6 @@ export default function AutomationPage() {
         </div>
       )}
 
-      {/* ── More Drawer ── */}
       {moreOpen && (
         <>
           <div onClick={() => setMoreOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 55, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }} />

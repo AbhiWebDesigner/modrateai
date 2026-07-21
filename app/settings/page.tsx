@@ -52,15 +52,22 @@ export default function SettingsPage() {
   const [memberSince, setMemberSince]             = useState('');
   const [moreOpen, setMoreOpen]                   = useState(false);
   const [notifOpen, setNotifOpen]                 = useState(false);
-  const [isPhone, setIsPhone]                     = useState(false);
+  // 'phone' | 'phone-desktop' | 'desktop'
+  const [layoutMode, setLayoutMode]               = useState<'phone'|'phone-desktop'|'desktop'>('phone');
 
   const currentPath = '/settings';
 
   useEffect(() => {
-    // Detect real phone via UA — unaffected by Chrome Desktop Site
     const ua = navigator.userAgent;
-    const phone = /Android.*Mobile|iPhone|iPod|Windows Phone/i.test(ua);
-    setIsPhone(phone);
+    const isPhone = /Android.*Mobile|iPhone|iPod|Windows Phone/i.test(ua);
+    if (!isPhone) {
+      setLayoutMode('desktop');
+    } else if (window.innerWidth >= 600) {
+      // Phone but Desktop Site ON inflated the viewport
+      setLayoutMode('phone-desktop');
+    } else {
+      setLayoutMode('phone');
+    }
   }, []);
 
   useEffect(() => {
@@ -309,22 +316,46 @@ export default function SettingsPage() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
-        /* ── DESKTOP (sidebar visible, no bottom nav) ── */
-        /* Only applies when JS confirms not a phone */
+        /* ═══════════════════════════════════════════
+           LAYOUT MODES — set by JS on mount via UA
+           Overrides any CSS media query behaviour
+        ═══════════════════════════════════════════ */
+
+        /* ── 1. REAL DESKTOP / LAPTOP ── */
         .desktop-layout .r-bottom-nav{display:none!important;}
         .desktop-layout .r-mobile-topbar{display:none!important;}
         .desktop-layout .r-sidebar{display:flex!important;}
         .desktop-layout .r-main{margin-left:216px!important;width:calc(100% - 216px)!important;padding-bottom:0!important;}
         .desktop-layout .r-topbar{display:flex!important;}
-        .desktop-layout .cards-grid{grid-template-columns:1fr 1fr;}
+        .desktop-layout .cards-grid{grid-template-columns:1fr 1fr!important;}
+        .desktop-layout .card-full{grid-column:1 / -1!important;}
         .desktop-layout .tab-label-short{display:none!important;}
         .desktop-layout .tab-label-full{display:inline!important;}
-        .desktop-layout .tab-btn{flex:none;padding:8px 16px;font-size:12.5px;gap:7px;min-height:unset;width:auto;}
+        .desktop-layout .tabs-row{display:flex!important;overflow-x:auto!important;grid-template-columns:unset!important;}
+        .desktop-layout .tab-btn{flex:none!important;width:auto!important;padding:8px 16px!important;
+          font-size:12.5px!important;gap:7px!important;min-height:unset!important;justify-content:unset!important;}
         .desktop-layout .tab-btn svg{width:13px!important;height:13px!important;}
-        .desktop-layout .tabs-row{display:flex;overflow-x:auto;}
 
-        /* ── PHONE (bottom nav, mobile topbar, no sidebar) ── */
-        /* Applies when JS confirms phone — regardless of viewport width */
+        /* ── 2. PHONE + DESKTOP SITE ON ── */
+        /* Mobile navigation, desktop-style content */
+        .phone-desktop-layout .r-sidebar{display:none!important;}
+        .phone-desktop-layout .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;min-height:0!important;}
+        .phone-desktop-layout .r-bottom-nav{display:flex!important;}
+        .phone-desktop-layout .r-topbar{display:none!important;}
+        .phone-desktop-layout .r-mobile-topbar{display:flex!important;}
+        .phone-desktop-layout .r-content{padding:16px 14px 20px!important;}
+        /* Content: desktop-style (wider cards, 2-col grid) */
+        .phone-desktop-layout .cards-grid{grid-template-columns:1fr 1fr!important;}
+        .phone-desktop-layout .card-full{grid-column:1 / -1!important;}
+        /* Tabs: full desktop labels, flex row */
+        .phone-desktop-layout .tabs-row{display:flex!important;overflow-x:auto!important;grid-template-columns:unset!important;}
+        .phone-desktop-layout .tab-btn{flex:none!important;width:auto!important;padding:8px 14px!important;
+          font-size:12px!important;gap:6px!important;min-height:unset!important;justify-content:unset!important;}
+        .phone-desktop-layout .tab-btn svg{width:13px!important;height:13px!important;}
+        .phone-desktop-layout .tab-label-short{display:none!important;}
+        .phone-desktop-layout .tab-label-full{display:inline!important;}
+
+        /* ── 3. PHONE + DESKTOP SITE OFF (narrow viewport) ── */
         .phone-layout .r-sidebar{display:none!important;}
         .phone-layout .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;min-height:0!important;}
         .phone-layout .r-bottom-nav{display:flex!important;}
@@ -333,6 +364,7 @@ export default function SettingsPage() {
         .phone-layout .r-content{padding:16px 14px 20px!important;}
         .phone-layout .cards-grid{grid-template-columns:1fr!important;}
         .phone-layout .card-full{grid-column:1!important;}
+        /* Tabs: equal-width grid, short labels */
         .phone-layout .tabs-row{display:grid!important;grid-template-columns:repeat(5,1fr)!important;gap:5px!important;overflow-x:visible!important;}
         .phone-layout .tab-btn{flex:none!important;width:100%!important;justify-content:center!important;
           padding:0 4px!important;min-height:40px!important;font-size:12px!important;gap:4px!important;white-space:nowrap!important;}
@@ -340,26 +372,23 @@ export default function SettingsPage() {
         .phone-layout .tab-label-short{display:inline!important;}
         .phone-layout .tab-label-full{display:none!important;}
 
-        /* ── SMALL PHONES (≤430px physical width) ── */
+        /* Small phone tweaks */
         @media(max-width:430px){
           .phone-layout .s-card{padding:14px;}
           .phone-layout .r-content{padding:12px 10px 16px!important;}
           .phone-layout .tabs-row{gap:3px!important;}
           .phone-layout .tab-btn{font-size:11.5px!important;}
         }
-
-        /* ── VERY SMALL PHONES (≤359px) ── */
         @media(max-width:359px){
           .phone-layout .tabs-row{grid-template-columns:repeat(5,minmax(52px,1fr))!important;overflow-x:auto!important;}
           .phone-layout .tab-btn{font-size:10.5px!important;gap:2px!important;}
           .phone-layout .tab-btn svg{width:10px!important;height:10px!important;}
         }
 
-        /* ── SSR / JS-not-yet-run fallback: use viewport width ── */
-        /* Overridden immediately once isPhone resolves on client */
+        /* ── SSR / pre-hydration fallback (viewport-based, overridden once JS runs) ── */
         @media(max-width:1023px){
           .r-sidebar{display:none;}
-          .r-main{margin-left:0;width:100%;padding-bottom:76px;}
+          .r-main{margin-left:0;width:100%;padding-bottom:76px;min-height:0;}
           .r-bottom-nav{display:flex;}
           .r-topbar{display:none;}
           .r-mobile-topbar{display:flex;}
@@ -375,6 +404,9 @@ export default function SettingsPage() {
         @media(min-width:1024px){
           .r-bottom-nav{display:none;}
           .r-mobile-topbar{display:none;}
+          .r-sidebar{display:flex;}
+          .r-main{margin-left:216px;width:calc(100% - 216px);padding-bottom:0;}
+          .r-topbar{display:flex;}
           .cards-grid{grid-template-columns:1fr 1fr;}
           .tab-label-short{display:none;}
           .tab-label-full{display:inline;}
@@ -382,7 +414,7 @@ export default function SettingsPage() {
         }
       `}</style>
 
-      <div className={`r-bg ${isPhone ? 'phone-layout' : 'desktop-layout'}`} style={{ display: 'flex' }}>
+      <div className={`r-bg ${layoutMode === 'desktop' ? 'desktop-layout' : layoutMode === 'phone-desktop' ? 'phone-desktop-layout' : 'phone-layout'}`} style={{ display: 'flex' }}>
 
         {/* ── SIDEBAR ── */}
         <aside className="r-sidebar">

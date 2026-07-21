@@ -12,20 +12,27 @@ import {
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, onSnapshot, DocumentData, collection, query, orderBy, limit } from 'firebase/firestore';
+import {
+  doc, onSnapshot, DocumentData, collection, query,
+  orderBy, limit, updateDoc, serverTimestamp
+} from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
-// ─── Plan defaults (used ONLY when Firestore field is intentionally absent) ───
-const PLAN_CREDITS: Record<string, number> = {
-  free:   250,
-  pro:    1900,
-  agency: 15000,
-};
-const PLAN_COMMENTS_LIMIT: Record<string, number> = {
-  free:   2000,
-  pro:    25000,
-  agency: 150000,
-};
+// ─── Plan defaults ───────────────────────────────────────────────────────────
+const PLAN_CREDITS: Record<string, number> = { free: 250, pro: 1900, agency: 15000 };
+const PLAN_COMMENTS_LIMIT: Record<string, number> = { free: 2000, pro: 25000, agency: 150000 };
+
+// ─── Automation rule type — matches Automation page schema ──────────────────
+interface AutomationRule {
+  id: string;
+  name: string;
+  active: boolean;           // ← boolean, same as Automation page
+  keywords?: string[];
+  video?: { id: string; title: string } | null;
+  replyMode?: string;
+  updatedAt?: any;
+  createdAt?: any;
+}
 
 function Sparkline({ color, up = true, width = 72, height = 32 }: { color: string; up?: boolean; width?: number; height?: number }) {
   const points = up
@@ -208,18 +215,172 @@ function LiveItem({ icon: Icon, iconColor, title, sub, time, bg }: {
   );
 }
 
-function AutomationRow({ icon: Icon, iconColor, label, active }: { icon: any; iconColor: string; label: string; active: boolean }) {
+// ─── Real-time Automation Row ────────────────────────────────────────────────
+// Reads from automations/{uid}/rules/{ruleId} — same as Automation page
+// active: true → "Live", active: false → "Disabled"
+function RealAutomationRow({ rule, uid }: { rule: AutomationRule; uid: string }) {
+  const [toggling, setToggling] = useState(false);
+
+  const isLive = rule.active === true;
+
+  const statusColor = isLive ? '#34d399' : '#f87171';
+  const statusLabel = isLive ? 'Live' : 'Disabled';
+
+  const keywordsCount = Array.isArray(rule.keywords) ? rule.keywords.length : 0;
+  const videoLabel = rule.video?.title || rule.video?.id || 'All Videos';
+  const updatedLabel = rule.updatedAt ? timeAgo(rule.updatedAt) : rule.createdAt ? timeAgo(rule.createdAt) : '—';
+
+  const handleToggle = async () => {
+    if (toggling) return;
+    setToggling(true);
+    try {
+      // Same path as Automation page: automations/{uid}/rules/{ruleId}
+      const ref = doc(db, 'automations', uid, 'rules', rule.id);
+      await updateDoc(ref, { active: !isLive });
+    } catch (e) {
+      console.error('Toggle failed:', e);
+    } finally {
+      setToggling(false);
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-      <div style={{ width: 28, height: 28, borderRadius: 8, background: `${iconColor}12`, border: `1px solid ${iconColor}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon size={12} color={iconColor} strokeWidth={1.8} />
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: 6,
+      padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{
+          width: 7, height: 7, borderRadius: '50%',
+          background: statusColor,
+          boxShadow: isLive ? `0 0 5px ${statusColor}88` : 'none',
+          flexShrink: 0,
+          animation: isLive ? 'pulse 2s infinite' : 'none',
+        }} />
+        <span style={{
+          flex: 1, color: 'rgba(255,255,255,0.82)', fontSize: 12,
+          fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>{rule.name || 'Untitled Rule'}</span>
+        <span style={{
+          color: statusColor, fontSize: 9.5, fontWeight: 800,
+          background: `${statusColor}12`, border: `1px solid ${statusColor}28`,
+          borderRadius: 5, padding: '1.5px 6px', flexShrink: 0,
+        }}>{statusLabel}</span>
+        <button
+          onClick={handleToggle}
+          disabled={toggling}
+          aria-label={isLive ? 'Disable rule' : 'Enable rule'}
+          style={{
+            width: 30, height: 17, borderRadius: 9,
+            background: isLive ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${isLive ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.09)'}`,
+            position: 'relative', cursor: toggling ? 'wait' : 'pointer',
+            flexShrink: 0, padding: 0, outline: 'none',
+            opacity: toggling ? 0.6 : 1, transition: 'opacity 0.2s',
+          }}>
+          <div style={{
+            position: 'absolute', top: 2,
+            left: isLive ? 14 : 2,
+            width: 11, height: 11, borderRadius: '50%',
+            background: isLive ? '#34d399' : 'rgba(255,255,255,0.28)',
+            transition: 'left 0.2s',
+            boxShadow: isLive ? '0 0 5px rgba(52,211,153,0.55)' : 'none',
+          }} />
+        </button>
       </div>
-      <span style={{ flex: 1, color: 'rgba(255,255,255,0.72)', fontSize: 12, fontWeight: 600 }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-        <span style={{ color: active ? '#34d399' : 'rgba(255,255,255,0.22)', fontSize: 10, fontWeight: 700 }}>{active ? 'Active' : 'Off'}</span>
-        <div style={{ width: 30, height: 17, borderRadius: 9, background: active ? 'rgba(52,211,153,0.2)' : 'rgba(255,255,255,0.06)', border: `1px solid ${active ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.09)'}`, position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 2, left: active ? 14 : 2, width: 11, height: 11, borderRadius: '50%', background: active ? '#34d399' : 'rgba(255,255,255,0.28)', transition: 'left 0.2s', boxShadow: active ? '0 0 5px rgba(52,211,153,0.55)' : 'none' }} />
-        </div>
+
+      <div style={{ display: 'flex', gap: 10, paddingLeft: 15, flexWrap: 'wrap' }}>
+        <span style={{
+          color: 'rgba(255,255,255,0.28)', fontSize: 10,
+          display: 'flex', alignItems: 'center', gap: 3,
+        }}>
+          <Hash size={9} strokeWidth={2} color="rgba(255,255,255,0.22)" />
+          {keywordsCount} {keywordsCount === 1 ? 'Keyword' : 'Keywords'}
+        </span>
+        <span style={{
+          color: 'rgba(255,255,255,0.28)', fontSize: 10,
+          display: 'flex', alignItems: 'center', gap: 3,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130,
+        }}>
+          <YTIcon color="rgba(255,255,255,0.22)" size={9} />
+          {videoLabel}
+        </span>
+        <span style={{
+          color: 'rgba(255,255,255,0.22)', fontSize: 10,
+          display: 'flex', alignItems: 'center', gap: 3, marginLeft: 'auto',
+        }}>
+          <Clock size={9} strokeWidth={2} color="rgba(255,255,255,0.16)" />
+          {updatedLabel}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Recent Automations widget ───────────────────────────────────────────────
+// Collection: automations/{uid}/rules — same as Automation page
+function RecentAutomations({ uid }: { uid: string }) {
+  const [rules, setRules] = useState<AutomationRule[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!uid) return;
+
+    // ✅ Correct path: automations/{uid}/rules (matches Automation page)
+    const ref = collection(db, 'automations', uid, 'rules');
+    const q = query(ref, orderBy('createdAt', 'desc'), limit(4));
+
+    const unsub = onSnapshot(q, (snap) => {
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as AutomationRule));
+      setRules(docs);
+      setLoading(false);
+    }, (err) => {
+      console.error('Automations listener error:', err);
+      setLoading(false);
+    });
+
+    return () => unsub();
+  }, [uid]);
+
+  return (
+    <div className="r-card">
+      <div className="r-card-top" style={{ alignItems: 'center' }}>
+        <div><div className="r-card-title">Recent Automations</div></div>
+        <Link href="/automation" style={{ display: 'flex', alignItems: 'center', gap: 3, color: 'rgba(255,255,255,0.3)', fontSize: 10.5, fontWeight: 600, textDecoration: 'none' }}>
+          View all <ChevronRight size={10} />
+        </Link>
+      </div>
+
+      <div style={{ padding: '4px 14px 10px' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+            <div style={{ width: 18, height: 18, border: '2px solid rgba(124,58,237,0.15)', borderTopColor: '#7C3AED', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          </div>
+        ) : rules.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '18px 10px', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={16} color="#a78bfa" strokeWidth={1.5} />
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>No automation rules yet</div>
+              <div style={{ color: 'rgba(255,255,255,0.22)', fontSize: 10.5, lineHeight: 1.5 }}>
+                Create your first automation to start automatically replying to comments.
+              </div>
+            </div>
+            <Link href="/automation" style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'linear-gradient(135deg,#7C3AED,#6D28D9)', color: '#fff',
+              fontWeight: 700, fontSize: 11, padding: '7px 14px', borderRadius: 8,
+              textDecoration: 'none', marginTop: 2,
+            }}>
+              <Plus size={11} /> Create Automation
+            </Link>
+          </div>
+        ) : (
+          rules.map(rule => (
+            <RealAutomationRow key={rule.id} rule={rule} uid={uid} />
+          ))
+        )}
       </div>
     </div>
   );
@@ -236,7 +397,6 @@ const SIDEBAR_NAV = [
   { label: 'Settings',   icon: Settings,        href: '/settings'   },
 ];
 
-// ─── Loading states ───────────────────────────────────────────────────────────
 type LoadState = 'auth' | 'firestore' | 'missing' | 'ready';
 
 export default function Dashboard() {
@@ -244,12 +404,8 @@ export default function Dashboard() {
   const [user, setUser]               = useState<User | null>(null);
   const [userData, setUserData]       = useState<DocumentData | null>(null);
   const [analyticsData, setAnalyticsData]   = useState<DocumentData | null>(null);
-  const [automationData, setAutomationData] = useState<DocumentData | null>(null);
   const [liveEvents, setLiveEvents]   = useState<any[]>([]);
-
-  // ── Three-phase loading: waiting for auth → waiting for Firestore → ready ──
   const [loadState, setLoadState]     = useState<LoadState>('auth');
-
   const [moreOpen, setMoreOpen]       = useState(false);
   const [notifOpen, setNotifOpen]     = useState(false);
   const [chartRange, setChartRange]   = useState<'week' | 'month'>('week');
@@ -257,63 +413,35 @@ export default function Dashboard() {
 
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      // ── Unauthenticated: redirect immediately ──
-      if (!firebaseUser) {
-        router.push('/login');
-        return;
-      }
-
+      if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
       setLoadState('firestore');
+      if (process.env.NODE_ENV === 'development') console.log('Dashboard UID:', firebaseUser.uid);
 
-// Dev log — UID only in development
-       if (process.env.NODE_ENV === 'development') {
-       console.log('Dashboard UID:', firebaseUser.uid);
-      }
+      unsubRefs.current.forEach(u => u());
+      unsubRefs.current = [];
 
-// Clean up any previous listeners
-        unsubRefs.current.forEach(u => u());
-         unsubRefs.current = [];
-
-// ── Auto-refresh YouTube stats every 30s (AFTER cleanup) ─────────────
       fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
-     const statsInterval = setInterval(() => {
-  fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
- }, 30_000);
- unsubRefs.current.push(() => clearInterval(statsInterval));
+      const statsInterval = setInterval(() => {
+        fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
+      }, 30_000);
+      unsubRefs.current.push(() => clearInterval(statsInterval));
 
-      // ── Primary: users/{uid} ──────────────────────────────────────────────
       const userDocRef = doc(db, 'users', firebaseUser.uid);
       const unsubUser = onSnapshot(userDocRef, (snap) => {
-        if (!snap.exists()) {
-          // Document truly missing — show error state, do NOT fall back to defaults
-          setLoadState('missing');
-          return;
-        }
+        if (!snap.exists()) { setLoadState('missing'); return; }
         const data = snap.data();
-
-        // Dev log — full Firestore payload
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Dashboard Firestore:', data);
-        }
-
+        if (process.env.NODE_ENV === 'development') console.log('Dashboard Firestore:', data);
         setUserData(data);
         setLoadState('ready');
       });
       unsubRefs.current.push(unsubUser);
 
-      // ── Secondary listeners (analytics, automations, events) ─────────────
       const unsubAnalytics = onSnapshot(
         doc(db, 'analytics', firebaseUser.uid),
         (snap) => { if (snap.exists()) setAnalyticsData(snap.data()); }
       );
       unsubRefs.current.push(unsubAnalytics);
-
-      const unsubAutomation = onSnapshot(
-        doc(db, 'automations', firebaseUser.uid),
-        (snap) => { if (snap.exists()) setAutomationData(snap.data()); }
-      );
-      unsubRefs.current.push(unsubAutomation);
 
       const eventsRef = collection(db, 'users', firebaseUser.uid, 'events');
       const eventsQ   = query(eventsRef, orderBy('timestamp', 'desc'), limit(10));
@@ -323,16 +451,12 @@ export default function Dashboard() {
       unsubRefs.current.push(unsubEvents);
     });
 
-    return () => {
-      unsubAuth();
-      unsubRefs.current.forEach(u => u());
-    };
+    return () => { unsubAuth(); unsubRefs.current.forEach(u => u()); };
   }, [router]);
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
   const handleYouTubeConnect = () => { window.location.href = `/api/auth/youtube?uid=${user?.uid}`; };
 
-  // ── Auth loading screen ───────────────────────────────────────────────────
   if (loadState === 'auth' || loadState === 'firestore') {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -347,7 +471,6 @@ export default function Dashboard() {
     );
   }
 
-  // ── Firestore document missing ────────────────────────────────────────────
   if (loadState === 'missing') {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -369,28 +492,14 @@ export default function Dashboard() {
     );
   }
 
-  // ── From here: loadState === 'ready' and userData is guaranteed non-null ──
-  // userData is DocumentData — Firestore is the single source of truth.
-  // We only derive plan-based limits as fallback when the field is intentionally absent.
-
   const plan = (userData!.plan as string) || 'free';
-
-  // ── Fields directly from Firestore — no silent numeric defaults ──────────
   const commentsScanned  = userData!.comments_scanned  as number | undefined;
   const hiddenComments   = userData!.comments_hidden   as number | undefined;
   const aiReplies        = userData!.ai_replies        as number | undefined;
   const avgResponseMs    = userData!.avg_response_ms   as number | undefined;
-
-  // comments_used: required for usage bar. Default 0 is intentional (no usage yet).
   const commentsUsed     = (userData!.comments_used    as number) ?? 0;
-
-  // comments_limit: Firestore wins; fall back to plan table if field absent.
   const commentsLimit    = (userData!.comments_limit   as number) ?? PLAN_COMMENTS_LIMIT[plan] ?? 2000;
-
-  // ai_credits: Firestore wins; fall back to plan table if field absent.
   const aiCredits        = (userData!.ai_credits       as number) ?? PLAN_CREDITS[plan] ?? 0;
-
-  // YouTube fields
   const youtubeConnected   = (userData!.youtube_connected        as boolean) === true;
   const channelName        = (userData!.youtube_channel_name     as string)  || null;
   const channelHandle      = (userData!.youtube_channel_handle   as string)  || null;
@@ -398,8 +507,6 @@ export default function Dashboard() {
   const subscriberCount    = (userData!.youtube_subscriber_count as string)  || null;
   const videoCount         = (userData!.youtube_video_count      as string)  || null;
   const viewCount          = (userData!.youtube_view_count       as string)  || null;
-
-  // Trial fields
   const trialActive  = (userData!.trial_active as boolean) ?? false;
   const trialDays    = (userData!.trial_days   as number)  ?? null;
   const trialEndsAt  = userData!.trial_ends_at?.toDate?.() as Date | undefined;
@@ -407,36 +514,24 @@ export default function Dashboard() {
     ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000))
     : trialDays;
 
-  // ── Analytics (secondary collection) ─────────────────────────────────────
   const moderationAcc   = (analyticsData?.moderationAccuracy as number) ?? (userData!.moderation_accuracy as number) ?? 99.9;
   const totalScanned    = (analyticsData?.totalScanned       as number) ?? 0;
   const totalHidden     = (analyticsData?.totalHidden        as number) ?? 0;
   const totalReplies    = (analyticsData?.totalReplies       as number) ?? 0;
   const pendingReview   = (analyticsData?.pendingReview      as number) ?? (userData!.pending_review as number) ?? 0;
   const avgResponseTime = (analyticsData?.avgResponseTime    as number) ?? avgResponseMs ?? 0;
-
   const weeklyScanned  = (analyticsData?.weekly?.scanned  as number[]) ?? [];
   const weeklyReplies  = (analyticsData?.weekly?.replies  as number[]) ?? [];
   const weeklyHidden   = (analyticsData?.weekly?.hidden   as number[]) ?? [];
   const hasChartData   = weeklyScanned.some(v => v > 0) || weeklyReplies.some(v => v > 0);
 
-  // ── Automation fields ─────────────────────────────────────────────────────
-  const autoHideToxic = (automationData?.hideToxic as boolean) ?? false;
-  const autoHideSpam  = (automationData?.hideSpam  as boolean) ?? false;
-  const autoAiReplies = (automationData?.aiReplies as boolean) ?? false;
-  const autoWelcome   = (automationData?.welcome   as boolean) ?? false;
-
-  // ── Derived display values ────────────────────────────────────────────────
   const usagePct = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
-
   const firstName  = user?.displayName?.split(' ')[0] || 'there';
   const initials   = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
   const planLabel  = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
   const planColor  = plan === 'agency' ? '#a78bfa' : plan === 'pro' ? '#34d399' : '#F59E0B';
   const userPhoto  = user?.photoURL || (userData!.photo as string) || null;
-
   const showUpgradeCard = plan === 'free';
-
   const youtubeChannelUrl = channelHandle
     ? `https://www.youtube.com/@${channelHandle.replace('@', '')}`
     : `https://www.youtube.com`;
@@ -447,32 +542,11 @@ export default function Dashboard() {
   const trendResponse = (analyticsData?.trends?.response  as number) ?? null;
   const pendingTrend  = (analyticsData?.trends?.pending   as number) ?? null;
 
-  // ── Stat cards — resolve value from Firestore then analytics, never invent ─
   const statCards = [
-    {
-      label: 'Comments Scanned',
-      value: fmt(commentsScanned ?? (totalScanned > 0 ? totalScanned : undefined)),
-      raw:   commentsScanned ?? (totalScanned > 0 ? totalScanned : undefined),
-      up:    true,  color: '#a78bfa', pct: trendScanned,  icon: MessageSquare,
-    },
-    {
-      label: 'AI Replies Sent',
-      value: fmt(aiReplies ?? (totalReplies > 0 ? totalReplies : undefined)),
-      raw:   aiReplies ?? (totalReplies > 0 ? totalReplies : undefined),
-      up:    true,  color: '#F59E0B', pct: trendReplies,  icon: Bot,
-    },
-    {
-      label: 'Hidden Toxic',
-      value: fmt(hiddenComments ?? (totalHidden > 0 ? totalHidden : undefined)),
-      raw:   hiddenComments ?? (totalHidden > 0 ? totalHidden : undefined),
-      up:    false, color: '#f87171', pct: trendHidden,   icon: EyeIcon,
-    },
-    {
-      label: 'Avg. Response Time',
-      value: fmtMs(avgResponseTime > 0 ? avgResponseTime : undefined),
-      raw:   avgResponseTime > 0 ? avgResponseTime : undefined,
-      up:    false, color: '#34d399', pct: trendResponse, icon: Activity,
-    },
+    { label: 'Comments Scanned', value: fmt(commentsScanned ?? (totalScanned > 0 ? totalScanned : undefined)), raw: commentsScanned ?? (totalScanned > 0 ? totalScanned : undefined), up: true,  color: '#a78bfa', pct: trendScanned,  icon: MessageSquare },
+    { label: 'AI Replies Sent',  value: fmt(aiReplies ?? (totalReplies > 0 ? totalReplies : undefined)),       raw: aiReplies ?? (totalReplies > 0 ? totalReplies : undefined),       up: true,  color: '#F59E0B', pct: trendReplies,  icon: Bot           },
+    { label: 'Hidden Toxic',     value: fmt(hiddenComments ?? (totalHidden > 0 ? totalHidden : undefined)),    raw: hiddenComments ?? (totalHidden > 0 ? totalHidden : undefined),    up: false, color: '#f87171', pct: trendHidden,   icon: EyeIcon       },
+    { label: 'Avg. Response Time', value: fmtMs(avgResponseTime > 0 ? avgResponseTime : undefined),           raw: avgResponseTime > 0 ? avgResponseTime : undefined,                up: false, color: '#34d399', pct: trendResponse, icon: Activity      },
   ];
 
   const chartLabels = ['11 Jul', '12 Jul', '13 Jul', '14 Jul', '15 Jul', '17 Jul'];
@@ -502,7 +576,6 @@ export default function Dashboard() {
   const totalActionsCalc   = totalScanned > 0 ? totalScanned : null;
   const correctActionsCalc = totalActionsCalc ? Math.round((moderationAcc / 100) * totalActionsCalc) : null;
   const falsePositivesCalc = totalActionsCalc ? totalActionsCalc - (correctActionsCalc ?? 0) : null;
-
   const requestVolumeBars = (analyticsData?.requestVolume12h as number[]) ?? [];
 
   const heroBadges = youtubeConnected
@@ -728,31 +801,23 @@ export default function Dashboard() {
           .r-hero{padding:14px 14px 14px;margin-bottom:10px;}
           .r-hero-shield{display:none!important;}
           .r-hero h1{font-size:20px!important;}
-
           .r-layout{display:flex!important;flex-direction:column!important;width:100%!important;max-width:100%!important;gap:10px;box-sizing:border-box!important;}
           .r-layout > div{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;}
-
           .r-stats{grid-template-columns:1fr 1fr!important;gap:8px;margin-bottom:10px;width:100%!important;}
           .r-stat{padding:12px 12px;}
           .r-stat-value,.r-stat-zero{font-size:22px!important;}
           .r-stat-label{font-size:10px;}
-
           .r-pending-row{grid-template-columns:1fr!important;gap:8px;margin-bottom:10px;width:100%!important;}
-
           .r-donut-wrap{flex-direction:column!important;align-items:center!important;gap:10px!important;}
           .r-donut-wrap > div:last-child{width:100%;}
-
           .r-bottom-grid{display:flex!important;flex-direction:column!important;gap:9px!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
           .r-bottom-grid > *{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;}
           .r-bottom-grid-last{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;}
-
           .r-live-panel{display:none!important;}
           .r-mobile-live{display:flex!important;flex-direction:column;width:100%!important;}
-
           .r-channel-card-inner{flex-direction:column!important;align-items:flex-start!important;gap:12px!important;}
           .r-channel-stats{flex-direction:row!important;gap:16px!important;width:100%;}
           .r-channel-open-btn{width:100%!important;justify-content:center!important;}
-
           .r-mob-protect-badge{display:none!important;}
           .r-credits-btn{padding:0 7px!important;font-size:10px!important;gap:3px!important;}
         }
@@ -815,7 +880,7 @@ export default function Dashboard() {
                 <span style={{ color: '#a78bfa', fontWeight: 700, fontSize: 11 }}>Upgrade to Pro</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 9 }}>
-                {[' 25,000 comments scanned / months', 'Unlimited automation rules', 'Priority support', '1,900 AI actions / month'].map(f => (
+                {[' 25,000 comments scanned / month', 'Unlimited automation rules', 'Priority support', '1,900 AI actions / month'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'rgba(255,255,255,0.32)', fontSize: 10 }}>
                     <div style={{ width: 3, height: 3, borderRadius: '50%', background: '#a78bfa', flexShrink: 0 }} />{f}
                   </div>
@@ -859,7 +924,6 @@ export default function Dashboard() {
                 AI Online
               </div>
             )}
-
             {youtubeConnected && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
                 <Shield size={9} strokeWidth={2} /> Protection Active
@@ -1236,21 +1300,8 @@ export default function Dashboard() {
                     <LiveActivityContent />
                   </div>
 
-                  {/* RECENT AUTOMATIONS */}
-                  <div className="r-card">
-                    <div className="r-card-top" style={{ alignItems: 'center' }}>
-                      <div><div className="r-card-title">Recent Automations</div></div>
-                      <Link href="/automation" style={{ display: 'flex', alignItems: 'center', gap: 3, color: 'rgba(255,255,255,0.3)', fontSize: 10.5, fontWeight: 600, textDecoration: 'none' }}>
-                        View all <ChevronRight size={10} />
-                      </Link>
-                    </div>
-                    <div style={{ padding: '4px 14px 10px' }}>
-                      <AutomationRow icon={Shield}        iconColor="#f87171" label="Toxic Comment Protection" active={autoHideToxic} />
-                      <AutomationRow icon={Bot}           iconColor="#a78bfa" label="AI Auto Reply"            active={autoAiReplies} />
-                      <AutomationRow icon={MessageSquare} iconColor="#34d399" label="Welcome Message"          active={autoWelcome} />
-                      <AutomationRow icon={AlertTriangle} iconColor="#F59E0B" label="Comment Filter"           active={autoHideSpam} />
-                    </div>
-                  </div>
+                  {/* REAL-TIME RECENT AUTOMATIONS */}
+                  {user && <RecentAutomations uid={user.uid} />}
 
                   {/* AI SYSTEM HEALTH + PLAN */}
                   <div className="r-bottom-grid-last" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

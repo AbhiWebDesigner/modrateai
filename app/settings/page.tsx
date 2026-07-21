@@ -134,7 +134,17 @@ export default function SettingsPage() {
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:3px}
 
-        .r-bg{min-height:100vh;background:#0a0a0f;position:relative;width:100%;overflow-x:hidden;}
+        /* ─── ROOT WRAPPER ───
+           height is content-driven, not viewport-driven.
+           min-height:100vh was causing the blank space below cards
+           in Desktop Site ON mode. Removed entirely.             */
+        .r-bg{
+          background:#0a0a0f;
+          position:relative;
+          width:100%;
+          overflow-x:hidden;
+          /* NO min-height:100vh here */
+        }
         .r-bg::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
           background:radial-gradient(ellipse 55% 45% at -5% -5%,rgba(124,58,237,0.09) 0%,transparent 55%),
             radial-gradient(ellipse 45% 35% at 108% 108%,rgba(245,158,11,0.06) 0%,transparent 55%);}
@@ -171,7 +181,7 @@ export default function SettingsPage() {
           padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;display:block;}
 
         /* MAIN */
-        .r-main{margin-left:216px;min-height:0;display:flex;flex-direction:column;position:relative;z-index:1;width:calc(100% - 216px);}
+        .r-main{min-height:0;display:flex;flex-direction:column;position:relative;z-index:1;}
 
         /* DESKTOP TOPBAR */
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(24px);
@@ -262,29 +272,50 @@ export default function SettingsPage() {
         /* WARN BOX */
         .warn-box{padding:13px 15px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.16);border-radius:11px;display:flex;align-items:flex-start;gap:9px;}
 
-        /* ══════════════════════════════════
-           MOBILE  ≤1023px
-        ══════════════════════════════════ */
-        @media(max-width:1023px){
+        /* ══════════════════════════════════════════════════════
+           NARROW MOBILE  ≤ 599px  (Chrome Desktop Site OFF)
+           Compact tabs that fit without overflow or clipping.
+        ══════════════════════════════════════════════════════ */
+        @media(max-width:599px){
           .r-sidebar{display:none!important;}
           .r-topbar{display:none!important;}
           .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
           .r-mobile-topbar{display:flex!important;}
           .r-bottom-nav{display:flex!important;}
-          .r-content{padding:16px 14px 20px!important;}
+          .r-content{padding:14px 12px 20px!important;}
+          /* Compact tabs — balanced, not oversized */
+          .tabs-row{gap:5px!important;}
+          .tab-btn{padding:6px 11px!important;font-size:11.5px!important;gap:5px!important;border-radius:9px!important;}
           .cards-grid{grid-template-columns:1fr!important;}
           .card-full{grid-column:1!important;}
-          .tabs-row{overflow-x:auto!important;flex-wrap:nowrap!important;gap:6px!important;}
-          .tab-btn{flex-shrink:0!important;padding:8px 13px!important;font-size:12px!important;}
-        }
-        @media(max-width:430px){
           .s-card{padding:14px!important;}
-          .r-content{padding:12px 10px 16px!important;}
         }
 
-        /* ══════════════════════════════════
-           DESKTOP  ≥1024px
-        ══════════════════════════════════ */
+        /* ══════════════════════════════════════════════════════
+           MID RANGE  600px – 1023px  (Chrome Desktop Site ON on phone,
+           or small tablets). Mobile nav + topbar, NO sidebar,
+           desktop-style card widths, full tab labels, no blank space.
+        ══════════════════════════════════════════════════════ */
+        @media(min-width:600px) and (max-width:1023px){
+          .r-sidebar{display:none!important;}
+          .r-topbar{display:none!important;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
+          .r-mobile-topbar{display:flex!important;}
+          .r-bottom-nav{display:flex!important;}
+          /* Wider content, desktop-style cards */
+          .r-content{padding:20px 22px 28px!important;}
+          /* Two-column cards like desktop */
+          .cards-grid{grid-template-columns:1fr 1fr!important;}
+          .card-full{grid-column:1 / -1!important;}
+          /* Full-width tabs, comfortable sizing */
+          .tabs-row{gap:7px!important;flex-wrap:nowrap!important;}
+          .tab-btn{padding:8px 14px!important;font-size:12.5px!important;}
+        }
+
+        /* ══════════════════════════════════════════════════════
+           DESKTOP  ≥ 1024px
+           Sidebar + topbar. Layout unchanged from original.
+        ══════════════════════════════════════════════════════ */
         @media(min-width:1024px){
           .r-sidebar{display:flex!important;}
           .r-topbar{display:flex!important;}
@@ -293,6 +324,9 @@ export default function SettingsPage() {
           .r-main{margin-left:216px!important;width:calc(100% - 216px)!important;padding-bottom:0!important;}
           .cards-grid{grid-template-columns:1fr 1fr!important;}
           .card-full{grid-column:1 / -1!important;}
+          .r-content{padding:24px 24px 32px!important;}
+          .tabs-row{gap:6px!important;}
+          .tab-btn{padding:8px 16px!important;font-size:12.5px!important;}
         }
 
         /* BOTTOM NAV */
@@ -372,7 +406,7 @@ export default function SettingsPage() {
         </aside>
 
         {/* ── MAIN ── */}
-        <div className="r-main">
+        <div className="r-main" style={{ flex: 1, minWidth: 0 }}>
 
           {/* DESKTOP TOPBAR */}
           <header className="r-topbar">

@@ -135,15 +135,14 @@ export default function SettingsPage() {
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:3px}
 
         /* ─── ROOT WRAPPER ───
-           height is content-driven, not viewport-driven.
-           min-height:100vh was causing the blank space below cards
-           in Desktop Site ON mode. Removed entirely.             */
+           display:flex is only applied on desktop via media query.
+           On mobile the wrapper is block so .r-main height = content height,
+           which eliminates the blank-space-below-cards issue on Desktop Site ON. */
         .r-bg{
           background:#0a0a0f;
           position:relative;
           width:100%;
           overflow-x:hidden;
-          /* NO min-height:100vh here */
         }
         .r-bg::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
           background:radial-gradient(ellipse 55% 45% at -5% -5%,rgba(124,58,237,0.09) 0%,transparent 55%),
@@ -207,17 +206,42 @@ export default function SettingsPage() {
         .r-content{padding:24px 24px 32px;flex:1;animation:fadeIn 0.3s ease;width:100%;box-sizing:border-box;}
 
         /* TABS */
-        .tabs-row{display:flex;gap:6px;margin-bottom:24px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;width:100%;}
+        .tabs-row{
+          display:flex;
+          gap:6px;
+          margin-bottom:24px;
+          overflow-x:auto;
+          -webkit-overflow-scrolling:touch;
+          scrollbar-width:none;
+          -ms-overflow-style:none;
+          width:100%;
+        }
         .tabs-row::-webkit-scrollbar{display:none;}
-        .tab-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;
-          font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;
-          background:transparent;color:rgba(255,255,255,0.38);border:1px solid transparent;
+        .tab-btn{
+          display:flex;
+          align-items:center;
+          gap:7px;
+          padding:8px 16px;
+          border-radius:10px;
+          font-size:12.5px;
+          font-weight:600;
+          cursor:pointer;
+          white-space:nowrap;
+          flex-shrink:0;
+          background:transparent;
+          color:rgba(255,255,255,0.38);
+          border:1px solid transparent;
           transition:background 240ms ease,border-color 240ms ease,color 240ms ease,box-shadow 240ms ease,transform 200ms ease;
-          position:relative;text-decoration:none;}
+          position:relative;
+          text-decoration:none;
+        }
         .tab-btn:hover{background:rgba(255,255,255,0.045);border-color:rgba(255,255,255,0.08);color:rgba(255,255,255,0.72);transform:translateY(-1px);}
-        .tab-btn.active{background:linear-gradient(160deg,rgba(124,58,237,0.18) 0%,rgba(109,40,217,0.11) 100%);
-          color:#c4b5fd;border-color:rgba(139,92,246,0.32);
-          box-shadow:0 0 0 1px rgba(139,92,246,0.12),0 2px 8px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.05);}
+        .tab-btn.active{
+          background:linear-gradient(160deg,rgba(124,58,237,0.18) 0%,rgba(109,40,217,0.11) 100%);
+          color:#c4b5fd;
+          border-color:rgba(139,92,246,0.32);
+          box-shadow:0 0 0 1px rgba(139,92,246,0.12),0 2px 8px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.05);
+        }
 
         /* CARDS */
         .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
@@ -272,65 +296,6 @@ export default function SettingsPage() {
         /* WARN BOX */
         .warn-box{padding:13px 15px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.16);border-radius:11px;display:flex;align-items:flex-start;gap:9px;}
 
-        /* ══════════════════════════════════════════════════════
-           NARROW MOBILE  ≤ 599px  (Chrome Desktop Site OFF)
-           Compact tabs that fit without overflow or clipping.
-        ══════════════════════════════════════════════════════ */
-        @media(max-width:599px){
-  .r-sidebar{display:none!important;}
-  .r-topbar{display:none!important;}
-  .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
-  .r-mobile-topbar{display:flex!important;}
-  .r-bottom-nav{display:flex!important;}
-  .r-content{padding:14px 12px 20px!important;}
-  /* Tabs scroll horizontally — no clipping, touch-friendly */
-  .tabs-row{gap:6px!important;flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important;}
-  .tab-btn{padding:8px 14px!important;font-size:12px!important;gap:6px!important;border-radius:9px!important;flex-shrink:0!important;}
-  .cards-grid{grid-template-columns:1fr!important;}
-  .card-full{grid-column:1!important;}
-  .s-card{padding:14px!important;}
-}
-
-        /* ══════════════════════════════════════════════════════
-           MID RANGE  600px – 1023px  (Chrome Desktop Site ON on phone,
-           or small tablets). Mobile nav + topbar, NO sidebar,
-           desktop-style card widths, full tab labels, no blank space.
-        ══════════════════════════════════════════════════════ */
-     @media(min-width:600px) and (max-width:1023px){
-    .r-sidebar{display:none!important;}
-    .r-topbar{display:none!important;}
-    .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
-    .r-mobile-topbar{display:flex!important;}
-    .r-bottom-nav{display:flex!important;}
-     /* Full-width content, natural height — no blank space */
-     .r-bg{min-height:0!important;height:auto!important;}
-     .r-content{padding:20px 20px 32px!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
-      /* Two-column cards */
-      .cards-grid{grid-template-columns:1fr 1fr!important;width:100%!important;}
-      .card-full{grid-column:1 / -1!important;}
-      .s-card{padding:18px!important;width:100%!important;box-sizing:border-box!important;}
-      /* Tabs — scrollable, full labels, no wrapping */
-     .tabs-row{gap:7px!important;flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:2px!important;}
-     .tab-btn{padding:8px 15px!important;font-size:12.5px!important;flex-shrink:0!important;}
-  }
-
-        /* ══════════════════════════════════════════════════════
-           DESKTOP  ≥ 1024px
-           Sidebar + topbar. Layout unchanged from original.
-        ══════════════════════════════════════════════════════ */
-        @media(min-width:1024px){
-          .r-sidebar{display:flex!important;}
-          .r-topbar{display:flex!important;}
-          .r-mobile-topbar{display:none!important;}
-          .r-bottom-nav{display:none!important;}
-          .r-main{margin-left:216px!important;width:calc(100% - 216px)!important;padding-bottom:0!important;}
-          .cards-grid{grid-template-columns:1fr 1fr!important;}
-          .card-full{grid-column:1 / -1!important;}
-          .r-content{padding:24px 24px 32px!important;}
-          .tabs-row{gap:6px!important;}
-          .tab-btn{padding:8px 16px!important;font-size:12.5px!important;}
-        }
-
         /* BOTTOM NAV */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
@@ -345,9 +310,125 @@ export default function SettingsPage() {
           display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
+
+        /* ══════════════════════════════════════════════════════
+           NARROW MOBILE  ≤ 599px  (Chrome Desktop Site OFF)
+
+           Fix: tabs get comfortable padding + min-width so they
+           never clip. overflow-x:auto on .tabs-row handles any
+           overflow gracefully without shrinking the tab text.
+        ══════════════════════════════════════════════════════ */
+        @media(max-width:599px){
+          .r-sidebar{display:none!important;}
+          .r-topbar{display:none!important;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
+          .r-mobile-topbar{display:flex!important;}
+          .r-bottom-nav{display:flex!important;}
+          .r-content{padding:14px 12px 20px!important;}
+
+          /* ── TAB FIX (Desktop Site OFF) ──
+             Increase padding so touch area is comfortable.
+             flex-shrink:0 already set on .tab-btn globally,
+             and .tabs-row already scrolls, so tabs never clip. */
+          .tabs-row{gap:6px!important;}
+          .tab-btn{
+            padding:9px 14px!important;
+            font-size:12.5px!important;
+            gap:6px!important;
+            border-radius:10px!important;
+            min-width:max-content!important;
+          }
+
+          .cards-grid{grid-template-columns:1fr!important;}
+          .card-full{grid-column:1!important;}
+          .s-card{padding:14px!important;}
+        }
+
+        /* ══════════════════════════════════════════════════════
+           MID RANGE  600px – 1023px  (Chrome Desktop Site ON on phone,
+           or small tablets).
+
+           Root cause of issues:
+           1. .r-bg had display:flex at all sizes (via inline style),
+              making .r-main stretch to 100vh → blank space below cards.
+              Fix: .r-bg is block at this range; sidebar is hidden;
+              .r-main has no left margin and no stretch.
+           2. cards-grid was 1fr 1fr making cards too narrow on a
+              phone-width viewport.
+              Fix: single column, full-width cards.
+           3. Tabs were too small.
+              Fix: comfortable padding matching desktop tab style.
+        ══════════════════════════════════════════════════════ */
+        @media(min-width:600px) and (max-width:1023px){
+          /* Root wrapper — block, not flex, so height = content */
+          .r-bg{display:block!important;}
+
+          .r-sidebar{display:none!important;}
+          .r-topbar{display:none!important;}
+
+          /* Main takes full width, no sidebar offset */
+          .r-main{
+            margin-left:0!important;
+            width:100%!important;
+            padding-bottom:76px!important;
+            /* block, not flex-child-of-flex, so no forced 100vh stretch */
+            display:block!important;
+          }
+
+          .r-mobile-topbar{display:flex!important;}
+          .r-bottom-nav{display:flex!important;}
+
+          /* Comfortable content padding */
+          .r-content{padding:20px 20px 28px!important;}
+
+          /* Single-column cards — full usable width */
+          .cards-grid{grid-template-columns:1fr!important;}
+          .card-full{grid-column:1!important;}
+          .s-card{padding:18px!important;}
+
+          /* Tabs — full desktop-size labels, comfortable touch targets */
+          .tabs-row{
+            gap:7px!important;
+            flex-wrap:nowrap!important;
+            overflow-x:auto!important;
+          }
+          .tab-btn{
+            padding:9px 16px!important;
+            font-size:13px!important;
+            gap:7px!important;
+            min-width:max-content!important;
+          }
+        }
+
+        /* ══════════════════════════════════════════════════════
+           DESKTOP  ≥ 1024px
+           Sidebar + topbar. Layout unchanged from original.
+        ══════════════════════════════════════════════════════ */
+        @media(min-width:1024px){
+          /* Root wrapper — flex for sidebar + main layout */
+          .r-bg{display:flex!important;}
+
+          .r-sidebar{display:flex!important;}
+          .r-topbar{display:flex!important;}
+          .r-mobile-topbar{display:none!important;}
+          .r-bottom-nav{display:none!important;}
+          .r-main{
+            margin-left:216px!important;
+            width:calc(100% - 216px)!important;
+            padding-bottom:0!important;
+            display:flex!important;
+            flex-direction:column!important;
+          }
+          .cards-grid{grid-template-columns:1fr 1fr!important;}
+          .card-full{grid-column:1 / -1!important;}
+          .r-content{padding:24px 24px 32px!important;}
+          .tabs-row{gap:6px!important;}
+          .tab-btn{padding:8px 16px!important;font-size:12.5px!important;}
+        }
       `}</style>
 
-      <div className="r-bg" style={{ display: 'flex' }}>
+      {/* r-bg: no inline display style — controlled entirely by media queries above */}
+      <div className="r-bg">
 
         {/* ── SIDEBAR ── */}
         <aside className="r-sidebar">
@@ -408,7 +489,7 @@ export default function SettingsPage() {
         </aside>
 
         {/* ── MAIN ── */}
-        <div className="r-main" style={{ flex: 1, minWidth: 0 }}>
+        <div className="r-main">
 
           {/* DESKTOP TOPBAR */}
           <header className="r-topbar">

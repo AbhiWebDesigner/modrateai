@@ -437,9 +437,12 @@ export default function SettingsPage() {
           }
           .tab-btn svg{width:17px!important;height:17px!important;}
 
+          /* Card sizing — bigger boxes */
+          .s-card{padding:28px 24px!important;border-radius:16px!important;}
+
           /* Card text */
-          .card-title{font-size:18px!important;}
-          .card-sub{font-size:14px!important;margin-bottom:18px!important;}
+          .card-title{font-size:22px!important;margin-bottom:6px!important;}
+          .card-sub{font-size:15px!important;margin-bottom:22px!important;}
 
           /* Inputs */
           .field-label{font-size:13px!important;margin-bottom:8px!important;}

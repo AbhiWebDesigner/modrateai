@@ -5,15 +5,14 @@ import {
   Shield, ChevronRight, ChevronLeft, Copy, Eye, EyeOff,
   ExternalLink, Check, Lock, Wifi, WifiOff, RotateCcw,
   Trash2, RefreshCw, AlertTriangle, Activity, Clock, Zap, BarChart2, X,
-  Cloud, Server, Loader2, AlertCircle, Play, SkipForward,
-  CheckCircle2, Circle, Youtube,
+  Cloud, Server, Loader2, Play, SkipForward, Youtube, ImageIcon,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type APIMethod  = "managed" | "custom";
-type WizardStep = 1 | 2 | 3 | 4 | 5 | 6;
 type LogStatus  = "success" | "warning" | "error" | "info";
+type WizardStep = "method" | "tutorial" | "gcp" | "enable" | "oauth" | "credentials" | "connect";
 
 interface ActivityLog {
   id: string;
@@ -43,6 +42,7 @@ interface CustomProjectInfo {
 
 interface APIStatus {
   method: APIMethod;
+  youtubeConnected: boolean;
   managed?: ManagedUsage;
   custom?: CustomProjectInfo;
 }
@@ -103,6 +103,15 @@ async function fetchActivityLogs(): Promise<ActivityLog[]> {
   return res.json();
 }
 
+async function checkVideoExists(): Promise<boolean> {
+  try {
+    const res = await fetch("/videos/google-cloud-setup.mp4", { method: "HEAD" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 function fmt(iso: string | null, opts?: Intl.DateTimeFormatOptions): string {
@@ -123,7 +132,7 @@ function Spinner({ className = "w-4 h-4" }: { className?: string }) {
 function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/8 px-4 py-3 text-sm text-red-400">
-      <AlertCircle size={14} className="shrink-0" />
+      <AlertTriangle size={14} className="shrink-0" />
       <span className="flex-1 leading-snug">{message}</span>
       {onRetry && (
         <button onClick={onRetry} className="text-xs font-semibold text-red-300 hover:text-red-200 underline underline-offset-2 transition-colors shrink-0">
@@ -147,45 +156,6 @@ function EmptyState({ icon: Icon, title, description }: { icon: React.ElementTyp
     </div>
   );
 }
-
-// ─── Step Indicator ───────────────────────────────────────────────────────────
-
-const STEPS = ["Tutorial", "Cloud Project", "Enable API", "OAuth Client", "Credentials", "Connect"];
-
-function StepIndicator({ current }: { current: WizardStep }) {
-  return (
-    <div className="w-full overflow-x-auto pb-1 -mx-1 px-1">
-      <div className="flex items-center min-w-max">
-        {STEPS.map((label, i) => {
-          const num    = (i + 1) as WizardStep;
-          const done   = num < current;
-          const active = num === current;
-          return (
-            <div key={num} className="flex items-center">
-              <div className="flex flex-col items-center gap-1.5">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300
-                  ${done   ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-900/40" : ""}
-                  ${active ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40 ring-4 ring-purple-500/15" : ""}
-                  ${!done && !active ? "bg-transparent border-white/15 text-white/25" : ""}`}>
-                  {done ? <Check size={12} /> : num}
-                </div>
-                <span className={`text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors duration-300
-                  ${active ? "text-purple-300" : done ? "text-emerald-500" : "text-white/20"}`}>
-                  {label}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div className={`h-px w-8 mx-2 mb-5 transition-all duration-500 ${done ? "bg-emerald-600/60" : "bg-white/8"}`} />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ─── Nav Buttons ──────────────────────────────────────────────────────────────
 
 function NavButtons({ onPrev, onNext, nextLabel = "Continue", nextDisabled = false, loading = false }: {
   onPrev?: () => void; onNext?: () => void; nextLabel?: string; nextDisabled?: boolean; loading?: boolean;
@@ -211,140 +181,217 @@ function NavButtons({ onPrev, onNext, nextLabel = "Continue", nextDisabled = fal
   );
 }
 
-// ─── Step 1 — Tutorial ────────────────────────────────────────────────────────
+// ─── Step Indicator ───────────────────────────────────────────────────────────
 
-function Step1({ onNext }: { onNext: () => void }) {
-  const [watched, setWatched] = useState(false);
-  const [playing, setPlaying] = useState(false);
+function StepIndicator({ labels, current }: { labels: string[]; current: number }) {
+  return (
+    <div className="w-full overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="flex items-center min-w-max">
+        {labels.map((label, i) => {
+          const num    = i + 1;
+          const done   = num < current;
+          const active = num === current;
+          return (
+            <div key={label} className="flex items-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300
+                  ${done   ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-900/40" : ""}
+                  ${active ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40 ring-4 ring-purple-500/15" : ""}
+                  ${!done && !active ? "bg-transparent border-white/15 text-white/25" : ""}`}>
+                  {done ? <Check size={12} /> : num}
+                </div>
+                <span className={`text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors duration-300
+                  ${active ? "text-purple-300" : done ? "text-emerald-500" : "text-white/20"}`}>
+                  {label}
+                </span>
+              </div>
+              {i < labels.length - 1 && (
+                <div className={`h-px w-8 mx-2 mb-5 transition-all duration-500 ${done ? "bg-emerald-600/60" : "bg-white/8"}`} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Step: Choose Method ──────────────────────────────────────────────────────
+
+function MethodStep({ method, onSelect, onNext }: {
+  method: APIMethod; onSelect: (m: APIMethod) => void; onNext: () => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-lg font-semibold text-white mb-1">Choose connection method</h2>
+        <p className="text-white/40 text-sm">You can switch this later in settings.</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div onClick={() => onSelect("managed")}
+          className={`relative rounded-2xl border p-5 cursor-pointer transition-all duration-200
+            ${method === "managed"
+              ? "border-purple-500/40 bg-purple-500/8 shadow-xl shadow-purple-900/15"
+              : "border-white/8 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.035]"}`}>
+          {method === "managed" && (
+            <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center">
+              <Check size={11} className="text-white" />
+            </div>
+          )}
+          <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-600/25 text-purple-300 border border-purple-500/25 mb-3 uppercase tracking-wide">
+            Recommended
+          </span>
+          <h3 className="text-sm font-semibold text-white mb-2">ModerateAI Managed</h3>
+          <ul className="space-y-1.5">
+            {["No setup required", "One-click YouTube connection", "Included with your plan"].map((item) => (
+              <li key={item} className="flex items-center gap-2 text-xs text-white/40">
+                <Check size={11} className="text-purple-400 shrink-0" />{item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div onClick={() => onSelect("custom")}
+          className={`relative rounded-2xl border p-5 cursor-pointer transition-all duration-200
+            ${method === "custom"
+              ? "border-purple-500/40 bg-purple-500/8 shadow-xl shadow-purple-900/15"
+              : "border-white/8 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.035]"}`}>
+          {method === "custom" && (
+            <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center">
+              <Check size={11} className="text-white" />
+            </div>
+          )}
+          <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-white/8 text-white/40 border border-white/12 mb-3 uppercase tracking-wide">
+            Advanced
+          </span>
+          <h3 className="text-sm font-semibold text-white mb-2">My Google Cloud Project</h3>
+          <ul className="space-y-1.5">
+            {["Your own daily API quota", "Better for high-volume channels", "Full control over credentials"].map((item) => (
+              <li key={item} className="flex items-center gap-2 text-xs text-white/40">
+                <Check size={11} className="text-purple-400 shrink-0" />{item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <NavButtons onNext={onNext} />
+    </div>
+  );
+}
+
+// ─── Step: Tutorial ───────────────────────────────────────────────────────────
+
+function TutorialStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
+  const [hasVideo, setHasVideo] = useState<boolean | null>(null);
+  const [watched, setWatched]   = useState(false);
+  const [playing, setPlaying]   = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const handleVideoEnd = () => setWatched(true);
-  const handlePlay = () => {
-    setPlaying(true);
-    videoRef.current?.play();
-  };
+  useEffect(() => { checkVideoExists().then(setHasVideo); }, []);
 
-  const topics = [
-    "Create a Google Cloud Project",
-    "Enable the YouTube Data API",
-    "Set up OAuth Consent Screen",
-    "Create OAuth Client credentials",
-    "Copy your Client ID & Secret",
-    "Connect ModerateAI to YouTube",
-  ];
+  const handlePlay = () => { setPlaying(true); videoRef.current?.play(); };
 
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-white mb-1">Watch the setup tutorial</h2>
-        <p className="text-white/40 text-sm">Optional — skip if you've done this before.</p>
+        <h2 className="text-lg font-semibold text-white mb-1">Setup tutorial</h2>
+        <p className="text-white/40 text-sm">Optional — you can continue without watching.</p>
       </div>
 
-      {/* Video card */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-        <div className="relative aspect-video bg-[#0d0c14] flex items-center justify-center group">
-          <video
-            ref={videoRef}
-            src="/videos/google-cloud-setup.mp4"
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${playing ? "opacity-100" : "opacity-0"}`}
-            onEnded={handleVideoEnd}
-          />
-          {!playing && (
-            <div className="relative z-10 flex flex-col items-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center shadow-2xl shadow-purple-900/60 hover:bg-purple-500 cursor-pointer transition-all duration-200 hover:scale-105 group-hover:shadow-purple-900/80"
-                onClick={handlePlay}>
-                <Play size={20} className="text-white ml-0.5" fill="white" />
-              </div>
-              <p className="text-xs text-white/30 font-medium">Play tutorial</p>
-            </div>
+        <div className="relative aspect-video bg-[#0d0c14] flex items-center justify-center">
+          {hasVideo === null && (
+            <Spinner className="w-5 h-5 text-white/20" />
           )}
-          {watched && (
-            <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold backdrop-blur-sm">
-              <Check size={10} /> Watched
-            </div>
-          )}
-        </div>
 
-        <div className="px-5 py-4 border-t border-white/8 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 text-xs text-white/35">
-            <Clock size={12} />
-            <span>2–3 min</span>
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            {topics.map((t) => (
-              <span key={t} className="flex items-center gap-1 text-[10px] text-white/30">
-                <Check size={9} className="text-emerald-500/60" /> {t}
-              </span>
-            ))}
-          </div>
+          {hasVideo === false && (
+            <div className="flex flex-col items-center gap-2 text-center px-6">
+              <div className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                <ImageIcon size={18} className="text-white/20" />
+              </div>
+              <p className="text-sm font-medium text-white/35">Tutorial coming soon</p>
+              <p className="text-xs text-white/20">Upload your setup video later — this will unlock automatically.</p>
+            </div>
+          )}
+
+          {hasVideo === true && (
+            <>
+              <video
+                ref={videoRef}
+                src="/videos/google-cloud-setup.mp4"
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${playing ? "opacity-100" : "opacity-0"}`}
+                onEnded={() => setWatched(true)}
+              />
+              {!playing && (
+                <div className="relative z-10 flex flex-col items-center gap-3">
+                  <div className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center shadow-2xl shadow-purple-900/60 hover:bg-purple-500 cursor-pointer transition-all duration-200 hover:scale-105"
+                    onClick={handlePlay}>
+                    <Play size={20} className="text-white ml-0.5" fill="white" />
+                  </div>
+                  <p className="text-xs text-white/30 font-medium">Play tutorial</p>
+                </div>
+              )}
+              {watched && (
+                <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold">
+                  <Check size={10} /> Watched
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-4">
-        <button onClick={() => setWatched(true)}
+        <button onClick={onPrev}
           className="flex items-center gap-1.5 text-xs text-white/25 hover:text-white/50 transition-colors duration-150">
-          <SkipForward size={12} /> Skip — I know this already
+          <ChevronLeft size={12} /> Back
         </button>
-        <button onClick={onNext} disabled={!watched}
+        <button onClick={onNext} disabled={hasVideo === true && !watched}
           className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
-            ${watched
+            ${hasVideo !== true || watched
               ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]"
               : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}>
-          Continue <ChevronRight size={15} />
+          {hasVideo === true && !watched ? <><SkipForward size={13} /> Skip</> : <>Continue</>} <ChevronRight size={15} />
         </button>
       </div>
     </div>
   );
 }
 
-// ─── Step 2 — Google Cloud Project ───────────────────────────────────────────
+// ─── Step: Google Cloud Project ───────────────────────────────────────────────
 
-function Step2({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
+function GCPStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   const cards = [
-    {
-      title: "Create Project",
-      desc: "Create a new Google Cloud project to host your YouTube API credentials.",
-      url: "https://console.cloud.google.com/projectcreate",
-    },
-    {
-      title: "Enable YouTube API",
-      desc: "Enable the YouTube Data API v3 from the API Library.",
-      url: "https://console.cloud.google.com/apis/library/youtube.googleapis.com",
-    },
-    {
-      title: "OAuth Consent Screen",
-      desc: "Configure the consent screen shown to users when they authorize your app.",
-      url: "https://console.cloud.google.com/apis/credentials/consent",
-    },
-    {
-      title: "Create OAuth Client",
-      desc: "Create OAuth 2.0 credentials under APIs & Services → Credentials.",
-      url: "https://console.cloud.google.com/apis/credentials",
-    },
+    { title: "Create Project", desc: "Create a new Google Cloud project.", url: "https://console.cloud.google.com/projectcreate" },
+    { title: "Enable YouTube API", desc: "Enable YouTube Data API v3.", url: "https://console.cloud.google.com/apis/library/youtube.googleapis.com" },
+    { title: "OAuth Consent Screen", desc: "Configure the consent screen.", url: "https://console.cloud.google.com/apis/credentials/consent" },
+    { title: "Create OAuth Client", desc: "Create OAuth 2.0 credentials.", url: "https://console.cloud.google.com/apis/credentials" },
   ];
 
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-white mb-1">Open Google Cloud Console</h2>
-        <p className="text-white/40 text-sm">Complete each step in order. Come back here after each one.</p>
+        <h2 className="text-lg font-semibold text-white mb-1">Google Cloud Project</h2>
+        <p className="text-white/40 text-sm">Complete each step, then come back here.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {cards.map(({ title, desc, url }, i) => (
-          <a key={title} href={url} target="_blank" rel="noopener noreferrer"
-            className="group relative rounded-xl border border-white/8 bg-white/[0.025] hover:border-purple-500/30 hover:bg-purple-500/5 p-4 transition-all duration-200 flex flex-col gap-3">
-            <div className="flex items-start justify-between gap-2">
-              <div className="w-6 h-6 rounded-lg bg-purple-600/25 border border-purple-500/25 flex items-center justify-center text-[10px] font-bold text-purple-300 shrink-0">
-                {i + 1}
-              </div>
-              <ExternalLink size={12} className="text-white/15 group-hover:text-purple-400 transition-colors duration-200 shrink-0 mt-0.5" />
+          <div key={title} className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0 text-[11px] font-bold text-purple-300">
+              {i + 1}
             </div>
-            <div>
-              <p className="text-sm font-semibold text-white mb-0.5">{title}</p>
-              <p className="text-xs text-white/35 leading-relaxed">{desc}</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{title}</p>
+              <p className="text-xs text-white/35 truncate">{desc}</p>
             </div>
-          </a>
+            <a href={url} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
+              Open <ExternalLink size={10} />
+            </a>
+          </div>
         ))}
       </div>
 
@@ -353,76 +400,68 @@ function Step2({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   );
 }
 
-// ─── Step 3 — Enable API ─────────────────────────────────────────────────────
+// ─── Step: Enable API ─────────────────────────────────────────────────────────
 
-function Step3({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
-  const steps = [
-    { n: "1", text: 'In the left sidebar, go to "APIs & Services" → "Library".' },
-    { n: "2", text: 'Search for "YouTube Data API v3" and click the result.' },
-    { n: "3", text: 'Click "Enable" and wait for the API to activate.' },
-  ];
-
+function EnableStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white mb-1">Enable YouTube Data API v3</h2>
-        <p className="text-white/40 text-sm">The API must be enabled before credentials will work.</p>
+        <p className="text-white/40 text-sm">Required before credentials will work.</p>
       </div>
 
-      <div className="rounded-xl border border-white/8 bg-white/[0.025] divide-y divide-white/5 overflow-hidden">
-        {steps.map(({ n, text }) => (
-          <div key={n} className="flex items-start gap-3 px-4 py-3.5">
-            <span className="w-5 h-5 rounded-full bg-purple-600/20 border border-purple-500/25 text-purple-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{n}</span>
-            <p className="text-sm text-white/55 leading-relaxed">{text}</p>
-          </div>
-        ))}
+      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
+          <Youtube size={16} className="text-purple-300" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white">YouTube Data API v3</p>
+          <p className="text-xs text-white/35">Search it in the API Library, then click Enable.</p>
+        </div>
+        <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com"
+          target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
+          Open <ExternalLink size={10} />
+        </a>
       </div>
-
-      <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com"
-        target="_blank" rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
-        Open API Library <ExternalLink size={13} />
-      </a>
 
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="API is enabled" />
     </div>
   );
 }
 
-// ─── Step 4 — OAuth Client ────────────────────────────────────────────────────
+// ─── Step: OAuth Client ────────────────────────────────────────────────────────
 
 const CALLBACK_URL = "https://moderateai.site/api/auth/google/callback";
 
-function Step4({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
+function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = () => {
     navigator.clipboard.writeText(CALLBACK_URL);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const steps = [
-    'Go to "APIs & Services" → "Credentials" → "Create Credentials" → "OAuth client ID".',
-    'Set Application Type to "Web application".',
-    "Add the callback URL below as an Authorised Redirect URI.",
-    "Click Create, then copy the Client ID and Client Secret.",
-  ];
-
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-white mb-1">Create OAuth 2.0 client</h2>
-        <p className="text-white/40 text-sm">Add the callback URL exactly as shown — no trailing slash.</p>
+        <h2 className="text-lg font-semibold text-white mb-1">Create OAuth client</h2>
+        <p className="text-white/40 text-sm">Add the callback URL as an Authorised Redirect URI.</p>
       </div>
 
-      <div className="rounded-xl border border-white/8 bg-white/[0.025] divide-y divide-white/5 overflow-hidden">
-        {steps.map((text, i) => (
-          <div key={i} className="flex items-start gap-3 px-4 py-3.5">
-            <span className="w-5 h-5 rounded-full bg-purple-600/20 border border-purple-500/25 text-purple-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-            <p className="text-sm text-white/55 leading-relaxed">{text}</p>
-          </div>
-        ))}
+      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
+          <Lock size={16} className="text-purple-300" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white">OAuth 2.0 Client ID</p>
+          <p className="text-xs text-white/35">Application type: Web application.</p>
+        </div>
+        <a href="https://console.cloud.google.com/apis/credentials"
+          target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
+          Open <ExternalLink size={10} />
+        </a>
       </div>
 
       <div className="space-y-1.5">
@@ -437,20 +476,14 @@ function Step4({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
         </div>
       </div>
 
-      <a href="https://console.cloud.google.com/apis/credentials"
-        target="_blank" rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
-        Open Credentials Page <ExternalLink size={13} />
-      </a>
-
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Credentials created" />
     </div>
   );
 }
 
-// ─── Step 5 — Add Credentials ─────────────────────────────────────────────────
+// ─── Step: Credentials ─────────────────────────────────────────────────────────
 
-function Step5({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
+function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   const [clientId, setClientId]         = useState("");
   const [clientSecret, setClientSecret] = useState("");
   const [showSecret, setShowSecret]     = useState(false);
@@ -461,8 +494,7 @@ function Step5({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
 
   const handleSave = async () => {
     if (!canSave || saving) return;
-    setSaving(true);
-    setError(null);
+    setSaving(true); setError(null);
     try {
       await saveOAuthCredentials(clientId.trim(), clientSecret.trim());
       onNext();
@@ -477,7 +509,7 @@ function Step5({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white mb-1">Add your credentials</h2>
-        <p className="text-white/40 text-sm">Paste the credentials from Google Console. Encrypted at rest, never exposed.</p>
+        <p className="text-white/40 text-sm">Encrypted at rest, never exposed.</p>
       </div>
 
       <div className="space-y-3">
@@ -534,11 +566,10 @@ function Step5({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   );
 }
 
-// ─── Step 6 — Connect YouTube ─────────────────────────────────────────────────
+// ─── Step: Connect YouTube ─────────────────────────────────────────────────────
 
-function Step6({ onPrev, onComplete }: { onPrev: () => void; onComplete: () => void }) {
+function ConnectStep({ onPrev, showBack }: { onPrev: () => void; showBack: boolean }) {
   const [connecting, setConnecting] = useState(false);
-
   const handleConnect = () => {
     setConnecting(true);
     window.location.href = "/api/auth/youtube";
@@ -548,7 +579,7 @@ function Step6({ onPrev, onComplete }: { onPrev: () => void; onComplete: () => v
     <div className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold text-white mb-1">Connect YouTube</h2>
-        <p className="text-white/40 text-sm">Authorize ModerateAI to access your YouTube channel using your credentials.</p>
+        <p className="text-white/40 text-sm">Authorize ModerateAI to access your channel's comments.</p>
       </div>
 
       <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-8 flex flex-col items-center gap-5 text-center">
@@ -558,7 +589,7 @@ function Step6({ onPrev, onComplete }: { onPrev: () => void; onComplete: () => v
         <div>
           <p className="text-white font-semibold mb-1">Authorize YouTube access</p>
           <p className="text-white/35 text-sm leading-relaxed max-w-xs mx-auto">
-            You'll be redirected to Google to grant read and manage access to your channel's comments.
+            You'll be redirected to Google to grant access.
           </p>
         </div>
         <button onClick={handleConnect} disabled={connecting}
@@ -567,43 +598,52 @@ function Step6({ onPrev, onComplete }: { onPrev: () => void; onComplete: () => v
         </button>
       </div>
 
-      <button onClick={onPrev}
-        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 font-medium text-sm transition-all duration-200">
-        <ChevronLeft size={15} /> Back
-      </button>
+      {showBack && (
+        <button onClick={onPrev}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 font-medium text-sm transition-all duration-200">
+          <ChevronLeft size={15} /> Back
+        </button>
+      )}
     </div>
   );
 }
 
 // ─── Setup Wizard ─────────────────────────────────────────────────────────────
 
-function SetupWizard({ onClose, onComplete }: { onClose: () => void; onComplete: () => void }) {
-  const [step, setStep] = useState<WizardStep>(1);
-  const next = () => setStep((s) => Math.min(s + 1, 6) as WizardStep);
-  const prev = () => setStep((s) => Math.max(s - 1, 1) as WizardStep);
+function SetupWizard({ onConnected }: { onConnected: () => void }) {
+  const [method, setMethod] = useState<APIMethod>("managed");
+  const flow: WizardStep[] = method === "managed"
+    ? ["method", "connect"]
+    : ["method", "tutorial", "gcp", "enable", "oauth", "credentials", "connect"];
+  const labels: Record<WizardStep, string> = {
+    method: "Method", tutorial: "Tutorial", gcp: "Cloud Project", enable: "Enable API",
+    oauth: "OAuth Client", credentials: "Credentials", connect: "Connect",
+  };
+  const [index, setIndex] = useState(0);
+  const step = flow[index];
+
+  const next = () => setIndex((i) => Math.min(i + 1, flow.length - 1));
+  const prev = () => setIndex((i) => Math.max(i - 1, 0));
 
   return (
     <div className="rounded-2xl border border-purple-500/20 bg-[#0d0c14] overflow-hidden shadow-2xl shadow-purple-900/20">
-      <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-          <span className="text-xs font-semibold text-purple-400 uppercase tracking-widest">Setup Wizard</span>
-        </div>
-        <button onClick={onClose}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/5 transition-all duration-150">
-          <X size={14} />
-        </button>
+      <div className="px-5 py-4 border-b border-white/8 flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+        <span className="text-xs font-semibold text-purple-400 uppercase tracking-widest">Setup</span>
       </div>
       <div className="px-5 py-4 border-b border-white/5">
-        <StepIndicator current={step} />
+        <StepIndicator labels={flow.map((s) => labels[s])} current={index + 1} />
       </div>
       <div className="px-5 py-5">
-        {step === 1 && <Step1 onNext={next} />}
-        {step === 2 && <Step2 onNext={next} onPrev={prev} />}
-        {step === 3 && <Step3 onNext={next} onPrev={prev} />}
-        {step === 4 && <Step4 onNext={next} onPrev={prev} />}
-        {step === 5 && <Step5 onNext={next} onPrev={prev} />}
-        {step === 6 && <Step6 onPrev={prev} onComplete={onComplete} />}
+        {step === "method" && (
+          <MethodStep method={method} onSelect={setMethod} onNext={next} />
+        )}
+        {step === "tutorial" && <TutorialStep onNext={next} onPrev={prev} />}
+        {step === "gcp" && <GCPStep onNext={next} onPrev={prev} />}
+        {step === "enable" && <EnableStep onNext={next} onPrev={prev} />}
+        {step === "oauth" && <OAuthStep onNext={next} onPrev={prev} />}
+        {step === "credentials" && <CredentialsStep onNext={next} onPrev={prev} />}
+        {step === "connect" && <ConnectStep onPrev={prev} showBack={index > 0} />}
       </div>
     </div>
   );
@@ -635,10 +675,6 @@ function DeleteModal({ onCancel, onConfirm, loading, error }: {
         <div>
           <h3 className="text-base font-semibold text-white mb-1">Delete credentials?</h3>
           <p className="text-sm text-white/40 leading-relaxed">This removes your Google Cloud credentials. Active moderation will stop immediately. You can reconnect at any time.</p>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-3 py-2.5">
-          <AlertTriangle size={12} className="text-yellow-400 shrink-0" />
-          <p className="text-xs text-yellow-300/70">Active moderation will stop immediately.</p>
         </div>
         {error && <ErrorBanner message={error} />}
         <div className="flex gap-2.5 pt-1">
@@ -672,12 +708,10 @@ function StatusBadge({ status }: { status: LogStatus }) {
   );
 }
 
-// ─── Connection Status Section ────────────────────────────────────────────────
+// ─── Connection Management (post-connect only) ─────────────────────────────────
 
-function ConnectionSection({
-  activeMethod, status, onRefresh,
-}: {
-  activeMethod: APIMethod; status: APIStatus | null; onRefresh: () => void;
+function ConnectionSection({ activeMethod, status, onRefresh }: {
+  activeMethod: APIMethod; status: APIStatus; onRefresh: () => void;
 }) {
   const [testState, setTestState]     = useState<"idle" | "loading" | "ok" | "fail">("idle");
   const [testMessage, setTestMessage] = useState("");
@@ -690,18 +724,8 @@ function ConnectionSection({
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const isManaged = activeMethod === "managed";
-  const custom    = status?.custom;
-  const managed   = status?.managed;
-
-  const isConnected = isManaged ? !!managed : custom?.connectionStatus === "active";
-  const connLabel   = isManaged ? "Connected"
-    : custom?.connectionStatus === "active" ? "Connected"
-    : custom?.connectionStatus === "error"  ? "Error"
-    : "Disconnected";
-
-  const connRing  = isConnected ? "border-emerald-500/25 bg-emerald-500/8"  : connLabel === "Error" ? "border-red-500/25 bg-red-500/8" : "border-white/10 bg-white/[0.03]";
-  const dotColor  = isConnected ? "bg-emerald-400 animate-pulse" : connLabel === "Error" ? "bg-red-400" : "bg-white/20";
-  const textColor = isConnected ? "text-emerald-400" : connLabel === "Error" ? "text-red-400" : "text-white/35";
+  const custom    = status.custom;
+  const managed   = status.managed;
 
   const handleTest = async () => {
     setTestState("loading");
@@ -736,23 +760,17 @@ function ConnectionSection({
     finally { setDeleting(false); }
   };
 
-  // Managed stats — only render if data exists
-  const managedStats = managed ? [
-    { label: "Plan",       value: managed.planLabel,                        icon: <Server size={12} className="text-purple-400" />  },
-    { label: "Used",       value: managed.actionsUsed.toLocaleString(),      icon: <Zap size={12} className="text-yellow-400" />    },
-    { label: "Remaining",  value: managed.actionsRemaining.toLocaleString(), icon: <BarChart2 size={12} className="text-green-400" /> },
-    { label: "Resets",     value: fmt(managed.resetDate, { month: "short", day: "numeric" }), icon: <Clock size={12} className="text-blue-400" /> },
-  ] : null;
-
-  // Custom stats — only render if data exists
-  const customStats = custom ? [
-    { label: "Project",   value: custom.projectName || "—",                                  icon: <Server size={12} className="text-purple-400" />   },
+  const stats = isManaged && managed ? [
+    { label: "Plan",      value: managed.planLabel,                          icon: <Server size={12} className="text-purple-400" />  },
+    { label: "Used",      value: managed.actionsUsed.toLocaleString(),        icon: <Zap size={12} className="text-yellow-400" />    },
+    { label: "Remaining", value: managed.actionsRemaining.toLocaleString(),   icon: <BarChart2 size={12} className="text-green-400" /> },
+    { label: "Resets",    value: fmt(managed.resetDate, { month: "short", day: "numeric" }), icon: <Clock size={12} className="text-blue-400" /> },
+  ] : !isManaged && custom ? [
+    { label: "Project",   value: custom.projectName || "—", icon: <Server size={12} className="text-purple-400" /> },
     { label: "OAuth",     value: custom.oauthStatus === "connected" ? "Connected" : custom.oauthStatus === "expired" ? "Expired" : "Disconnected", icon: <Wifi size={12} className="text-blue-400" /> },
-    { label: "Remaining", value: custom.remainingQuota?.toLocaleString() ?? "—",             icon: <BarChart2 size={12} className="text-green-400" /> },
-    { label: "Last Sync", value: fmt(custom.lastSync),                                       icon: <Clock size={12} className="text-blue-400" />      },
+    { label: "Remaining", value: custom.remainingQuota?.toLocaleString() ?? "—", icon: <BarChart2 size={12} className="text-green-400" /> },
+    { label: "Last Sync", value: fmt(custom.lastSync), icon: <Clock size={12} className="text-blue-400" /> },
   ] : null;
-
-  const stats = isManaged ? managedStats : customStats;
 
   return (
     <>
@@ -766,7 +784,6 @@ function ConnectionSection({
       )}
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-        {/* Header */}
         <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-xl border flex items-center justify-center ${isManaged ? "bg-purple-500/12 border-purple-500/20" : "bg-emerald-500/12 border-emerald-500/20"}`}>
@@ -781,14 +798,13 @@ function ConnectionSection({
               </p>
             </div>
           </div>
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all duration-300 ${connRing}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-            <span className={textColor}>{connLabel}</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border border-emerald-500/25 bg-emerald-500/8">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-emerald-400">Connected</span>
           </span>
         </div>
 
-        {/* Stats */}
-        {stats ? (
+        {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/5">
             {stats.map(({ label, value, icon }) => (
               <div key={label} className="px-4 py-3.5 flex flex-col gap-1.5">
@@ -797,15 +813,8 @@ function ConnectionSection({
               </div>
             ))}
           </div>
-        ) : (
-          <div className="px-5 py-4 text-center">
-            <p className="text-sm text-white/25">
-              {isManaged ? "No managed API data available." : "Connect your Google Cloud project to see stats."}
-            </p>
-          </div>
         )}
 
-        {/* Test Connection */}
         <div className="px-5 py-4 border-t border-white/8">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
@@ -819,7 +828,7 @@ function ConnectionSection({
           </div>
           {testState === "ok" && (
             <div className="mt-3 flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 rounded-xl px-4 py-2.5">
-              <CheckCircle2 size={12} /> {testMessage}
+              <Check size={12} /> {testMessage}
             </div>
           )}
           {testState === "fail" && (
@@ -829,25 +838,21 @@ function ConnectionSection({
           )}
         </div>
 
-        {/* Actions */}
         <div className="px-5 py-4 border-t border-white/8 space-y-3">
           <p className="text-[10px] font-semibold text-white/20 uppercase tracking-widest">Actions</p>
           {discError   && <ErrorBanner message={discError} />}
           {rotateError && <ErrorBanner message={rotateError} />}
           <div className="flex flex-wrap gap-2">
             <button onClick={() => { window.location.href = "/api/auth/youtube"; }}
-              disabled={isConnected}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-medium transition-all duration-200
-                ${!isConnected ? "border-purple-500/35 text-purple-300 hover:border-purple-500/55 hover:scale-[1.02]" : "border-white/8 text-white/20 cursor-not-allowed"}`}>
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-500/35 text-purple-300 hover:border-purple-500/55 text-xs font-medium transition-all duration-200 hover:scale-[1.02]">
               <RefreshCw size={12} /> Reconnect
             </button>
             <button onClick={handleRotate} disabled={rotating}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-yellow-500/20 text-yellow-400/70 hover:text-yellow-300 hover:border-yellow-500/35 text-xs font-medium transition-all duration-200 hover:scale-[1.02]">
               {rotating ? <><Spinner className="w-3 h-3 text-yellow-300" /> Rotating…</> : <><RotateCcw size={12} /> Rotate credentials</>}
             </button>
-            <button onClick={handleDisconnect} disabled={disconnecting || !isConnected}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-medium transition-all duration-200
-                ${isConnected ? "border-white/8 text-white/45 hover:text-red-400 hover:border-red-500/25 hover:scale-[1.02]" : "border-white/8 text-white/20 cursor-not-allowed"}`}>
+            <button onClick={handleDisconnect} disabled={disconnecting}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/8 text-white/45 hover:text-red-400 hover:border-red-500/25 text-xs font-medium transition-all duration-200 hover:scale-[1.02]">
               {disconnecting ? <><Spinner className="w-3 h-3" /> Disconnecting…</> : <><WifiOff size={12} /> Disconnect</>}
             </button>
             <button onClick={() => setShowDelete(true)}
@@ -861,11 +866,10 @@ function ConnectionSection({
   );
 }
 
-// ─── Managed Usage ────────────────────────────────────────────────────────────
+// ─── Usage Sections ────────────────────────────────────────────────────────────
 
 function ManagedUsageSection({ usage }: { usage: ManagedUsage | undefined }) {
   if (!usage) return null;
-
   const pct      = usage.actionsTotal > 0 ? Math.min(100, Math.round((usage.actionsUsed / usage.actionsTotal) * 100)) : 0;
   const barColor = pct >= 90 ? "from-red-600 to-red-400" : pct >= 70 ? "from-yellow-600 to-yellow-400" : "from-purple-600 to-purple-400";
 
@@ -877,7 +881,6 @@ function ManagedUsageSection({ usage }: { usage: ManagedUsage | undefined }) {
           {usage.planLabel}
         </span>
       </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -895,7 +898,6 @@ function ManagedUsageSection({ usage }: { usage: ManagedUsage | undefined }) {
             </div>
           </div>
         </div>
-
         <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-medium text-white/30 uppercase tracking-wide">Remaining</span>
@@ -917,11 +919,8 @@ function ManagedUsageSection({ usage }: { usage: ManagedUsage | undefined }) {
   );
 }
 
-// ─── Custom Usage ─────────────────────────────────────────────────────────────
-
 function CustomUsageSection({ custom }: { custom: CustomProjectInfo | undefined }) {
   if (!custom) return null;
-
   const used = custom.dailyQuota - custom.remainingQuota;
   const pct  = custom.dailyQuota > 0 ? Math.min(100, Math.round((used / custom.dailyQuota) * 100)) : 0;
 
@@ -966,18 +965,18 @@ function CustomUsageSection({ custom }: { custom: CustomProjectInfo | undefined 
   );
 }
 
-// ─── Activity Logs ────────────────────────────────────────────────────────────
+// ─── Activity Logs (only after connect) ────────────────────────────────────────
 
 function ActivityLogsSection() {
   const [logs, setLogs]     = useState<ActivityLog[]>([]);
   const [loading, setLoad]  = useState(true);
-  const [error, setError]   = useState<string | null>(null);
+  const [error, setError]   = useState(false);
   const [expanded, setExp]  = useState(false);
 
   const load = useCallback(async () => {
-    setLoad(true); setError(null);
+    setLoad(true); setError(false);
     try { setLogs(await fetchActivityLogs()); }
-    catch { setError("Failed to load activity logs."); }
+    catch { setError(true); }
     finally { setLoad(false); }
   }, []);
 
@@ -989,7 +988,7 @@ function ActivityLogsSection() {
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
       <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-white/70">Activity</p>
-        {!loading && !error && logs.length > 0 && (
+        {!loading && logs.length > 0 && (
           <span className="text-[10px] text-white/25 font-medium">{logs.length} events</span>
         )}
       </div>
@@ -1000,17 +999,11 @@ function ActivityLogsSection() {
         </div>
       )}
 
-      {!loading && error && (
-        <div className="px-5 py-4">
-          <ErrorBanner message={error} onRetry={load} />
-        </div>
-      )}
-
-      {!loading && !error && logs.length === 0 && (
+      {!loading && (error || logs.length === 0) && (
         <EmptyState
           icon={Activity}
           title="No activity yet"
-          description="Your API events will appear here after connecting your Google Cloud Project."
+          description="Activity will appear here as ModerateAI moderates your channel."
         />
       )}
 
@@ -1018,8 +1011,7 @@ function ActivityLogsSection() {
         <>
           <div className="divide-y divide-white/5">
             {visible.map((log) => (
-              <div key={log.id}
-                className="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.015] transition-colors duration-150 group">
+              <div key={log.id} className="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.015] transition-colors duration-150 group">
                 <StatusBadge status={log.status} />
                 <p className="flex-1 text-sm text-white/55 leading-snug group-hover:text-white/70 transition-colors duration-150">{log.action}</p>
                 <span className="text-[10px] text-white/20 whitespace-nowrap shrink-0">{log.timestamp}</span>
@@ -1040,203 +1032,72 @@ function ActivityLogsSection() {
   );
 }
 
-// ─── Custom Onboarding Card (shown when not set up) ───────────────────────────
-
-function CustomOnboardingCard({ onSetup }: { onSetup: () => void }) {
-  const features = [
-    "Your own dedicated API quota",
-    "No shared limits with other users",
-    "Full control over your credentials",
-    "Better for high-volume channels",
-  ];
-
-  return (
-    <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.015] p-8 text-center space-y-5">
-      <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
-        <Cloud size={22} className="text-white/30" />
-      </div>
-      <div>
-        <p className="text-base font-semibold text-white mb-1">Connect your Google Cloud project</p>
-        <p className="text-sm text-white/35 leading-relaxed max-w-sm mx-auto">
-          Use your own YouTube Data API quota. Takes about 5 minutes to set up.
-        </p>
-      </div>
-      <div className="flex flex-col items-center gap-2">
-        {features.map((f) => (
-          <span key={f} className="flex items-center gap-2 text-xs text-white/35">
-            <Check size={11} className="text-purple-400/60 shrink-0" /> {f}
-          </span>
-        ))}
-      </div>
-      <button onClick={onSetup}
-        className="flex items-center gap-2 mx-auto px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
-        Start setup <ChevronRight size={14} />
-      </button>
-    </div>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function APIAccessPage() {
-  const [activeMethod, setActiveMethod] = useState<APIMethod>("managed");
-  const [showWizard, setShowWizard]     = useState(false);
-  const [status, setStatus]             = useState<APIStatus | null>(null);
-  const [statusLoading, setStatusLoad]  = useState(true);
-  const [statusError, setStatusError]   = useState<string | null>(null);
-  const wizardRef = useRef<HTMLDivElement>(null);
+  const [status, setStatus]   = useState<APIStatus | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const loadStatus = useCallback(async () => {
-    setStatusLoad(true); setStatusError(null);
+    setLoading(true);
     try {
       const data = await fetchAPIStatus();
       setStatus(data);
-      setActiveMethod(data.method);
     } catch {
-      setStatusError("Failed to load API status. Please refresh.");
+      setStatus(null);
     } finally {
-      setStatusLoad(false);
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => { loadStatus(); }, [loadStatus]);
 
-  const handleMethodSwitch = async (method: APIMethod) => {
-    setActiveMethod(method);
-    if (method === "managed") setShowWizard(false);
-    try { await switchAPIMethod(method); loadStatus(); } catch { /* silent */ }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+        <div className="flex items-center gap-2 text-white/20 text-sm">
+          <Spinner /> Loading…
+        </div>
+      </div>
+    );
+  }
 
-  const handleSetupClick = () => {
-    setShowWizard(true);
-    setTimeout(() => wizardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
-  };
-
-  const handleWizardClose = () => {
-    setShowWizard(false);
-    setActiveMethod("managed");
-    handleMethodSwitch("managed");
-  };
-
-  const handleWizardComplete = () => {
-    setShowWizard(false);
-    loadStatus();
-  };
-
-  const customIsSetup = !!status?.custom;
+  const connected = !!status?.youtubeConnected;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
 
-        {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight mb-1">API Access</h1>
-          <p className="text-white/35 text-sm">Choose how ModerateAI connects to the YouTube Data API.</p>
+          <p className="text-white/35 text-sm">
+            {connected ? "Manage how ModerateAI connects to the YouTube Data API." : "Connect your YouTube channel to get started."}
+          </p>
         </div>
 
-        {statusError && <ErrorBanner message={statusError} onRetry={loadStatus} />}
+        {!connected && <SetupWizard onConnected={loadStatus} />}
 
-        {/* Method selector */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Managed */}
-          <div
-            onClick={() => handleMethodSwitch("managed")}
-            className={`relative rounded-2xl border p-5 cursor-pointer transition-all duration-200
-              ${activeMethod === "managed"
-                ? "border-purple-500/40 bg-purple-500/8 shadow-xl shadow-purple-900/15"
-                : "border-white/8 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.035]"}`}>
-            {activeMethod === "managed" && (
-              <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center">
-                <Check size={11} className="text-white" />
+        {connected && status && (
+          <>
+            <ConnectionSection activeMethod={status.method} status={status} onRefresh={loadStatus} />
+            {status.method === "managed"
+              ? <ManagedUsageSection usage={status.managed} />
+              : <CustomUsageSection custom={status.custom} />}
+            <ActivityLogsSection />
+
+            <div className="flex items-start gap-4 rounded-2xl border border-emerald-500/12 bg-emerald-500/4 px-5 py-4">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/12 border border-emerald-500/15 flex items-center justify-center shrink-0">
+                <Shield size={15} className="text-emerald-400" />
               </div>
-            )}
-            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-600/25 text-purple-300 border border-purple-500/25 mb-3 uppercase tracking-wide">
-              Recommended
-            </span>
-            <h3 className="text-sm font-semibold text-white mb-2">ModerateAI Managed</h3>
-            <ul className="space-y-1.5">
-              {["No setup required", "One-click YouTube connection", "Included with your plan"].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-xs text-white/40">
-                  <Check size={11} className="text-purple-400 shrink-0" />{item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Custom */}
-          <div
-            onClick={() => { handleMethodSwitch("custom"); if (!customIsSetup) handleSetupClick(); }}
-            className={`relative rounded-2xl border p-5 cursor-pointer transition-all duration-200
-              ${activeMethod === "custom"
-                ? "border-purple-500/40 bg-purple-500/8 shadow-xl shadow-purple-900/15"
-                : "border-white/8 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.035]"}`}>
-            {activeMethod === "custom" && (
-              <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center">
-                <Check size={11} className="text-white" />
+              <div>
+                <p className="text-sm font-semibold text-emerald-300 mb-0.5">Security</p>
+                <p className="text-xs text-white/30 leading-relaxed">
+                  Credentials are encrypted at rest and never exposed via the API. Remove them from your account at any time.
+                </p>
               </div>
-            )}
-            <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-white/8 text-white/40 border border-white/12 mb-3 uppercase tracking-wide">
-              Advanced
-            </span>
-            <h3 className="text-sm font-semibold text-white mb-2">My Google Cloud Project</h3>
-            <ul className="space-y-1.5">
-              {["Your own daily API quota", "Better for high-volume channels", "Full control over credentials"].map((item) => (
-                <li key={item} className="flex items-center gap-2 text-xs text-white/40">
-                  <Check size={11} className="text-purple-400 shrink-0" />{item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Custom — show onboarding card if not set up yet */}
-        {activeMethod === "custom" && !customIsSetup && !showWizard && (
-          <CustomOnboardingCard onSetup={handleSetupClick} />
+            </div>
+          </>
         )}
-
-        {/* Setup Wizard */}
-        {showWizard && (
-          <div ref={wizardRef}>
-            <SetupWizard onClose={handleWizardClose} onComplete={handleWizardComplete} />
-          </div>
-        )}
-
-        {/* Connection status */}
-        {statusLoading ? (
-          <div className="rounded-2xl border border-white/8 bg-white/[0.02] p-10 flex items-center justify-center gap-2 text-white/20 text-sm">
-            <Spinner /> Loading connection…
-          </div>
-        ) : (
-          /* Only show when managed, or when custom is set up */
-          (activeMethod === "managed" || customIsSetup) && (
-            <ConnectionSection
-              activeMethod={activeMethod}
-              status={status}
-              onRefresh={loadStatus}
-            />
-          )
-        )}
-
-        {/* Usage */}
-        {!statusLoading && activeMethod === "managed" && <ManagedUsageSection usage={status?.managed} />}
-        {!statusLoading && activeMethod === "custom" && customIsSetup && <CustomUsageSection custom={status?.custom} />}
-
-        {/* Activity */}
-        {(activeMethod === "managed" || customIsSetup) && <ActivityLogsSection />}
-
-        {/* Security */}
-        <div className="flex items-start gap-4 rounded-2xl border border-emerald-500/12 bg-emerald-500/4 px-5 py-4">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/12 border border-emerald-500/15 flex items-center justify-center shrink-0">
-            <Shield size={15} className="text-emerald-400" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-emerald-300 mb-0.5">Security</p>
-            <p className="text-xs text-white/30 leading-relaxed">
-              Credentials are encrypted at rest and never exposed via the API. Remove them from your account at any time.
-            </p>
-          </div>
-        </div>
 
       </div>
     </div>

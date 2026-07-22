@@ -311,7 +311,7 @@ export default function SettingsPage() {
            MOBILE — Chrome Desktop Site OFF  (≤ 767px)
            Tabs పెద్దగా + API Access కనిపించేలా
         ══════════════════════════════════════════════════════ */
-        @media (pointer: coarse) and (max-width: 767px) {
+        @media (pointer: coarse) and (max-width: 599px) {
           .r-sidebar{display:none!important;}
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
@@ -357,7 +357,7 @@ export default function SettingsPage() {
            MOBILE — Chrome Desktop Site ON  (≥ 768px, coarse)
            Empty space తీసేసి, content అంతా పెద్దగా
         ══════════════════════════════════════════════════════ */
-        @media (pointer: coarse) and (min-width: 768px) {
+        @media (pointer: coarse) and (min-width: 600px) {
           .r-sidebar{display:none!important;}
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}

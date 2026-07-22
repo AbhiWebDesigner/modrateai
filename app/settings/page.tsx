@@ -404,42 +404,62 @@ export default function SettingsPage() {
           min-height:0!important;
         }
         .dso .card-full{grid-column:1!important;}
+
+        /* CARDS — large padding + min-height so page extends down */
         .dso .s-card{
-          padding:32px 28px!important;
-          border-radius:18px!important;
+          padding:44px 36px!important;
+          border-radius:22px!important;
           height:auto!important;
-          min-height:0!important;
+          min-height:420px!important;
+          display:flex!important;
+          flex-direction:column!important;
         }
-        .dso .card-title{font-size:26px!important;margin-bottom:8px!important;line-height:1.2!important;}
-        .dso .card-sub{font-size:17px!important;margin-bottom:26px!important;}
+        .dso .card-title{font-size:30px!important;margin-bottom:10px!important;line-height:1.2!important;}
+        .dso .card-sub{font-size:19px!important;margin-bottom:32px!important;}
+
+        /* AVATAR — bigger */
+        .dso .s-card img[alt="avatar"]{
+          width:88px!important;
+          height:88px!important;
+        }
 
         /* FORM FIELDS — big */
-        .dso .field-label{font-size:15px!important;margin-bottom:10px!important;letter-spacing:0.05em!important;}
+        .dso .field-label{font-size:16px!important;margin-bottom:12px!important;letter-spacing:0.05em!important;}
         .dso .field-input{
-          padding:18px 20px!important;
-          font-size:20px!important;
-          border-radius:13px!important;
+          padding:22px 22px!important;
+          font-size:22px!important;
+          border-radius:14px!important;
           height:auto!important;
+          min-height:64px!important;
+        }
+
+        /* gap between form fields */
+        .dso .s-card > div > div[style*="flex-direction: column"],
+        .dso .s-card > div > div[style*="flex-direction:column"]{
+          gap:20px!important;
         }
 
         /* BUTTONS — big */
         .dso .btn-primary{
-          padding:20px 24px!important;
-          font-size:20px!important;
-          border-radius:13px!important;
+          padding:24px 28px!important;
+          font-size:22px!important;
+          border-radius:14px!important;
           height:auto!important;
+          min-height:68px!important;
         }
         .dso .btn-ghost{
-          padding:18px 24px!important;
-          font-size:19px!important;
-          border-radius:13px!important;
+          padding:22px 28px!important;
+          font-size:21px!important;
+          border-radius:14px!important;
           height:auto!important;
+          min-height:66px!important;
         }
         .dso .btn-danger{
-          padding:18px 24px!important;
-          font-size:19px!important;
-          border-radius:13px!important;
+          padding:22px 28px!important;
+          font-size:21px!important;
+          border-radius:14px!important;
           height:auto!important;
+          min-height:66px!important;
         }
 
         /* BADGES — big */
@@ -447,33 +467,25 @@ export default function SettingsPage() {
         .dso .badge-gray,
         .dso .badge-yellow,
         .dso .badge-red{
-          font-size:15px!important;
-          padding:6px 16px!important;
-          border-radius:24px!important;
+          font-size:16px!important;
+          padding:8px 20px!important;
+          border-radius:28px!important;
         }
 
-        /* INFO ROWS — big */
-        .dso .info-row{padding:16px 0!important;}
-        .dso .info-label{font-size:18px!important;gap:10px!important;}
-        .dso .info-value{font-size:18px!important;}
-
-        /* AVATAR in profile */
-        .dso .s-card img[alt="avatar"],
-        .dso .s-card > div > div:first-child{
-          width:72px!important;
-          height:72px!important;
-          font-size:28px!important;
-        }
+        /* INFO ROWS — more spacing */
+        .dso .info-row{padding:20px 0!important;}
+        .dso .info-label{font-size:20px!important;gap:12px!important;}
+        .dso .info-value{font-size:20px!important;}
 
         /* TOGGLE — big */
-        .dso .toggle{width:62px!important;height:34px!important;}
-        .dso .toggle-thumb{width:28px!important;height:28px!important;top:3px!important;}
+        .dso .toggle{width:68px!important;height:38px!important;}
+        .dso .toggle-thumb{width:32px!important;height:32px!important;top:3px!important;}
 
         /* SESSION CARD */
-        .dso .session-card{padding:20px!important;border-radius:14px!important;gap:16px!important;}
+        .dso .session-card{padding:24px!important;border-radius:16px!important;gap:18px!important;}
 
         /* WARN BOX */
-        .dso .warn-box{padding:18px 20px!important;border-radius:14px!important;gap:12px!important;font-size:17px!important;}
+        .dso .warn-box{padding:22px 24px!important;border-radius:16px!important;gap:14px!important;font-size:19px!important;}
 
         /* ══ DESKTOP ≥1024px fine pointer ══ */
         @media (min-width: 1024px) and (pointer: fine) {

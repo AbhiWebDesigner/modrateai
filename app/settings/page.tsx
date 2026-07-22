@@ -309,8 +309,8 @@ export default function SettingsPage() {
 
         /* ══════════════════════════════════════════════════════
            MOBILE — Chrome Desktop Site OFF  (≤ 599px)
-           Viewport is narrow. Tabs need slightly more size so
-           "API Access" is visible in the scrollable row.
+           Slightly larger tabs so all tabs + API Access are
+           comfortably reachable in the scrollable row.
         ══════════════════════════════════════════════════════ */
         @media (max-width: 599px) {
           .r-sidebar{display:none!important;}
@@ -318,14 +318,14 @@ export default function SettingsPage() {
           .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
           .r-mobile-topbar{display:flex!important;}
           .r-bottom-nav{display:flex!important;}
-          .r-content{padding:14px 12px 20px!important;}
+          .r-content{padding:16px 12px 20px!important;}
 
-          /* Slightly larger tabs — API Access now visible */
-          .tabs-row{gap:5px!important;}
+          /* Tabs — larger touch targets, API Access visible */
+          .tabs-row{gap:6px!important;padding-right:8px!important;}
           .tab-btn{
-            padding:10px 15px!important;
-            font-size:13px!important;
-            gap:6px!important;
+            padding:10px 16px!important;
+            font-size:13.5px!important;
+            gap:7px!important;
             border-radius:10px!important;
             min-width:max-content!important;
           }
@@ -333,25 +333,24 @@ export default function SettingsPage() {
 
           .cards-grid{grid-template-columns:1fr!important;}
           .card-full{grid-column:1!important;}
-          .s-card{padding:14px!important;}
+          .s-card{padding:16px!important;}
         }
 
         /* ══════════════════════════════════════════════════════
            MOBILE — Chrome Desktop Site ON  (touch device, any width)
 
-           ROOT CAUSE: Chrome Desktop Site ON disables the
-           <meta name="viewport"> tag, so the browser reports
-           a ~980-1280px layout width. This triggered the
-           min-width:1024px block, showing the sidebar and
-           making everything look like a zoomed-out desktop.
+           ROOT CAUSE: Chrome Desktop Site ON reports a ~980px
+           layout viewport. The page renders at ~980px then the
+           browser scales it down to fit the screen — making
+           everything appear tiny.
 
-           FIX: Use (pointer: coarse) to detect touch screens.
-           Real desktops/laptops always have (pointer: fine).
-           This media feature is NOT affected by Desktop Site mode —
-           it reads the actual hardware input, not the viewport.
-
-           We do NOT use zoom, transform:scale, or width overrides.
-           We fix the layout by switching to the mobile structure.
+           FIX:
+           1. Pin .r-bg and .r-main to 100vw (the actual screen
+              width in CSS pixels, unaffected by viewport spoofing)
+              so the layout never expands beyond the real screen.
+           2. Set min-height on .r-content so it fills the space
+              between the mobile topbar (52px) and bottom nav (76px),
+              eliminating the empty gap at the bottom.
         ══════════════════════════════════════════════════════ */
         @media (pointer: coarse) {
           /* Hide desktop chrome */
@@ -362,71 +361,79 @@ export default function SettingsPage() {
           .r-mobile-topbar{display:flex!important;}
           .r-bottom-nav{display:flex!important;}
 
-          /* Block layout — no flex sidebar+main, no forced 100vh */
-          .r-bg{display:block!important;}
+          /* ── ROOT FIX: pin layout to actual device screen width ── */
+          .r-bg{
+            display:block!important;
+            max-width:100vw!important;
+            overflow-x:hidden!important;
+          }
           .r-main{
             margin-left:0!important;
-            width:100%!important;
+            width:100vw!important;
+            max-width:100vw!important;
             display:block!important;
             padding-bottom:76px!important;
+            overflow-x:hidden!important;
           }
 
-          /* Comfortable mobile content padding */
-          .r-content{padding:20px 16px 24px!important;}
+          /* ── Fill height between topbar and bottom nav ── */
+          .r-content{
+            padding:18px 14px 24px!important;
+            min-height:calc(100vh - 52px - 76px)!important;
+            box-sizing:border-box!important;
+          }
 
           /* Single-column full-width cards */
           .cards-grid{grid-template-columns:1fr!important;}
           .card-full{grid-column:1!important;}
-          .s-card{padding:20px!important;border-radius:16px!important;}
+          .s-card{padding:18px!important;border-radius:14px!important;}
 
           /* Page heading */
-          .r-content h1{font-size:26px!important;}
+          .r-content h1{font-size:22px!important;}
 
-          /* Tabs — touch-friendly, scrollable */
+          /* Tabs — scrollable, touch-friendly, all tabs reachable */
           .tabs-row{
-            gap:7px!important;
+            gap:6px!important;
             flex-wrap:nowrap!important;
             overflow-x:auto!important;
-            margin-bottom:22px!important;
+            margin-bottom:20px!important;
+            padding-right:8px!important;
           }
           .tab-btn{
-            padding:12px 18px!important;
-            font-size:14.5px!important;
-            gap:8px!important;
+            padding:10px 16px!important;
+            font-size:13.5px!important;
+            gap:7px!important;
             min-width:max-content!important;
-            border-radius:12px!important;
+            border-radius:10px!important;
           }
-          .tab-btn svg{width:16px!important;height:16px!important;}
+          .tab-btn svg{width:14px!important;height:14px!important;}
 
           /* Form labels & inputs */
-          .field-label{font-size:12px!important;margin-bottom:8px!important;}
-          .field-input{padding:14px 16px!important;font-size:16px!important;border-radius:12px!important;}
+          .field-label{font-size:11px!important;margin-bottom:7px!important;}
+          .field-input{padding:12px 14px!important;font-size:15px!important;border-radius:10px!important;}
 
           /* Buttons */
-          .btn-primary{padding:15px 20px!important;font-size:16px!important;border-radius:12px!important;}
-          .btn-ghost{padding:14px 20px!important;font-size:15px!important;border-radius:12px!important;}
-          .btn-danger{padding:14px 20px!important;font-size:15px!important;border-radius:12px!important;}
+          .btn-primary{padding:13px 18px!important;font-size:15px!important;border-radius:10px!important;}
+          .btn-ghost{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
+          .btn-danger{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
 
           /* Badges */
           .badge-green,.badge-gray,.badge-yellow,.badge-red{
-            font-size:12.5px!important;
-            padding:5px 12px!important;
+            font-size:11.5px!important;
+            padding:4px 10px!important;
           }
 
           /* Info rows */
-          .info-label{font-size:14.5px!important;}
-          .info-value{font-size:14.5px!important;}
+          .info-label{font-size:13.5px!important;}
+          .info-value{font-size:13.5px!important;}
 
           /* Card typography */
-          .card-title{font-size:17px!important;}
-          .card-sub{font-size:13.5px!important;margin-bottom:20px!important;}
+          .card-title{font-size:15px!important;}
+          .card-sub{font-size:12.5px!important;margin-bottom:16px!important;}
         }
 
         /* ══════════════════════════════════════════════════════
            DESKTOP / LAPTOP  ≥ 1024px  AND  fine pointer (mouse)
-           (pointer: fine) guarantees this only fires on real
-           desktop/laptop hardware — never on a touch phone
-           running Chrome Desktop Site ON.
         ══════════════════════════════════════════════════════ */
         @media (min-width: 1024px) and (pointer: fine) {
           .r-bg{display:flex!important;}

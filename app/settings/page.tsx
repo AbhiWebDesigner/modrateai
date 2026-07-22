@@ -312,86 +312,39 @@ export default function SettingsPage() {
            Slightly larger tabs so all tabs + API Access are
            comfortably reachable in the scrollable row.
         ══════════════════════════════════════════════════════ */
-        @media (max-width: 599px) {
-          .r-sidebar{display:none!important;}
-          .r-topbar{display:none!important;}
-          .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
-          .r-mobile-topbar{display:flex!important;}
-          .r-bottom-nav{display:flex!important;}
-          .r-content{padding:16px 12px 20px!important;}
-
-          /* Tabs — larger touch targets, API Access visible */
-          .tabs-row{gap:6px!important;padding-right:8px!important;}
-          .tab-btn{
-            padding:10px 16px!important;
-            font-size:13.5px!important;
-            gap:7px!important;
-            border-radius:10px!important;
-            min-width:max-content!important;
-          }
-          .tab-btn svg{width:14px!important;height:14px!important;}
-
-          .cards-grid{grid-template-columns:1fr!important;}
-          .card-full{grid-column:1!important;}
-          .s-card{padding:16px!important;}
-        }
-
         /* ══════════════════════════════════════════════════════
-           MOBILE — Chrome Desktop Site ON  (touch device, any width)
-
-           ROOT CAUSE: Chrome Desktop Site ON reports a ~980px
-           layout viewport. The page renders at ~980px then the
-           browser scales it down to fit the screen — making
-           everything appear tiny.
-
-           FIX:
-           1. Pin .r-bg and .r-main to 100vw (the actual screen
-              width in CSS pixels, unaffected by viewport spoofing)
-              so the layout never expands beyond the real screen.
-           2. Set min-height on .r-content so it fills the space
-              between the mobile topbar (52px) and bottom nav (76px),
-              eliminating the empty gap at the bottom.
+           MOBILE — Chrome Desktop Site OFF
+           Touch device + narrow real viewport (≤ 767px).
+           Desktop Site OFF keeps the <meta viewport> tag active,
+           so the browser reports the real screen width (~360-430px).
+           Both (pointer:coarse) AND (max-width:767px) are true here.
+           The Desktop Site ON block below requires (min-width:768px)
+           so the two blocks are mutually exclusive.
         ══════════════════════════════════════════════════════ */
-        @media (pointer: coarse) {
-          /* Hide desktop chrome */
+        @media (pointer: coarse) and (max-width: 767px) {
           .r-sidebar{display:none!important;}
           .r-topbar{display:none!important;}
-
-          /* Show mobile chrome */
           .r-mobile-topbar{display:flex!important;}
           .r-bottom-nav{display:flex!important;}
 
-          /* ── ROOT FIX: pin layout to actual device screen width ── */
-          .r-bg{
-            display:block!important;
-            max-width:100vw!important;
-            overflow-x:hidden!important;
-          }
+          .r-bg{display:block!important;overflow-x:hidden!important;}
           .r-main{
             margin-left:0!important;
-            width:100vw!important;
-            max-width:100vw!important;
+            width:100%!important;
             display:block!important;
             padding-bottom:76px!important;
-            overflow-x:hidden!important;
           }
 
-          /* ── Fill height between topbar and bottom nav ── */
           .r-content{
-            padding:18px 14px 24px!important;
+            padding:16px 12px 20px!important;
             min-height:calc(100vh - 52px - 76px)!important;
             box-sizing:border-box!important;
           }
 
-          /* Single-column full-width cards */
           .cards-grid{grid-template-columns:1fr!important;}
           .card-full{grid-column:1!important;}
-          .s-card{padding:18px!important;border-radius:14px!important;}
+          .s-card{padding:16px!important;}
 
-          /* Page heading */
-          .r-content h1{font-size:22px!important;}
-
-          /* Tabs — scrollable, touch-friendly, all tabs reachable */
           .tabs-row{
             gap:6px!important;
             flex-wrap:nowrap!important;
@@ -408,26 +361,91 @@ export default function SettingsPage() {
           }
           .tab-btn svg{width:14px!important;height:14px!important;}
 
-          /* Form labels & inputs */
           .field-label{font-size:11px!important;margin-bottom:7px!important;}
           .field-input{padding:12px 14px!important;font-size:15px!important;border-radius:10px!important;}
 
-          /* Buttons */
           .btn-primary{padding:13px 18px!important;font-size:15px!important;border-radius:10px!important;}
           .btn-ghost{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
           .btn-danger{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
 
-          /* Badges */
-          .badge-green,.badge-gray,.badge-yellow,.badge-red{
-            font-size:11.5px!important;
-            padding:4px 10px!important;
-          }
+          .badge-green,.badge-gray,.badge-yellow,.badge-red{font-size:11.5px!important;padding:4px 10px!important;}
 
-          /* Info rows */
           .info-label{font-size:13.5px!important;}
           .info-value{font-size:13.5px!important;}
+          .card-title{font-size:15px!important;}
+          .card-sub{font-size:12.5px!important;margin-bottom:16px!important;}
+        }
 
-          /* Card typography */
+        /* ══════════════════════════════════════════════════════
+           MOBILE — Chrome Desktop Site ON
+           Touch device + spoofed wide viewport (≥ 768px).
+           Desktop Site ON disables <meta viewport>, so the browser
+           reports ~980px. (pointer:coarse) still fires because it
+           reads hardware input, not the viewport.
+           (min-width:768px) makes this block exclusive from the
+           Desktop Site OFF block above.
+        ══════════════════════════════════════════════════════ */
+        @media (pointer: coarse) and (min-width: 768px) {
+          .r-sidebar{display:none!important;}
+          .r-topbar{display:none!important;}
+          .r-mobile-topbar{display:flex!important;}
+          .r-bottom-nav{display:flex!important;}
+
+          /* Pin layout to actual screen width, not the spoofed ~980px */
+          .r-bg{
+            display:block!important;
+            max-width:100vw!important;
+            overflow-x:hidden!important;
+          }
+          .r-main{
+            margin-left:0!important;
+            width:100vw!important;
+            max-width:100vw!important;
+            display:block!important;
+            padding-bottom:76px!important;
+            overflow-x:hidden!important;
+          }
+
+          /* Fill space between topbar (52px) and bottom nav (76px) */
+          .r-content{
+            padding:18px 14px 24px!important;
+            min-height:calc(100vh - 52px - 76px)!important;
+            box-sizing:border-box!important;
+          }
+
+          .cards-grid{grid-template-columns:1fr!important;}
+          .card-full{grid-column:1!important;}
+          .s-card{padding:18px!important;border-radius:14px!important;}
+
+          .r-content h1{font-size:22px!important;}
+
+          .tabs-row{
+            gap:6px!important;
+            flex-wrap:nowrap!important;
+            overflow-x:auto!important;
+            margin-bottom:20px!important;
+            padding-right:8px!important;
+          }
+          .tab-btn{
+            padding:10px 16px!important;
+            font-size:13.5px!important;
+            gap:7px!important;
+            min-width:max-content!important;
+            border-radius:10px!important;
+          }
+          .tab-btn svg{width:14px!important;height:14px!important;}
+
+          .field-label{font-size:11px!important;margin-bottom:7px!important;}
+          .field-input{padding:12px 14px!important;font-size:15px!important;border-radius:10px!important;}
+
+          .btn-primary{padding:13px 18px!important;font-size:15px!important;border-radius:10px!important;}
+          .btn-ghost{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
+          .btn-danger{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
+
+          .badge-green,.badge-gray,.badge-yellow,.badge-red{font-size:11.5px!important;padding:4px 10px!important;}
+
+          .info-label{font-size:13.5px!important;}
+          .info-value{font-size:13.5px!important;}
           .card-title{font-size:15px!important;}
           .card-sub{font-size:12.5px!important;margin-bottom:16px!important;}
         }

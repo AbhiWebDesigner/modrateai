@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid} {
+
+      allow read: if request.auth != null
+                  && request.auth.uid == uid;
+
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.keys().hasOnly([
+                         'email',
+                         'displayName',
+                         'photoURL'
+                       ])
+                    && (request.resource.data.get('email', null) == null
+                        || request.resource.data.email is string)
+                    && (request.resource.data.get('displayName', null) == null
+                        || request.resource.data.displayName is string)
+                    && (request.resource.data.get('photoURL', null) == null
+                        || request.resource.data.photoURL is string);
+
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                         'youtube_access_token',
+                         'youtube_refresh_token',
+                         'youtube_connected',
+                         'youtube_channel_id',
+                         'youtube_channel_name',
+                         'youtube_channel_handle',
+                         'youtube_channel_thumbnail',
+                         'youtube_subscriber_count',
+                         'youtube_video_count',
+                         'youtube_view_count',
+                         'plan',
+                         'createdAt'
+                       ])
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                         'email',
+                         'displayName',
+                         'photoURL'
+                       ])
+                    && (request.resource.data.get('email', null) == null
+                        || request.resource.data.email is string)
+                    && (request.resource.data.get('displayName', null) == null
+                        || request.resource.data.displayName is string)
+                    && (request.resource.data.get('photoURL', null) == null
+                        || request.resource.data.photoURL is string);
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

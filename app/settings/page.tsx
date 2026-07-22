@@ -334,6 +334,8 @@ export default function SettingsPage() {
           .tabs-row{gap:6px!important;flex-wrap:nowrap!important;overflow-x:auto!important;margin-bottom:20px!important;padding-right:10px!important;}
           .tab-btn{padding:7px 9px!important;font-size:11px!important;gap:4px!important;min-width:max-content!important;border-radius:8px!important;}
           .tab-btn svg{width:11px!important;height:11px!important;}
+          .r-mobile-topbar .r-avatar-btn{display:none!important;}
+          .r-mobile-topbar .r-icon-btn{display:none!important;}
         }
 
         /* ══ MOBILE Desktop Site ON (.dso) ══ */

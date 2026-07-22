@@ -232,7 +232,7 @@ function RealAutomationRow({ rule, uid }: { rule: AutomationRule; uid: string })
     try {
       const ref = doc(db, 'automations', uid, 'rules', rule.id);
       // FIX: also write updatedAt so the updatedAt desc query re-sorts correctly
-      await updateDoc(ref, { active: !isLive, updatedAt: serverTimestamp() });
+      await updateDoc(ref, { active: !isLive });
     } catch (e) {
       console.error('Toggle failed:', e);
     } finally {
@@ -318,7 +318,7 @@ function RecentAutomations({ uid }: { uid: string }) {
     if (!uid) return;
 
     const ref = collection(db, 'automations', uid, 'rules');
-    const q = query(ref, orderBy('updatedAt', 'desc'), limit(4));
+    const q = query(ref, orderBy('createdAt', 'desc'), limit(5));
 
     const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as AutomationRule));

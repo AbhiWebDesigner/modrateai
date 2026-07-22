@@ -342,15 +342,15 @@ export default function SettingsPage() {
             margin-bottom:20px!important;
             padding-right:10px!important;
           }
-          /* ↓ Compact tabs so all 5 (incl. API Access) fit in scroll row */
+          /* ↓ Compact tabs — all 5 incl. API Access fully visible */
           .tab-btn{
-            padding:8px 12px!important;
-            font-size:12px!important;
-            gap:5px!important;
+            padding:7px 9px!important;
+            font-size:11px!important;
+            gap:4px!important;
             min-width:max-content!important;
-            border-radius:9px!important;
+            border-radius:8px!important;
           }
-          .tab-btn svg{width:12px!important;height:12px!important;}
+          .tab-btn svg{width:11px!important;height:11px!important;}
         }
 
         /* ══════════════════════════════════════════════════════

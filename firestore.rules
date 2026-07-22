@@ -11,16 +11,42 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && request.auth.uid == uid
                     && request.resource.data.keys().hasOnly([
+                         'uid',
                          'email',
-                         'displayName',
-                         'photoURL'
+                         'name',
+                         'photo',
+                         'plan',
+                         'ai_credits',
+                         'comments_limit',
+                         'comments_used',
+                         'comments_scanned',
+                         'comments_hidden',
+                         'ai_replies',
+                         'youtube_connected',
+                         'youtube_channel_id',
+                         'youtube_channel_name',
+                         'youtube_channel_handle',
+                         'youtube_channel_thumbnail',
+                         'youtube_subscriber_count',
+                         'youtube_video_count',
+                         'youtube_view_count',
+                         'trial_active',
+                         'trial_days',
+                         'trial_started_at',
+                         'trial_ends_at',
+                         'created_at',
+                         'updated_at'
                        ])
-                    && (request.resource.data.get('email', null) == null
-                        || request.resource.data.email is string)
-                    && (request.resource.data.get('displayName', null) == null
-                        || request.resource.data.displayName is string)
-                    && (request.resource.data.get('photoURL', null) == null
-                        || request.resource.data.photoURL is string);
+                    && request.resource.data.plan == 'free'
+                    && request.resource.data.ai_credits == 250
+                    && request.resource.data.comments_limit == 2000
+                    && request.resource.data.trial_active == true
+                    && request.resource.data.trial_days == 19
+                    && request.resource.data.youtube_connected == false
+                    && request.resource.data.comments_used == 0
+                    && request.resource.data.comments_scanned == 0
+                    && request.resource.data.comments_hidden == 0
+                    && request.resource.data.ai_replies == 0;
 
       allow update: if request.auth != null
                     && request.auth.uid == uid
@@ -36,19 +62,20 @@ service cloud.firestore {
                          'youtube_video_count',
                          'youtube_view_count',
                          'plan',
-                         'createdAt'
+                         'ai_credits',
+                         'comments_limit',
+                         'trial_active',
+                         'trial_days',
+                         'trial_started_at',
+                         'trial_ends_at',
+                         'created_at'
                        ])
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
                          'email',
-                         'displayName',
-                         'photoURL'
-                       ])
-                    && (request.resource.data.get('email', null) == null
-                        || request.resource.data.email is string)
-                    && (request.resource.data.get('displayName', null) == null
-                        || request.resource.data.displayName is string)
-                    && (request.resource.data.get('photoURL', null) == null
-                        || request.resource.data.photoURL is string);
+                         'name',
+                         'photo',
+                         'updated_at'
+                       ]);
 
       allow delete: if false;
     }

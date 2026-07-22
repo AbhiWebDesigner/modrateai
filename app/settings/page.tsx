@@ -56,7 +56,6 @@ export default function SettingsPage() {
 
   const currentPath = '/settings';
 
-  // Detect Mobile Chrome "Desktop Site ON" — touch device + wide spoofed viewport
   useEffect(() => {
     const check = () => {
       const touch = navigator.maxTouchPoints > 0;
@@ -305,7 +304,7 @@ export default function SettingsPage() {
         /* WARN BOX */
         .warn-box{padding:13px 15px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.16);border-radius:11px;display:flex;align-items:flex-start;gap:9px;}
 
-        /* BOTTOM NAV — untouched */
+        /* BOTTOM NAV */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
           backdrop-filter:blur(24px);padding:6px 4px env(safe-area-inset-bottom,6px);}
@@ -320,67 +319,36 @@ export default function SettingsPage() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
-        /* ══════════════════════════════════════════════════════
-           MOBILE — Chrome Desktop Site OFF  (≤ 767px)
-           Tabs పెద్దగా + API Access కనిపించేలా
-        ══════════════════════════════════════════════════════ */
+        /* ══ MOBILE Desktop Site OFF (≤599px touch) ══ */
         @media (pointer: coarse) and (max-width: 599px) {
           .r-sidebar{display:none!important;}
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
           .r-bottom-nav{display:flex!important;}
-
           .r-bg{display:block!important;overflow-x:hidden!important;}
-          .r-main{
-            margin-left:0!important;
-            width:100%!important;
-            display:block!important;
-            padding-bottom:76px!important;
-          }
-
-          .r-content{
-            padding:16px 10px 20px!important;
-            min-height:calc(100vh - 52px - 76px)!important;
-            box-sizing:border-box!important;
-          }
-
+          .r-main{margin-left:0!important;width:100%!important;display:block!important;padding-bottom:76px!important;}
+          .r-content{padding:16px 10px 20px!important;min-height:calc(100vh - 52px - 76px)!important;box-sizing:border-box!important;}
           .cards-grid{grid-template-columns:1fr!important;}
           .card-full{grid-column:1!important;}
           .s-card{padding:16px!important;}
-
-          .tabs-row{
-            gap:6px!important;
-            flex-wrap:nowrap!important;
-            overflow-x:auto!important;
-            margin-bottom:20px!important;
-            padding-right:10px!important;
-          }
-          /* ↓ Compact tabs — all 5 incl. API Access fully visible */
-          .tab-btn{
-            padding:7px 9px!important;
-            font-size:11px!important;
-            gap:4px!important;
-            min-width:max-content!important;
-            border-radius:8px!important;
-          }
+          .tabs-row{gap:6px!important;flex-wrap:nowrap!important;overflow-x:auto!important;margin-bottom:20px!important;padding-right:10px!important;}
+          .tab-btn{padding:7px 9px!important;font-size:11px!important;gap:4px!important;min-width:max-content!important;border-radius:8px!important;}
           .tab-btn svg{width:11px!important;height:11px!important;}
         }
 
-        /* ══════════════════════════════════════════════════════
-           MOBILE — Chrome Desktop Site ON
-           JS detects touch + wide viewport → adds .dso class
-        ══════════════════════════════════════════════════════ */
+        /* ══ MOBILE Desktop Site ON (.dso) ══ */
         .dso .r-sidebar{display:none!important;}
         .dso .r-topbar{display:none!important;}
         .dso .r-mobile-topbar{display:flex!important;}
         .dso .r-bottom-nav{display:flex!important;}
+
         .dso.r-bg{
           display:block!important;
           width:100vw!important;
           max-width:100vw!important;
           overflow-x:hidden!important;
-          height:auto!important;
           min-height:100vh!important;
+          height:auto!important;
         }
         .dso .r-main{
           margin-left:0!important;
@@ -393,83 +361,140 @@ export default function SettingsPage() {
           height:auto!important;
         }
         .dso .r-content{
-          padding:16px 14px 20px!important;
+          padding:20px 16px 24px!important;
           box-sizing:border-box!important;
           width:100%!important;
           min-height:0!important;
           height:auto!important;
         }
-        .dso .cards-grid{
-          display:grid!important;
-          grid-template-columns:1fr!important;
-          gap:14px!important;
-          height:auto!important;
+        .dso .r-content h1{
+          font-size:32px!important;
+          line-height:1.2!important;
+          margin-bottom:4px!important;
         }
-        .dso .card-full{grid-column:1!important;}
-        .dso .s-card{
-          padding:28px 24px!important;
-          border-radius:16px!important;
-          height:auto!important;
+        .dso .r-content p{
+          font-size:16px!important;
         }
-        .dso .r-content h1{font-size:26px!important;line-height:1.2!important;}
+
+        /* TABS — big */
         .dso .tabs-row{
-          gap:8px!important;
+          gap:10px!important;
           flex-wrap:nowrap!important;
           overflow-x:auto!important;
-          margin-bottom:20px!important;
+          margin-bottom:24px!important;
           padding-right:8px!important;
           height:auto!important;
         }
         .dso .tab-btn{
-          padding:14px 22px!important;
-          font-size:16px!important;
-          gap:9px!important;
+          padding:16px 26px!important;
+          font-size:18px!important;
+          gap:10px!important;
           min-width:max-content!important;
-          border-radius:12px!important;
+          border-radius:14px!important;
+          height:auto!important;
         }
-        .dso .tab-btn svg{width:17px!important;height:17px!important;}
-        .dso .card-title{font-size:22px!important;margin-bottom:6px!important;}
-        .dso .card-sub{font-size:15px!important;margin-bottom:22px!important;}
-        .dso .field-label{font-size:13px!important;margin-bottom:8px!important;}
-        .dso .field-input{padding:14px 16px!important;font-size:17px!important;border-radius:11px!important;}
-        .dso .btn-primary{padding:16px 20px!important;font-size:17px!important;border-radius:11px!important;}
-        .dso .btn-ghost{padding:15px 20px!important;font-size:16px!important;border-radius:11px!important;}
-        .dso .btn-danger{padding:15px 20px!important;font-size:16px!important;border-radius:11px!important;}
-        .dso .badge-green,.dso .badge-gray,.dso .badge-yellow,.dso .badge-red{font-size:13px!important;padding:5px 12px!important;}
-        .dso .info-label{font-size:15px!important;}
-        .dso .info-value{font-size:15px!important;}
+        .dso .tab-btn svg{width:20px!important;height:20px!important;}
 
-        /* ══════════════════════════════════════════════════════
-           DESKTOP / LAPTOP  ≥ 1024px  AND  fine pointer (mouse)
-        ══════════════════════════════════════════════════════ */
+        /* CARDS — no empty space */
+        .dso .cards-grid{
+          display:grid!important;
+          grid-template-columns:1fr!important;
+          gap:16px!important;
+          height:auto!important;
+          min-height:0!important;
+        }
+        .dso .card-full{grid-column:1!important;}
+        .dso .s-card{
+          padding:32px 28px!important;
+          border-radius:18px!important;
+          height:auto!important;
+          min-height:0!important;
+        }
+        .dso .card-title{font-size:26px!important;margin-bottom:8px!important;line-height:1.2!important;}
+        .dso .card-sub{font-size:17px!important;margin-bottom:26px!important;}
+
+        /* FORM FIELDS — big */
+        .dso .field-label{font-size:15px!important;margin-bottom:10px!important;letter-spacing:0.05em!important;}
+        .dso .field-input{
+          padding:18px 20px!important;
+          font-size:20px!important;
+          border-radius:13px!important;
+          height:auto!important;
+        }
+
+        /* BUTTONS — big */
+        .dso .btn-primary{
+          padding:20px 24px!important;
+          font-size:20px!important;
+          border-radius:13px!important;
+          height:auto!important;
+        }
+        .dso .btn-ghost{
+          padding:18px 24px!important;
+          font-size:19px!important;
+          border-radius:13px!important;
+          height:auto!important;
+        }
+        .dso .btn-danger{
+          padding:18px 24px!important;
+          font-size:19px!important;
+          border-radius:13px!important;
+          height:auto!important;
+        }
+
+        /* BADGES — big */
+        .dso .badge-green,
+        .dso .badge-gray,
+        .dso .badge-yellow,
+        .dso .badge-red{
+          font-size:15px!important;
+          padding:6px 16px!important;
+          border-radius:24px!important;
+        }
+
+        /* INFO ROWS — big */
+        .dso .info-row{padding:16px 0!important;}
+        .dso .info-label{font-size:18px!important;gap:10px!important;}
+        .dso .info-value{font-size:18px!important;}
+
+        /* AVATAR in profile */
+        .dso .s-card img[alt="avatar"],
+        .dso .s-card > div > div:first-child{
+          width:72px!important;
+          height:72px!important;
+          font-size:28px!important;
+        }
+
+        /* TOGGLE — big */
+        .dso .toggle{width:62px!important;height:34px!important;}
+        .dso .toggle-thumb{width:28px!important;height:28px!important;top:3px!important;}
+
+        /* SESSION CARD */
+        .dso .session-card{padding:20px!important;border-radius:14px!important;gap:16px!important;}
+
+        /* WARN BOX */
+        .dso .warn-box{padding:18px 20px!important;border-radius:14px!important;gap:12px!important;font-size:17px!important;}
+
+        /* ══ DESKTOP ≥1024px fine pointer ══ */
         @media (min-width: 1024px) and (pointer: fine) {
           .r-bg{display:flex!important;}
           .r-sidebar{display:flex!important;}
           .r-topbar{display:flex!important;}
           .r-mobile-topbar{display:none!important;}
           .r-bottom-nav{display:none!important;}
-          .r-main{
-            margin-left:216px!important;
-            width:calc(100% - 216px)!important;
-            padding-bottom:0!important;
-            display:flex!important;
-            flex-direction:column!important;
-          }
+          .r-main{margin-left:216px!important;width:calc(100% - 216px)!important;padding-bottom:0!important;display:flex!important;flex-direction:column!important;}
           .cards-grid{grid-template-columns:1fr 1fr!important;}
           .card-full{grid-column:1 / -1!important;}
           .r-content{padding:24px 24px 32px!important;}
           .tabs-row{gap:6px!important;}
-          .tab-btn{
-            padding:8px 16px!important;
-            font-size:12.5px!important;
-          }
+          .tab-btn{padding:8px 16px!important;font-size:12.5px!important;}
           .tab-btn svg{width:13px!important;height:13px!important;}
         }
       `}</style>
 
       <div className={`r-bg${isDesktopSiteOn ? ' dso' : ''}`}>
 
-        {/* ── SIDEBAR ── */}
+        {/* SIDEBAR */}
         <aside className="r-sidebar">
           <div className="r-logo">
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
@@ -480,7 +505,6 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-
           <nav className="r-nav">
             {SIDEBAR_NAV.map(item => {
               const isActive = currentPath === item.href;
@@ -492,7 +516,6 @@ export default function SettingsPage() {
               );
             })}
           </nav>
-
           {showUpgradeCard && (
             <div className="r-upgrade">
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
@@ -509,7 +532,6 @@ export default function SettingsPage() {
               <Link href="/billing" className="r-btn-upgrade">Upgrade Now</Link>
             </div>
           )}
-
           <div className="r-sidebar-bottom">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 11px', marginBottom: 3 }}>
               {userPhoto
@@ -527,7 +549,7 @@ export default function SettingsPage() {
           </div>
         </aside>
 
-        {/* ── MAIN ── */}
+        {/* MAIN */}
         <div className="r-main">
 
           {/* DESKTOP TOPBAR */}
@@ -550,9 +572,9 @@ export default function SettingsPage() {
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12 }}>Notifications</span>
                     </div>
                     {[
-                      { icon: Shield, color: '#34d399', title: 'Moderation active',   sub: 'AI moderator protecting your channel', time: 'Now' },
-                      { icon: Bell,   color: '#60a5fa', title: 'System operational',  sub: 'All services running normally',        time: '2m'  },
-                      { icon: Zap,    color: '#a78bfa', title: 'Upgrade available',   sub: 'Unlock unlimited scans with Pro',      time: '1h'  },
+                      { icon: Shield, color: '#34d399', title: 'Moderation active',  sub: 'AI moderator protecting your channel', time: 'Now' },
+                      { icon: Bell,   color: '#60a5fa', title: 'System operational', sub: 'All services running normally',         time: '2m'  },
+                      { icon: Zap,    color: '#a78bfa', title: 'Upgrade available',  sub: 'Unlock unlimited scans with Pro',       time: '1h'  },
                     ].map((n, i) => (
                       <div key={i} style={{ display: 'flex', gap: 9, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
                         <div style={{ width: 28, height: 28, borderRadius: 8, background: `${n.color}12`, border: `1px solid ${n.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -619,7 +641,7 @@ export default function SettingsPage() {
               </Link>
             </div>
 
-            {/* ── PROFILE TAB ── */}
+            {/* PROFILE TAB */}
             {activeTab === 'profile' && (
               <div className="cards-grid">
                 <div className="s-card">
@@ -687,7 +709,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* ── SECURITY TAB ── */}
+            {/* SECURITY TAB */}
             {activeTab === 'security' && (
               <div className="cards-grid">
                 <div className="s-card">
@@ -727,7 +749,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* ── 2FA TAB ── */}
+            {/* 2FA TAB */}
             {activeTab === '2fa' && (
               <div className="cards-grid">
                 <div className="s-card">
@@ -763,7 +785,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* ── ENCRYPTION TAB ── */}
+            {/* ENCRYPTION TAB */}
             {activeTab === 'encryption' && (
               <div className="cards-grid">
                 <div className="s-card card-full">
@@ -808,7 +830,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── MOBILE BOTTOM NAV — untouched ── */}
+        {/* MOBILE BOTTOM NAV */}
         <nav className="r-bottom-nav">
           <Link href="/dashboard" className="r-bnav-item">
             <span className="r-bnav-icon"><LayoutDashboard size={19} strokeWidth={1.7} /></span>
@@ -834,7 +856,7 @@ export default function SettingsPage() {
           </button>
         </nav>
 
-        {/* ── MORE DRAWER ── */}
+        {/* MORE DRAWER */}
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />

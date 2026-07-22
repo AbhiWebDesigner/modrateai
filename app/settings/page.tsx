@@ -134,10 +134,6 @@ export default function SettingsPage() {
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:3px}
 
-        /* ─── ROOT WRAPPER ───
-           display:flex is only applied on desktop via media query.
-           On mobile the wrapper is block so .r-main height = content height,
-           which eliminates the blank-space-below-cards issue on Desktop Site ON. */
         .r-bg{
           background:#0a0a0f;
           position:relative;
@@ -151,7 +147,7 @@ export default function SettingsPage() {
           background-image:linear-gradient(rgba(255,255,255,0.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.011) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        /* SIDEBAR — desktop only */
+        /* SIDEBAR */
         .r-sidebar{width:216px;min-width:216px;background:#0c0c14;border-right:1px solid rgba(124,58,237,0.11);
           display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;}
         .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
@@ -296,7 +292,7 @@ export default function SettingsPage() {
         /* WARN BOX */
         .warn-box{padding:13px 15px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.16);border-radius:11px;display:flex;align-items:flex-start;gap:9px;}
 
-        /* BOTTOM NAV */
+        /* BOTTOM NAV — untouched */
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
           backdrop-filter:blur(24px);padding:6px 4px env(safe-area-inset-bottom,6px);}
@@ -312,13 +308,11 @@ export default function SettingsPage() {
         .r-bnav-fab:active{transform:scale(0.93);}
 
         /* ══════════════════════════════════════════════════════
-           NARROW MOBILE  ≤ 599px  (Chrome Desktop Site OFF)
-
-           Fix: tabs get comfortable padding + min-width so they
-           never clip. overflow-x:auto on .tabs-row handles any
-           overflow gracefully without shrinking the tab text.
+           MOBILE — Chrome Desktop Site OFF  (≤ 599px)
+           Viewport is narrow. Tabs need slightly more size so
+           "API Access" is visible in the scrollable row.
         ══════════════════════════════════════════════════════ */
-        @media(max-width:599px){
+        @media (max-width: 599px) {
           .r-sidebar{display:none!important;}
           .r-topbar{display:none!important;}
           .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px!important;}
@@ -326,18 +320,16 @@ export default function SettingsPage() {
           .r-bottom-nav{display:flex!important;}
           .r-content{padding:14px 12px 20px!important;}
 
-          /* ── TAB FIX (Desktop Site OFF) ──
-             Increase padding so touch area is comfortable.
-             flex-shrink:0 already set on .tab-btn globally,
-             and .tabs-row already scrolls, so tabs never clip. */
-          .tabs-row{gap:6px!important;}
+          /* Slightly larger tabs — API Access now visible */
+          .tabs-row{gap:5px!important;}
           .tab-btn{
-            padding:9px 14px!important;
-            font-size:12.5px!important;
+            padding:10px 15px!important;
+            font-size:13px!important;
             gap:6px!important;
             border-radius:10px!important;
             min-width:max-content!important;
           }
+          .tab-btn svg{width:14px!important;height:14px!important;}
 
           .cards-grid{grid-template-columns:1fr!important;}
           .card-full{grid-column:1!important;}
@@ -345,69 +337,99 @@ export default function SettingsPage() {
         }
 
         /* ══════════════════════════════════════════════════════
-           MID RANGE  600px – 1023px  (Chrome Desktop Site ON on phone,
-           or small tablets).
+           MOBILE — Chrome Desktop Site ON  (touch device, any width)
 
-           Root cause of issues:
-           1. .r-bg had display:flex at all sizes (via inline style),
-              making .r-main stretch to 100vh → blank space below cards.
-              Fix: .r-bg is block at this range; sidebar is hidden;
-              .r-main has no left margin and no stretch.
-           2. cards-grid was 1fr 1fr making cards too narrow on a
-              phone-width viewport.
-              Fix: single column, full-width cards.
-           3. Tabs were too small.
-              Fix: comfortable padding matching desktop tab style.
+           ROOT CAUSE: Chrome Desktop Site ON disables the
+           <meta name="viewport"> tag, so the browser reports
+           a ~980-1280px layout width. This triggered the
+           min-width:1024px block, showing the sidebar and
+           making everything look like a zoomed-out desktop.
+
+           FIX: Use (pointer: coarse) to detect touch screens.
+           Real desktops/laptops always have (pointer: fine).
+           This media feature is NOT affected by Desktop Site mode —
+           it reads the actual hardware input, not the viewport.
+
+           We do NOT use zoom, transform:scale, or width overrides.
+           We fix the layout by switching to the mobile structure.
         ══════════════════════════════════════════════════════ */
-        @media(min-width:600px) and (max-width:1023px){
-          /* Root wrapper — block, not flex, so height = content */
-          .r-bg{display:block!important;}
-
+        @media (pointer: coarse) {
+          /* Hide desktop chrome */
           .r-sidebar{display:none!important;}
           .r-topbar{display:none!important;}
 
-          /* Main takes full width, no sidebar offset */
-          .r-main{
-            margin-left:0!important;
-            width:100%!important;
-            padding-bottom:76px!important;
-            /* block, not flex-child-of-flex, so no forced 100vh stretch */
-            display:block!important;
-          }
-
+          /* Show mobile chrome */
           .r-mobile-topbar{display:flex!important;}
           .r-bottom-nav{display:flex!important;}
 
-          /* Comfortable content padding */
-          .r-content{padding:20px 20px 28px!important;}
+          /* Block layout — no flex sidebar+main, no forced 100vh */
+          .r-bg{display:block!important;}
+          .r-main{
+            margin-left:0!important;
+            width:100%!important;
+            display:block!important;
+            padding-bottom:76px!important;
+          }
 
-          /* Single-column cards — full usable width */
+          /* Comfortable mobile content padding */
+          .r-content{padding:20px 16px 24px!important;}
+
+          /* Single-column full-width cards */
           .cards-grid{grid-template-columns:1fr!important;}
           .card-full{grid-column:1!important;}
-          .s-card{padding:18px!important;}
+          .s-card{padding:20px!important;border-radius:16px!important;}
 
-          /* Tabs — full desktop-size labels, comfortable touch targets */
+          /* Page heading */
+          .r-content h1{font-size:26px!important;}
+
+          /* Tabs — touch-friendly, scrollable */
           .tabs-row{
             gap:7px!important;
             flex-wrap:nowrap!important;
             overflow-x:auto!important;
+            margin-bottom:22px!important;
           }
           .tab-btn{
-            padding:9px 16px!important;
-            font-size:13px!important;
-            gap:7px!important;
+            padding:12px 18px!important;
+            font-size:14.5px!important;
+            gap:8px!important;
             min-width:max-content!important;
+            border-radius:12px!important;
           }
+          .tab-btn svg{width:16px!important;height:16px!important;}
+
+          /* Form labels & inputs */
+          .field-label{font-size:12px!important;margin-bottom:8px!important;}
+          .field-input{padding:14px 16px!important;font-size:16px!important;border-radius:12px!important;}
+
+          /* Buttons */
+          .btn-primary{padding:15px 20px!important;font-size:16px!important;border-radius:12px!important;}
+          .btn-ghost{padding:14px 20px!important;font-size:15px!important;border-radius:12px!important;}
+          .btn-danger{padding:14px 20px!important;font-size:15px!important;border-radius:12px!important;}
+
+          /* Badges */
+          .badge-green,.badge-gray,.badge-yellow,.badge-red{
+            font-size:12.5px!important;
+            padding:5px 12px!important;
+          }
+
+          /* Info rows */
+          .info-label{font-size:14.5px!important;}
+          .info-value{font-size:14.5px!important;}
+
+          /* Card typography */
+          .card-title{font-size:17px!important;}
+          .card-sub{font-size:13.5px!important;margin-bottom:20px!important;}
         }
 
         /* ══════════════════════════════════════════════════════
-           DESKTOP  ≥ 1024px
-           Sidebar + topbar. Layout unchanged from original.
+           DESKTOP / LAPTOP  ≥ 1024px  AND  fine pointer (mouse)
+           (pointer: fine) guarantees this only fires on real
+           desktop/laptop hardware — never on a touch phone
+           running Chrome Desktop Site ON.
         ══════════════════════════════════════════════════════ */
-        @media(min-width:1024px){
-          /* Root wrapper — flex for sidebar + main layout */
+        @media (min-width: 1024px) and (pointer: fine) {
           .r-bg{display:flex!important;}
-
           .r-sidebar{display:flex!important;}
           .r-topbar{display:flex!important;}
           .r-mobile-topbar{display:none!important;}
@@ -423,11 +445,14 @@ export default function SettingsPage() {
           .card-full{grid-column:1 / -1!important;}
           .r-content{padding:24px 24px 32px!important;}
           .tabs-row{gap:6px!important;}
-          .tab-btn{padding:8px 16px!important;font-size:12.5px!important;}
+          .tab-btn{
+            padding:8px 16px!important;
+            font-size:12.5px!important;
+          }
+          .tab-btn svg{width:13px!important;height:13px!important;}
         }
       `}</style>
 
-      {/* r-bg: no inline display style — controlled entirely by media queries above */}
       <div className="r-bg">
 
         {/* ── SIDEBAR ── */}
@@ -769,7 +794,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* ── MOBILE BOTTOM NAV ── */}
+        {/* ── MOBILE BOTTOM NAV — untouched ── */}
         <nav className="r-bottom-nav">
           <Link href="/dashboard" className="r-bnav-item">
             <span className="r-bnav-icon"><LayoutDashboard size={19} strokeWidth={1.7} /></span>

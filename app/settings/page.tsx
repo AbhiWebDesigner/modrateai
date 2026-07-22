@@ -336,7 +336,7 @@ export default function SettingsPage() {
           }
 
           .r-content{
-            padding:16px 12px 20px!important;
+            padding:16px 10px 20px!important;
             min-height:calc(100vh - 52px - 76px)!important;
             box-sizing:border-box!important;
           }
@@ -346,34 +346,20 @@ export default function SettingsPage() {
           .s-card{padding:16px!important;}
 
           .tabs-row{
-            gap:6px!important;
+            gap:5px!important;
             flex-wrap:nowrap!important;
             overflow-x:auto!important;
             margin-bottom:20px!important;
-            padding-right:8px!important;
+            padding-right:10px!important;
           }
           .tab-btn{
-            padding:10px 16px!important;
-            font-size:13.5px!important;
-            gap:7px!important;
+            padding:10px 14px!important;
+            font-size:13px!important;
+            gap:6px!important;
             min-width:max-content!important;
             border-radius:10px!important;
           }
-          .tab-btn svg{width:14px!important;height:14px!important;}
-
-          .field-label{font-size:11px!important;margin-bottom:7px!important;}
-          .field-input{padding:12px 14px!important;font-size:15px!important;border-radius:10px!important;}
-
-          .btn-primary{padding:13px 18px!important;font-size:15px!important;border-radius:10px!important;}
-          .btn-ghost{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
-          .btn-danger{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
-
-          .badge-green,.badge-gray,.badge-yellow,.badge-red{font-size:11.5px!important;padding:4px 10px!important;}
-
-          .info-label{font-size:13.5px!important;}
-          .info-value{font-size:13.5px!important;}
-          .card-title{font-size:15px!important;}
-          .card-sub{font-size:12.5px!important;margin-bottom:16px!important;}
+          .tab-btn svg{width:13px!important;height:13px!important;}
         }
 
         /* ══════════════════════════════════════════════════════
@@ -391,11 +377,20 @@ export default function SettingsPage() {
           .r-mobile-topbar{display:flex!important;}
           .r-bottom-nav{display:flex!important;}
 
-          /* Pin layout to actual screen width, not the spoofed ~980px */
+          /* Pin html/body so the spoofed ~980px viewport height
+             does not make the page taller than the real screen.
+             overflow:hidden on body clips the invisible extra space. */
+          html{height:100%!important;}
+          body{height:100%!important;overflow-y:auto!important;}
+
+          /* Pin layout width to real screen, block display */
           .r-bg{
             display:block!important;
+            width:100vw!important;
             max-width:100vw!important;
             overflow-x:hidden!important;
+            height:auto!important;
+            min-height:100%!important;
           }
           .r-main{
             margin-left:0!important;
@@ -406,10 +401,8 @@ export default function SettingsPage() {
             overflow-x:hidden!important;
           }
 
-          /* Fill space between topbar (52px) and bottom nav (76px) */
           .r-content{
             padding:18px 14px 24px!important;
-            min-height:calc(100vh - 52px - 76px)!important;
             box-sizing:border-box!important;
           }
 
@@ -417,37 +410,39 @@ export default function SettingsPage() {
           .card-full{grid-column:1!important;}
           .s-card{padding:18px!important;border-radius:14px!important;}
 
-          .r-content h1{font-size:22px!important;}
+          .r-content h1{font-size:28px!important;}
+          .r-content p{font-size:14px!important;}
 
           .tabs-row{
-            gap:6px!important;
+            gap:8px!important;
             flex-wrap:nowrap!important;
             overflow-x:auto!important;
-            margin-bottom:20px!important;
+            margin-bottom:24px!important;
             padding-right:8px!important;
           }
           .tab-btn{
-            padding:10px 16px!important;
-            font-size:13.5px!important;
-            gap:7px!important;
+            padding:14px 22px!important;
+            font-size:16px!important;
+            gap:9px!important;
             min-width:max-content!important;
-            border-radius:10px!important;
+            border-radius:12px!important;
           }
-          .tab-btn svg{width:14px!important;height:14px!important;}
+          .tab-btn svg{width:17px!important;height:17px!important;}
 
-          .field-label{font-size:11px!important;margin-bottom:7px!important;}
-          .field-input{padding:12px 14px!important;font-size:15px!important;border-radius:10px!important;}
+          .card-title{font-size:18px!important;}
+          .card-sub{font-size:14px!important;margin-bottom:18px!important;}
 
-          .btn-primary{padding:13px 18px!important;font-size:15px!important;border-radius:10px!important;}
-          .btn-ghost{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
-          .btn-danger{padding:12px 18px!important;font-size:14px!important;border-radius:10px!important;}
+          .field-label{font-size:13px!important;margin-bottom:8px!important;}
+          .field-input{padding:14px 16px!important;font-size:17px!important;border-radius:11px!important;}
 
-          .badge-green,.badge-gray,.badge-yellow,.badge-red{font-size:11.5px!important;padding:4px 10px!important;}
+          .btn-primary{padding:16px 20px!important;font-size:17px!important;border-radius:11px!important;}
+          .btn-ghost{padding:15px 20px!important;font-size:16px!important;border-radius:11px!important;}
+          .btn-danger{padding:15px 20px!important;font-size:16px!important;border-radius:11px!important;}
 
-          .info-label{font-size:13.5px!important;}
-          .info-value{font-size:13.5px!important;}
-          .card-title{font-size:15px!important;}
-          .card-sub{font-size:12.5px!important;margin-bottom:16px!important;}
+          .badge-green,.badge-gray,.badge-yellow,.badge-red{font-size:13px!important;padding:5px 12px!important;}
+
+          .info-label{font-size:15px!important;}
+          .info-value{font-size:15px!important;}
         }
 
         /* ══════════════════════════════════════════════════════

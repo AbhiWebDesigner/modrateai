@@ -367,125 +367,148 @@ export default function SettingsPage() {
           min-height:0!important;
           height:auto!important;
         }
+        /* Settings title + subtitle */
         .dso .r-content h1{
-          font-size:32px!important;
+          font-size:38px!important;
           line-height:1.2!important;
-          margin-bottom:4px!important;
+          margin-bottom:6px!important;
         }
-        .dso .r-content p{
-          font-size:16px!important;
+        .dso .r-content > div:first-child p{
+          font-size:19px!important;
         }
 
-        /* TABS — big */
+        /* TABS */
         .dso .tabs-row{
-          gap:10px!important;
+          gap:12px!important;
           flex-wrap:nowrap!important;
           overflow-x:auto!important;
-          margin-bottom:24px!important;
+          margin-bottom:28px!important;
           padding-right:8px!important;
           height:auto!important;
         }
         .dso .tab-btn{
-          padding:16px 26px!important;
-          font-size:18px!important;
-          gap:10px!important;
+          padding:19px 30px!important;
+          font-size:21px!important;
+          gap:12px!important;
           min-width:max-content!important;
-          border-radius:14px!important;
+          border-radius:16px!important;
           height:auto!important;
         }
-        .dso .tab-btn svg{width:20px!important;height:20px!important;}
+        .dso .tab-btn svg{width:23px!important;height:23px!important;}
 
-        /* CARDS — no empty space */
+        /* CARDS GRID */
         .dso .cards-grid{
           display:grid!important;
           grid-template-columns:1fr!important;
-          gap:16px!important;
+          gap:20px!important;
           height:auto!important;
           min-height:0!important;
         }
         .dso .card-full{grid-column:1!important;}
 
-        /* CARDS — large padding + min-height so page extends down */
+        /* CARD BASE */
         .dso .s-card{
-          padding:44px 36px!important;
-          border-radius:22px!important;
+          padding:52px 42px!important;
+          border-radius:24px!important;
           height:auto!important;
-          min-height:420px!important;
+          min-height:480px!important;
           display:flex!important;
           flex-direction:column!important;
         }
-        .dso .card-title{font-size:30px!important;margin-bottom:10px!important;line-height:1.2!important;}
-        .dso .card-sub{font-size:19px!important;margin-bottom:32px!important;}
+        .dso .card-title{font-size:35px!important;margin-bottom:12px!important;line-height:1.2!important;}
+        .dso .card-sub{font-size:22px!important;margin-bottom:36px!important;}
 
-        /* AVATAR — bigger */
+        /* AVATAR */
         .dso .s-card img[alt="avatar"]{
-          width:88px!important;
-          height:88px!important;
+          width:100px!important;
+          height:100px!important;
         }
 
-        /* FORM FIELDS — big */
-        .dso .field-label{font-size:16px!important;margin-bottom:12px!important;letter-spacing:0.05em!important;}
+        /* FORM FIELDS */
+        .dso .field-label{font-size:18px!important;margin-bottom:14px!important;letter-spacing:0.05em!important;}
         .dso .field-input{
-          padding:22px 22px!important;
-          font-size:22px!important;
-          border-radius:14px!important;
+          padding:26px 24px!important;
+          font-size:25px!important;
+          border-radius:16px!important;
           height:auto!important;
-          min-height:64px!important;
+          min-height:72px!important;
         }
 
         /* gap between form fields */
         .dso .s-card > div > div[style*="flex-direction: column"],
         .dso .s-card > div > div[style*="flex-direction:column"]{
-          gap:20px!important;
+          gap:24px!important;
         }
 
-        /* BUTTONS — big */
+        /* BUTTONS */
         .dso .btn-primary{
-          padding:24px 28px!important;
-          font-size:22px!important;
-          border-radius:14px!important;
+          padding:28px 32px!important;
+          font-size:25px!important;
+          border-radius:16px!important;
           height:auto!important;
-          min-height:68px!important;
+          min-height:78px!important;
         }
         .dso .btn-ghost{
-          padding:22px 28px!important;
-          font-size:21px!important;
-          border-radius:14px!important;
+          padding:26px 32px!important;
+          font-size:24px!important;
+          border-radius:16px!important;
           height:auto!important;
-          min-height:66px!important;
+          min-height:76px!important;
         }
         .dso .btn-danger{
-          padding:22px 28px!important;
-          font-size:21px!important;
-          border-radius:14px!important;
+          padding:26px 32px!important;
+          font-size:24px!important;
+          border-radius:16px!important;
           height:auto!important;
-          min-height:66px!important;
+          min-height:76px!important;
         }
 
-        /* BADGES — big */
+        /* BADGES */
         .dso .badge-green,
         .dso .badge-gray,
         .dso .badge-yellow,
         .dso .badge-red{
-          font-size:16px!important;
-          padding:8px 20px!important;
-          border-radius:28px!important;
+          font-size:18px!important;
+          padding:10px 24px!important;
+          border-radius:32px!important;
         }
 
-        /* INFO ROWS — more spacing */
-        .dso .info-row{padding:20px 0!important;}
-        .dso .info-label{font-size:20px!important;gap:12px!important;}
-        .dso .info-value{font-size:20px!important;}
+        /* INFO ROWS */
+        .dso .info-row{padding:24px 0!important;}
+        .dso .info-label{font-size:23px!important;gap:14px!important;}
+        .dso .info-value{font-size:23px!important;}
 
-        /* TOGGLE — big */
-        .dso .toggle{width:68px!important;height:38px!important;}
-        .dso .toggle-thumb{width:32px!important;height:32px!important;top:3px!important;}
+        /* TOGGLE */
+        .dso .toggle{width:78px!important;height:44px!important;}
+        .dso .toggle-thumb{width:38px!important;height:38px!important;top:3px!important;}
 
         /* SESSION CARD */
-        .dso .session-card{padding:24px!important;border-radius:16px!important;gap:18px!important;}
+        .dso .session-card{padding:28px!important;border-radius:18px!important;gap:20px!important;}
 
         /* WARN BOX */
-        .dso .warn-box{padding:22px 24px!important;border-radius:16px!important;gap:14px!important;font-size:19px!important;}
+        .dso .warn-box{padding:26px 28px!important;border-radius:18px!important;gap:16px!important;font-size:22px!important;}
+
+        /* MORE DRAWER — dso bigger */
+        .dso-drawer{
+          border-radius:24px!important;
+          padding:10px 10px 18px!important;
+        }
+        .dso-drawer-item{
+          padding:18px 16px!important;
+          border-radius:14px!important;
+          font-size:22px!important;
+          gap:18px!important;
+        }
+        .dso-drawer-icon{
+          width:52px!important;
+          height:52px!important;
+          border-radius:14px!important;
+        }
+        .dso-drawer-logout{
+          font-size:22px!important;
+          gap:18px!important;
+          padding:18px 4px!important;
+        }
 
         /* ══ DESKTOP ≥1024px fine pointer ══ */
         @media (min-width: 1024px) and (pointer: fine) {
@@ -872,8 +895,21 @@ export default function SettingsPage() {
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />
-            <div style={{ position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60, background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '6px 6px 10px', boxShadow: '0 -8px 40px rgba(0,0,0,0.65)', backdropFilter: 'blur(28px)', animation: 'slideUp 0.18s ease' }}>
-              <div style={{ width: 30, height: 3, background: 'rgba(255,255,255,0.09)', borderRadius: 3, margin: '6px auto 12px' }} />
+            <div style={{
+              position: 'fixed',
+              bottom: isDesktopSiteOn ? 80 : 68,
+              left: isDesktopSiteOn ? 16 : 10,
+              right: isDesktopSiteOn ? 16 : 10,
+              zIndex: 60,
+              background: 'rgba(13,12,20,0.99)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: isDesktopSiteOn ? 26 : 18,
+              padding: isDesktopSiteOn ? '10px 10px 20px' : '6px 6px 10px',
+              boxShadow: '0 -8px 40px rgba(0,0,0,0.65)',
+              backdropFilter: 'blur(28px)',
+              animation: 'slideUp 0.18s ease',
+            }}>
+              <div style={{ width: isDesktopSiteOn ? 44 : 30, height: isDesktopSiteOn ? 5 : 3, background: 'rgba(255,255,255,0.09)', borderRadius: 3, margin: isDesktopSiteOn ? '10px auto 18px' : '6px auto 12px' }} />
               {[
                 { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
                 { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
@@ -881,18 +917,60 @@ export default function SettingsPage() {
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 13 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <item.icon size={14} color={item.color} strokeWidth={1.8} />
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: isDesktopSiteOn ? 20 : 12,
+                    padding: isDesktopSiteOn ? '16px 18px' : '10px 12px',
+                    borderRadius: isDesktopSiteOn ? 16 : 10,
+                    textDecoration: 'none',
+                    color: 'rgba(255,255,255,0.72)',
+                    fontWeight: 600,
+                    fontSize: isDesktopSiteOn ? 24 : 13,
+                  }}>
+                  <div style={{
+                    width: isDesktopSiteOn ? 54 : 30,
+                    height: isDesktopSiteOn ? 54 : 30,
+                    borderRadius: isDesktopSiteOn ? 15 : 9,
+                    background: `${item.color}12`,
+                    border: `1px solid ${item.color}20`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <item.icon size={isDesktopSiteOn ? 26 : 14} color={item.color} strokeWidth={1.8} />
                   </div>
                   {item.label}
                 </Link>
               ))}
-              <div style={{ margin: '6px 12px 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 6 }}>
+              <div style={{ margin: isDesktopSiteOn ? '10px 18px 0' : '6px 12px 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: isDesktopSiteOn ? 10 : 6 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 13, width: '100%' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LogOut size={14} color="#f87171" strokeWidth={1.8} />
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: isDesktopSiteOn ? 20 : 12,
+                    padding: isDesktopSiteOn ? '16px 4px' : '10px 0',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#f87171',
+                    fontWeight: 600,
+                    fontSize: isDesktopSiteOn ? 24 : 13,
+                    width: '100%',
+                  }}>
+                  <div style={{
+                    width: isDesktopSiteOn ? 54 : 30,
+                    height: isDesktopSiteOn ? 54 : 30,
+                    borderRadius: isDesktopSiteOn ? 15 : 9,
+                    background: 'rgba(248,113,113,0.08)',
+                    border: '1px solid rgba(248,113,113,0.14)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <LogOut size={isDesktopSiteOn ? 26 : 14} color="#f87171" strokeWidth={1.8} />
                   </div>
                   Logout
                 </button>

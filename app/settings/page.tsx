@@ -460,6 +460,7 @@ export default function SettingsPage() {
 
         /* ── DSO MOBILE TOPBAR — bell only, no avatar ── */
         .dso .r-mobile-topbar .r-avatar-btn{display:none!important;}
+        .dso .r-mobile-topbar .r-icon-btn{display:none!important;}
         .dso .r-mobile-topbar .r-icon-btn{
           width:44px!important;height:44px!important;border-radius:12px!important;
         }

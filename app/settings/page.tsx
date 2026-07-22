@@ -415,78 +415,105 @@ export default function SettingsPage() {
           display:flex!important;
           flex-direction:column!important;
         }
-        .dso .card-title{font-size:35px!important;margin-bottom:12px!important;line-height:1.2!important;}
-        .dso .card-sub{font-size:22px!important;margin-bottom:36px!important;}
 
-        /* AVATAR */
-        .dso .s-card img[alt="avatar"]{
-          width:100px!important;
-          height:100px!important;
-        }
+        /* ── DSO card titles & subtitles (all tabs) ── */
+        .dso .card-title{font-size:36px!important;font-weight:800!important;margin-bottom:10px!important;line-height:1.2!important;}
+        .dso .card-sub{font-size:22px!important;margin-bottom:34px!important;}
 
-        /* FORM FIELDS */
+        /* AVATAR (profile tab) */
+        .dso .s-card img[alt="avatar"]{width:100px!important;height:100px!important;}
+
+        /* FORM FIELDS (profile tab) */
         .dso .field-label{font-size:18px!important;margin-bottom:14px!important;letter-spacing:0.05em!important;}
         .dso .field-input{
-          padding:26px 24px!important;
-          font-size:25px!important;
-          border-radius:16px!important;
-          height:auto!important;
-          min-height:72px!important;
+          padding:26px 24px!important;font-size:25px!important;border-radius:16px!important;
+          height:auto!important;min-height:72px!important;
         }
-
-        /* gap between form fields */
         .dso .s-card > div > div[style*="flex-direction: column"],
-        .dso .s-card > div > div[style*="flex-direction:column"]{
-          gap:24px!important;
-        }
+        .dso .s-card > div > div[style*="flex-direction:column"]{gap:24px!important;}
 
-        /* BUTTONS */
+        /* BUTTONS — base dso sizes (overridden per-tab below where needed) */
         .dso .btn-primary{
-          padding:28px 32px!important;
-          font-size:25px!important;
-          border-radius:16px!important;
-          height:auto!important;
-          min-height:78px!important;
+          padding:28px 32px!important;font-size:25px!important;border-radius:16px!important;
+          height:auto!important;min-height:78px!important;gap:12px!important;
         }
         .dso .btn-ghost{
-          padding:26px 32px!important;
-          font-size:24px!important;
-          border-radius:16px!important;
-          height:auto!important;
-          min-height:76px!important;
+          padding:26px 32px!important;font-size:25px!important;border-radius:16px!important;
+          height:auto!important;min-height:76px!important;gap:12px!important;
         }
         .dso .btn-danger{
-          padding:26px 32px!important;
-          font-size:24px!important;
-          border-radius:16px!important;
-          height:auto!important;
-          min-height:76px!important;
+          padding:26px 32px!important;font-size:25px!important;border-radius:16px!important;
+          height:auto!important;min-height:76px!important;gap:12px!important;
         }
 
-        /* BADGES */
-        .dso .badge-green,
-        .dso .badge-gray,
-        .dso .badge-yellow,
-        .dso .badge-red{
-          font-size:18px!important;
-          padding:10px 24px!important;
-          border-radius:32px!important;
+        /* BADGES — all tabs */
+        .dso .badge-green,.dso .badge-gray,.dso .badge-yellow,.dso .badge-red{
+          font-size:20px!important;padding:12px 26px!important;border-radius:36px!important;
         }
 
-        /* INFO ROWS */
-        .dso .info-row{padding:24px 0!important;}
-        .dso .info-label{font-size:23px!important;gap:14px!important;}
-        .dso .info-value{font-size:23px!important;}
+        /* INFO ROWS — all tabs */
+        .dso .info-row{padding:26px 0!important;}
+        .dso .info-label{font-size:25px!important;gap:14px!important;}
+        .dso .info-value{font-size:25px!important;}
 
-        /* TOGGLE */
-        .dso .toggle{width:78px!important;height:44px!important;}
-        .dso .toggle-thumb{width:38px!important;height:38px!important;top:3px!important;}
+        /* ── DSO MOBILE TOPBAR — bell only, no avatar ── */
+        .dso .r-mobile-topbar .r-avatar-btn{display:none!important;}
+        .dso .r-mobile-topbar .r-icon-btn{
+          width:44px!important;height:44px!important;border-radius:12px!important;
+        }
+        .dso .r-mobile-topbar .r-icon-btn svg{width:22px!important;height:22px!important;}
 
-        /* SESSION CARD */
-        .dso .session-card{padding:28px!important;border-radius:18px!important;gap:20px!important;}
+        /* ── DSO SECURITY TAB ── */
+        /* Google OAuth banner */
+        .dso .dso-google-banner{
+          padding:28px 26px!important;border-radius:18px!important;margin-bottom:26px!important;
+        }
+        .dso .dso-google-banner-title{font-size:28px!important;margin-bottom:8px!important;}
+        .dso .dso-google-banner-sub{font-size:22px!important;}
+        .dso .dso-google-icon-wrap{width:54px!important;height:54px!important;border-radius:14px!important;}
 
-        /* WARN BOX */
-        .dso .warn-box{padding:26px 28px!important;border-radius:18px!important;gap:16px!important;font-size:22px!important;}
+        /* Password info box */
+        .dso .dso-pass-box{padding:26px 28px!important;border-radius:18px!important;margin-bottom:22px!important;}
+        .dso .dso-pass-box-title{font-size:26px!important;margin-bottom:8px!important;}
+        .dso .dso-pass-box-desc{font-size:22px!important;line-height:1.7!important;}
+
+        /* ── DSO 2FA TAB ── */
+        .dso .dso-managed-box{padding:26px 28px!important;border-radius:18px!important;margin-bottom:22px!important;}
+        .dso .dso-managed-box-title{font-size:26px!important;margin-bottom:8px!important;}
+        .dso .dso-managed-box-desc{font-size:22px!important;line-height:1.7!important;}
+
+        /* Warn box */
+        .dso .warn-box{
+          padding:28px 30px!important;border-radius:18px!important;gap:16px!important;margin-bottom:26px!important;
+        }
+        .dso .warn-box .dso-warn-emoji{font-size:28px!important;}
+        .dso .warn-box p{font-size:23px!important;line-height:1.7!important;}
+
+        /* Session card */
+        .dso .session-card{padding:30px 26px!important;border-radius:20px!important;gap:22px!important;}
+        .dso .session-card .dso-session-icon{width:54px!important;height:54px!important;border-radius:14px!important;}
+        .dso .session-card .dso-session-title{font-size:26px!important;}
+        .dso .session-card .dso-session-sub{font-size:22px!important;}
+
+        /* ── DSO ENCRYPTION TAB ── */
+        /* Encryption item rows */
+        .dso .dso-enc-row{
+          padding:28px 30px!important;border-radius:18px!important;
+        }
+        .dso .dso-enc-icon-wrap{width:54px!important;height:54px!important;border-radius:14px!important;}
+        .dso .dso-enc-title{font-size:26px!important;}
+        .dso .dso-enc-desc{font-size:21px!important;}
+
+        /* Toggle — larger in dso */
+        .dso .toggle{width:88px!important;height:50px!important;}
+        .dso .toggle-thumb{width:44px!important;height:44px!important;top:3px!important;}
+
+        /* Encryption "Your data is secure" footer */
+        .dso .dso-enc-footer{
+          padding:28px 30px!important;border-radius:18px!important;margin-top:22px!important;
+        }
+        .dso .dso-enc-footer-title{font-size:26px!important;}
+        .dso .dso-enc-footer-desc{font-size:22px!important;margin-top:8px!important;line-height:1.7!important;}
 
         /* MORE DRAWER — dso bigger */
         .dso-drawer{
@@ -635,7 +662,7 @@ export default function SettingsPage() {
             </button>
           </header>
 
-          {/* MOBILE TOPBAR */}
+          {/* MOBILE TOPBAR — DSO hides avatar btn via CSS */}
           <header className="r-mobile-topbar">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
               <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -647,6 +674,7 @@ export default function SettingsPage() {
             <button className="r-icon-btn" style={{ width: 28, height: 28 }} onClick={() => setNotifOpen(v => !v)}>
               <Bell size={11} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
             </button>
+            {/* Avatar — hidden in DSO via CSS */}
             <button className="r-avatar-btn" style={{ padding: '2px 6px 2px 2px' }} onClick={() => router.push('/settings')}>
               {userPhoto
                 ? <img src={userPhoto} style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
@@ -750,13 +778,13 @@ export default function SettingsPage() {
                 <div className="s-card">
                   <p className="card-title">Login method</p>
                   <p className="card-sub">How you sign in to ModerateAI</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', background: 'rgba(66,133,244,0.07)', border: '1px solid rgba(66,133,244,0.16)', borderRadius: 11, marginBottom: 14 }}>
-                    <div style={{ width: 34, height: 34, background: 'rgba(66,133,244,0.13)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div className="dso-google-banner" style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 13px', background: 'rgba(66,133,244,0.07)', border: '1px solid rgba(66,133,244,0.16)', borderRadius: 11, marginBottom: 14 }}>
+                    <div className="dso-google-icon-wrap" style={{ width: 34, height: 34, background: 'rgba(66,133,244,0.13)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <p style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 13.5 }}>Google OAuth</p>
-                      <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11.5 }}>Official Google sign-in</p>
+                      <p className="dso-google-banner-title" style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 13.5 }}>Google OAuth</p>
+                      <p className="dso-google-banner-sub" style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11.5 }}>Official Google sign-in</p>
                     </div>
                     <span className="badge-green">✓ Active</span>
                   </div>
@@ -771,9 +799,9 @@ export default function SettingsPage() {
                 <div className="s-card">
                   <p className="card-title">Password</p>
                   <p className="card-sub">Managed by your Google account</p>
-                  <div style={{ padding: '13px 15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11, marginBottom: 14 }}>
-                    <p style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13.5, marginBottom: 5 }}>Managed by Google</p>
-                    <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 12.5, lineHeight: 1.6 }}>Your password is controlled by your Google account. ModerateAI never stores or manages passwords directly.</p>
+                  <div className="dso-pass-box" style={{ padding: '13px 15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11, marginBottom: 14 }}>
+                    <p className="dso-pass-box-title" style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13.5, marginBottom: 5 }}>Managed by Google</p>
+                    <p className="dso-pass-box-desc" style={{ color: 'rgba(255,255,255,0.38)', fontSize: 12.5, lineHeight: 1.6 }}>Your password is controlled by your Google account. ModerateAI never stores or manages passwords directly.</p>
                   </div>
                   <span className="badge-gray" style={{ marginBottom: 14, display: 'inline-block' }}>Read only</span>
                   <a href="https://myaccount.google.com/security" target="_blank" rel="noopener noreferrer" className="btn-ghost">
@@ -790,12 +818,12 @@ export default function SettingsPage() {
                 <div className="s-card">
                   <p className="card-title">Two-step verification</p>
                   <p className="card-sub">Managed via your Google account</p>
-                  <div style={{ padding: '13px 15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11, marginBottom: 11 }}>
-                    <p style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13.5, marginBottom: 5 }}>Managed by Google</p>
-                    <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 12.5, lineHeight: 1.6 }}>ModerateAI uses Google OAuth and cannot access your Google security settings. Manage 2FA directly from Google.</p>
+                  <div className="dso-managed-box" style={{ padding: '13px 15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11, marginBottom: 11 }}>
+                    <p className="dso-managed-box-title" style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13.5, marginBottom: 5 }}>Managed by Google</p>
+                    <p className="dso-managed-box-desc" style={{ color: 'rgba(255,255,255,0.38)', fontSize: 12.5, lineHeight: 1.6 }}>ModerateAI uses Google OAuth and cannot access your Google security settings. Manage 2FA directly from Google.</p>
                   </div>
                   <div className="warn-box" style={{ marginBottom: 14 }}>
-                    <span style={{ fontSize: 15 }}>⚠️</span>
+                    <span className="dso-warn-emoji" style={{ fontSize: 15 }}>⚠️</span>
                     <p style={{ color: '#FBBF24', fontSize: 12.5, lineHeight: 1.6 }}>We strongly recommend enabling 2-step verification on your Google account for maximum security.</p>
                   </div>
                   <a href="https://myaccount.google.com/signinoptions/two-step-verification" target="_blank" rel="noopener noreferrer" className="btn-ghost">
@@ -807,12 +835,12 @@ export default function SettingsPage() {
                   <p className="card-title">Active sessions</p>
                   <p className="card-sub">Devices currently signed in</p>
                   <div className="session-card">
-                    <div style={{ width: 34, height: 34, background: 'rgba(255,255,255,0.05)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div className="dso-session-icon" style={{ width: 34, height: 34, background: 'rgba(255,255,255,0.05)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Monitor size={15} color="rgba(255,255,255,0.55)" />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <p style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5 }}>Current browser</p>
-                      <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5 }}>Signed in · {memberSince || 'Recently'}</p>
+                      <p className="dso-session-title" style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5 }}>Current browser</p>
+                      <p className="dso-session-sub" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5 }}>Signed in · {memberSince || 'Recently'}</p>
                     </div>
                     <span className="badge-green">This device</span>
                   </div>
@@ -832,14 +860,14 @@ export default function SettingsPage() {
                       { title: 'YouTube token encryption', desc: 'Access tokens encrypted with AES-256',       locked: true  },
                       { title: 'Comment data encryption',  desc: 'Hidden comments stored with encryption',     locked: false },
                     ].map((item) => (
-                      <div key={item.title} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11 }}>
+                      <div key={item.title} className="dso-enc-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 11 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                          <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(52,211,153,0.09)', border: '1px solid rgba(52,211,153,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <div className="dso-enc-icon-wrap" style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(52,211,153,0.09)', border: '1px solid rgba(52,211,153,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <Key size={14} color="#34D399" />
                           </div>
                           <div>
-                            <p style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5 }}>{item.title}</p>
-                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5 }}>{item.desc}</p>
+                            <p className="dso-enc-title" style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5 }}>{item.title}</p>
+                            <p className="dso-enc-desc" style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5 }}>{item.desc}</p>
                           </div>
                         </div>
                         {item.locked
@@ -851,11 +879,11 @@ export default function SettingsPage() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginTop: 14, padding: '13px 15px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.14)', borderRadius: 11 }}>
-                    <p style={{ color: '#34D399', fontWeight: 700, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div className="dso-enc-footer" style={{ marginTop: 14, padding: '13px 15px', background: 'rgba(52,211,153,0.05)', border: '1px solid rgba(52,211,153,0.14)', borderRadius: 11 }}>
+                    <p className="dso-enc-footer-title" style={{ color: '#34D399', fontWeight: 700, fontSize: 12.5, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Lock size={12} /> Your data is secure
                     </p>
-                    <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
+                    <p className="dso-enc-footer-desc" style={{ color: 'rgba(255,255,255,0.38)', fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
                       ModerateAI uses AES-256 encryption. YouTube credentials are never stored in plain text.
                     </p>
                   </div>

@@ -364,47 +364,69 @@ export default function SettingsPage() {
           .r-bottom-nav{display:flex!important;}
 
           html{height:100%!important;}
-          body{height:100%!important;overflow-y:auto!important;}
+          body{
+            height:100%!important;
+            overflow-y:auto!important;
+            overflow-x:hidden!important;
+          }
 
+          /* Full width, no extra height gaps */
           .r-bg{
             display:block!important;
             width:100vw!important;
             max-width:100vw!important;
             overflow-x:hidden!important;
+            min-height:100vh!important;
             height:auto!important;
-            min-height:100%!important;
           }
           .r-main{
             margin-left:0!important;
             width:100vw!important;
             max-width:100vw!important;
             display:block!important;
-            padding-bottom:76px!important;
+            padding-bottom:80px!important;
             overflow-x:hidden!important;
+            /* kill any min-height that creates empty space */
+            min-height:0!important;
+            height:auto!important;
           }
 
-          /* Tight padding — no empty space */
+          /* Tight content — no dead space below cards */
           .r-content{
             padding:16px 14px 20px!important;
             box-sizing:border-box!important;
+            width:100%!important;
+            /* prevent content from stretching to spoofed viewport height */
+            min-height:0!important;
+            height:auto!important;
           }
 
-          /* Single column, no wasted horizontal space */
-          .cards-grid{grid-template-columns:1fr!important;}
+          /* Single column */
+          .cards-grid{
+            display:grid!important;
+            grid-template-columns:1fr!important;
+            gap:14px!important;
+            height:auto!important;
+          }
           .card-full{grid-column:1!important;}
-          .s-card{padding:20px!important;border-radius:14px!important;}
+          .s-card{
+            padding:20px!important;
+            border-radius:14px!important;
+            height:auto!important;
+          }
 
           /* Headings */
-          .r-content h1{font-size:26px!important;}
-          .r-content p{font-size:14px!important;}
+          .r-content h1{font-size:26px!important;line-height:1.2!important;}
+          .r-content>div>p{font-size:14px!important;}
 
-          /* Tabs — big and scrollable */
+          /* Tabs */
           .tabs-row{
             gap:8px!important;
             flex-wrap:nowrap!important;
             overflow-x:auto!important;
             margin-bottom:20px!important;
             padding-right:8px!important;
+            height:auto!important;
           }
           .tab-btn{
             padding:14px 22px!important;

@@ -257,10 +257,6 @@ export default function AnalyticsPage() {
                 <input className="search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search comments, users..." />
               </div>
 
-              <button className="connect-btn desktop-only" onClick={handleYouTubeConnect}>
-                <Youtube size={16} /> Connect YouTube
-              </button>
-
               <button className="desktop-only" onClick={() => router.push('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid #27272A', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
                   {user?.photoURL ? (

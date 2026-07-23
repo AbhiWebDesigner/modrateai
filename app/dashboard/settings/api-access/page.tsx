@@ -7,19 +7,17 @@ import {
   Shield, ChevronRight, ChevronLeft, Copy, Eye, EyeOff,
   ExternalLink, Check, Lock, Wifi, WifiOff, RotateCcw,
   Trash2, RefreshCw, AlertTriangle, Activity, Clock, Zap, BarChart2, X,
-  Cloud, Server, Loader2, ImageIcon, Key,
+  Cloud, Server, Loader2, Key,
   TrendingUp, MessageSquare, Video, ArrowUpRight, CheckCircle2,
   AlertCircle, Cpu, Radio, Tv2 as Youtube,
+  Play, Pause, Volume2, VolumeX, Maximize, SkipForward,
 } from "lucide-react";
 
 // ─── YouTube OAuth redirect ───────────────────────────────────────────────────
 
 function redirectToYouTubeAuth() {
   const uid = getAuth().currentUser?.uid;
-  if (!uid) {
-    console.error("[api-access] No authenticated user — cannot start OAuth.");
-    return;
-  }
+  if (!uid) { console.error("[api-access] No authenticated user."); return; }
   window.location.href = `/api/auth/youtube?uid=${encodeURIComponent(uid)}`;
 }
 
@@ -29,6 +27,7 @@ type APIMethod   = "managed" | "custom";
 type LogStatus   = "success" | "warning" | "error" | "info";
 type WizardStep  = "tutorial" | "gcp" | "enable" | "oauth" | "credentials" | "connect";
 type HealthState = "healthy" | "warning" | "offline" | "loading";
+type GraphRange  = "daily" | "weekly" | "monthly";
 
 interface ActivityLog {
   id: string;
@@ -36,6 +35,8 @@ interface ActivityLog {
   action: string;
   status: LogStatus;
 }
+
+interface UsagePoint { label: string; value: number; }
 
 interface ManagedUsage {
   plan: "free_trial" | "pro" | "agency";
@@ -54,6 +55,9 @@ interface ManagedUsage {
   latencyMs: number;
   connectedChannels: number;
   billingStatus: "active" | "overdue" | "trial";
+  channelName?: string;
+  channelAvatar?: string;
+  usageGraph?: { daily: UsagePoint[]; weekly: UsagePoint[]; monthly: UsagePoint[] };
 }
 
 interface CustomProjectInfo {
@@ -85,8 +89,6 @@ const APP_ORIGIN =
 const REDIRECT_URI = `${APP_ORIGIN}/api/auth/youtube/callback`;
 const JS_ORIGIN    = APP_ORIGIN;
 
-// ─── Plan limits ──────────────────────────────────────────────────────────────
-
 const PLAN_LIMITS: Record<string, number> = {
   free_trial: 250,
   pro: 1900,
@@ -96,7 +98,6 @@ const PLAN_LIMITS: Record<string, number> = {
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
 async function fetchAPIStatus(): Promise<APIStatus> {
-  // Primary: read youtube_connected from Firestore (same field as Dashboard)
   try {
     const auth = getAuth();
     const uid  = auth.currentUser?.uid;
@@ -108,7 +109,6 @@ async function fetchAPIStatus(): Promise<APIStatus> {
         const connected = (data?.youtube_connected as boolean) || false;
         const plan      = (data?.plan as string) || "free_trial";
         const planLabel = plan === "pro" ? "Pro" : plan === "agency" ? "Agency" : "Free Trial";
-
         if (connected) {
           return {
             method:           (data?.api_method as APIMethod) || "managed",
@@ -130,18 +130,18 @@ async function fetchAPIStatus(): Promise<APIStatus> {
               latencyMs:         (data?.latency_ms         as number) ?? 0,
               connectedChannels: (data?.connected_channels as number) ?? 1,
               billingStatus:     (data?.billing_status     as ManagedUsage["billingStatus"]) || "trial",
+              channelName:       (data?.channel_name       as string) || undefined,
+              channelAvatar:     (data?.channel_avatar     as string) || undefined,
+              usageGraph:        (data?.usage_graph        as ManagedUsage["usageGraph"]) || undefined,
             },
           };
         }
-        // User exists but not connected
         return { method: "managed", youtubeConnected: false };
       }
     }
   } catch (e) {
     console.warn("[api-access] Firestore read failed, falling back to REST", e);
   }
-
-  // Fallback: REST endpoint (if it exists)
   const res = await fetch("/api/settings/api-access", { cache: "no-store" });
   if (!res.ok) throw new Error(`${res.status}`);
   return res.json();
@@ -186,6 +186,12 @@ async function fetchActivityLogs(): Promise<ActivityLog[]> {
   return res.json();
 }
 
+async function fetchUsageGraph(range: GraphRange): Promise<UsagePoint[]> {
+  const res = await fetch(`/api/settings/api-access/usage?range=${range}`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 function fmt(iso: string | null, opts?: Intl.DateTimeFormatOptions): string {
@@ -208,7 +214,13 @@ function fmtRelative(iso: string | null): string {
   } catch { return "—"; }
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+function fmtSeconds(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+// ─── Primitives ───────────────────────────────────────────────────────────────
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-lg bg-white/[0.06] ${className}`} />;
@@ -219,25 +231,16 @@ function SkeletonCard() {
     <div className="rounded-2xl border border-white/8 bg-white/[0.025] overflow-hidden">
       <div className="px-5 py-4 border-b border-white/8 flex items-center gap-3">
         <Skeleton className="w-8 h-8 rounded-xl" />
-        <div className="space-y-1.5 flex-1">
-          <Skeleton className="h-3.5 w-36" />
-          <Skeleton className="h-2.5 w-52" />
-        </div>
+        <div className="space-y-1.5 flex-1"><Skeleton className="h-3.5 w-36" /><Skeleton className="h-2.5 w-52" /></div>
         <Skeleton className="h-6 w-20 rounded-full" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="px-4 py-3.5 space-y-2">
-            <Skeleton className="h-2 w-20" />
-            <Skeleton className="h-4 w-16" />
-          </div>
+          <div key={i} className="px-4 py-3.5 space-y-2"><Skeleton className="h-2 w-20" /><Skeleton className="h-4 w-16" /></div>
         ))}
       </div>
       <div className="px-5 py-4 border-t border-white/5 space-y-2">
-        <div className="flex justify-between">
-          <Skeleton className="h-2 w-24" />
-          <Skeleton className="h-2 w-16" />
-        </div>
+        <div className="flex justify-between"><Skeleton className="h-2 w-24" /><Skeleton className="h-2 w-16" /></div>
         <Skeleton className="h-1.5 w-full rounded-full" />
       </div>
     </div>
@@ -247,9 +250,7 @@ function SkeletonCard() {
 function SkeletonLogs() {
   return (
     <div className="rounded-2xl border border-white/8 bg-white/[0.025] overflow-hidden">
-      <div className="px-5 py-4 border-b border-white/8">
-        <Skeleton className="h-3.5 w-20" />
-      </div>
+      <div className="px-5 py-4 border-b border-white/8"><Skeleton className="h-3.5 w-20" /></div>
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 px-5 py-3 border-b border-white/5 last:border-0">
           <Skeleton className="h-5 w-14 rounded-full" />
@@ -261,8 +262,6 @@ function SkeletonLogs() {
   );
 }
 
-// ─── Primitives ───────────────────────────────────────────────────────────────
-
 function Spinner({ className = "w-4 h-4" }: { className?: string }) {
   return <Loader2 className={`${className} animate-spin`} />;
 }
@@ -273,10 +272,7 @@ function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => vo
       <AlertTriangle size={14} className="shrink-0" />
       <span className="flex-1 leading-snug">{message}</span>
       {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs font-semibold text-red-300 hover:text-red-200 underline underline-offset-2 transition-colors shrink-0"
-        >
+        <button onClick={onRetry} className="text-xs font-semibold text-red-300 hover:text-red-200 underline underline-offset-2 transition-colors shrink-0">
           Retry
         </button>
       )}
@@ -284,9 +280,7 @@ function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => vo
   );
 }
 
-function EmptyState({
-  icon: Icon, title, description,
-}: { icon: React.ElementType; title: string; description: string }) {
+function EmptyState({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) {
   return (
     <div className="flex flex-col items-center gap-3 py-10 text-center">
       <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
@@ -318,39 +312,21 @@ function HealthIndicator({ health }: { health: HealthState }) {
   );
 }
 
-// ─── Copy Button ──────────────────────────────────────────────────────────────
-
 function CopyButton({ value, label }: { value: string; label?: string }) {
   const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const handleCopy = () => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   return (
-    <button
-      onClick={handleCopy}
+    <button onClick={handleCopy}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all duration-200 shrink-0
-        ${copied
-          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/25"
-          : "bg-purple-600/20 text-purple-300 hover:bg-purple-600/35 border border-purple-500/25"}`}
-    >
+        ${copied ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/25" : "bg-purple-600/20 text-purple-300 hover:bg-purple-600/35 border border-purple-500/25"}`}>
       {copied ? <><Check size={10} /> Copied</> : <><Copy size={10} /> {label ?? "Copy"}</>}
     </button>
   );
 }
 
-// ─── Quota Progress Bar ───────────────────────────────────────────────────────
-
-function QuotaBar({ used, total, label, resetLabel }: {
-  used: number; total: number; label?: string; resetLabel?: string;
-}) {
+function QuotaBar({ used, total, label, resetLabel }: { used: number; total: number; label?: string; resetLabel?: string }) {
   const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
-  const barColor =
-    pct >= 90 ? "from-red-600 to-red-400" :
-    pct >= 70 ? "from-yellow-600 to-yellow-400" :
-    "from-purple-600 to-purple-400";
-
+  const barColor = pct >= 90 ? "from-red-600 to-red-400" : pct >= 70 ? "from-yellow-600 to-yellow-400" : "from-purple-600 to-purple-400";
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center text-[10px] text-white/30">
@@ -358,10 +334,7 @@ function QuotaBar({ used, total, label, resetLabel }: {
         <span className="font-mono">{used.toLocaleString()} / {total.toLocaleString()}{resetLabel ? ` · ${resetLabel}` : ""}</span>
       </div>
       <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
-        <div
-          className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-700`}
-          style={{ width: `${pct}%` }}
-        />
+        <div className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-700`} style={{ width: `${pct}%` }} />
       </div>
       {pct >= 90 && (
         <p className="text-[10px] text-red-400/80 flex items-center gap-1">
@@ -372,17 +345,12 @@ function QuotaBar({ used, total, label, resetLabel }: {
   );
 }
 
-// ─── Stat Cell ────────────────────────────────────────────────────────────────
-
-function StatCell({ label, value, icon, valueClass = "text-white", border = "" }: {
-  label: string; value: string; icon: React.ReactNode;
-  valueClass?: string; border?: string;
+function StatCell({ label, value, icon, valueClass = "text-white" }: {
+  label: string; value: string; icon: React.ReactNode; valueClass?: string;
 }) {
   return (
-    <div className={`px-4 py-3.5 flex flex-col gap-1.5 ${border}`}>
-      <div className="flex items-center gap-1.5 text-[10px] text-white/30 font-medium uppercase tracking-wide">
-        {icon}{label}
-      </div>
+    <div className="px-4 py-3.5 flex flex-col gap-1.5">
+      <div className="flex items-center gap-1.5 text-[10px] text-white/30 font-medium uppercase tracking-wide">{icon}{label}</div>
       <p className={`text-sm font-semibold truncate ${valueClass}`}>{value}</p>
     </div>
   );
@@ -391,17 +359,12 @@ function StatCell({ label, value, icon, valueClass = "text-white", border = "" }
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 
 const STEP_LABELS: Record<WizardStep, string> = {
-  tutorial:    "Tutorial",
-  gcp:         "Cloud Project",
-  enable:      "Enable API",
-  oauth:       "OAuth Client",
-  credentials: "Credentials",
-  connect:     "Connect",
+  tutorial: "Tutorial", gcp: "Cloud Project", enable: "Enable API",
+  oauth: "OAuth Client", credentials: "Credentials", connect: "Connect",
 };
-
 const WIZARD_FLOW: WizardStep[] = ["tutorial", "gcp", "enable", "oauth", "credentials", "connect"];
 
-function StepIndicator({ current }: { current: number }) {
+function StepIndicator({ current, videoWatched }: { current: number; videoWatched: boolean }) {
   const labels = WIZARD_FLOW.map((s) => STEP_LABELS[s]);
   return (
     <div className="w-full overflow-x-auto scrollbar-none -mx-1 px-1 pb-1">
@@ -410,25 +373,19 @@ function StepIndicator({ current }: { current: number }) {
           const num    = i + 1;
           const done   = num < current;
           const active = num === current;
+          const locked = num > 1 && !videoWatched;
           return (
             <div key={label} className="flex items-start">
               <div className="flex flex-col items-center gap-1.5">
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300
-                    ${done   ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-900/40" : ""}
-                    ${active ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40 ring-4 ring-purple-500/15" : ""}
-                    ${!done && !active ? "bg-transparent border-white/15 text-white/25" : ""}`}
-                >
-                  {done ? (
-                    <span className="inline-flex items-center justify-center">
-                      <Check size={12} className="animate-[scale-in_0.2s_ease-out]" />
-                    </span>
-                  ) : num}
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300
+                  ${done   ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-900/40" : ""}
+                  ${active ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40 ring-4 ring-purple-500/15" : ""}
+                  ${locked && !done && !active ? "bg-transparent border-white/8 text-white/15" : ""}
+                  ${!locked && !done && !active ? "bg-transparent border-white/15 text-white/25" : ""}`}>
+                  {done ? <Check size={12} /> : locked ? <Lock size={10} /> : num}
                 </div>
-                <span
-                  className={`text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors duration-300
-                    ${active ? "text-purple-300" : done ? "text-emerald-500" : "text-white/20"}`}
-                >
+                <span className={`text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors duration-300
+                  ${active ? "text-purple-300" : done ? "text-emerald-500" : locked ? "text-white/12" : "text-white/20"}`}>
                   {label}
                 </span>
               </div>
@@ -443,63 +400,44 @@ function StepIndicator({ current }: { current: number }) {
   );
 }
 
-// ─── Nav Buttons ──────────────────────────────────────────────────────────────
-
 function NavButtons({ onPrev, onNext, nextLabel = "Continue", nextDisabled = false, loading = false }: {
-  onPrev?: () => void; onNext?: () => void;
-  nextLabel?: string; nextDisabled?: boolean; loading?: boolean;
+  onPrev?: () => void; onNext?: () => void; nextLabel?: string; nextDisabled?: boolean; loading?: boolean;
 }) {
   return (
     <div className="flex gap-2.5 pt-2">
       {onPrev && (
-        <button
-          onClick={onPrev}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-medium text-sm transition-all duration-200"
-        >
+        <button onClick={onPrev}
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-medium text-sm transition-all duration-200">
           <ChevronLeft size={15} /> Back
         </button>
       )}
       {onNext && (
-        <button
-          onClick={onNext}
-          disabled={nextDisabled || loading}
+        <button onClick={onNext} disabled={nextDisabled || loading}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
-            ${!nextDisabled && !loading
-              ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]"
-              : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}
-        >
-          {loading
-            ? <><Spinner className="w-3.5 h-3.5" /> Processing…</>
-            : <>{nextLabel} <ChevronRight size={15} /></>}
+            ${!nextDisabled && !loading ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]" : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}>
+          {loading ? <><Spinner className="w-3.5 h-3.5" /> Processing…</> : <>{nextLabel} <ChevronRight size={15} /></>}
         </button>
       )}
     </div>
   );
 }
 
-// ─── Screenshot Placeholder ───────────────────────────────────────────────────
+// ─── Real Video Player ────────────────────────────────────────────────────────
 
-function ScreenshotPlaceholder({ label }: { label: string }) {
-  return (
-    <div className="w-full rounded-xl border border-white/8 bg-[#0d0c14] overflow-hidden aspect-[16/5] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-2 text-center px-4">
-        <ImageIcon size={18} className="text-white/12" />
-        <p className="text-[10px] text-white/18 font-medium">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── Step 1: Tutorial ─────────────────────────────────────────────────────────
-
-function TutorialStep({ onNext, onPrev }: { onNext: () => void; onPrev?: () => void }) {
-  const videoRef               = useRef<HTMLVideoElement>(null);
-  const [hasVideo, setHasVideo] = useState<boolean | null>(null);
-  const [watched,  setWatched]  = useState(false);
-  const [playing,  setPlaying]  = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const isDev = process.env.NODE_ENV === "development";
+function VideoPlayer({ onWatched }: { onWatched: () => void }) {
+  const videoRef           = useRef<HTMLVideoElement>(null);
+  const containerRef       = useRef<HTMLDivElement>(null);
+  const [playing,   setPlaying]   = useState(false);
+  const [muted,     setMuted]     = useState(false);
+  const [progress,  setProgress]  = useState(0);
+  const [duration,  setDuration]  = useState(0);
+  const [volume,    setVolume]    = useState(1);
+  const [watched,   setWatched]   = useState(false);
+  const [buffered,  setBuffered]  = useState(0);
+  const [showCtrl,  setShowCtrl]  = useState(true);
+  const [hasVideo,  setHasVideo]  = useState<boolean | null>(null);
+  const [ended,     setEnded]     = useState(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch("/videos/google-cloud-setup.mp4", { method: "HEAD" })
@@ -507,100 +445,337 @@ function TutorialStep({ onNext, onPrev }: { onNext: () => void; onPrev?: () => v
       .catch(() => setHasVideo(false));
   }, []);
 
-  const canContinue = isDev || hasVideo === false || watched;
+  const showControls = () => {
+    setShowCtrl(true);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (playing) hideTimer.current = setTimeout(() => setShowCtrl(false), 3000);
+  };
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (playing) { videoRef.current.pause(); setPlaying(false); setShowCtrl(true); }
+    else { videoRef.current.play(); setPlaying(true); }
+    showControls();
+  };
 
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
     setProgress(videoRef.current.currentTime);
-    if (videoRef.current.currentTime / videoRef.current.duration > 0.9) {
+    const buf = videoRef.current.buffered;
+    if (buf.length > 0) setBuffered(buf.end(buf.length - 1));
+    if (!watched && videoRef.current.currentTime / videoRef.current.duration > 0.9) {
       setWatched(true);
+      onWatched();
     }
   };
 
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, "0")}`;
+  const handleEnded = () => {
+    setPlaying(false); setEnded(true); setShowCtrl(true);
+    if (!watched) { setWatched(true); onWatched(); }
   };
 
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!videoRef.current || duration === 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct  = (e.clientX - rect.left) / rect.width;
+    videoRef.current.currentTime = pct * duration;
+    showControls();
+  };
+
+  const changeVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = parseFloat(e.target.value);
+    setVolume(v);
+    if (videoRef.current) videoRef.current.volume = v;
+    setMuted(v === 0);
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    const newMuted = !muted;
+    setMuted(newMuted);
+    videoRef.current.muted = newMuted;
+  };
+
+  const fullscreen = () => {
+    if (!containerRef.current) return;
+    if (document.fullscreenElement) document.exitFullscreen();
+    else containerRef.current.requestFullscreen?.();
+  };
+
+  const skip10 = () => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = Math.min(videoRef.current.currentTime + 10, duration);
+    showControls();
+  };
+
+  const pct      = duration > 0 ? (progress / duration) * 100 : 0;
+  const bufPct   = duration > 0 ? (buffered / duration) * 100 : 0;
+
+  // No video available
+  if (hasVideo === false) {
+    return (
+      <div className="relative w-full aspect-video bg-[#0a0a0f] rounded-xl border border-white/8 flex flex-col items-center justify-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+          <Video size={20} className="text-purple-400" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-semibold text-white/50">Tutorial video coming soon</p>
+          <p className="text-xs text-white/25 mt-1">Steps 2–6 will unlock once the video is available.</p>
+        </div>
+        {process.env.NODE_ENV === "development" && (
+          <button
+            onClick={() => { setWatched(true); onWatched(); }}
+            className="mt-2 px-4 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/25 text-purple-300 text-xs font-semibold hover:bg-purple-600/30 transition-all">
+            Dev: Skip Tutorial
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (hasVideo === null) {
+    return (
+      <div className="relative w-full aspect-video bg-[#0a0a0f] rounded-xl border border-white/8 flex items-center justify-center">
+        <Spinner className="w-6 h-6 text-white/20" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-white/8 group cursor-pointer select-none"
+      onMouseMove={showControls}
+      onClick={togglePlay}
+    >
+      <video
+        ref={videoRef}
+        src="/videos/google-cloud-setup.mp4"
+        className="w-full h-full object-cover"
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
+        onEnded={handleEnded}
+        preload="metadata"
+      />
+
+      {/* Big play overlay when paused */}
+      {!playing && !ended && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-200">
+          <div className="w-16 h-16 rounded-full bg-purple-600/90 flex items-center justify-center shadow-2xl shadow-purple-900/60 hover:bg-purple-500/90 transition-all duration-200 hover:scale-105">
+            <Play size={22} className="text-white ml-1" fill="white" />
+          </div>
+        </div>
+      )}
+
+      {/* Replay overlay */}
+      {ended && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+              <RotateCcw size={18} className="text-white" />
+            </div>
+            <p className="text-white/60 text-sm font-medium">Replay</p>
+          </div>
+        </div>
+      )}
+
+      {/* Watched badge */}
+      {watched && (
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 backdrop-blur-sm text-white text-[10px] font-semibold">
+          <Check size={10} /> Tutorial Complete
+        </div>
+      )}
+
+      {/* Controls bar */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent px-4 pb-3 pt-8 transition-opacity duration-300 ${showCtrl ? "opacity-100" : "opacity-0"}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Progress track */}
+        <div
+          className="relative w-full h-1 bg-white/20 rounded-full mb-3 cursor-pointer group/bar"
+          onClick={seek}
+        >
+          <div className="absolute inset-y-0 left-0 bg-white/20 rounded-full" style={{ width: `${bufPct}%` }} />
+          <div className="absolute inset-y-0 left-0 bg-purple-500 rounded-full transition-all duration-100" style={{ width: `${pct}%` }} />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/bar:opacity-100 transition-opacity duration-150"
+            style={{ left: `calc(${pct}% - 6px)` }}
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Play/Pause */}
+          <button onClick={togglePlay} className="text-white/80 hover:text-white transition-colors">
+            {playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+          </button>
+
+          {/* Skip 10s */}
+          <button onClick={skip10} className="text-white/50 hover:text-white/80 transition-colors">
+            <SkipForward size={14} />
+          </button>
+
+          {/* Volume */}
+          <div className="flex items-center gap-1.5 group/vol">
+            <button onClick={toggleMute} className="text-white/60 hover:text-white transition-colors">
+              {muted || volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            </button>
+            <input
+              type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume}
+              onChange={changeVolume}
+              className="w-0 group-hover/vol:w-16 overflow-hidden transition-all duration-200 accent-purple-500 cursor-pointer"
+            />
+          </div>
+
+          {/* Time */}
+          <span className="text-[10px] text-white/40 font-mono ml-auto">
+            {fmtSeconds(progress)} / {fmtSeconds(duration)}
+          </span>
+
+          {/* Fullscreen */}
+          <button onClick={fullscreen} className="text-white/60 hover:text-white transition-colors">
+            <Maximize size={13} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Usage Graph ──────────────────────────────────────────────────────────────
+
+function UsageGraph({ managed }: { managed: ManagedUsage }) {
+  const [range,  setRange]  = useState<GraphRange>("daily");
+  const [points, setPoints] = useState<UsagePoint[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Try backend first
+      const data = await fetchUsageGraph(range);
+      if (data.length > 0) { setPoints(data); return; }
+      // Fallback to embedded graph data from Firestore
+      const embedded = managed.usageGraph?.[range];
+      if (embedded && embedded.length > 0) { setPoints(embedded); return; }
+      setPoints([]);
+    } catch {
+      const embedded = managed.usageGraph?.[range];
+      setPoints(embedded ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, [range, managed.usageGraph]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const max    = Math.max(...points.map((p) => p.value), 1);
+  const total  = points.reduce((s, p) => s + p.value, 0);
+  const avgVal = points.length > 0 ? Math.round(total / points.length) : 0;
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
+      <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={13} className="text-purple-400" />
+          <p className="text-sm font-semibold text-white/70">Usage</p>
+        </div>
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/8">
+          {(["daily", "weekly", "monthly"] as GraphRange[]).map((r) => (
+            <button key={r} onClick={() => setRange(r)}
+              className={`px-3 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wide transition-all duration-200
+                ${range === r ? "bg-purple-600 text-white shadow-sm shadow-purple-900/40" : "text-white/30 hover:text-white/60"}`}>
+              {r === "daily" ? "24h" : r === "weekly" ? "7d" : "30d"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="px-5 py-10 flex items-center justify-center">
+          <Spinner className="w-5 h-5 text-white/20" />
+        </div>
+      ) : points.length === 0 ? (
+        <EmptyState icon={BarChart2} title="No usage data yet" description="Data appears here once moderation activity is recorded." />
+      ) : (
+        <div className="px-5 pt-5 pb-4">
+          {/* Summary row */}
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            {[
+              { label: "Total",   value: total.toLocaleString()  },
+              { label: "Average", value: avgVal.toLocaleString() },
+              { label: "Peak",    value: max.toLocaleString()    },
+            ].map((s) => (
+              <div key={s.label} className="rounded-xl bg-white/[0.03] border border-white/6 px-3 py-2.5">
+                <p className="text-[10px] text-white/25 uppercase tracking-widest mb-1">{s.label}</p>
+                <p className="text-base font-bold text-white">{s.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Bar chart */}
+          <div className="flex items-end gap-1 h-24">
+            {points.map((p, i) => {
+              const h = max > 0 ? Math.max(4, (p.value / max) * 96) : 4;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1 group/bar relative">
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover/bar:opacity-100 pointer-events-none transition-opacity duration-150">
+                    <div className="bg-[#1a1825] border border-white/15 rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-xl">
+                      <p className="text-[10px] font-semibold text-white">{p.value.toLocaleString()}</p>
+                      <p className="text-[9px] text-white/35 mt-0.5">{p.label}</p>
+                    </div>
+                  </div>
+                  <div
+                    className="w-full rounded-t-md bg-gradient-to-t from-purple-700 to-purple-500 group-hover/bar:from-purple-600 group-hover/bar:to-purple-400 transition-all duration-200"
+                    style={{ height: `${h}%` }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* X-axis labels — show only first, middle, last */}
+          <div className="flex items-center mt-2">
+            {points.map((p, i) => {
+              const show = i === 0 || i === Math.floor(points.length / 2) || i === points.length - 1;
+              return (
+                <div key={i} className="flex-1 text-center">
+                  {show && <span className="text-[9px] text-white/20 font-mono">{p.label}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Step 1: Tutorial ─────────────────────────────────────────────────────────
+
+function TutorialStep({ onNext, onPrev, onWatched, watched }: {
+  onNext: () => void; onPrev?: () => void; onWatched: () => void; watched: boolean;
+}) {
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Setup tutorial</h2>
         <p className="text-white/40 text-xs leading-relaxed">
-          Watch this walkthrough before connecting your Google Cloud Project.
+          Watch this walkthrough before connecting your Google Cloud Project. Steps 2–6 unlock after completion.
         </p>
       </div>
 
-      <div className="rounded-xl border border-white/8 bg-[#0d0c14] overflow-hidden">
-        <div className="relative aspect-video flex items-center justify-center bg-black/40">
-          {hasVideo === null && <Spinner className="w-5 h-5 text-white/20" />}
+      <VideoPlayer onWatched={onWatched} />
 
-          {hasVideo === false && (
-            <div className="flex flex-col items-center gap-3 text-center px-6">
-              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center">
-                <ImageIcon size={16} className="text-white/20" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white/35">Tutorial video coming soon</p>
-                <p className="text-xs text-white/20 mt-0.5">Development Mode — tutorial will be uploaded later.</p>
-              </div>
-            </div>
-          )}
-
-          {hasVideo === true && (
-            <>
-              <video
-                ref={videoRef}
-                src="/videos/google-cloud-setup.mp4"
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${playing ? "opacity-100" : "opacity-0"}`}
-                onEnded={() => setWatched(true)}
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
-              />
-              {!playing && (
-                <button
-                  onClick={() => { setPlaying(true); videoRef.current?.play(); }}
-                  className="relative z-10 w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center shadow-2xl shadow-purple-900/60 hover:bg-purple-500 transition-all duration-200 hover:scale-105"
-                >
-                  <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5 ml-0.5">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </button>
-              )}
-              {watched && (
-                <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold">
-                  <Check size={10} /> Tutorial Completed
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Progress bar — only when video exists and is playing */}
-        {hasVideo === true && playing && (
-          <div className="px-4 py-2.5 border-t border-white/8 flex items-center gap-3">
-            <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-purple-500 transition-all duration-300"
-                style={{ width: duration > 0 ? `${(progress / duration) * 100}%` : "0%" }}
-              />
-            </div>
-            <span className="text-[10px] font-mono text-white/25 shrink-0">
-              {formatTime(progress)} / {formatTime(duration)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {(isDev || hasVideo === false) && (
-        <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-purple-500/20 bg-purple-500/6 text-xs text-purple-400">
-          <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-          Development mode — tutorial auto-completed. Video will be added later.
+      {watched && (
+        <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/6 text-xs text-emerald-400">
+          <CheckCircle2 size={13} className="shrink-0" />
+          Tutorial complete — all steps are now unlocked.
         </div>
       )}
 
-      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Continue" nextDisabled={!canContinue} />
+      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Continue" nextDisabled={!watched} />
     </div>
   );
 }
@@ -613,49 +788,52 @@ function GCPStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void })
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Create a Google Cloud Project</h2>
         <p className="text-white/40 text-xs leading-relaxed">
-          You need a Google Cloud Project to generate API credentials. Create one if you don&apos;t have it already.
+          You need a Google Cloud Project to generate API credentials.
         </p>
       </div>
 
-      <ScreenshotPlaceholder label="Google Cloud Console · New Project" />
-
-      <div className="space-y-2.5">
-        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
-          <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
-          <ol className="space-y-2">
-            {[
-              "Go to console.cloud.google.com",
-              "Click the project dropdown at the top",
-              'Select "New Project"',
-              "Give it a name and click Create",
-            ].map((step, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
-                <span className="w-4 h-4 rounded-full bg-purple-600/20 border border-purple-500/25 text-purple-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                  {i + 1}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-
-        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-            <Cloud size={14} className="text-purple-400" />
+      {/* Screenshot */}
+      <div className="w-full rounded-xl border border-white/8 overflow-hidden">
+        <img
+          src="/screenshots/gcp-new-project.png"
+          alt="Google Cloud Console – New Project"
+          className="w-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+            (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+          }}
+        />
+        <div className="hidden w-full aspect-[16/5] bg-[#0d0c14]">
+          <div className="flex items-center justify-center w-full h-full">
+            <p className="text-[10px] text-white/15">Place screenshot at /public/screenshots/gcp-new-project.png</p>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white">Google Cloud Console</p>
-            <p className="text-[10px] text-white/30 font-mono">console.cloud.google.com</p>
-          </div>
-          <a
-            href="https://console.cloud.google.com/projectcreate"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
-          >
-            Open <ExternalLink size={10} />
-          </a>
         </div>
+      </div>
+
+      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
+        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
+        <ol className="space-y-2">
+          {["Go to console.cloud.google.com", "Click the project dropdown at the top", 'Select "New Project"', "Give it a name and click Create"].map((step, i) => (
+            <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
+              <span className="w-4 h-4 rounded-full bg-purple-600/20 border border-purple-500/25 text-purple-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
+          <Cloud size={14} className="text-purple-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-white">Google Cloud Console</p>
+          <p className="text-[10px] text-white/30 font-mono">console.cloud.google.com</p>
+        </div>
+        <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
+          Open <ExternalLink size={10} />
+        </a>
       </div>
 
       <div className="flex items-center gap-2 text-[10px] text-white/25">
@@ -674,49 +852,43 @@ function EnableStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Enable YouTube Data API v3</h2>
-        <p className="text-white/40 text-xs leading-relaxed">
-          Find and enable the YouTube Data API v3 in the API Library. Required before credentials will work.
-        </p>
+        <p className="text-white/40 text-xs leading-relaxed">Find and enable the YouTube Data API v3 in the API Library.</p>
       </div>
 
-      <ScreenshotPlaceholder label="Google Cloud API Library · YouTube Data API v3" />
-
-      <div className="space-y-2.5">
-        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
-          <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
-          <ol className="space-y-2">
-            {[
-              "In the Cloud Console, open APIs & Services → Library",
-              'Search for "YouTube Data API v3"',
-              "Click the result and press Enable",
-            ].map((step, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
-                <span className="w-4 h-4 rounded-full bg-red-500/15 border border-red-500/20 text-red-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                  {i + 1}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ol>
-        </div>
-
-        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-            <Youtube size={14} className="text-red-400" />
+      <div className="w-full rounded-xl border border-white/8 overflow-hidden">
+        <img src="/screenshots/gcp-enable-api.png" alt="Google Cloud API Library – YouTube Data API v3" className="w-full object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }} />
+        <div className="hidden w-full aspect-[16/5] bg-[#0d0c14]">
+          <div className="flex items-center justify-center w-full h-full">
+            <p className="text-[10px] text-white/15">Place screenshot at /public/screenshots/gcp-enable-api.png</p>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white">YouTube Data API v3</p>
-            <p className="text-[10px] text-white/30">Search in the API Library, then click Enable.</p>
-          </div>
-          <a
-            href="https://console.cloud.google.com/apis/library/youtube.googleapis.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
-          >
-            Open <ExternalLink size={10} />
-          </a>
         </div>
+      </div>
+
+      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
+        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
+        <ol className="space-y-2">
+          {["In the Cloud Console, open APIs & Services → Library", 'Search for "YouTube Data API v3"', "Click the result and press Enable"].map((step, i) => (
+            <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
+              <span className="w-4 h-4 rounded-full bg-red-500/15 border border-red-500/20 text-red-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+              {step}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+          <Youtube size={14} className="text-red-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-white">YouTube Data API v3</p>
+          <p className="text-[10px] text-white/30">Search in the API Library, then click Enable.</p>
+        </div>
+        <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
+          Open <ExternalLink size={10} />
+        </a>
       </div>
 
       <div className="flex items-center gap-2 text-[10px] text-white/25">
@@ -735,12 +907,18 @@ function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void 
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Create an OAuth 2.0 Client</h2>
-        <p className="text-white/40 text-xs leading-relaxed">
-          Set up an OAuth consent screen, then create a Web Application client. Add the values below exactly.
-        </p>
+        <p className="text-white/40 text-xs leading-relaxed">Set up an OAuth consent screen, then create a Web Application client.</p>
       </div>
 
-      <ScreenshotPlaceholder label="Google Cloud · OAuth Client Credentials" />
+      <div className="w-full rounded-xl border border-white/8 overflow-hidden">
+        <img src="/screenshots/gcp-oauth-client.png" alt="Google Cloud OAuth Client Credentials" className="w-full object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }} />
+        <div className="hidden w-full aspect-[16/5] bg-[#0d0c14]">
+          <div className="flex items-center justify-center w-full h-full">
+            <p className="text-[10px] text-white/15">Place screenshot at /public/screenshots/gcp-oauth-client.png</p>
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-2.5">
         <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
@@ -751,22 +929,15 @@ function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void 
             <p className="text-xs font-semibold text-white">OAuth Consent Screen</p>
             <p className="text-[10px] text-white/30">Configure as External and add your app details.</p>
           </div>
-          <a
-            href="https://console.cloud.google.com/apis/credentials/consent"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
-          >
+          <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
             Open <ExternalLink size={10} />
           </a>
         </div>
 
         <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest pt-1">Add these to your OAuth client</p>
 
-        {[
-          { label: "Authorized JavaScript Origin", value: JS_ORIGIN },
-          { label: "Authorized Redirect URI",       value: REDIRECT_URI },
-        ].map(({ label, value }) => (
+        {[{ label: "Authorized JavaScript Origin", value: JS_ORIGIN }, { label: "Authorized Redirect URI", value: REDIRECT_URI }].map(({ label, value }) => (
           <div key={label} className="space-y-1.5">
             <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">{label}</label>
             <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3">
@@ -784,12 +955,8 @@ function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void 
             <p className="text-xs font-semibold text-white">Create OAuth Client ID</p>
             <p className="text-[10px] text-white/30">Application type: Web application.</p>
           </div>
-          <a
-            href="https://console.cloud.google.com/apis/credentials"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
-          >
+          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
             Open <ExternalLink size={10} />
           </a>
         </div>
@@ -817,55 +984,45 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
 
   const handleSave = async () => {
     if (!canSave || saving) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await saveOAuthCredentials(clientId.trim(), clientSecret.trim());
-      onNext();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    setSaving(true); setError(null);
+    try { await saveOAuthCredentials(clientId.trim(), clientSecret.trim()); onNext(); }
+    catch (err) { setError(err instanceof Error ? err.message : "Failed to save. Please try again."); }
+    finally { setSaving(false); }
   };
 
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Paste your credentials</h2>
-        <p className="text-white/40 text-xs leading-relaxed">
-          Copy the Client ID and Client Secret from the OAuth client you just created.
-        </p>
+        <p className="text-white/40 text-xs leading-relaxed">Copy the Client ID and Client Secret from the OAuth client you just created.</p>
       </div>
 
-      <ScreenshotPlaceholder label="Google Cloud · OAuth Client · Credentials" />
+      <div className="w-full rounded-xl border border-white/8 overflow-hidden">
+        <img src="/screenshots/gcp-credentials.png" alt="Google Cloud OAuth Credentials" className="w-full object-cover"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }} />
+        <div className="hidden w-full aspect-[16/5] bg-[#0d0c14]">
+          <div className="flex items-center justify-center w-full h-full">
+            <p className="text-[10px] text-white/15">Place screenshot at /public/screenshots/gcp-credentials.png</p>
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-3">
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Client ID</label>
-          <input
-            type="text"
-            value={clientId}
-            onChange={(e) => setClientId(e.target.value)}
+          <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)}
             placeholder="xxxxxxxxxxxx-xxxxxxxx.apps.googleusercontent.com"
-            className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono"
-          />
+            className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono" />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Client Secret</label>
           <div className="relative">
-            <input
-              type={showSecret ? "text" : "password"}
-              value={clientSecret}
-              onChange={(e) => setClientSecret(e.target.value)}
+            <input type={showSecret ? "text" : "password"} value={clientSecret} onChange={(e) => setClientSecret(e.target.value)}
               placeholder="GOCSPX-xxxxxxxxxxxxxxxxxxxxx"
-              className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 pr-11 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono"
-            />
-            <button
-              onClick={() => setShowSecret(!showSecret)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors duration-150"
-            >
+              className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 pr-11 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono" />
+            <button onClick={() => setShowSecret(!showSecret)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors duration-150">
               {showSecret ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
@@ -880,23 +1037,14 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
       </div>
 
       <div className="flex gap-2.5 pt-1">
-        <button
-          onClick={onPrev}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-medium text-sm transition-all duration-200"
-        >
+        <button onClick={onPrev}
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-medium text-sm transition-all duration-200">
           <ChevronLeft size={15} /> Back
         </button>
-        <button
-          onClick={handleSave}
-          disabled={!canSave || saving}
+        <button onClick={handleSave} disabled={!canSave || saving}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
-            ${canSave && !saving
-              ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]"
-              : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}
-        >
-          {saving
-            ? <><Spinner className="w-3.5 h-3.5" /> Saving…</>
-            : <><Lock size={13} /> Save & Continue</>}
+            ${canSave && !saving ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]" : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}>
+          {saving ? <><Spinner className="w-3.5 h-3.5" /> Saving…</> : <><Lock size={13} /> Save & Continue</>}
         </button>
       </div>
     </div>
@@ -907,14 +1055,11 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
 
 function ConnectStep({ onPrev }: { onPrev?: () => void }) {
   const [connecting, setConnecting] = useState(false);
-
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Connect YouTube</h2>
-        <p className="text-white/40 text-xs leading-relaxed">
-          Authorize ModerateAI to read and moderate comments on your YouTube channel.
-        </p>
+        <p className="text-white/40 text-xs leading-relaxed">Authorize ModerateAI to read and moderate comments on your YouTube channel.</p>
       </div>
 
       <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-8 flex flex-col items-center gap-5 text-center">
@@ -930,19 +1075,14 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
         <button
           onClick={() => { setConnecting(true); redirectToYouTubeAuth(); }}
           disabled={connecting}
-          className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.02] disabled:opacity-60"
-        >
-          {connecting
-            ? <><Spinner className="w-3.5 h-3.5" /> Redirecting…</>
-            : <><Youtube size={15} /> Connect YouTube</>}
+          className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.02] disabled:opacity-60">
+          {connecting ? <><Spinner className="w-3.5 h-3.5" /> Redirecting…</> : <><Youtube size={15} /> Connect YouTube</>}
         </button>
       </div>
 
       {onPrev && (
-        <button
-          onClick={onPrev}
-          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 font-medium text-sm transition-all duration-200"
-        >
+        <button onClick={onPrev}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 font-medium text-sm transition-all duration-200">
           <ChevronLeft size={15} /> Back
         </button>
       )}
@@ -953,29 +1093,31 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
 // ─── Setup Wizard ─────────────────────────────────────────────────────────────
 
 function SetupWizard({ onConnected }: { onConnected: () => void }) {
-  const [stepIndex, setStepIndex] = useState(0);
+  const [stepIndex,    setStepIndex]    = useState(0);
+  const [videoWatched, setVideoWatched] = useState(false);
   const step = WIZARD_FLOW[stepIndex];
-  const next = () => setStepIndex((i) => Math.min(i + 1, WIZARD_FLOW.length - 1));
+
+  const next = () => {
+    if (stepIndex > 0 && !videoWatched) return; // guard
+    setStepIndex((i) => Math.min(i + 1, WIZARD_FLOW.length - 1));
+  };
   const prev = () => setStepIndex((i) => Math.max(i - 1, 0));
   void onConnected;
 
   return (
     <div className="rounded-2xl border border-purple-500/15 bg-[#0d0c14] overflow-hidden shadow-2xl shadow-purple-900/15">
-      {/* Wizard header */}
       <div className="px-5 py-3.5 border-b border-white/8 flex items-center gap-2.5">
         <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
         <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Google Cloud Setup</span>
         <span className="ml-auto text-[10px] text-white/20 font-medium">Step {stepIndex + 1} of {WIZARD_FLOW.length}</span>
       </div>
 
-      {/* Step indicator */}
       <div className="px-5 py-4 border-b border-white/5">
-        <StepIndicator current={stepIndex + 1} />
+        <StepIndicator current={stepIndex + 1} videoWatched={videoWatched} />
       </div>
 
-      {/* Step content */}
       <div className="px-5 py-5">
-        {step === "tutorial"    && <TutorialStep    onNext={next} onPrev={stepIndex > 0 ? prev : undefined} />}
+        {step === "tutorial"    && <TutorialStep    onNext={next} onPrev={stepIndex > 0 ? prev : undefined} onWatched={() => setVideoWatched(true)} watched={videoWatched} />}
         {step === "gcp"         && <GCPStep         onNext={next} onPrev={prev} />}
         {step === "enable"      && <EnableStep      onNext={next} onPrev={prev} />}
         {step === "oauth"       && <OAuthStep       onNext={next} onPrev={prev} />}
@@ -1000,10 +1142,7 @@ function DeleteModal({ onCancel, onConfirm, loading, error }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !loading && onCancel()}>
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-[#0d0c14] shadow-2xl p-6 space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-[#0d0c14] shadow-2xl p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
         <button onClick={onCancel} disabled={loading} className="absolute top-4 right-4 text-white/25 hover:text-white/60 transition-colors disabled:opacity-40">
           <X size={15} />
         </button>
@@ -1012,20 +1151,13 @@ function DeleteModal({ onCancel, onConfirm, loading, error }: {
         </div>
         <div>
           <h3 className="text-base font-semibold text-white mb-1">Delete credentials?</h3>
-          <p className="text-sm text-white/40 leading-relaxed">
-            This removes your OAuth credentials from ModerateAI. Active moderation will stop immediately. You can reconnect at any time.
-          </p>
+          <p className="text-sm text-white/40 leading-relaxed">This removes your OAuth credentials. Active moderation will stop immediately.</p>
         </div>
         {error && <ErrorBanner message={error} />}
         <div className="flex gap-2.5 pt-1">
-          <button onClick={onCancel} disabled={loading} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-semibold text-sm transition-all duration-200 disabled:opacity-40">
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.01] disabled:opacity-60 flex items-center justify-center gap-2"
-          >
+          <button onClick={onCancel} disabled={loading} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-semibold text-sm transition-all duration-200 disabled:opacity-40">Cancel</button>
+          <button onClick={onConfirm} disabled={loading}
+            className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.01] disabled:opacity-60 flex items-center justify-center gap-2">
             {loading ? <><Spinner className="w-3.5 h-3.5" /> Deleting…</> : "Delete"}
           </button>
         </div>
@@ -1050,39 +1182,59 @@ function StatusBadge({ status }: { status: LogStatus }) {
   );
 }
 
+// ─── Plan Limits ──────────────────────────────────────────────────────────────
+
+function PlanLimitsInfo() {
+  const plans = [
+    { key: "free_trial", label: "Free Trial", actions: PLAN_LIMITS.free_trial, color: "text-white/50 border-white/10" },
+    { key: "pro",        label: "Pro",         actions: PLAN_LIMITS.pro,        color: "text-purple-400 border-purple-500/25" },
+    { key: "agency",     label: "Agency",      actions: PLAN_LIMITS.agency,     color: "text-emerald-400 border-emerald-500/25" },
+  ];
+  return (
+    <div className="rounded-2xl border border-white/8 bg-white/[0.02] overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-white/8">
+        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Plan Limits</p>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-white/[0.05]">
+        {plans.map((p) => (
+          <div key={p.key} className="px-4 py-3.5 flex flex-col gap-1">
+            <span className={`text-[9px] font-bold uppercase tracking-widest border rounded-full px-1.5 py-0.5 w-fit ${p.color} bg-transparent`}>{p.label}</span>
+            <p className="text-sm font-semibold text-white mt-1">{p.actions.toLocaleString()}</p>
+            <p className="text-[10px] text-white/25">AI Actions / mo</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Managed Dashboard Card ───────────────────────────────────────────────────
 
 function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh: () => void }) {
   const planLimit = PLAN_LIMITS[managed.plan] ?? managed.actionsTotal;
   const used      = managed.actionsUsed;
-
   const health: HealthState =
     managed.apiStatus === "operational" ? "healthy" :
-    managed.apiStatus === "degraded"    ? "warning" :
-    "offline";
+    managed.apiStatus === "degraded"    ? "warning" : "offline";
 
   const [lastSyncDisplay, setLastSyncDisplay] = useState(fmtRelative(managed.lastSync));
 
-  useEffect(() => {
-    const t = setInterval(onRefresh, 30_000);
-    return () => clearInterval(t);
-  }, [onRefresh]);
-
-  useEffect(() => {
-    const t = setInterval(() => setLastSyncDisplay(fmtRelative(managed.lastSync)), 10_000);
-    return () => clearInterval(t);
-  }, [managed.lastSync]);
+  useEffect(() => { const t = setInterval(onRefresh, 30_000); return () => clearInterval(t); }, [onRefresh]);
+  useEffect(() => { const t = setInterval(() => setLastSyncDisplay(fmtRelative(managed.lastSync)), 10_000); return () => clearInterval(t); }, [managed.lastSync]);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
-      {/* Header */}
       <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-purple-500/12 border border-purple-500/20 flex items-center justify-center shrink-0">
-            <Server size={14} className="text-purple-400" />
-          </div>
+          {managed.channelAvatar ? (
+            <img src={managed.channelAvatar} alt={managed.channelName ?? "Channel"} className="w-8 h-8 rounded-full object-cover border border-white/10" />
+          ) : (
+            <div className="w-8 h-8 rounded-xl bg-purple-500/12 border border-purple-500/20 flex items-center justify-center shrink-0">
+              <Server size={14} className="text-purple-400" />
+            </div>
+          )}
           <div>
-            <p className="text-sm font-semibold text-white">ModerateAI Shared API</p>
+            <p className="text-sm font-semibold text-white">{managed.channelName ?? "ModerateAI Shared API"}</p>
             <p className="text-xs text-white/30">YouTube Data API v3 · Managed by ModerateAI</p>
           </div>
         </div>
@@ -1096,59 +1248,38 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
 
       {/* Primary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/[0.04]">
-        <StatCell label="Current Plan"      value={managed.planLabel}                         icon={<Server    size={11} className="text-purple-400"  />} />
-        <StatCell label="AI Actions Used"   value={used.toLocaleString()}                     icon={<Zap       size={11} className="text-yellow-400"  />} />
-        <StatCell label="AI Actions Left"   value={managed.actionsRemaining.toLocaleString()} icon={<BarChart2 size={11} className="text-emerald-400" />} />
-        <StatCell label="Reset Date"        value={fmt(managed.resetDate, { month: "short", day: "numeric" })} icon={<Clock size={11} className="text-blue-400" />} />
+        <StatCell label="Current Plan"    value={managed.planLabel}                            icon={<Server    size={11} className="text-purple-400"  />} />
+        <StatCell label="AI Actions Used" value={used.toLocaleString()}                        icon={<Zap       size={11} className="text-yellow-400"  />} />
+        <StatCell label="AI Actions Left" value={managed.actionsRemaining.toLocaleString()}    icon={<BarChart2 size={11} className="text-emerald-400" />} />
+        <StatCell label="Reset Date"      value={fmt(managed.resetDate, { month: "short", day: "numeric" })} icon={<Clock size={11} className="text-blue-400" />} />
       </div>
 
       {/* Secondary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/[0.04] border-t border-white/[0.04]">
-        <StatCell label="Today's Requests"    value={managed.todayRequests.toLocaleString()}     icon={<TrendingUp    size={11} className="text-blue-400"   />} />
-        <StatCell label="Comments Moderated"  value={managed.commentsModerated.toLocaleString()} icon={<MessageSquare size={11} className="text-purple-400" />} />
-        <StatCell label="Replies Generated"   value={managed.repliesGenerated.toLocaleString()}  icon={<Zap           size={11} className="text-yellow-400" />} />
-        <StatCell label="Videos Monitored"    value={managed.videosMonitored.toLocaleString()}   icon={<Video         size={11} className="text-red-400"    />} />
+        <StatCell label="Today's Requests"   value={managed.todayRequests.toLocaleString()}     icon={<TrendingUp    size={11} className="text-blue-400"   />} />
+        <StatCell label="Comments Moderated" value={managed.commentsModerated.toLocaleString()} icon={<MessageSquare size={11} className="text-purple-400" />} />
+        <StatCell label="Replies Generated"  value={managed.repliesGenerated.toLocaleString()}  icon={<Zap           size={11} className="text-yellow-400" />} />
+        <StatCell label="Videos Monitored"   value={managed.videosMonitored.toLocaleString()}   icon={<Video         size={11} className="text-red-400"    />} />
       </div>
 
-      {/* API health row */}
+      {/* Health row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/[0.04] border-t border-white/[0.04]">
-        <StatCell
-          label="Success Rate"
-          value={`${managed.successRate}%`}
-          icon={<CheckCircle2 size={11} className="text-emerald-400" />}
-          valueClass={managed.successRate >= 99 ? "text-emerald-400" : managed.successRate >= 95 ? "text-yellow-400" : "text-red-400"}
-        />
-        <StatCell
-          label="Avg Latency"
-          value={`${managed.latencyMs}ms`}
-          icon={<Cpu size={11} className="text-blue-400" />}
-          valueClass={managed.latencyMs < 200 ? "text-emerald-400" : managed.latencyMs < 500 ? "text-yellow-400" : "text-red-400"}
-        />
-        <StatCell
-          label="Connected Channels"
-          value={managed.connectedChannels.toLocaleString()}
-          icon={<Youtube size={11} className="text-red-400" />}
-        />
-        <StatCell
-          label="Last Sync"
-          value={lastSyncDisplay}
-          icon={<Radio size={11} className="text-purple-400" />}
-          valueClass="text-white/70"
-        />
+        <StatCell label="Success Rate" value={`${managed.successRate}%`} icon={<CheckCircle2 size={11} className="text-emerald-400" />}
+          valueClass={managed.successRate >= 99 ? "text-emerald-400" : managed.successRate >= 95 ? "text-yellow-400" : "text-red-400"} />
+        <StatCell label="Avg Latency" value={`${managed.latencyMs}ms`} icon={<Cpu size={11} className="text-blue-400" />}
+          valueClass={managed.latencyMs < 200 ? "text-emerald-400" : managed.latencyMs < 500 ? "text-yellow-400" : "text-red-400"} />
+        <StatCell label="Connected Channels" value={managed.connectedChannels.toLocaleString()} icon={<Youtube size={11} className="text-red-400" />} />
+        <StatCell label="Last Sync" value={lastSyncDisplay} icon={<Radio size={11} className="text-purple-400" />} valueClass="text-white/70" />
       </div>
 
-      {/* Billing status row */}
       {managed.billingStatus === "overdue" && (
         <div className="px-5 py-3 border-t border-red-500/15 bg-red-500/5 flex items-center gap-2.5">
           <AlertCircle size={13} className="text-red-400 shrink-0" />
           <p className="text-xs text-red-400">Payment overdue — moderation may pause soon.</p>
-          <a href="/billing" className="ml-auto text-xs font-semibold text-red-300 hover:text-red-200 underline underline-offset-2 transition-colors shrink-0">
-            Update billing
-          </a>
+          <a href="/billing" className="ml-auto text-xs font-semibold text-red-300 hover:text-red-200 underline underline-offset-2 transition-colors shrink-0">Update billing</a>
         </div>
       )}
 
-      {/* Quota bar */}
       <div className="px-5 py-4 border-t border-white/5">
         <QuotaBar
           used={used}
@@ -1158,17 +1289,12 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
         />
       </div>
 
-      {/* Upgrade CTA — only when near limit and not agency */}
       {used / planLimit >= 0.8 && managed.plan !== "agency" && (
         <div className="px-5 py-3.5 border-t border-white/5 flex items-center justify-between gap-3 bg-purple-500/5">
           <p className="text-xs text-white/50 leading-snug">
             You&apos;re using <span className="text-white/70 font-semibold">{Math.round((used / planLimit) * 100)}%</span> of your monthly limit.
-            Upgrade to avoid interruptions.
           </p>
-          <a
-            href="/billing"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-all duration-200 shrink-0 hover:scale-[1.02]"
-          >
+          <a href="/billing" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-all duration-200 shrink-0 hover:scale-[1.02]">
             Upgrade <ArrowUpRight size={11} />
           </a>
         </div>
@@ -1177,56 +1303,17 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
   );
 }
 
-// ─── Plan Limits Info ─────────────────────────────────────────────────────────
-
-function PlanLimitsInfo() {
-  const plans = [
-    { key: "free_trial", label: "Free Trial", actions: PLAN_LIMITS.free_trial, color: "text-white/50 border-white/10" },
-    { key: "pro",        label: "Pro",         actions: PLAN_LIMITS.pro,        color: "text-purple-400 border-purple-500/25" },
-    { key: "agency",     label: "Agency",      actions: PLAN_LIMITS.agency,     color: "text-emerald-400 border-emerald-500/25" },
-  ];
-
-  return (
-    <div className="rounded-2xl border border-white/8 bg-white/[0.02] overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-white/8">
-        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Plan Limits</p>
-      </div>
-      <div className="grid grid-cols-3 divide-x divide-white/[0.05]">
-        {plans.map((p) => (
-          <div key={p.key} className="px-4 py-3.5 flex flex-col gap-1">
-            <span className={`text-[9px] font-bold uppercase tracking-widest border rounded-full px-1.5 py-0.5 w-fit ${p.color} bg-transparent`}>
-              {p.label}
-            </span>
-            <p className="text-sm font-semibold text-white mt-1">{p.actions.toLocaleString()}</p>
-            <p className="text-[10px] text-white/25">AI Actions / mo</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Custom Project Card ──────────────────────────────────────────────────────
 
 function CustomProjectCard({ custom, onRefresh }: { custom: CustomProjectInfo; onRefresh: () => void }) {
   const used = custom.dailyQuota - custom.remainingQuota;
-
   const [lastSyncDisplay, setLastSyncDisplay] = useState(fmtRelative(custom.lastSync));
 
-  useEffect(() => {
-    const t = setInterval(onRefresh, 30_000);
-    return () => clearInterval(t);
-  }, [onRefresh]);
+  useEffect(() => { const t = setInterval(onRefresh, 30_000); return () => clearInterval(t); }, [onRefresh]);
+  useEffect(() => { const t = setInterval(() => setLastSyncDisplay(fmtRelative(custom.lastSync)), 10_000); return () => clearInterval(t); }, [custom.lastSync]);
 
-  useEffect(() => {
-    const t = setInterval(() => setLastSyncDisplay(fmtRelative(custom.lastSync)), 10_000);
-    return () => clearInterval(t);
-  }, [custom.lastSync]);
-
-  const oauthColor =
-    custom.oauthStatus === "connected" ? "text-emerald-400" :
-    custom.oauthStatus === "expired"   ? "text-yellow-400" : "text-red-400";
-  const apiColor = custom.apiStatus === "enabled" ? "text-emerald-400" : "text-red-400";
+  const oauthColor = custom.oauthStatus === "connected" ? "text-emerald-400" : custom.oauthStatus === "expired" ? "text-yellow-400" : "text-red-400";
+  const apiColor   = custom.apiStatus === "enabled" ? "text-emerald-400" : "text-red-400";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
@@ -1247,31 +1334,16 @@ function CustomProjectCard({ custom, onRefresh }: { custom: CustomProjectInfo; o
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-white/[0.04]">
-        <StatCell label="Connected Account"  value={custom.connectedAccount || "—"}     icon={<Wifi         size={11} className="text-blue-400"    />} />
-        <StatCell
-          label="OAuth Status"
-          value={custom.oauthStatus === "connected" ? "Connected" : custom.oauthStatus === "expired" ? "Expired" : "Disconnected"}
-          icon={<Lock size={11} className="text-purple-400" />}
-          valueClass={oauthColor}
-        />
-        <StatCell
-          label="API Status"
-          value={custom.apiStatus === "enabled" ? "Enabled" : "Disabled"}
-          icon={<Youtube size={11} className="text-red-400" />}
-          valueClass={apiColor}
-        />
-        <StatCell label="Last Sync"        value={lastSyncDisplay}                      icon={<Clock        size={11} className="text-blue-400"    />} valueClass="text-white/70" />
-        <StatCell label="Daily Quota Used" value={`${used.toLocaleString()} / ${custom.dailyQuota.toLocaleString()}`} icon={<BarChart2 size={11} className="text-emerald-400" />} />
-        <StatCell label="Remaining Today"  value={custom.remainingQuota.toLocaleString()} icon={<Zap         size={11} className="text-yellow-400"  />} />
+        <StatCell label="Connected Account"  value={custom.connectedAccount || "—"}     icon={<Wifi     size={11} className="text-blue-400"   />} />
+        <StatCell label="OAuth Status"       value={custom.oauthStatus === "connected" ? "Connected" : custom.oauthStatus === "expired" ? "Expired" : "Disconnected"} icon={<Lock size={11} className="text-purple-400" />} valueClass={oauthColor} />
+        <StatCell label="API Status"         value={custom.apiStatus === "enabled" ? "Enabled" : "Disabled"} icon={<Youtube size={11} className="text-red-400" />} valueClass={apiColor} />
+        <StatCell label="Last Sync"          value={lastSyncDisplay}                    icon={<Clock    size={11} className="text-blue-400"   />} valueClass="text-white/70" />
+        <StatCell label="Daily Quota Used"   value={`${used.toLocaleString()} / ${custom.dailyQuota.toLocaleString()}`} icon={<BarChart2 size={11} className="text-emerald-400" />} />
+        <StatCell label="Remaining Today"    value={custom.remainingQuota.toLocaleString()} icon={<Zap  size={11} className="text-yellow-400" />} />
       </div>
 
       <div className="px-5 py-4 border-t border-white/5">
-        <QuotaBar
-          used={used}
-          total={custom.dailyQuota}
-          label={`${Math.min(100, Math.round((used / custom.dailyQuota) * 100))}% of daily quota used`}
-          resetLabel="resets midnight PT"
-        />
+        <QuotaBar used={used} total={custom.dailyQuota} label={`${Math.min(100, Math.round((used / custom.dailyQuota) * 100))}% of daily quota used`} resetLabel="resets midnight PT" />
       </div>
     </div>
   );
@@ -1292,14 +1364,8 @@ function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
 
   const handleTest = async () => {
     setTestState("loading");
-    try {
-      const r = await testConnection();
-      setTestState(r.ok ? "ok" : "fail");
-      setTestMsg(r.message);
-    } catch {
-      setTestState("fail");
-      setTestMsg("Could not reach the server.");
-    }
+    try { const r = await testConnection(); setTestState(r.ok ? "ok" : "fail"); setTestMsg(r.message); }
+    catch { setTestState("fail"); setTestMsg("Could not reach the server."); }
   };
 
   const handleRotate = async () => {
@@ -1325,73 +1391,43 @@ function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
 
   return (
     <>
-      {showDelete && (
-        <DeleteModal
-          onCancel={() => { setShowDelete(false); setDeleteErr(null); }}
-          onConfirm={handleDeleteConfirm}
-          loading={deleting}
-          error={deleteError}
-        />
-      )}
+      {showDelete && <DeleteModal onCancel={() => { setShowDelete(false); setDeleteErr(null); }} onConfirm={handleDeleteConfirm} loading={deleting} error={deleteError} />}
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
-        {/* Test */}
         <div className="px-5 py-4 border-b border-white/8">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <p className="text-sm font-medium text-white">Test connection</p>
               <p className="text-xs text-white/30 mt-0.5">Verify the API is responding correctly.</p>
             </div>
-            <button
-              onClick={handleTest}
-              disabled={testState === "loading"}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-xs font-semibold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50"
-            >
+            <button onClick={handleTest} disabled={testState === "loading"}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-xs font-semibold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50">
               {testState === "loading" ? <><Spinner className="w-3 h-3" /> Testing…</> : <><Wifi size={12} /> Test</>}
             </button>
           </div>
-          {testState === "ok" && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 rounded-xl px-4 py-2.5">
-              <Check size={12} /> {testMessage}
-            </div>
-          )}
-          {testState === "fail" && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-red-400 bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-2.5">
-              <WifiOff size={12} /> {testMessage}
-            </div>
-          )}
+          {testState === "ok"   && <div className="mt-3 flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 rounded-xl px-4 py-2.5"><Check size={12} /> {testMessage}</div>}
+          {testState === "fail" && <div className="mt-3 flex items-center gap-2 text-xs text-red-400 bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-2.5"><WifiOff size={12} /> {testMessage}</div>}
         </div>
 
-        {/* Actions */}
         <div className="px-5 py-4 space-y-3">
           <p className="text-[10px] font-semibold text-white/20 uppercase tracking-widest">Management</p>
           {discError   && <ErrorBanner message={discError} />}
           {rotateError && <ErrorBanner message={rotateError} />}
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => redirectToYouTubeAuth()}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-500/30 text-purple-300 hover:border-purple-500/50 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
-            >
+            <button onClick={() => redirectToYouTubeAuth()}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-500/30 text-purple-300 hover:border-purple-500/50 text-xs font-medium transition-all duration-200 hover:scale-[1.02]">
               <RefreshCw size={12} /> Reconnect
             </button>
-            <button
-              onClick={handleRotate}
-              disabled={rotating}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-yellow-500/20 text-yellow-400/70 hover:text-yellow-300 hover:border-yellow-500/35 text-xs font-medium transition-all duration-200 hover:scale-[1.02] disabled:opacity-50"
-            >
+            <button onClick={handleRotate} disabled={rotating}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-yellow-500/20 text-yellow-400/70 hover:text-yellow-300 hover:border-yellow-500/35 text-xs font-medium transition-all duration-200 hover:scale-[1.02] disabled:opacity-50">
               {rotating ? <><Spinner className="w-3 h-3 text-yellow-300" /> Rotating…</> : <><RotateCcw size={12} /> Rotate credentials</>}
             </button>
-            <button
-              onClick={handleDisconnect}
-              disabled={disconnecting}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/8 text-white/40 hover:text-red-400 hover:border-red-500/25 text-xs font-medium transition-all duration-200 hover:scale-[1.02] disabled:opacity-50"
-            >
+            <button onClick={handleDisconnect} disabled={disconnecting}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/8 text-white/40 hover:text-red-400 hover:border-red-500/25 text-xs font-medium transition-all duration-200 hover:scale-[1.02] disabled:opacity-50">
               {disconnecting ? <><Spinner className="w-3 h-3" /> Disconnecting…</> : <><WifiOff size={12} /> Disconnect</>}
             </button>
-            <button
-              onClick={() => setShowDelete(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-500/15 text-red-400/60 hover:text-red-400 hover:border-red-500/35 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
-            >
+            <button onClick={() => setShowDelete(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-500/15 text-red-400/60 hover:text-red-400 hover:border-red-500/35 text-xs font-medium transition-all duration-200 hover:scale-[1.02]">
               <Trash2 size={12} /> Delete credentials
             </button>
           </div>
@@ -1401,7 +1437,7 @@ function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
   );
 }
 
-// ─── Activity Logs ────────────────────────────────────────────────────────────
+// ─── Activity Feed ────────────────────────────────────────────────────────────
 
 function ActivityLogsSection() {
   const [logs,     setLogs]    = useState<ActivityLog[]>([]);
@@ -1416,11 +1452,7 @@ function ActivityLogsSection() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
-
-  useEffect(() => {
-    const t = setInterval(load, 30_000);
-    return () => clearInterval(t);
-  }, [load]);
+  useEffect(() => { const t = setInterval(load, 30_000); return () => clearInterval(t); }, [load]);
 
   const visible = expanded ? logs : logs.slice(0, 5);
 
@@ -1433,41 +1465,32 @@ function ActivityLogsSection() {
           <Activity size={13} className="text-white/30" />
           <p className="text-sm font-semibold text-white/70">Activity</p>
         </div>
-        {logs.length > 0 && (
-          <span className="text-[10px] text-white/25 font-medium">{logs.length} events</span>
-        )}
+        <div className="flex items-center gap-3">
+          {logs.length > 0 && <span className="text-[10px] text-white/25 font-medium">{logs.length} events</span>}
+          <button onClick={load} className="text-white/20 hover:text-white/50 transition-colors duration-150">
+            <RefreshCw size={12} />
+          </button>
+        </div>
       </div>
 
       {logs.length === 0 && (
-        <EmptyState
-          icon={Activity}
-          title="No activity yet"
-          description="Events appear here as ModerateAI moderates your channel — connections, syncs, and moderation actions."
-        />
+        <EmptyState icon={Activity} title="No activity yet" description="Events appear here as ModerateAI moderates your channel." />
       )}
 
       {logs.length > 0 && (
         <>
           <div className="divide-y divide-white/5">
             {visible.map((log) => (
-              <div
-                key={log.id}
-                className="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.015] transition-colors duration-150 group"
-              >
+              <div key={log.id} className="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.015] transition-colors duration-150 group">
                 <StatusBadge status={log.status} />
-                <p className="flex-1 text-sm text-white/55 leading-snug group-hover:text-white/70 transition-colors duration-150 truncate">
-                  {log.action}
-                </p>
+                <p className="flex-1 text-sm text-white/55 leading-snug group-hover:text-white/70 transition-colors duration-150 truncate">{log.action}</p>
                 <span className="text-[10px] text-white/20 whitespace-nowrap shrink-0">{log.timestamp}</span>
               </div>
             ))}
           </div>
           {logs.length > 5 && (
             <div className="px-5 py-3 border-t border-white/8">
-              <button
-                onClick={() => setExp(!expanded)}
-                className="text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors duration-150"
-              >
+              <button onClick={() => setExp(!expanded)} className="text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors duration-150">
                 {expanded ? "Show less" : `Show ${logs.length - 5} more`}
               </button>
             </div>
@@ -1478,28 +1501,12 @@ function ActivityLogsSection() {
   );
 }
 
-// ─── Connection Method Selector ───────────────────────────────────────────────
+// ─── Method Selector ──────────────────────────────────────────────────────────
 
 function MethodSelector({ method, onChange }: { method: APIMethod; onChange: (m: APIMethod) => void }) {
-  const options: { key: APIMethod; icon: React.ReactNode; label: string; sub: string; badge: string; badgeColor: string; ring: string }[] = [
-    {
-      key:        "managed",
-      icon:       <Server size={16} className="text-purple-400" />,
-      label:      "ModerateAI Shared API",
-      sub:        "Recommended · Zero setup",
-      badge:      "Recommended",
-      badgeColor: "text-purple-400 border-purple-500/25 bg-purple-500/8",
-      ring:       "border-purple-500/40 bg-purple-500/6",
-    },
-    {
-      key:        "custom",
-      icon:       <Cloud size={16} className="text-emerald-400" />,
-      label:      "My Google Cloud Project",
-      sub:        "Advanced · Your own quota",
-      badge:      "Advanced",
-      badgeColor: "text-emerald-400 border-emerald-500/25 bg-emerald-500/8",
-      ring:       "border-emerald-500/30 bg-emerald-500/4",
-    },
+  const options = [
+    { key: "managed" as APIMethod, icon: <Server size={16} className="text-purple-400" />, label: "ModerateAI Shared API", sub: "Recommended · Zero setup", badge: "Recommended", badgeColor: "text-purple-400 border-purple-500/25 bg-purple-500/8", ring: "border-purple-500/40 bg-purple-500/6" },
+    { key: "custom"  as APIMethod, icon: <Cloud  size={16} className="text-emerald-400" />, label: "My Google Cloud Project", sub: "Advanced · Your own quota", badge: "Advanced",     badgeColor: "text-emerald-400 border-emerald-500/25 bg-emerald-500/8", ring: "border-emerald-500/30 bg-emerald-500/4" },
   ];
 
   return (
@@ -1507,27 +1514,19 @@ function MethodSelector({ method, onChange }: { method: APIMethod; onChange: (m:
       {options.map((opt) => {
         const active = method === opt.key;
         return (
-          <button
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200
-              ${active ? opt.ring : "border-white/8 bg-white/[0.02] hover:border-white/15"}`}
-          >
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5
-              ${active ? "bg-white/8 border border-white/10" : "bg-white/4 border border-white/6"}`}>
+          <button key={opt.key} onClick={() => onChange(opt.key)}
+            className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200 ${active ? opt.ring : "border-white/8 bg-white/[0.02] hover:border-white/15"}`}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${active ? "bg-white/8 border border-white/10" : "bg-white/4 border border-white/6"}`}>
               {opt.icon}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-0.5">
                 <p className="text-sm font-semibold text-white">{opt.label}</p>
-                <span className={`text-[9px] font-bold border px-1.5 py-0.5 rounded-full uppercase tracking-wide ${opt.badgeColor}`}>
-                  {opt.badge}
-                </span>
+                <span className={`text-[9px] font-bold border px-1.5 py-0.5 rounded-full uppercase tracking-wide ${opt.badgeColor}`}>{opt.badge}</span>
               </div>
               <p className="text-xs text-white/30">{opt.sub}</p>
             </div>
-            <div className={`w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200
-              ${active ? "border-purple-500 bg-purple-500" : "border-white/15 bg-transparent"}`}>
+            <div className={`w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200 ${active ? "border-purple-500 bg-purple-500" : "border-white/15 bg-transparent"}`}>
               {active && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
             </div>
           </button>
@@ -1556,34 +1555,20 @@ export default function APIAccessPage() {
     }
   }, []);
 
-  // Wait for Firebase Auth before loading — ensures currentUser is available
   useEffect(() => {
     const auth = getAuth();
-    // If already signed in, load immediately
-    if (auth.currentUser) {
-      loadStatus();
-      return;
-    }
-    // Otherwise wait for auth state
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) loadStatus();
-      else setLoading(false);
-    });
+    if (auth.currentUser) { loadStatus(); return; }
+    const unsub = onAuthStateChanged(auth, (user) => { if (user) loadStatus(); else setLoading(false); });
     return () => unsub();
   }, [loadStatus]);
 
   const connected = !!status?.youtubeConnected;
 
-  // ── Loading state ──────────────────────────────────────────────────────────
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] text-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6">
-          <div className="space-y-1.5">
-            <Skeleton className="h-7 w-32" />
-            <Skeleton className="h-3.5 w-72" />
-          </div>
+          <div className="space-y-1.5"><Skeleton className="h-7 w-32" /><Skeleton className="h-3.5 w-72" /></div>
           <SkeletonCard />
           <SkeletonCard />
           <SkeletonLogs />
@@ -1591,9 +1576,6 @@ export default function APIAccessPage() {
       </div>
     );
   }
-
-  // ── Main render ────────────────────────────────────────────────────────────
-  // If status failed to load, treat as disconnected and show onboarding.
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -1604,22 +1586,18 @@ export default function APIAccessPage() {
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight mb-1">API Access</h1>
             <p className="text-white/35 text-sm">
-              {connected
-                ? "Manage how ModerateAI connects to the YouTube Data API."
-                : "Connect your account to start moderating comments."}
+              {connected ? "Manage how ModerateAI connects to the YouTube Data API." : "Connect your account to start moderating comments."}
             </p>
           </div>
           {connected && (
-            <button
-              onClick={loadStatus}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 text-xs font-medium transition-all duration-200"
-            >
+            <button onClick={loadStatus}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 text-xs font-medium transition-all duration-200">
               <RefreshCw size={12} /> Refresh
             </button>
           )}
         </div>
 
-        {/* ── Not connected ── */}
+        {/* Not connected */}
         {!connected && (
           <>
             <div className="space-y-3">
@@ -1639,29 +1617,23 @@ export default function APIAccessPage() {
                       No Google Cloud setup required. We manage the API quota and infrastructure for you.
                     </p>
                   </div>
-                  <button
-                    onClick={() => redirectToYouTubeAuth()}
-                    className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.02]"
-                  >
+                  <button onClick={() => redirectToYouTubeAuth()}
+                    className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.02]">
                     <Youtube size={15} /> Connect YouTube
                   </button>
                   <p className="text-[10px] text-white/20">You&apos;ll be redirected to Google to authorize your channel.</p>
                 </div>
-
                 <PlanLimitsInfo />
               </div>
             )}
 
-            {activeMethod === "custom" && (
-              <SetupWizard onConnected={loadStatus} />
-            )}
+            {activeMethod === "custom" && <SetupWizard onConnected={loadStatus} />}
           </>
         )}
 
-        {/* ── Connected ── */}
+        {/* Connected */}
         {connected && status && (
           <>
-            {/* Active method badge */}
             <div className="flex items-center gap-2">
               <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Connection Method</p>
               <span className="text-[10px] font-semibold text-purple-400 border border-purple-500/25 bg-purple-500/8 px-2 py-0.5 rounded-full uppercase tracking-wide">
@@ -1669,24 +1641,21 @@ export default function APIAccessPage() {
               </span>
             </div>
 
-            {/* Dashboard card */}
             {status.method === "managed" && status.managed && (
               <>
                 <ManagedCard managed={status.managed} onRefresh={loadStatus} />
+                <UsageGraph managed={status.managed} />
                 <PlanLimitsInfo />
               </>
             )}
+
             {status.method === "custom" && status.custom && (
               <CustomProjectCard custom={status.custom} onRefresh={loadStatus} />
             )}
 
-            {/* Management */}
             <ManagementSection onRefresh={loadStatus} />
-
-            {/* Activity */}
             <ActivityLogsSection />
 
-            {/* Security footer */}
             <div className="flex items-start gap-4 rounded-2xl border border-emerald-500/12 bg-emerald-500/4 px-5 py-4">
               <div className="w-8 h-8 rounded-xl bg-emerald-500/12 border border-emerald-500/15 flex items-center justify-center shrink-0">
                 <Shield size={15} className="text-emerald-400" />

@@ -11,6 +11,8 @@ import {
   TrendingUp, MessageSquare, Video, ArrowUpRight, CheckCircle2,
   AlertCircle, Cpu, Radio, Tv2 as Youtube,
   Play, Pause, Volume2, VolumeX, Maximize, SkipForward,
+  Plus, ChevronDown, Search, Settings, HelpCircle, Bell,
+  Globe, Database, Code2, Terminal, Layers,
 } from "lucide-react";
 
 // ─── YouTube OAuth redirect ───────────────────────────────────────────────────
@@ -359,48 +361,53 @@ function StatCell({ label, value, icon, valueClass = "text-white" }: {
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 
 const STEP_LABELS: Record<WizardStep, string> = {
-  tutorial: "Tutorial", gcp: "Cloud Project", enable: "Enable API",
-  oauth: "OAuth Client", credentials: "Credentials", connect: "Connect",
+  tutorial: "Watch Video", gcp: "Google Console", enable: "Enable API",
+  oauth: "OAuth Client", credentials: "Add Credentials", connect: "Connect YouTube",
 };
 const WIZARD_FLOW: WizardStep[] = ["tutorial", "gcp", "enable", "oauth", "credentials", "connect"];
 
-function StepIndicator({ current, videoWatched }: { current: number; videoWatched: boolean }) {
+function StepIndicator({ current, videoWatched, onStepClick }: {
+  current: number;
+  videoWatched: boolean;
+  onStepClick?: (index: number) => void;
+}) {
   const labels = WIZARD_FLOW.map((s) => STEP_LABELS[s]);
   return (
-    <div className="w-full overflow-x-auto scrollbar-none -mx-1 px-1 pb-1">
-      <div className="flex items-start min-w-max gap-0">
-        {labels.map((label, i) => {
-          const num    = i + 1;
-          const done   = num < current;
-          const active = num === current;
-          const locked = num > 1 && !videoWatched;
-          return (
-            <div key={label} className="flex items-start">
-              <div className="flex flex-col items-center gap-1.5">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300
-                  ${done   ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-900/40" : ""}
-                  ${active ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40 ring-4 ring-purple-500/15" : ""}
-                  ${locked && !done && !active ? "bg-transparent border-white/8 text-white/15" : ""}
-                  ${!locked && !done && !active ? "bg-transparent border-white/15 text-white/25" : ""}`}>
-                  {done ? <Check size={12} /> : locked ? <Lock size={10} /> : num}
-                </div>
-                <span className={`text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors duration-300
-                  ${active ? "text-purple-300" : done ? "text-emerald-500" : locked ? "text-white/12" : "text-white/20"}`}>
-                  {label}
-                </span>
-              </div>
-              {i < labels.length - 1 && (
-                <div className={`h-px w-8 mx-2 mt-3.5 shrink-0 transition-all duration-500 ${done ? "bg-emerald-600/60" : "bg-white/8"}`} />
-              )}
+    <div className="flex flex-col gap-1">
+      {labels.map((label, i) => {
+        const num    = i + 1;
+        const done   = num < current;
+        const active = num === current;
+        const locked = i > 0 && !videoWatched;
+        return (
+          <button
+            key={label}
+            onClick={() => !locked && onStepClick?.(i)}
+            disabled={locked}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 w-full
+              ${active ? "bg-purple-600/15 border border-purple-500/25" : done ? "hover:bg-white/[0.03]" : locked ? "opacity-40 cursor-not-allowed" : "hover:bg-white/[0.03] cursor-pointer"}
+            `}
+          >
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2 shrink-0 transition-all duration-300
+              ${done   ? "bg-purple-600 border-purple-600 text-white" : ""}
+              ${active ? "bg-purple-600 border-purple-500 text-white ring-4 ring-purple-500/15" : ""}
+              ${locked && !done && !active ? "bg-transparent border-white/8 text-white/15" : ""}
+              ${!locked && !done && !active ? "bg-transparent border-white/15 text-white/25" : ""}`}>
+              {done ? <Check size={10} /> : locked ? <Lock size={9} /> : num}
             </div>
-          );
-        })}
-      </div>
+            <span className={`text-xs font-medium transition-colors duration-200 truncate
+              ${active ? "text-purple-300" : done ? "text-white/60" : "text-white/25"}`}>
+              {label}
+            </span>
+            {done && <Check size={12} className="text-purple-400 ml-auto shrink-0" />}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-function NavButtons({ onPrev, onNext, nextLabel = "Continue", nextDisabled = false, loading = false }: {
+function NavButtons({ onPrev, onNext, nextLabel = "Next →", nextDisabled = false, loading = false }: {
   onPrev?: () => void; onNext?: () => void; nextLabel?: string; nextDisabled?: boolean; loading?: boolean;
 }) {
   return (
@@ -408,14 +415,14 @@ function NavButtons({ onPrev, onNext, nextLabel = "Continue", nextDisabled = fal
       {onPrev && (
         <button onClick={onPrev}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-medium text-sm transition-all duration-200">
-          <ChevronLeft size={15} /> Back
+          ← Previous
         </button>
       )}
       {onNext && (
         <button onClick={onNext} disabled={nextDisabled || loading}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
             ${!nextDisabled && !loading ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]" : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}>
-          {loading ? <><Spinner className="w-3.5 h-3.5" /> Processing…</> : <>{nextLabel} <ChevronRight size={15} /></>}
+          {loading ? <><Spinner className="w-3.5 h-3.5" /> Processing…</> : nextLabel}
         </button>
       )}
     </div>
@@ -508,25 +515,38 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
     showControls();
   };
 
-  const pct      = duration > 0 ? (progress / duration) * 100 : 0;
-  const bufPct   = duration > 0 ? (buffered / duration) * 100 : 0;
+  const pct    = duration > 0 ? (progress / duration) * 100 : 0;
+  const bufPct = duration > 0 ? (buffered / duration) * 100 : 0;
 
-  // No video available
+  // No video available — show a styled placeholder with tutorial info
   if (hasVideo === false) {
     return (
-      <div className="relative w-full aspect-video bg-[#0a0a0f] rounded-xl border border-white/8 flex flex-col items-center justify-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-          <Video size={20} className="text-purple-400" />
+      <div className="relative w-full aspect-video bg-[#181829] rounded-xl border border-white/8 flex flex-col items-center justify-center gap-4 overflow-hidden">
+        {/* Background grid */}
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.3) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+        <div className="relative z-10 flex flex-col items-center gap-3">
+          <div className="w-16 h-16 rounded-full bg-purple-600/90 flex items-center justify-center shadow-2xl shadow-purple-900/60 cursor-default">
+            <Play size={24} className="text-white ml-1" fill="white" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-bold text-white mb-1">Complete Setup in <span className="text-purple-400">58 Seconds</span></p>
+            <p className="text-xs text-white/40">Quick walkthrough to connect Google Cloud with ModerateAI</p>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-white/30 font-mono">
+            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+            1:00 / 1:00
+          </div>
         </div>
-        <div className="text-center">
-          <p className="text-sm font-semibold text-white/50">Tutorial video coming soon</p>
-          <p className="text-xs text-white/25 mt-1">Steps 2–6 will unlock once the video is available.</p>
+        {/* Progress bar at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+          <div className="h-full bg-gradient-to-r from-purple-600 to-purple-400" style={{ width: "100%" }} />
         </div>
         {process.env.NODE_ENV === "development" && (
           <button
             onClick={() => { setWatched(true); onWatched(); }}
-            className="mt-2 px-4 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/25 text-purple-300 text-xs font-semibold hover:bg-purple-600/30 transition-all">
-            Dev: Skip Tutorial
+            className="absolute top-3 right-3 z-20 px-3 py-1 rounded-lg bg-purple-600/20 border border-purple-500/25 text-purple-300 text-[10px] font-semibold hover:bg-purple-600/30 transition-all">
+            Dev: Skip
           </button>
         )}
       </div>
@@ -557,8 +577,6 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
         onEnded={handleEnded}
         preload="metadata"
       />
-
-      {/* Big play overlay when paused */}
       {!playing && !ended && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity duration-200">
           <div className="w-16 h-16 rounded-full bg-purple-600/90 flex items-center justify-center shadow-2xl shadow-purple-900/60 hover:bg-purple-500/90 transition-all duration-200 hover:scale-105">
@@ -566,8 +584,6 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
           </div>
         </div>
       )}
-
-      {/* Replay overlay */}
       {ended && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
           <div className="flex flex-col items-center gap-3">
@@ -578,64 +594,36 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
           </div>
         </div>
       )}
-
-      {/* Watched badge */}
       {watched && (
         <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 backdrop-blur-sm text-white text-[10px] font-semibold">
-          <Check size={10} /> Tutorial Complete
+          <Check size={10} /> Video Completed!
         </div>
       )}
-
-      {/* Controls bar */}
       <div
         className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent px-4 pb-3 pt-8 transition-opacity duration-300 ${showCtrl ? "opacity-100" : "opacity-0"}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Progress track */}
-        <div
-          className="relative w-full h-1 bg-white/20 rounded-full mb-3 cursor-pointer group/bar"
-          onClick={seek}
-        >
+        <div className="relative w-full h-1 bg-white/20 rounded-full mb-3 cursor-pointer group/bar" onClick={seek}>
           <div className="absolute inset-y-0 left-0 bg-white/20 rounded-full" style={{ width: `${bufPct}%` }} />
           <div className="absolute inset-y-0 left-0 bg-purple-500 rounded-full transition-all duration-100" style={{ width: `${pct}%` }} />
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/bar:opacity-100 transition-opacity duration-150"
-            style={{ left: `calc(${pct}% - 6px)` }}
-          />
+          <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover/bar:opacity-100 transition-opacity duration-150" style={{ left: `calc(${pct}% - 6px)` }} />
         </div>
-
         <div className="flex items-center gap-3">
-          {/* Play/Pause */}
           <button onClick={togglePlay} className="text-white/80 hover:text-white transition-colors">
             {playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
           </button>
-
-          {/* Skip 10s */}
           <button onClick={skip10} className="text-white/50 hover:text-white/80 transition-colors">
             <SkipForward size={14} />
           </button>
-
-          {/* Volume */}
           <div className="flex items-center gap-1.5 group/vol">
             <button onClick={toggleMute} className="text-white/60 hover:text-white transition-colors">
               {muted || volume === 0 ? <VolumeX size={14} /> : <Volume2 size={14} />}
             </button>
-            <input
-              type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume}
-              onChange={changeVolume}
-              className="w-0 group-hover/vol:w-16 overflow-hidden transition-all duration-200 accent-purple-500 cursor-pointer"
-            />
+            <input type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume} onChange={changeVolume}
+              className="w-0 group-hover/vol:w-16 overflow-hidden transition-all duration-200 accent-purple-500 cursor-pointer" />
           </div>
-
-          {/* Time */}
-          <span className="text-[10px] text-white/40 font-mono ml-auto">
-            {fmtSeconds(progress)} / {fmtSeconds(duration)}
-          </span>
-
-          {/* Fullscreen */}
-          <button onClick={fullscreen} className="text-white/60 hover:text-white transition-colors">
-            <Maximize size={13} />
-          </button>
+          <span className="text-[10px] text-white/40 font-mono ml-auto">{fmtSeconds(progress)} / {fmtSeconds(duration)}</span>
+          <button onClick={fullscreen} className="text-white/60 hover:text-white transition-colors"><Maximize size={13} /></button>
         </div>
       </div>
     </div>
@@ -652,10 +640,8 @@ function UsageGraph({ managed }: { managed: ManagedUsage }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Try backend first
       const data = await fetchUsageGraph(range);
       if (data.length > 0) { setPoints(data); return; }
-      // Fallback to embedded graph data from Firestore
       const embedded = managed.usageGraph?.[range];
       if (embedded && embedded.length > 0) { setPoints(embedded); return; }
       setPoints([]);
@@ -690,52 +676,36 @@ function UsageGraph({ managed }: { managed: ManagedUsage }) {
           ))}
         </div>
       </div>
-
       {loading ? (
-        <div className="px-5 py-10 flex items-center justify-center">
-          <Spinner className="w-5 h-5 text-white/20" />
-        </div>
+        <div className="px-5 py-10 flex items-center justify-center"><Spinner className="w-5 h-5 text-white/20" /></div>
       ) : points.length === 0 ? (
         <EmptyState icon={BarChart2} title="No usage data yet" description="Data appears here once moderation activity is recorded." />
       ) : (
         <div className="px-5 pt-5 pb-4">
-          {/* Summary row */}
           <div className="grid grid-cols-3 gap-3 mb-5">
-            {[
-              { label: "Total",   value: total.toLocaleString()  },
-              { label: "Average", value: avgVal.toLocaleString() },
-              { label: "Peak",    value: max.toLocaleString()    },
-            ].map((s) => (
+            {[{ label: "Total", value: total.toLocaleString() }, { label: "Average", value: avgVal.toLocaleString() }, { label: "Peak", value: max.toLocaleString() }].map((s) => (
               <div key={s.label} className="rounded-xl bg-white/[0.03] border border-white/6 px-3 py-2.5">
                 <p className="text-[10px] text-white/25 uppercase tracking-widest mb-1">{s.label}</p>
                 <p className="text-base font-bold text-white">{s.value}</p>
               </div>
             ))}
           </div>
-
-          {/* Bar chart */}
           <div className="flex items-end gap-1 h-24">
             {points.map((p, i) => {
               const h = max > 0 ? Math.max(4, (p.value / max) * 96) : 4;
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1 group/bar relative">
-                  {/* Tooltip */}
                   <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover/bar:opacity-100 pointer-events-none transition-opacity duration-150">
                     <div className="bg-[#1a1825] border border-white/15 rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-xl">
                       <p className="text-[10px] font-semibold text-white">{p.value.toLocaleString()}</p>
                       <p className="text-[9px] text-white/35 mt-0.5">{p.label}</p>
                     </div>
                   </div>
-                  <div
-                    className="w-full rounded-t-md bg-gradient-to-t from-purple-700 to-purple-500 group-hover/bar:from-purple-600 group-hover/bar:to-purple-400 transition-all duration-200"
-                    style={{ height: `${h}%` }}
-                  />
+                  <div className="w-full rounded-t-md bg-gradient-to-t from-purple-700 to-purple-500 group-hover/bar:from-purple-600 group-hover/bar:to-purple-400 transition-all duration-200" style={{ height: `${h}%` }} />
                 </div>
               );
             })}
           </div>
-
-          {/* X-axis labels — show only first, middle, last */}
           <div className="flex items-center mt-2">
             {points.map((p, i) => {
               const show = i === 0 || i === Math.floor(points.length / 2) || i === points.length - 1;
@@ -752,6 +722,264 @@ function UsageGraph({ managed }: { managed: ManagedUsage }) {
   );
 }
 
+// ─── GCP Console Mock UI Components ──────────────────────────────────────────
+
+/** Realistic Google Cloud Console topbar */
+function GCPTopBar({ projectName = "my-moderateai-project" }: { projectName?: string }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 bg-[#202124] border-b border-white/10">
+      {/* Google Cloud logo */}
+      <div className="flex items-center gap-1.5 mr-1">
+        <div className="flex gap-0.5">
+          <div className="w-2 h-2 rounded-full bg-[#4285F4]" />
+          <div className="w-2 h-2 rounded-full bg-[#EA4335]" />
+        </div>
+        <div className="flex gap-0.5">
+          <div className="w-2 h-2 rounded-full bg-[#FBBC05]" />
+          <div className="w-2 h-2 rounded-full bg-[#34A853]" />
+        </div>
+      </div>
+      <span className="text-[10px] font-semibold text-white/70 mr-1">Google Cloud</span>
+      <div className="flex items-center gap-1 px-2 py-1 rounded bg-white/5 border border-white/10 flex-1 max-w-[180px]">
+        <span className="text-[9px] text-white/50 truncate">{projectName}</span>
+        <ChevronDown size={9} className="text-white/30 shrink-0" />
+      </div>
+      <div className="ml-auto flex items-center gap-2">
+        <Search size={11} className="text-white/30" />
+        <Bell size={11} className="text-white/30" />
+        <div className="w-5 h-5 rounded-full bg-[#4285F4] flex items-center justify-center">
+          <span className="text-[8px] font-bold text-white">Y</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** GCP left nav item */
+function GCPNavItem({ icon: Icon, label, active }: { icon: React.ElementType; label: string; active?: boolean }) {
+  return (
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded cursor-pointer transition-colors duration-150
+      ${active ? "bg-[#4285F4]/20 text-[#8ab4f8]" : "text-white/40 hover:bg-white/5 hover:text-white/60"}`}>
+      <Icon size={11} />
+      <span className="text-[10px]">{label}</span>
+    </div>
+  );
+}
+
+/** Realistic Google Cloud Console shell */
+function GCPConsoleShell({ children, activeNav }: { children: React.ReactNode; activeNav?: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 overflow-hidden bg-[#1a1b1e] shadow-2xl">
+      <GCPTopBar />
+      <div className="flex" style={{ minHeight: 220 }}>
+        {/* Left nav */}
+        <div className="w-36 bg-[#202124] border-r border-white/8 py-2 shrink-0">
+          <GCPNavItem icon={Layers} label="Dashboard" />
+          <div className="px-3 py-1 mt-1">
+            <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest">APIs & Services</p>
+          </div>
+          <GCPNavItem icon={Globe} label="Library" active={activeNav === "library"} />
+          <GCPNavItem icon={Key} label="Credentials" active={activeNav === "credentials"} />
+          <GCPNavItem icon={Shield} label="OAuth consent" active={activeNav === "consent"} />
+          <div className="px-3 py-1 mt-1">
+            <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest">IAM & Admin</p>
+          </div>
+          <GCPNavItem icon={Settings} label="Settings" />
+        </div>
+        {/* Main content */}
+        <div className="flex-1 p-4 overflow-auto">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/** Simulated "New Project" dialog */
+function GCPNewProjectUI() {
+  return (
+    <GCPConsoleShell>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex gap-0.5">
+            <div className="w-3 h-3 rounded-full bg-[#4285F4]" />
+            <div className="w-3 h-3 rounded-full bg-[#EA4335]" />
+            <div className="w-3 h-3 rounded-full bg-[#FBBC05]" />
+            <div className="w-3 h-3 rounded-full bg-[#34A853]" />
+          </div>
+          <span className="text-xs font-semibold text-white/80">New Project</span>
+        </div>
+        <div className="space-y-2">
+          <div>
+            <label className="text-[10px] text-white/40 block mb-1">Project name *</label>
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#2d2e31] border border-[#4285F4]/60 rounded text-xs text-white/80">
+              <span className="flex-1">my-moderateai-project</span>
+              <div className="w-1 h-3 bg-[#4285F4] animate-pulse" />
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] text-white/40 block mb-1">Project ID</label>
+            <div className="px-3 py-2 bg-[#2d2e31] border border-white/10 rounded text-[10px] text-white/40 font-mono">
+              my-moderateai-project-491023
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] text-white/40 block mb-1">Organization</label>
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-[#2d2e31] border border-white/10 rounded text-[10px] text-white/50">
+              No organization
+              <ChevronDown size={9} className="ml-auto text-white/30" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 pt-1">
+          <button className="px-4 py-1.5 bg-[#4285F4] text-white text-[10px] font-semibold rounded hover:bg-[#5a95f5] transition-colors">
+            CREATE
+          </button>
+          <button className="px-4 py-1.5 text-[#8ab4f8] text-[10px] font-semibold rounded hover:bg-white/5 transition-colors">
+            CANCEL
+          </button>
+        </div>
+      </div>
+    </GCPConsoleShell>
+  );
+}
+
+/** Simulated API Library view */
+function GCPAPILibraryUI() {
+  return (
+    <GCPConsoleShell activeNav="library">
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-white/70">API Library</p>
+        {/* Search bar */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#2d2e31] border border-white/10 rounded">
+          <Search size={11} className="text-white/30" />
+          <span className="text-[10px] text-white/40">Search APIs & Services</span>
+        </div>
+        {/* YouTube API result */}
+        <div className="rounded border border-[#4285F4]/40 bg-[#4285F4]/5 p-3 flex items-start gap-3">
+          <div className="w-8 h-8 rounded bg-[#FF0000] flex items-center justify-center shrink-0">
+            <Youtube size={14} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-[11px] font-semibold text-white/80">YouTube Data API v3</p>
+            <p className="text-[9px] text-white/40 mt-0.5">Google · youtube.googleapis.com</p>
+            <p className="text-[9px] text-white/30 mt-1 leading-relaxed">The YouTube Data API v3 is an API that provides access to YouTube data, such as videos, playlists, and channels.</p>
+            <div className="flex items-center gap-2 mt-2">
+              <button className="px-3 py-1 bg-[#4285F4] text-white text-[9px] font-bold rounded hover:bg-[#5a95f5] transition-colors uppercase tracking-wide">
+                ENABLE
+              </button>
+              <span className="text-[9px] text-[#34A853] font-medium flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#34A853]" /> Currently disabled
+              </span>
+            </div>
+          </div>
+        </div>
+        {/* Other APIs (greyed out) */}
+        {["YouTube Analytics API", "YouTube Reporting API"].map((api) => (
+          <div key={api} className="rounded border border-white/6 bg-[#2d2e31]/50 p-2.5 flex items-center gap-2.5">
+            <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center shrink-0">
+              <Youtube size={10} className="text-white/30" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[10px] text-white/35">{api}</p>
+              <p className="text-[9px] text-white/20">Google</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </GCPConsoleShell>
+  );
+}
+
+/** Simulated OAuth Credentials page */
+function GCPOAuthUI() {
+  return (
+    <GCPConsoleShell activeNav="credentials">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-white/70">Credentials</p>
+          <button className="flex items-center gap-1 px-2.5 py-1 bg-[#4285F4] text-white text-[9px] font-bold rounded uppercase tracking-wide">
+            <Plus size={9} /> Create credentials
+          </button>
+        </div>
+        {/* OAuth 2.0 Client IDs table */}
+        <div className="rounded border border-white/10 overflow-hidden">
+          <div className="px-3 py-2 bg-[#2d2e31] border-b border-white/8">
+            <p className="text-[10px] font-semibold text-white/50">OAuth 2.0 Client IDs</p>
+          </div>
+          <div className="divide-y divide-white/5">
+            <div className="grid grid-cols-3 px-3 py-1.5 gap-2">
+              <span className="text-[9px] text-white/25 uppercase tracking-wide font-semibold">Name</span>
+              <span className="text-[9px] text-white/25 uppercase tracking-wide font-semibold">Type</span>
+              <span className="text-[9px] text-white/25 uppercase tracking-wide font-semibold">Created</span>
+            </div>
+            <div className="grid grid-cols-3 px-3 py-2 gap-2 bg-[#4285F4]/8 border-l-2 border-[#4285F4]">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#4285F4]" />
+                <span className="text-[10px] text-[#8ab4f8] font-medium truncate">Web client 1</span>
+              </div>
+              <span className="text-[10px] text-white/50">Web application</span>
+              <span className="text-[10px] text-white/40 font-mono">{new Date().toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+        {/* Authorized origins preview */}
+        <div className="rounded border border-white/8 bg-[#2d2e31]/60 p-2.5 space-y-1.5">
+          <p className="text-[9px] font-semibold text-white/30 uppercase tracking-wide">Authorized JavaScript origins</p>
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-[#202124] rounded border border-white/8">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#34A853]" />
+            <span className="text-[9px] text-white/50 font-mono truncate">{JS_ORIGIN}</span>
+          </div>
+        </div>
+      </div>
+    </GCPConsoleShell>
+  );
+}
+
+/** Simulated Credentials detail page with client ID/secret */
+function GCPCredentialsDetailUI() {
+  const [showSecret, setShowSecret] = useState(false);
+  return (
+    <GCPConsoleShell activeNav="credentials">
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-white/70">OAuth Client · Web client 1</p>
+        <div className="space-y-2">
+          <div className="rounded border border-white/8 bg-[#2d2e31]/60 p-2.5 space-y-1">
+            <p className="text-[9px] font-semibold text-white/30 uppercase tracking-wide">Client ID</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-white/60 font-mono flex-1 truncate">
+                491023874561-abcdefghijklmnopqrstuv.apps.googleusercontent.com
+              </span>
+              <button className="text-[#8ab4f8] text-[9px] flex items-center gap-0.5 hover:text-[#4285F4] transition-colors">
+                <Copy size={9} /> Copy
+              </button>
+            </div>
+          </div>
+          <div className="rounded border border-white/8 bg-[#2d2e31]/60 p-2.5 space-y-1">
+            <p className="text-[9px] font-semibold text-white/30 uppercase tracking-wide">Client Secret</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-white/60 font-mono flex-1 truncate">
+                {showSecret ? "GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" : "GOCSPX-••••••••••••••••••••••••••••••••"}
+              </span>
+              <button onClick={() => setShowSecret(!showSecret)} className="text-[#8ab4f8] text-[9px] hover:text-[#4285F4] transition-colors">
+                {showSecret ? <EyeOff size={9} /> : <Eye size={9} />}
+              </button>
+              <button className="text-[#8ab4f8] text-[9px] flex items-center gap-0.5 hover:text-[#4285F4] transition-colors">
+                <Copy size={9} /> Copy
+              </button>
+            </div>
+          </div>
+          <div className="rounded border border-white/8 bg-[#2d2e31]/60 p-2.5 space-y-1">
+            <p className="text-[9px] font-semibold text-white/30 uppercase tracking-wide">Authorized Redirect URI</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-white/60 font-mono flex-1 truncate">{REDIRECT_URI}</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#34A853] shrink-0" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </GCPConsoleShell>
+  );
+}
+
 // ─── Step 1: Tutorial ─────────────────────────────────────────────────────────
 
 function TutorialStep({ onNext, onPrev, onWatched, watched }: {
@@ -760,22 +988,40 @@ function TutorialStep({ onNext, onPrev, onWatched, watched }: {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-white mb-1">Setup tutorial</h2>
+        <h2 className="text-base font-semibold text-white mb-1">Watch Setup Video</h2>
         <p className="text-white/40 text-xs leading-relaxed">
-          Watch this walkthrough before connecting your Google Cloud Project. Steps 2–6 unlock after completion.
+          Watch this quick walkthrough before connecting your Google Cloud Project. Steps 2–6 unlock after completion.
         </p>
       </div>
 
       <VideoPlayer onWatched={onWatched} />
 
+      {/* Trust signals */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { icon: <Shield size={13} className="text-emerald-400" />, label: "100% Secure", sub: "Credentials encrypted & safe" },
+          { icon: <Zap size={13} className="text-yellow-400" />, label: "10,000 Units/Day", sub: "Your own YouTube API quota" },
+          { icon: <HelpCircle size={13} className="text-blue-400" />, label: "24/7 Support", sub: "We're here to help" },
+        ].map((item) => (
+          <div key={item.label} className="rounded-xl border border-white/6 bg-white/[0.02] px-3 py-3 flex flex-col items-center gap-1.5 text-center">
+            <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center">{item.icon}</div>
+            <p className="text-[10px] font-semibold text-white/70">{item.label}</p>
+            <p className="text-[9px] text-white/30 leading-tight">{item.sub}</p>
+          </div>
+        ))}
+      </div>
+
       {watched && (
         <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/6 text-xs text-emerald-400">
           <CheckCircle2 size={13} className="shrink-0" />
-          Tutorial complete — all steps are now unlocked.
+          <div>
+            <span className="font-semibold">Great! Video Completed 🎉</span>
+            <span className="text-emerald-400/70 ml-1">You are all set to connect your Google Cloud project.</span>
+          </div>
         </div>
       )}
 
-      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Continue" nextDisabled={!watched} />
+      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Continue →" nextDisabled={!watched} />
     </div>
   );
 }
@@ -786,34 +1032,24 @@ function GCPStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void })
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-white mb-1">Create a Google Cloud Project</h2>
+        <h2 className="text-base font-semibold text-white mb-1">Open Google Cloud Console</h2>
         <p className="text-white/40 text-xs leading-relaxed">
-          You need a Google Cloud Project to generate API credentials.
+          Click the button below to open Google Cloud Console in a new tab.
         </p>
       </div>
 
-      {/* Screenshot */}
-      <div className="w-full rounded-xl border border-white/8 overflow-hidden">
-        <img
-          src="/screenshots/gcp-new-project.png"
-          alt="Google Cloud Console – New Project"
-          className="w-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-            (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
-          }}
-        />
-        <div className="hidden w-full aspect-[16/5] bg-[#0d0c14]">
-          <div className="flex items-center justify-center w-full h-full">
-            <p className="text-[10px] text-white/15">Place screenshot at /public/screenshots/gcp-new-project.png</p>
-          </div>
-        </div>
-      </div>
+      {/* Realistic GCP UI mock */}
+      <GCPNewProjectUI />
 
       <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
         <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
         <ol className="space-y-2">
-          {["Go to console.cloud.google.com", "Click the project dropdown at the top", 'Select "New Project"', "Give it a name and click Create"].map((step, i) => (
+          {[
+            "Go to console.cloud.google.com",
+            "Click the project dropdown at the top of the page",
+            'Click "New Project" in the dialog',
+            'Give it a name like "ModerateAI" and click Create',
+          ].map((step, i) => (
             <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
               <span className="w-4 h-4 rounded-full bg-purple-600/20 border border-purple-500/25 text-purple-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
               {step}
@@ -822,25 +1058,18 @@ function GCPStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void })
         </ol>
       </div>
 
-      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-          <Cloud size={14} className="text-purple-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-white">Google Cloud Console</p>
-          <p className="text-[10px] text-white/30 font-mono">console.cloud.google.com</p>
-        </div>
+      <div className="flex gap-2">
         <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
-          Open <ExternalLink size={10} />
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
+          Open Google Console <ExternalLink size={13} />
         </a>
       </div>
 
-      <div className="flex items-center gap-2 text-[10px] text-white/25">
-        <Clock size={10} className="text-white/20" /> Estimated time: 2 minutes
-      </div>
+      <p className="text-center text-[10px] text-white/25">
+        Having trouble? <span className="text-purple-400 underline cursor-pointer">View Guide</span>
+      </p>
 
-      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Project created" />
+      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Next →" />
     </div>
   );
 }
@@ -852,23 +1081,20 @@ function EnableStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Enable YouTube Data API v3</h2>
-        <p className="text-white/40 text-xs leading-relaxed">Find and enable the YouTube Data API v3 in the API Library.</p>
+        <p className="text-white/40 text-xs leading-relaxed">Click the button below to go to the YouTube Data API v3 page.</p>
       </div>
 
-      <div className="w-full rounded-xl border border-white/8 overflow-hidden">
-        <img src="/screenshots/gcp-enable-api.png" alt="Google Cloud API Library – YouTube Data API v3" className="w-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }} />
-        <div className="hidden w-full aspect-[16/5] bg-[#0d0c14]">
-          <div className="flex items-center justify-center w-full h-full">
-            <p className="text-[10px] text-white/15">Place screenshot at /public/screenshots/gcp-enable-api.png</p>
-          </div>
-        </div>
-      </div>
+      {/* Realistic API Library UI */}
+      <GCPAPILibraryUI />
 
       <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
         <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
         <ol className="space-y-2">
-          {["In the Cloud Console, open APIs & Services → Library", 'Search for "YouTube Data API v3"', "Click the result and press Enable"].map((step, i) => (
+          {[
+            "In the Cloud Console, open APIs & Services → Library",
+            'Search for "YouTube Data API v3"',
+            "Click the result, then press Enable",
+          ].map((step, i) => (
             <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
               <span className="w-4 h-4 rounded-full bg-red-500/15 border border-red-500/20 text-red-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
               {step}
@@ -877,25 +1103,12 @@ function EnableStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void
         </ol>
       </div>
 
-      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-          <Youtube size={14} className="text-red-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-white">YouTube Data API v3</p>
-          <p className="text-[10px] text-white/30">Search in the API Library, then click Enable.</p>
-        </div>
-        <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
-          Open <ExternalLink size={10} />
-        </a>
-      </div>
+      <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
+        Open API Library <ExternalLink size={13} />
+      </a>
 
-      <div className="flex items-center gap-2 text-[10px] text-white/25">
-        <Clock size={10} className="text-white/20" /> Estimated time: 1 minute
-      </div>
-
-      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="API enabled" />
+      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Next →" />
     </div>
   );
 }
@@ -906,38 +1119,20 @@ function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void 
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-white mb-1">Create an OAuth 2.0 Client</h2>
-        <p className="text-white/40 text-xs leading-relaxed">Set up an OAuth consent screen, then create a Web Application client.</p>
+        <h2 className="text-base font-semibold text-white mb-1">Create OAuth Client ID</h2>
+        <p className="text-white/40 text-xs leading-relaxed">Click the button below to go to the Credentials page.</p>
       </div>
 
-      <div className="w-full rounded-xl border border-white/8 overflow-hidden">
-        <img src="/screenshots/gcp-oauth-client.png" alt="Google Cloud OAuth Client Credentials" className="w-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }} />
-        <div className="hidden w-full aspect-[16/5] bg-[#0d0c14]">
-          <div className="flex items-center justify-center w-full h-full">
-            <p className="text-[10px] text-white/15">Place screenshot at /public/screenshots/gcp-oauth-client.png</p>
-          </div>
-        </div>
-      </div>
+      {/* Realistic OAuth Credentials UI */}
+      <GCPOAuthUI />
 
-      <div className="space-y-2.5">
-        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-            <Shield size={14} className="text-purple-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white">OAuth Consent Screen</p>
-            <p className="text-[10px] text-white/30">Configure as External and add your app details.</p>
-          </div>
-          <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
-            Open <ExternalLink size={10} />
-          </a>
-        </div>
+      <div className="space-y-2">
+        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Add these to your OAuth client</p>
 
-        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest pt-1">Add these to your OAuth client</p>
-
-        {[{ label: "Authorized JavaScript Origin", value: JS_ORIGIN }, { label: "Authorized Redirect URI", value: REDIRECT_URI }].map(({ label, value }) => (
+        {[
+          { label: "Authorized JavaScript Origin", value: JS_ORIGIN },
+          { label: "Authorized Redirect URI", value: REDIRECT_URI },
+        ].map(({ label, value }) => (
           <div key={label} className="space-y-1.5">
             <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">{label}</label>
             <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3">
@@ -946,27 +1141,14 @@ function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void 
             </div>
           </div>
         ))}
-
-        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-            <Key size={14} className="text-purple-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-white">Create OAuth Client ID</p>
-            <p className="text-[10px] text-white/30">Application type: Web application.</p>
-          </div>
-          <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0">
-            Open <ExternalLink size={10} />
-          </a>
-        </div>
       </div>
 
-      <div className="flex items-center gap-2 text-[10px] text-white/25">
-        <Clock size={10} className="text-white/20" /> Estimated time: 3–5 minutes
-      </div>
+      <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
+        Open Credentials <ExternalLink size={13} />
+      </a>
 
-      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Client created" />
+      <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Next →" />
     </div>
   );
 }
@@ -993,38 +1175,37 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-white mb-1">Paste your credentials</h2>
-        <p className="text-white/40 text-xs leading-relaxed">Copy the Client ID and Client Secret from the OAuth client you just created.</p>
+        <h2 className="text-base font-semibold text-white mb-1">Add Your Credentials</h2>
+        <p className="text-white/40 text-xs leading-relaxed">Paste your OAuth Client ID and Client Secret below.</p>
       </div>
 
-      <div className="w-full rounded-xl border border-white/8 overflow-hidden">
-        <img src="/screenshots/gcp-credentials.png" alt="Google Cloud OAuth Credentials" className="w-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }} />
-        <div className="hidden w-full aspect-[16/5] bg-[#0d0c14]">
-          <div className="flex items-center justify-center w-full h-full">
-            <p className="text-[10px] text-white/15">Place screenshot at /public/screenshots/gcp-credentials.png</p>
-          </div>
-        </div>
-      </div>
+      {/* Realistic GCP credentials detail UI */}
+      <GCPCredentialsDetailUI />
 
       <div className="space-y-3">
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Client ID</label>
           <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)}
-            placeholder="xxxxxxxxxxxx-xxxxxxxx.apps.googleusercontent.com"
+            placeholder="Paste your Client ID"
             className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono" />
         </div>
-
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Client Secret</label>
           <div className="relative">
             <input type={showSecret ? "text" : "password"} value={clientSecret} onChange={(e) => setClientSecret(e.target.value)}
-              placeholder="GOCSPX-xxxxxxxxxxxxxxxxxxxxx"
+              placeholder="Paste your Client Secret"
               className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 pr-11 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono" />
             <button onClick={() => setShowSecret(!showSecret)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors duration-150">
               {showSecret ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Redirect URI (Copy this)</label>
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3">
+            <code className="flex-1 text-white/40 text-xs font-mono truncate">{REDIRECT_URI}</code>
+            <CopyButton value={REDIRECT_URI} />
           </div>
         </div>
       </div>
@@ -1039,12 +1220,12 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
       <div className="flex gap-2.5 pt-1">
         <button onClick={onPrev}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-medium text-sm transition-all duration-200">
-          <ChevronLeft size={15} /> Back
+          ← Previous
         </button>
         <button onClick={handleSave} disabled={!canSave || saving}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
             ${canSave && !saving ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]" : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}>
-          {saving ? <><Spinner className="w-3.5 h-3.5" /> Saving…</> : <><Lock size={13} /> Save & Continue</>}
+          {saving ? <><Spinner className="w-3.5 h-3.5" /> Saving…</> : "Validate"}
         </button>
       </div>
     </div>
@@ -1058,24 +1239,41 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-white mb-1">Connect YouTube</h2>
-        <p className="text-white/40 text-xs leading-relaxed">Authorize ModerateAI to read and moderate comments on your YouTube channel.</p>
+        <h2 className="text-base font-semibold text-white mb-1">Connect Your YouTube Channel</h2>
+        <p className="text-white/40 text-xs leading-relaxed">Authorize ModerateAI to access your YouTube channel.</p>
       </div>
 
       <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-8 flex flex-col items-center gap-5 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-          <Youtube size={26} className="text-red-400" />
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full bg-[#FF0000] flex items-center justify-center shadow-2xl shadow-red-900/40">
+            <Youtube size={28} className="text-white" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-[#0a0a0f] flex items-center justify-center">
+            <Check size={10} className="text-white" />
+          </div>
         </div>
         <div>
-          <p className="text-sm font-semibold text-white mb-1">Authorize via Google OAuth</p>
+          <p className="text-sm font-semibold text-white mb-1">Connect Your YouTube Channel</p>
           <p className="text-xs text-white/35 leading-relaxed max-w-xs mx-auto">
-            A Google sign-in window will open. Select the account that owns your YouTube channel, then grant the requested permissions.
+            Authorize ModerateAI to access your YouTube channel for comment moderation.
           </p>
+        </div>
+        <div className="w-full space-y-2 text-left">
+          {[
+            "We will only access data required for moderation.",
+            "Your data is secure and encrypted.",
+            "You can disconnect anytime.",
+          ].map((item) => (
+            <div key={item} className="flex items-center gap-2 text-xs text-white/40">
+              <Check size={11} className="text-emerald-400 shrink-0" />
+              {item}
+            </div>
+          ))}
         </div>
         <button
           onClick={() => { setConnecting(true); redirectToYouTubeAuth(); }}
           disabled={connecting}
-          className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.02] disabled:opacity-60">
+          className="w-full flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-[#FF0000] hover:bg-red-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.02] disabled:opacity-60">
           {connecting ? <><Spinner className="w-3.5 h-3.5" /> Redirecting…</> : <><Youtube size={15} /> Connect YouTube</>}
         </button>
       </div>
@@ -1083,7 +1281,7 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
       {onPrev && (
         <button onClick={onPrev}
           className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 font-medium text-sm transition-all duration-200">
-          <ChevronLeft size={15} /> Back
+          ← Previous
         </button>
       )}
     </div>
@@ -1098,7 +1296,7 @@ function SetupWizard({ onConnected }: { onConnected: () => void }) {
   const step = WIZARD_FLOW[stepIndex];
 
   const next = () => {
-    if (stepIndex > 0 && !videoWatched) return; // guard
+    if (stepIndex > 0 && !videoWatched) return;
     setStepIndex((i) => Math.min(i + 1, WIZARD_FLOW.length - 1));
   };
   const prev = () => setStepIndex((i) => Math.max(i - 1, 0));
@@ -1112,17 +1310,28 @@ function SetupWizard({ onConnected }: { onConnected: () => void }) {
         <span className="ml-auto text-[10px] text-white/20 font-medium">Step {stepIndex + 1} of {WIZARD_FLOW.length}</span>
       </div>
 
-      <div className="px-5 py-4 border-b border-white/5">
-        <StepIndicator current={stepIndex + 1} videoWatched={videoWatched} />
-      </div>
+      <div className="flex">
+        {/* Left sidebar nav */}
+        <div className="w-44 border-r border-white/8 py-3 px-2 shrink-0">
+          <StepIndicator
+            current={stepIndex + 1}
+            videoWatched={videoWatched}
+            onStepClick={(i) => {
+              if (i > 0 && !videoWatched) return;
+              setStepIndex(i);
+            }}
+          />
+        </div>
 
-      <div className="px-5 py-5">
-        {step === "tutorial"    && <TutorialStep    onNext={next} onPrev={stepIndex > 0 ? prev : undefined} onWatched={() => setVideoWatched(true)} watched={videoWatched} />}
-        {step === "gcp"         && <GCPStep         onNext={next} onPrev={prev} />}
-        {step === "enable"      && <EnableStep      onNext={next} onPrev={prev} />}
-        {step === "oauth"       && <OAuthStep       onNext={next} onPrev={prev} />}
-        {step === "credentials" && <CredentialsStep onNext={next} onPrev={prev} />}
-        {step === "connect"     && <ConnectStep     onPrev={prev} />}
+        {/* Main content */}
+        <div className="flex-1 px-5 py-5">
+          {step === "tutorial"    && <TutorialStep    onNext={next} onPrev={stepIndex > 0 ? prev : undefined} onWatched={() => setVideoWatched(true)} watched={videoWatched} />}
+          {step === "gcp"         && <GCPStep         onNext={next} onPrev={prev} />}
+          {step === "enable"      && <EnableStep      onNext={next} onPrev={prev} />}
+          {step === "oauth"       && <OAuthStep       onNext={next} onPrev={prev} />}
+          {step === "credentials" && <CredentialsStep onNext={next} onPrev={prev} />}
+          {step === "connect"     && <ConnectStep     onPrev={prev} />}
+        </div>
       </div>
     </div>
   );
@@ -1246,7 +1455,6 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
         </div>
       </div>
 
-      {/* Primary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/[0.04]">
         <StatCell label="Current Plan"    value={managed.planLabel}                            icon={<Server    size={11} className="text-purple-400"  />} />
         <StatCell label="AI Actions Used" value={used.toLocaleString()}                        icon={<Zap       size={11} className="text-yellow-400"  />} />
@@ -1254,7 +1462,6 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
         <StatCell label="Reset Date"      value={fmt(managed.resetDate, { month: "short", day: "numeric" })} icon={<Clock size={11} className="text-blue-400" />} />
       </div>
 
-      {/* Secondary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/[0.04] border-t border-white/[0.04]">
         <StatCell label="Today's Requests"   value={managed.todayRequests.toLocaleString()}     icon={<TrendingUp    size={11} className="text-blue-400"   />} />
         <StatCell label="Comments Moderated" value={managed.commentsModerated.toLocaleString()} icon={<MessageSquare size={11} className="text-purple-400" />} />
@@ -1262,7 +1469,6 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
         <StatCell label="Videos Monitored"   value={managed.videosMonitored.toLocaleString()}   icon={<Video         size={11} className="text-red-400"    />} />
       </div>
 
-      {/* Health row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/[0.04] border-t border-white/[0.04]">
         <StatCell label="Success Rate" value={`${managed.successRate}%`} icon={<CheckCircle2 size={11} className="text-emerald-400" />}
           valueClass={managed.successRate >= 99 ? "text-emerald-400" : managed.successRate >= 95 ? "text-yellow-400" : "text-red-400"} />
@@ -1586,7 +1792,9 @@ export default function APIAccessPage() {
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight mb-1">API Access</h1>
             <p className="text-white/35 text-sm">
-              {connected ? "Manage how ModerateAI connects to the YouTube Data API." : "Connect your account to start moderating comments."}
+              {connected
+                ? "Manage how ModerateAI connects to the YouTube Data API."
+                : "Connect your account to start moderating comments."}
             </p>
           </div>
           {connected && (

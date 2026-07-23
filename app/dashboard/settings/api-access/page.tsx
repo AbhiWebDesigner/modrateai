@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { getAuth } from "firebase/auth";
 import {
   Shield, ChevronRight, ChevronLeft, Copy, Eye, EyeOff,
   ExternalLink, Check, Lock, Wifi, WifiOff, RotateCcw,
@@ -9,6 +10,17 @@ import {
   TrendingUp, MessageSquare, Video, ArrowUpRight, CheckCircle2,
   AlertCircle, XCircle, Cpu,
 } from "lucide-react";
+
+// ─── YouTube OAuth redirect ───────────────────────────────────────────────────
+
+function redirectToYouTubeAuth() {
+  const uid = getAuth().currentUser?.uid;
+  if (!uid) {
+    console.error("[api-access] No authenticated user — cannot start OAuth.");
+    return;
+  }
+  window.location.href = `/api/auth/youtube?uid=${encodeURIComponent(uid)}`;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -784,7 +796,7 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
           </p>
         </div>
         <button
-          onClick={() => { setConnecting(true); window.location.href = "/api/auth/youtube"; }}
+          onClick={() => { setConnecting(true); redirectToYouTubeAuth(); }}
           disabled={connecting}
           className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.02] disabled:opacity-60"
         >
@@ -1170,7 +1182,7 @@ function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
           {rotateError && <ErrorBanner message={rotateError} />}
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => { window.location.href = "/api/auth/youtube"; }}
+              onClick={() => { redirectToYouTubeAuth(); }}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-500/30 text-purple-300 hover:border-purple-500/50 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
             >
               <RefreshCw size={12} /> Reconnect
@@ -1420,7 +1432,7 @@ export default function APIAccessPage() {
               </p>
             </div>
             <button
-              onClick={() => { window.location.href = "/api/auth/youtube"; }}
+              onClick={() => { redirectToYouTubeAuth(); }}
               className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.02]"
             >
               <Youtube size={15} /> Connect YouTube

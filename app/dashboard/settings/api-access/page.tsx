@@ -1,15 +1,16 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { DashboardSidebar, DashboardBottomNav } from "@/app/components/DashboardLayout";
 import {
   Shield, RefreshCw, CheckCircle, Zap,
   BarChart2, MessageSquare, Video, Clock, TrendingUp,
   Activity, BookOpen, Headphones, ChevronLeft, ChevronRight,
-  Lock, AlertCircle, ExternalLink, Wifi, WifiOff, Loader2
+  Lock, AlertCircle, ExternalLink, Wifi, WifiOff, Loader2,
+  Cloud, Key, Database, Settings2, Play
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -44,7 +45,29 @@ interface UserData {
   protection_score: number;
   usage_percent: number;
   live_monitoring: boolean;
+  // Google Cloud Project fields
+  gcp_project_name?: string;
+  gcp_project_id?: string;
+  gcp_google_account?: string;
+  gcp_oauth_status?: string;
+  gcp_oauth_redirect_uri?: string;
+  gcp_oauth_scopes?: string[];
+  gcp_oauth_verification?: string;
+  gcp_api_status?: string;
+  gcp_api_quota?: number;
+  gcp_api_billing?: string;
+  gcp_api_last_checked?: string;
+  gcp_daily_quota?: number;
+  gcp_used_today?: number;
+  gcp_quota_reset_time?: string;
+  gcp_client_id?: string;
+  gcp_client_secret_masked?: string;
+  gcp_credentials_updated?: string;
+  gcp_connected?: boolean;
+  gcp_last_sync?: string;
 }
+
+type ConnectionMode = "shared" | "gcp";
 
 // ─── Setup Steps ──────────────────────────────────────────────────────────────
 const SETUP_STEPS = [
@@ -56,13 +79,13 @@ const SETUP_STEPS = [
   { label: "Connect YouTube", key: "connect_youtube" },
 ];
 
-const STEP_DETAILS: Record<string, { title: string; desc: string; action?: string; url?: string }> = {
-  watch_video: { title: "Step 1: Watch Setup Video", desc: "Watch the complete setup guide video before proceeding to Google Cloud Console.", action: "Watch Video", url: "https://youtube.com" },
-  google_console: { title: "Step 2: Google Cloud Console", desc: "Create a new project in Google Cloud Console. Use project name 'ModerateAI Project'.", action: "Open Console", url: "https://console.cloud.google.com" },
-  enable_api: { title: "Step 3: Enable YouTube Data API", desc: "In your Google Cloud project, go to APIs & Services > Library and enable 'YouTube Data API v3'.", action: "Open API Library", url: "https://console.cloud.google.com/apis/library" },
-  oauth_client: { title: "Step 4: Create OAuth Client", desc: "Go to APIs & Services > Credentials and create an OAuth 2.0 Client ID for a Web Application.", action: "Open Credentials", url: "https://console.cloud.google.com/apis/credentials" },
-  add_credential: { title: "Step 5: Add Credential to ModerateAI", desc: "Copy your Client ID and Client Secret from Google Cloud and paste them into ModerateAI Settings.", action: "Go to Settings", url: "/dashboard/settings" },
-  connect_youtube: { title: "Step 6: Connect YouTube", desc: "Authorize ModerateAI to access your YouTube channel using the credentials you just added.", action: "Connect YouTube", url: "/api/auth/youtube" },
+const STEP_DETAILS: Record<string, { title: string; desc: string; action?: string; url?: string; screenshot: string }> = {
+  watch_video: { title: "Step 1: Watch Setup Video", desc: "Watch the complete setup guide video before proceeding to Google Cloud Console.", action: "Watch Video", url: "https://youtube.com", screenshot: "/images/setup/step1.webp" },
+  google_console: { title: "Step 2: Google Cloud Console", desc: "Create a new project in Google Cloud Console. Use project name 'ModerateAI Project'.", action: "Open Console", url: "https://console.cloud.google.com", screenshot: "/images/setup/step2.webp" },
+  enable_api: { title: "Step 3: Enable YouTube Data API", desc: "In your Google Cloud project, go to APIs & Services > Library and enable 'YouTube Data API v3'.", action: "Open API Library", url: "https://console.cloud.google.com/apis/library", screenshot: "/images/setup/step3.webp" },
+  oauth_client: { title: "Step 4: Create OAuth Client", desc: "Go to APIs & Services > Credentials and create an OAuth 2.0 Client ID for a Web Application.", action: "Open Credentials", url: "https://console.cloud.google.com/apis/credentials", screenshot: "/images/setup/step4.webp" },
+  add_credential: { title: "Step 5: Add Credential to ModerateAI", desc: "Copy your Client ID and Client Secret from Google Cloud and paste them into ModerateAI Settings.", action: "Go to Settings", url: "/dashboard/settings", screenshot: "/images/setup/step5.webp" },
+  connect_youtube: { title: "Step 6: Connect YouTube", desc: "Authorize ModerateAI to access your YouTube channel using the credentials you just added.", action: "Connect YouTube", url: "/api/auth/youtube", screenshot: "/images/setup/step6.webp" },
 };
 
 // ─── Mini Chart ───────────────────────────────────────────────────────────────
@@ -109,6 +132,35 @@ function MiniChart({ used, limit }: { used: number; limit: number }) {
   );
 }
 
+// ─── GCP Quota Bar ────────────────────────────────────────────────────────────
+function QuotaBar({ used, total, color }: { used: number; total: number; color: string }) {
+  const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ flex: 1, background: "rgba(255,255,255,0.08)", borderRadius: 4, height: 5 }}>
+        <div style={{ width: `${pct}%`, background: color, height: "100%", borderRadius: 4, transition: "width 0.6s ease" }} />
+      </div>
+      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" }}>{pct.toFixed(0)}%</span>
+    </div>
+  );
+}
+
+// ─── GCP Status Badge ─────────────────────────────────────────────────────────
+function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      background: ok ? "rgba(34,197,94,0.12)" : "rgba(244,63,94,0.12)",
+      color: ok ? "#22C55E" : "#F43F5E",
+      border: `1px solid ${ok ? "rgba(34,197,94,0.3)" : "rgba(244,63,94,0.3)"}`,
+      borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 700,
+    }}>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: ok ? "#22C55E" : "#F43F5E", display: "inline-block" }} />
+      {label}
+    </span>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function APIAccessPage() {
   const router = useRouter();
@@ -116,13 +168,18 @@ export default function APIAccessPage() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"24H" | "7D" | "30D" | "90D">("30D");
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [videoWatched, setVideoWatched] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error" | "info">("info");
   const [testingConnection, setTestingConnection] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [gcpRefreshing, setGcpRefreshing] = useState(false);
+  const [gcpDisconnecting, setGcpDisconnecting] = useState(false);
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode>("shared");
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const showToast = useCallback((msg: string, type: "success" | "error" | "info" = "info") => {
     setToastMsg(msg);
@@ -130,7 +187,6 @@ export default function APIAccessPage() {
     setTimeout(() => setToastMsg(""), 3500);
   }, []);
 
-  // Auth listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
       if (!u) { router.push("/login"); return; }
@@ -139,7 +195,6 @@ export default function APIAccessPage() {
     return () => unsub();
   }, [router]);
 
-  // Realtime Firestore listener
   useEffect(() => {
     if (!user) return;
     const ref = doc(db, "users", user.uid);
@@ -150,46 +205,36 @@ export default function APIAccessPage() {
     return () => unsub();
   }, [user]);
 
-  // ─── Button Handlers ──────────────────────────────────────────────────────
+  // ─── Video ended → unlock steps ───────────────────────────────────────────
+  const handleVideoEnded = () => {
+    setVideoWatched(true);
+    if (currentStep === 0) setCurrentStep(1);
+    showToast("Video complete — Step 2 unlocked!", "success");
+  };
 
+  // ─── Button Handlers ──────────────────────────────────────────────────────
   const handleReconnect = async () => {
     if (!user) return;
     setReconnecting(true);
-    try {
-      window.location.href = `/api/auth/youtube?uid=${user.uid}`;
-    } catch {
-      showToast("Reconnect failed. Try again.", "error");
-      setReconnecting(false);
-    }
+    try { window.location.href = `/api/auth/youtube?uid=${user.uid}`; }
+    catch { showToast("Reconnect failed. Try again.", "error"); setReconnecting(false); }
   };
 
   const handleTestConnection = async () => {
     if (!user || !userData) return;
     setTestingConnection(true);
     try {
-      if (!userData.youtube_connected) {
-        showToast("No YouTube channel connected.", "error");
-        return;
-      }
+      if (!userData.youtube_connected) { showToast("No YouTube channel connected.", "error"); return; }
       const res = await fetch(`/api/auth/youtube/refresh-stats?uid=${user.uid}`);
       if (res.ok) {
-        await updateDoc(doc(db, "users", user.uid), {
-          youtube_stats_refreshed_at: new Date().toISOString(),
-        });
+        await updateDoc(doc(db, "users", user.uid), { youtube_stats_refreshed_at: new Date().toISOString() });
         showToast("Connection verified — channel is live!", "success");
-      } else {
-        showToast("Connection test failed. Check your API credentials.", "error");
-      }
-    } catch {
-      showToast("Connection test failed. Check your API credentials.", "error");
-    } finally {
-      setTestingConnection(false);
-    }
+      } else { showToast("Connection test failed. Check your API credentials.", "error"); }
+    } catch { showToast("Connection test failed. Check your API credentials.", "error"); }
+    finally { setTestingConnection(false); }
   };
 
-  const handleViewUsage = () => {
-    router.push("/dashboard/analytics");
-  };
+  const handleViewUsage = () => router.push("/dashboard/analytics");
 
   const handleDisconnect = async () => {
     if (!user) return;
@@ -197,41 +242,24 @@ export default function APIAccessPage() {
     setDisconnecting(true);
     try {
       await updateDoc(doc(db, "users", user.uid), {
-        youtube_connected: false,
-        channel_status: "disconnected",
-        youtube_channel_id: "",
-        youtube_channel_name: "",
-        youtube_channel_handle: "",
-        youtube_channel_thumbnail: "",
-        youtube_access_token: "",
-        youtube_refresh_token: "",
+        youtube_connected: false, channel_status: "disconnected",
+        youtube_channel_id: "", youtube_channel_name: "", youtube_channel_handle: "",
+        youtube_channel_thumbnail: "", youtube_access_token: "", youtube_refresh_token: "",
       });
       showToast("YouTube channel disconnected.", "success");
-    } catch {
-      showToast("Failed to disconnect. Try again.", "error");
-    } finally {
-      setDisconnecting(false);
-    }
+    } catch { showToast("Failed to disconnect. Try again.", "error"); }
+    finally { setDisconnecting(false); }
   };
 
   const handleRefreshStats = async () => {
-    if (!user || !userData?.youtube_connected) {
-      showToast("Connect a YouTube channel first.", "error");
-      return;
-    }
+    if (!user || !userData?.youtube_connected) { showToast("Connect a YouTube channel first.", "error"); return; }
     setRefreshing(true);
     try {
       const res = await fetch(`/api/auth/youtube/refresh-stats?uid=${user.uid}`);
-      if (res.ok) {
-        showToast("Stats refreshed successfully.", "success");
-      } else {
-        showToast("Failed to refresh stats.", "error");
-      }
-    } catch {
-      showToast("Failed to refresh stats.", "error");
-    } finally {
-      setRefreshing(false);
-    }
+      if (res.ok) { showToast("Stats refreshed successfully.", "success"); }
+      else { showToast("Failed to refresh stats.", "error"); }
+    } catch { showToast("Failed to refresh stats.", "error"); }
+    finally { setRefreshing(false); }
   };
 
   const handleConnectYouTube = () => {
@@ -242,13 +270,34 @@ export default function APIAccessPage() {
   const handleStepAction = (stepKey: string) => {
     const detail = STEP_DETAILS[stepKey];
     if (!detail?.url) return;
-    if (stepKey === "connect_youtube") {
-      handleConnectYouTube();
-    } else if (detail.url.startsWith("/")) {
-      router.push(detail.url);
-    } else {
-      window.open(detail.url, "_blank", "noopener noreferrer");
-    }
+    if (stepKey === "connect_youtube") { handleConnectYouTube(); }
+    else if (detail.url.startsWith("/")) { router.push(detail.url); }
+    else { window.open(detail.url, "_blank", "noopener noreferrer"); }
+  };
+
+  const handleGcpRefresh = async () => {
+    if (!user) return;
+    setGcpRefreshing(true);
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) setUserData(snap.data() as UserData);
+      showToast("GCP stats refreshed.", "success");
+    } catch { showToast("Failed to refresh.", "error"); }
+    finally { setGcpRefreshing(false); }
+  };
+
+  const handleGcpDisconnect = async () => {
+    if (!user) return;
+    if (!confirm("Disconnect Google Cloud Project?")) return;
+    setGcpDisconnecting(true);
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        gcp_connected: false, gcp_project_name: "", gcp_project_id: "",
+        gcp_client_id: "", gcp_client_secret_masked: "",
+      });
+      showToast("Google Cloud Project disconnected.", "success");
+    } catch { showToast("Failed to disconnect.", "error"); }
+    finally { setGcpDisconnecting(false); }
   };
 
   // ─── Derived values ───────────────────────────────────────────────────────
@@ -267,6 +316,30 @@ export default function APIAccessPage() {
   const successRate = userData?.moderation_accuracy ?? 0;
   const avgResponseSec = userData?.avg_response_ms ? (userData.avg_response_ms / 1000).toFixed(1) + "s" : "—";
 
+  // GCP derived
+  const gcpConnected = userData?.gcp_connected ?? false;
+  const gcpProjectName = userData?.gcp_project_name || "—";
+  const gcpProjectId = userData?.gcp_project_id || "—";
+  const gcpAccount = userData?.gcp_google_account || "—";
+  const gcpDailyQuota = userData?.gcp_daily_quota ?? 10000;
+  const gcpUsedToday = userData?.gcp_used_today ?? 0;
+  const gcpRemaining = gcpDailyQuota - gcpUsedToday;
+  const gcpResetTime = userData?.gcp_quota_reset_time || "Midnight UTC";
+  const gcpLastSync = userData?.gcp_last_sync
+    ? new Date(userData.gcp_last_sync).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+    : "Never";
+  const gcpOAuthStatus = userData?.gcp_oauth_status || "Not Configured";
+  const gcpOAuthRedirect = userData?.gcp_oauth_redirect_uri || "—";
+  const gcpOAuthScopes = userData?.gcp_oauth_scopes ?? [];
+  const gcpOAuthVerification = userData?.gcp_oauth_verification || "Pending";
+  const gcpApiStatus = userData?.gcp_api_status || "Unknown";
+  const gcpApiQuota = userData?.gcp_api_quota ?? 0;
+  const gcpApiBilling = userData?.gcp_api_billing || "Not Configured";
+  const gcpApiLastChecked = userData?.gcp_api_last_checked || "Never";
+  const gcpClientId = userData?.gcp_client_id ? userData.gcp_client_id.slice(0, 12) + "••••••••••" : "—";
+  const gcpClientSecret = userData?.gcp_client_secret_masked || "—";
+  const gcpCredUpdated = userData?.gcp_credentials_updated || "—";
+
   const STATS = [
     { icon: <Zap size={15} color="#7C3AED" />, label: "AI Actions Used", value: aiUsed.toLocaleString(), sub: `of ${aiLimit.toLocaleString()}`, bg: "rgba(124,58,237,0.1)" },
     { icon: <MessageSquare size={15} color="#22C55E" />, label: "Comments Scanned", value: (userData?.comments_scanned ?? 0).toLocaleString(), sub: "total", bg: "rgba(34,197,94,0.1)" },
@@ -284,30 +357,19 @@ export default function APIAccessPage() {
   ];
 
   const ACTIVITY = [
-    userData?.youtube_stats_refreshed_at && {
-      msg: `YouTube stats refreshed`,
-      time: lastSync,
-    },
-    channelConnected && userData?.youtube_channel_name && {
-      msg: `Channel "${userData.youtube_channel_name}" connected`,
-      time: "Active",
-    },
-    userData?.last_scan_at && {
-      msg: "Moderation scan completed",
-      time: userData.last_scan_at
-        ? new Date(userData.last_scan_at.seconds * 1000).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })
-        : "—",
-    },
-    userData?.last_comment_at && {
-      msg: "Last comment processed",
-      time: userData.last_comment_at
-        ? new Date(userData.last_comment_at.seconds * 1000).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })
-        : "—",
-    },
+    userData?.youtube_stats_refreshed_at && { msg: `YouTube stats refreshed`, time: lastSync },
+    channelConnected && userData?.youtube_channel_name && { msg: `Channel "${userData.youtube_channel_name}" connected`, time: "Active" },
+    userData?.last_scan_at && { msg: "Moderation scan completed", time: new Date(userData.last_scan_at.seconds * 1000).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) },
+    userData?.last_comment_at && { msg: "Last comment processed", time: new Date(userData.last_comment_at.seconds * 1000).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) },
   ].filter(Boolean) as { msg: string; time: string }[];
 
-  const currentStepKey = SETUP_STEPS[currentStep]?.key ?? "google_console";
+  const currentStepKey = SETUP_STEPS[currentStep]?.key ?? "watch_video";
   const currentStepDetail = STEP_DETAILS[currentStepKey];
+
+  const isStepLocked = (i: number) => {
+    if (i === 0) return false;
+    return !videoWatched && i > 0;
+  };
 
   if (loading) {
     return (
@@ -375,7 +437,7 @@ export default function APIAccessPage() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }} className="api-cards">
                 <style>{`@media (max-width: 560px) { .api-cards { grid-template-columns: 1fr !important; } }`}</style>
 
-                {/* Shared API Card */}
+                {/* ── Shared API Card (unchanged) ── */}
                 <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.4)", borderRadius: 16, padding: 18, position: "relative" }}>
                   <div style={{ position: "absolute", top: 14, right: 14, background: "#7C3AED", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "#fff" }}>Recommended</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -417,36 +479,235 @@ export default function APIAccessPage() {
                     </div>
                     <div>
                       <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>Connected</div>
-                      <div style={{ fontSize: 12, fontWeight: 600 }}>
-                        {channelConnected ? "1 Channel" : "None"}
-                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600 }}>{channelConnected ? "1 Channel" : "None"}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      onClick={handleReconnect}
-                      disabled={reconnecting}
-                      style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
-                    >
+                    <button onClick={handleReconnect} disabled={reconnecting} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                       {reconnecting ? <Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={11} />} Reconnect
                     </button>
-                    <button
-                      onClick={handleTestConnection}
-                      disabled={testingConnection}
-                      style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
-                    >
+                    <button onClick={handleTestConnection} disabled={testingConnection} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                       {testingConnection ? <Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> : <Wifi size={11} />} Test
                     </button>
-                    <button
-                      onClick={handleViewUsage}
-                      style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none" }}
-                    >
+                    <button onClick={handleViewUsage} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none" }}>
                       View Usage
                     </button>
                   </div>
                 </div>
 
-                {/* YouTube Channel Card */}
+                {/* ── NEW: My Google Cloud Project Card ── */}
+                <div style={{ background: gcpConnected ? "rgba(59,130,246,0.07)" : "rgba(255,255,255,0.03)", border: `1.5px solid ${gcpConnected ? "rgba(59,130,246,0.4)" : "rgba(255,255,255,0.1)"}`, borderRadius: 16, padding: 18, position: "relative" }}>
+                  <div style={{ position: "absolute", top: 14, right: 14, background: "rgba(59,130,246,0.15)", color: "#3B82F6", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>Advanced</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                    <div style={{ background: "rgba(59,130,246,0.15)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Cloud size={16} color="#3B82F6" />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>My Google Cloud Project</div>
+                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Use your own Google Cloud project</div>
+                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>&amp; get higher limits.</div>
+                    </div>
+                  </div>
+
+                  {gcpConnected ? (
+                    <>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                        <div>
+                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>Project Status</div>
+                          <StatusBadge ok={true} label="Connected" />
+                        </div>
+                        <div>
+                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>Daily Quota</div>
+                          <div style={{ fontSize: 12, fontWeight: 600 }}>{gcpDailyQuota.toLocaleString()} units</div>
+                        </div>
+                        <div>
+                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>Used Today</div>
+                          <div style={{ fontSize: 12, fontWeight: 600 }}>{gcpUsedToday.toLocaleString()} units</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                        <div>
+                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>OAuth Status</div>
+                          <StatusBadge ok={gcpOAuthStatus === "Verified" || gcpOAuthStatus === "Configured"} label={gcpOAuthStatus} />
+                        </div>
+                        <div>
+                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>API Status</div>
+                          <StatusBadge ok={gcpApiStatus === "Enabled"} label={gcpApiStatus} />
+                        </div>
+                        <div>
+                          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>Channel</div>
+                          <div style={{ fontSize: 12, fontWeight: 600 }}>{channelConnected ? "1 Connected" : "None"}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          onClick={() => window.open("https://console.cloud.google.com", "_blank")}
+                          style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                        >
+                          <Settings2 size={11} /> Manage Project
+                        </button>
+                        <button
+                          onClick={handleGcpDisconnect}
+                          disabled={gcpDisconnecting}
+                          style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(244,63,94,0.1)", color: "#F43F5E", border: "1px solid rgba(244,63,94,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                        >
+                          {gcpDisconnecting ? <Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> : <WifiOff size={11} />} Disconnect
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: "center", padding: "16px 0" }}>
+                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 14 }}>Connect your own Google Cloud project for higher API limits</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <button
+                          onClick={() => window.open("https://console.cloud.google.com", "_blank")}
+                          style={{ width: "100%", background: "linear-gradient(135deg,#3B82F6,#2563EB)", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                        >
+                          <Cloud size={13} /> Open Google Console
+                        </button>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button
+                            onClick={() => window.open("https://console.cloud.google.com/apis/credentials", "_blank")}
+                            style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "7px 4px", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                          >
+                            <Key size={10} /> Open Credentials
+                          </button>
+                          <button
+                            onClick={() => window.open("https://console.cloud.google.com/apis/library", "_blank")}
+                            style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "7px 4px", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                          >
+                            <Database size={10} /> API Library
+                          </button>
+                          <button
+                            onClick={handleGcpRefresh}
+                            disabled={gcpRefreshing}
+                            style={{ flex: 1, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "7px 4px", fontWeight: 700, fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                          >
+                            {gcpRefreshing ? <Loader2 size={10} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={10} />} Refresh
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* ── NEW: GCP Detail Panels (only when connected) ── */}
+              {gcpConnected && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }} className="gcp-detail-grid">
+                  <style>{`@media (max-width: 560px) { .gcp-detail-grid { grid-template-columns: 1fr !important; } }`}</style>
+
+                  {/* Google Cloud Quota */}
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                      <Database size={14} color="#3B82F6" />
+                      <span style={{ fontWeight: 700, fontSize: 13 }}>Google Cloud Quota</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Daily Limit</span>
+                          <span style={{ fontSize: 11, fontWeight: 600 }}>{gcpDailyQuota.toLocaleString()} units / day</span>
+                        </div>
+                        <QuotaBar used={gcpUsedToday} total={gcpDailyQuota} color="#3B82F6" />
+                      </div>
+                      {[
+                        { label: "Today's Usage", val: `${gcpUsedToday.toLocaleString()} units` },
+                        { label: "Remaining", val: `${gcpRemaining.toLocaleString()} units`, color: gcpRemaining < 1000 ? "#F43F5E" : "#22C55E" },
+                        { label: "Reset Time", val: gcpResetTime },
+                      ].map(item => (
+                        <div key={item.label} style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{item.label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: item.color || "#FAFAFA" }}>{item.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* OAuth Status */}
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                      <Key size={14} color="#A78BFA" />
+                      <span style={{ fontWeight: 700, fontSize: 13 }}>OAuth Status</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Configured</span>
+                        <StatusBadge ok={gcpOAuthStatus !== "Not Configured"} label={gcpOAuthStatus} />
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Redirect URI</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.6)", maxWidth: 140, textAlign: "right", wordBreak: "break-all" }}>{gcpOAuthRedirect}</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Scopes</span>
+                        <div style={{ marginTop: 4, display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {gcpOAuthScopes.length > 0 ? gcpOAuthScopes.map(s => (
+                            <span key={s} style={{ background: "rgba(124,58,237,0.15)", color: "#A78BFA", borderRadius: 4, padding: "1px 6px", fontSize: 10 }}>{s}</span>
+                          )) : <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>—</span>}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Verification</span>
+                        <StatusBadge ok={gcpOAuthVerification === "Verified"} label={gcpOAuthVerification} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* YouTube API Status */}
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                      <Video size={14} color="#EF4444" />
+                      <span style={{ fontWeight: 700, fontSize: 13 }}>YouTube API Status</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Status</span>
+                        <StatusBadge ok={gcpApiStatus === "Enabled"} label={gcpApiStatus} />
+                      </div>
+                      {[
+                        { label: "Quota", val: gcpApiQuota > 0 ? `${gcpApiQuota.toLocaleString()} units` : "—" },
+                        { label: "Billing", val: gcpApiBilling },
+                        { label: "Last Checked", val: gcpApiLastChecked },
+                      ].map(item => (
+                        <div key={item.label} style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{item.label}</span>
+                          <span style={{ fontSize: 11, fontWeight: 600 }}>{item.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Client Credentials Status */}
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+                      <Shield size={14} color="#22C55E" />
+                      <span style={{ fontWeight: 700, fontSize: 13 }}>Client Credentials</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Client ID</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{gcpClientId}</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Client Secret</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{gcpClientSecret}</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Encrypted</span>
+                        <StatusBadge ok={true} label="Yes" />
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Updated</span>
+                        <span style={{ fontSize: 11, fontWeight: 600 }}>{gcpCredUpdated}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* YouTube Channel Card */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
                 <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 18, position: "relative" }}>
                   <div style={{ position: "absolute", top: 14, right: 14, background: channelConnected ? "rgba(34,197,94,0.15)" : "rgba(245,158,11,0.15)", color: channelConnected ? "#22C55E" : "#F59E0B", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700 }}>
                     {channelConnected ? "Connected" : "Not Connected"}
@@ -465,7 +726,6 @@ export default function APIAccessPage() {
                       {channelHandle && <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>{channelHandle}</div>}
                     </div>
                   </div>
-
                   {channelConnected ? (
                     <>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
@@ -476,7 +736,7 @@ export default function APIAccessPage() {
                         ].map(item => (
                           <div key={item.label}>
                             <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>{item.label}</div>
-                            <div style={{ color: item.color || "#FAFAFA", fontSize: 12, fontWeight: 600 }}>{item.val}</div>
+                            <div style={{ color: (item as any).color || "#FAFAFA", fontSize: 12, fontWeight: 600 }}>{item.val}</div>
                           </div>
                         ))}
                       </div>
@@ -488,26 +748,18 @@ export default function APIAccessPage() {
                         ].map(item => (
                           <div key={item.label}>
                             <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>{item.label}</div>
-                            <div style={{ color: item.color || "#FAFAFA", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-                              {item.color && item.color !== "#FAFAFA" && <span style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, display: "inline-block" }} />}
+                            <div style={{ color: (item as any).color || "#FAFAFA", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                              {(item as any).color && (item as any).color !== "#FAFAFA" && <span style={{ width: 6, height: 6, borderRadius: "50%", background: (item as any).color, display: "inline-block" }} />}
                               {item.val}
                             </div>
                           </div>
                         ))}
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          onClick={handleRefreshStats}
-                          disabled={refreshing}
-                          style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
-                        >
+                        <button onClick={handleRefreshStats} disabled={refreshing} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                           {refreshing ? <Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={11} />} Refresh Stats
                         </button>
-                        <button
-                          onClick={handleDisconnect}
-                          disabled={disconnecting}
-                          style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(244,63,94,0.1)", color: "#F43F5E", border: "1px solid rgba(244,63,94,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
-                        >
+                        <button onClick={handleDisconnect} disabled={disconnecting} style={{ flex: 1, padding: "8px 4px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", background: "rgba(244,63,94,0.1)", color: "#F43F5E", border: "1px solid rgba(244,63,94,0.25)", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                           {disconnecting ? <Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> : <WifiOff size={11} />} Disconnect
                         </button>
                       </div>
@@ -515,10 +767,7 @@ export default function APIAccessPage() {
                   ) : (
                     <div style={{ textAlign: "center", padding: "16px 0" }}>
                       <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 14 }}>Connect your YouTube channel to start moderation</div>
-                      <button
-                        onClick={handleConnectYouTube}
-                        style={{ width: "100%", background: "linear-gradient(135deg,#EF4444,#DC2626)", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
-                      >
+                      <button onClick={handleConnectYouTube} style={{ width: "100%", background: "linear-gradient(135deg,#EF4444,#DC2626)", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
                         Connect YouTube Channel
                       </button>
                     </div>
@@ -543,8 +792,7 @@ export default function APIAccessPage() {
                       background: `rgba(${plan.color === "#22C55E" ? "34,197,94" : plan.color === "#7C3AED" ? "124,58,237" : "245,158,11"},0.07)`,
                       border: `${plan.current ? "2px" : "1px"} solid ${plan.color}${plan.current ? "88" : "33"}`,
                       borderRadius: 12, padding: 16, textAlign: "center", position: "relative",
-                      cursor: plan.current ? "default" : "pointer",
-                      transition: "transform 0.15s",
+                      cursor: plan.current ? "default" : "pointer", transition: "transform 0.15s",
                     }}>
                       {plan.badge && <span style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", background: plan.color, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 10px", borderRadius: 20 }}>{plan.badge}</span>}
                       {plan.current && <span style={{ position: "absolute", top: 8, right: 8, background: plan.color, color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 10 }}>Current</span>}
@@ -566,18 +814,12 @@ export default function APIAccessPage() {
                   </div>
                   <div style={{ display: "flex", gap: 6 }}>
                     {(["24H", "7D", "30D", "90D"] as const).map(t => (
-                      <button key={t} onClick={() => setActiveTab(t)} style={{
-                        padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer",
-                        background: activeTab === t ? "#7C3AED" : "rgba(255,255,255,0.06)",
-                        color: activeTab === t ? "#fff" : "rgba(255,255,255,0.4)", border: "none",
-                      }}>{t}</button>
+                      <button key={t} onClick={() => setActiveTab(t)} style={{ padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", background: activeTab === t ? "#7C3AED" : "rgba(255,255,255,0.06)", color: activeTab === t ? "#fff" : "rgba(255,255,255,0.4)", border: "none" }}>{t}</button>
                     ))}
                   </div>
                 </div>
                 {aiUsed === 0 && aiLimit > 0 ? (
-                  <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
-                    No usage yet. Start moderating to see data here.
-                  </div>
+                  <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>No usage yet. Start moderating to see data here.</div>
                 ) : (
                   <MiniChart used={aiUsed} limit={aiLimit} />
                 )}
@@ -585,9 +827,7 @@ export default function APIAccessPage() {
                   <style>{`@media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr 1fr !important; } }`}</style>
                   {STATS.map(s => (
                     <div key={s.label} style={{ background: s.bg, borderRadius: 10, padding: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        {s.icon}<span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11 }}>{s.label}</span>
-                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>{s.icon}<span style={{ color: "rgba(255,255,255,0.45)", fontSize: 11 }}>{s.label}</span></div>
                       <div style={{ fontSize: 18, fontWeight: 800 }}>{s.value}</div>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>{s.sub}</div>
                     </div>
@@ -598,7 +838,6 @@ export default function APIAccessPage() {
               {/* Recent Activity + System Health */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }} className="bottom-grid">
                 <style>{`@media (max-width: 560px) { .bottom-grid { grid-template-columns: 1fr !important; } }`}</style>
-
                 <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 18 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                     <Activity size={15} color="rgba(255,255,255,0.5)" />
@@ -616,7 +855,6 @@ export default function APIAccessPage() {
                     </div>
                   ))}
                 </div>
-
                 <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 18 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
                     <Zap size={15} color="rgba(255,255,255,0.5)" />
@@ -628,9 +866,7 @@ export default function APIAccessPage() {
                         {h.ok ? <CheckCircle size={14} color="#22C55E" /> : <AlertCircle size={14} color="#F59E0B" />}
                         <span style={{ fontSize: 13 }}>{h.label}</span>
                       </div>
-                      <span style={{ color: h.ok ? "#22C55E" : "#F59E0B", fontSize: 12, fontWeight: 600 }}>
-                        {h.ok ? "Operational" : "Not Connected"}
-                      </span>
+                      <span style={{ color: h.ok ? "#22C55E" : "#F59E0B", fontSize: 12, fontWeight: 600 }}>{h.ok ? "Operational" : "Not Connected"}</span>
                     </div>
                   ))}
                 </div>
@@ -665,52 +901,48 @@ export default function APIAccessPage() {
                       </div>
                     ))}
                   </div>
-                  <button
-                    onClick={() => window.open(`https://youtube.com/channel/${userData.youtube_channel_id}`, "_blank")}
-                    style={{ width: "100%", marginTop: 10, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#EF4444", borderRadius: 10, padding: "8px", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-                  >
+                  <button onClick={() => window.open(`https://youtube.com/channel/${userData.youtube_channel_id}`, "_blank")} style={{ width: "100%", marginTop: 10, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#EF4444", borderRadius: 10, padding: "8px", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                     <ExternalLink size={12} /> View on YouTube
                   </button>
                 </div>
               )}
 
-              {/* Setup Guide Video */}
+              {/* ── Setup Guide Video (with HTML5 player) ── */}
               <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Video size={15} color="rgba(255,255,255,0.5)" />
                     <span style={{ fontWeight: 700, fontSize: 13 }}>Setup Guide Video</span>
                   </div>
-                  <button
-                    onClick={handleRefreshStats}
-                    disabled={refreshing}
-                    style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "5px 10px", fontSize: 11, cursor: "pointer" }}
-                  >
+                  <button onClick={handleRefreshStats} disabled={refreshing} style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "5px 10px", fontSize: 11, cursor: "pointer" }}>
                     <RefreshCw size={11} style={refreshing ? { animation: "spin 1s linear infinite" } : {}} /> Refresh
                   </button>
                 </div>
-                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                  <div style={{ background: "linear-gradient(135deg,#1E1B4B,#4C1D95)", margin: "0 12px 12px", borderRadius: 12, padding: "24px 16px", textAlign: "center", cursor: "pointer" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 8 }}>
-                      <div style={{ background: "rgba(124,58,237,0.3)", borderRadius: 10, padding: 8 }}><Shield size={20} color="#A78BFA" /></div>
-                      <div style={{ textAlign: "left" }}>
-                        <div style={{ fontWeight: 800, fontSize: 13, color: "#fff" }}>ModerateAI</div>
-                        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>Complete Setup Guide</div>
-                      </div>
+                {/* HTML5 Video Player */}
+                <div style={{ margin: "0 12px 12px", borderRadius: 12, overflow: "hidden", background: "#000", position: "relative" }}>
+                  <video
+                    ref={videoRef}
+                    src="/videos/setup-demo.mp4"
+                    controls
+                    onEnded={handleVideoEnded}
+                    style={{ width: "100%", display: "block", borderRadius: 12 }}
+                    poster="/images/setup/step1.webp"
+                  />
+                  {videoWatched && (
+                    <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(34,197,94,0.9)", borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
+                      <CheckCircle size={11} /> Watched
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
-                      <div style={{ background: "#FF0000", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}><Video size={16} color="#fff" /></div>
-                      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 18 }}>→</span>
-                      <div style={{ background: "#4285F4", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}><BarChart2 size={16} color="#fff" /></div>
-                      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 18 }}>→</span>
-                      <div style={{ background: "#7C3AED", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}><Shield size={16} color="#fff" /></div>
-                    </div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Click to watch setup guide ↗</div>
+                  )}
+                </div>
+                {!videoWatched && (
+                  <div style={{ padding: "0 12px 12px", display: "flex", alignItems: "center", gap: 6 }}>
+                    <Play size={12} color="#F59E0B" />
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Watch the full video to unlock setup steps</span>
                   </div>
-                </a>
+                )}
               </div>
 
-              {/* Step by Step Setup */}
+              {/* ── Step by Step Setup (with screenshot previews) ── */}
               <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 16 }}>
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2 }}>Step by Step Setup</div>
@@ -721,51 +953,54 @@ export default function APIAccessPage() {
                     {SETUP_STEPS.map((s, i) => {
                       const done = i < currentStep;
                       const active = i === currentStep;
-                      const locked = i > currentStep;
+                      const locked = isStepLocked(i);
                       return (
-                        <button
-                          key={i}
-                          onClick={() => !locked && setCurrentStep(i)}
-                          style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: locked ? "default" : "pointer", padding: 0, textAlign: "left" }}
-                        >
-                          <div style={{
-                            width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            background: done ? "#22C55E" : active ? "#7C3AED" : "rgba(255,255,255,0.1)",
-                            fontSize: 10, fontWeight: 700, color: "#fff",
-                          }}>
-                            {done ? <CheckCircle size={12} /> : locked ? <Lock size={10} /> : i + 1}
+                        <button key={i} onClick={() => !locked && setCurrentStep(i)} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: locked ? "default" : "pointer", padding: 0, textAlign: "left" }}>
+                          <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: done ? "#22C55E" : active ? "#7C3AED" : locked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.1)", fontSize: 10, fontWeight: 700, color: "#fff" }}>
+                            {done ? <CheckCircle size={12} /> : locked ? <Lock size={10} color="rgba(255,255,255,0.3)" /> : i + 1}
                           </div>
-                          <span style={{ fontSize: 12, color: active ? "#fff" : done ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.3)", fontWeight: active ? 700 : 400 }}>{s.label}</span>
+                          <span style={{ fontSize: 12, color: locked ? "rgba(255,255,255,0.2)" : active ? "#fff" : done ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.5)", fontWeight: active ? 700 : 400 }}>{s.label}</span>
                         </button>
                       );
                     })}
                   </div>
                   <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 12 }}>
+                    {/* Screenshot preview */}
+                    <div style={{ marginBottom: 10, borderRadius: 8, overflow: "hidden", background: "rgba(0,0,0,0.3)", minHeight: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <img
+                        src={currentStepDetail.screenshot}
+                        alt={`Step ${currentStep + 1} screenshot`}
+                        style={{ width: "100%", display: "block", borderRadius: 8, objectFit: "cover" }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
                     <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 4 }}>{currentStepDetail.title}</div>
                     <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 10 }}>{currentStepDetail.desc}</div>
-                    {currentStepDetail.action && (
-                      <button
-                        onClick={() => handleStepAction(currentStepKey)}
-                        style={{ width: "100%", background: "#7C3AED", color: "#fff", border: "none", borderRadius: 8, padding: "7px", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
-                      >
+                    {currentStepDetail.action && !isStepLocked(currentStep) && (
+                      <button onClick={() => handleStepAction(currentStepKey)} style={{ width: "100%", background: "#7C3AED", color: "#fff", border: "none", borderRadius: 8, padding: "7px", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                         {currentStepDetail.action} <ExternalLink size={10} />
                       </button>
+                    )}
+                    {isStepLocked(currentStep) && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.3)", fontSize: 11 }}>
+                        <Lock size={11} /> Watch the video to unlock this step
+                      </div>
                     )}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                  <button
-                    onClick={() => setCurrentStep(s => Math.max(0, s - 1))}
-                    disabled={currentStep === 0}
-                    style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: currentStep === 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", borderRadius: 8, padding: "8px", fontSize: 12, cursor: currentStep === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
-                  >
+                  <button onClick={() => setCurrentStep(s => Math.max(0, s - 1))} disabled={currentStep === 0} style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: currentStep === 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", borderRadius: 8, padding: "8px", fontSize: 12, cursor: currentStep === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
                     <ChevronLeft size={14} /> Previous
                   </button>
                   <button
-                    onClick={() => setCurrentStep(s => Math.min(SETUP_STEPS.length - 1, s + 1))}
-                    disabled={currentStep === SETUP_STEPS.length - 1}
-                    style={{ flex: 1, background: "#7C3AED", border: "none", color: "#fff", borderRadius: 8, padding: "8px", fontSize: 12, fontWeight: 700, cursor: currentStep === SETUP_STEPS.length - 1 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, opacity: currentStep === SETUP_STEPS.length - 1 ? 0.5 : 1 }}
+                    onClick={() => {
+                      const next = currentStep + 1;
+                      if (next < SETUP_STEPS.length && !isStepLocked(next)) setCurrentStep(next);
+                    }}
+                    disabled={currentStep === SETUP_STEPS.length - 1 || isStepLocked(currentStep + 1)}
+                    style={{ flex: 1, background: "#7C3AED", border: "none", color: "#fff", borderRadius: 8, padding: "8px", fontSize: 12, fontWeight: 700, cursor: (currentStep === SETUP_STEPS.length - 1 || isStepLocked(currentStep + 1)) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, opacity: (currentStep === SETUP_STEPS.length - 1 || isStepLocked(currentStep + 1)) ? 0.4 : 1 }}
                   >
                     Next <ChevronRight size={14} />
                   </button>

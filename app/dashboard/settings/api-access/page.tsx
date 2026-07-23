@@ -84,14 +84,14 @@ export default function APIAccessPage() {
         <DashboardSidebar />
       </div>
       <style>{`
-        @media (min-width: 768px) { .sidebar-wrapper { display: block !important; } }
+        @media (pointer: fine) { .sidebar-wrapper { display: block !important; } }
       `}</style>
 
       {/* Main */}
       <main style={{ flex: 1, paddingBottom: 80, overflowX: "hidden" }}
         className="main-content">
         <style>{`
-          @media (min-width: 768px) { .main-content { margin-left: 240px !important; padding-bottom: 0 !important; } }
+          @media (pointer: fine) { .main-content { margin-left: 240px !important; padding-bottom: 0 !important; } }
         `}</style>
 
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 16px" }}>

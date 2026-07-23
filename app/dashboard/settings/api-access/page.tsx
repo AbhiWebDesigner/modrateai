@@ -103,11 +103,16 @@ async function fetchActivityLogs(): Promise<ActivityLog[]> {
   return res.json();
 }
 
-// ─── Project config (real values, not hardcoded) ──────────────────────────────
-
-const PROJECT_ORIGIN   = typeof window !== "undefined" ? window.location.origin : "https://moderateai.site";
-const CALLBACK_URL     = `${PROJECT_ORIGIN}/api/auth/youtube/callback`;
-const JS_ORIGIN        = PROJECT_ORIGIN;
+// ─── Project config — computed client-side only ───────────────────────────────
+// Never computed at module scope to avoid SSR/hydration crashes.
+function useProjectUrls() {
+  const [urls, setUrls] = useState({ origin: "", callback: "" });
+  useEffect(() => {
+    const origin = window.location.origin;
+    setUrls({ origin, callback: `${origin}/api/auth/youtube/callback` });
+  }, []);
+  return urls;
+}
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
@@ -297,6 +302,7 @@ function Step3({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
 // ─── Step 4 — OAuth Client ────────────────────────────────────────────────────
 
 function Step4({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
+  const { origin: JS_ORIGIN, callback: CALLBACK_URL } = useProjectUrls();
   const [copiedCallback, setCopiedCallback] = useState(false);
   const [copiedOrigin,   setCopiedOrigin]   = useState(false);
 

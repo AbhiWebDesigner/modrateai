@@ -436,7 +436,7 @@ function SuccessScreen({ onDashboard, onStart }: { onDashboard: () => void; onSt
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
-function EmptyState({ icon, title, desc, cta, onCta }: { icon: React.ReactNode; title: string; desc: string; cta?: string; onCta?: () => void }) {
+function EmptyState({ icon, title, desc, cta, onCta, children }: { icon: React.ReactNode; title: string; desc: string; cta?: string; onCta?: () => void; children?: React.ReactNode }) {
   return (
     <div style={{ textAlign: "center", padding: "24px 16px" }}>
       <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 48, height: 48, background: "rgba(255,255,255,0.06)", borderRadius: 12, marginBottom: 12 }}>{icon}</div>
@@ -445,6 +445,7 @@ function EmptyState({ icon, title, desc, cta, onCta }: { icon: React.ReactNode; 
       {cta && onCta && (
         <button onClick={onCta} style={{ background: "#7C3AED", border: "none", color: "#fff", borderRadius: 10, padding: "8px 18px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{cta}</button>
       )}
+      {children}
     </div>
   );
 }
@@ -1510,17 +1511,3 @@ export default function APIAccessPage() {
   );
 }
 
-// ─── EmptyState with children support ────────────────────────────────────────
-function EmptyState({ icon, title, desc, cta, onCta, children }: { icon: React.ReactNode; title: string; desc: string; cta?: string; onCta?: () => void; children?: React.ReactNode }) {
-  return (
-    <div style={{ textAlign: "center", padding: "16px" }}>
-      <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, background: "rgba(255,255,255,0.06)", borderRadius: 12, marginBottom: 10 }}>{icon}</div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 4 }}>{title}</div>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: (cta || children) ? 12 : 0 }}>{desc}</div>
-      {cta && onCta && (
-        <button onClick={onCta} style={{ background: "#7C3AED", border: "none", color: "#fff", borderRadius: 10, padding: "7px 16px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{cta}</button>
-      )}
-      {children}
-    </div>
-  );
-}

@@ -88,7 +88,7 @@ export default function APIAccessPage() {
       `}</style>
 
       {/* Main */}
-      <main style={{ flex: 1, marginLeft: 0, paddingBottom: 80, overflowX: "hidden" }}
+      <main style={{ flex: 1, paddingBottom: 80, overflowX: "hidden" }}
         className="main-content">
         <style>{`
           @media (min-width: 768px) { .main-content { margin-left: 240px !important; padding-bottom: 0 !important; } }

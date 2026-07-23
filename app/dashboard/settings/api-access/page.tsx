@@ -5,8 +5,8 @@ import {
   Shield, ChevronRight, ChevronLeft, Copy, Eye, EyeOff,
   ExternalLink, Check, Lock, Wifi, WifiOff, RotateCcw,
   Trash2, RefreshCw, Activity, Clock, Zap, BarChart2, X,
-  Cloud, Server, Loader2, Youtube, AlertTriangle,
-  CheckCircle2, Circle,
+  Cloud, Server, Loader2, AlertTriangle,
+  CheckCircle2, Circle, Play,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -210,7 +210,7 @@ function Step1({ onNext }: { onNext: () => void }) {
 
       <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-6 flex flex-col items-center gap-3 text-center">
         <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-          <Youtube size={18} className="text-purple-400" />
+          <Play size={18} className="text-purple-400" />
         </div>
         <div>
           <p className="text-sm font-semibold text-white mb-0.5">Tutorial video coming soon</p>
@@ -465,7 +465,7 @@ function Step6({ onPrev }: { onPrev: () => void }) {
 
       <div className="rounded-xl border border-white/8 bg-white/[0.025] p-6 flex flex-col items-center gap-4 text-center">
         <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-          <Youtube size={26} className="text-red-400" />
+          <Play size={26} className="text-red-400" />
         </div>
         <div>
           <p className="text-sm font-semibold text-white mb-1">Google OAuth will open</p>
@@ -485,7 +485,7 @@ function Step6({ onPrev }: { onPrev: () => void }) {
 
         <button onClick={handleConnect} disabled={connecting}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.01] disabled:opacity-60">
-          {connecting ? <><Spinner className="w-3.5 h-3.5" /> Redirecting to Google…</> : <><Youtube size={15} /> Connect YouTube</>}
+          {connecting ? <><Spinner className="w-3.5 h-3.5" /> Redirecting to Google…</> : <><Play size={15} /> Connect YouTube</>}
         </button>
       </div>
 
@@ -533,7 +533,7 @@ function SetupWizard() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-purple-600/20 border border-purple-500/25 flex items-center justify-center">
-          <Youtube size={15} className="text-purple-400" />
+          <Play size={15} className="text-purple-400" />
         </div>
         <div>
           <p className="text-sm font-semibold text-white">Connect YouTube</p>

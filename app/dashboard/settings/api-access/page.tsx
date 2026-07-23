@@ -6,9 +6,9 @@ import {
   Shield, ChevronRight, ChevronLeft, Copy, Eye, EyeOff,
   ExternalLink, Check, Lock, Wifi, WifiOff, RotateCcw,
   Trash2, RefreshCw, AlertTriangle, Activity, Clock, Zap, BarChart2, X,
-  Cloud, Server, Loader2, Tv2 as Youtube, ImageIcon, Key, Radio,
+  Cloud, Server, Loader2, ImageIcon, Key,
   TrendingUp, MessageSquare, Video, ArrowUpRight, CheckCircle2,
-  AlertCircle, XCircle, Cpu,
+  AlertCircle, XCircle, Cpu, Radio, Tv2 as Youtube,
 } from "lucide-react";
 
 // ─── YouTube OAuth redirect ───────────────────────────────────────────────────
@@ -155,7 +155,7 @@ function fmtRelative(iso: string | null): string {
   try {
     const diff = Date.now() - new Date(iso).getTime();
     const s    = Math.floor(diff / 1000);
-    if (s < 60)  return `${s}s ago`;
+    if (s < 60)   return `${s}s ago`;
     if (s < 3600) return `${Math.floor(s / 60)}m ago`;
     return `${Math.floor(s / 3600)}h ago`;
   } catch { return "—"; }
@@ -164,9 +164,7 @@ function fmtRelative(iso: string | null): string {
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return (
-    <div className={`animate-pulse rounded-lg bg-white/[0.06] ${className}`} />
-  );
+  return <div className={`animate-pulse rounded-lg bg-white/[0.06] ${className}`} />;
 }
 
 function SkeletonCard() {
@@ -255,38 +253,14 @@ function EmptyState({
   );
 }
 
-// ─── Live Health Indicator ────────────────────────────────────────────────────
+// ─── Health Indicator ─────────────────────────────────────────────────────────
 
 function HealthIndicator({ health }: { health: HealthState }) {
-  const map: Record<HealthState, { label: string; icon: React.ReactNode; dot: string; ring: string; text: string }> = {
-    healthy: {
-      label: "Healthy",
-      icon: <CheckCircle2 size={11} />,
-      dot: "bg-emerald-400",
-      ring: "border-emerald-500/25 bg-emerald-500/10",
-      text: "text-emerald-400",
-    },
-    warning: {
-      label: "Degraded",
-      icon: <AlertCircle size={11} />,
-      dot: "bg-yellow-400",
-      ring: "border-yellow-500/25 bg-yellow-500/10",
-      text: "text-yellow-400",
-    },
-    offline: {
-      label: "Offline",
-      icon: <XCircle size={11} />,
-      dot: "bg-red-400",
-      ring: "border-red-500/25 bg-red-500/10",
-      text: "text-red-400",
-    },
-    loading: {
-      label: "Checking…",
-      icon: <Spinner className="w-2.5 h-2.5" />,
-      dot: "bg-white/20",
-      ring: "border-white/10 bg-white/5",
-      text: "text-white/30",
-    },
+  const map: Record<HealthState, { label: string; dot: string; ring: string; text: string }> = {
+    healthy: { label: "Healthy",   dot: "bg-emerald-400", ring: "border-emerald-500/25 bg-emerald-500/10", text: "text-emerald-400" },
+    warning: { label: "Degraded",  dot: "bg-yellow-400",  ring: "border-yellow-500/25 bg-yellow-500/10",   text: "text-yellow-400" },
+    offline: { label: "Offline",   dot: "bg-red-400",     ring: "border-red-500/25 bg-red-500/10",         text: "text-red-400"    },
+    loading: { label: "Checking…", dot: "bg-white/20",    ring: "border-white/10 bg-white/5",              text: "text-white/30"   },
   };
   const m = map[health];
   return (
@@ -321,9 +295,9 @@ function CopyButton({ value, label }: { value: string; label?: string }) {
 
 // ─── Quota Progress Bar ───────────────────────────────────────────────────────
 
-function QuotaBar({
-  used, total, label, resetLabel,
-}: { used: number; total: number; label?: string; resetLabel?: string }) {
+function QuotaBar({ used, total, label, resetLabel }: {
+  used: number; total: number; label?: string; resetLabel?: string;
+}) {
   const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
   const barColor =
     pct >= 90 ? "from-red-600 to-red-400" :
@@ -353,9 +327,7 @@ function QuotaBar({
 
 // ─── Stat Cell ────────────────────────────────────────────────────────────────
 
-function StatCell({
-  label, value, icon, valueClass = "text-white", border = "",
-}: {
+function StatCell({ label, value, icon, valueClass = "text-white", border = "" }: {
   label: string; value: string; icon: React.ReactNode;
   valueClass?: string; border?: string;
 }) {
@@ -372,12 +344,12 @@ function StatCell({
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 
 const STEP_LABELS: Record<WizardStep, string> = {
-  tutorial: "Tutorial",
-  gcp: "Cloud Project",
-  enable: "Enable API",
-  oauth: "OAuth Client",
+  tutorial:    "Tutorial",
+  gcp:         "Cloud Project",
+  enable:      "Enable API",
+  oauth:       "OAuth Client",
   credentials: "Credentials",
-  connect: "Connect",
+  connect:     "Connect",
 };
 
 const WIZARD_FLOW: WizardStep[] = ["tutorial", "gcp", "enable", "oauth", "credentials", "connect"];
@@ -400,7 +372,11 @@ function StepIndicator({ current }: { current: number }) {
                     ${active ? "bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/40 ring-4 ring-purple-500/15" : ""}
                     ${!done && !active ? "bg-transparent border-white/15 text-white/25" : ""}`}
                 >
-                  {done ? <Check size={12} /> : num}
+                  {done ? (
+                    <span className="inline-flex items-center justify-center">
+                      <Check size={12} className="animate-[scale-in_0.2s_ease-out]" />
+                    </span>
+                  ) : num}
                 </div>
                 <span
                   className={`text-[9px] font-semibold uppercase tracking-wide whitespace-nowrap transition-colors duration-300
@@ -422,9 +398,7 @@ function StepIndicator({ current }: { current: number }) {
 
 // ─── Nav Buttons ──────────────────────────────────────────────────────────────
 
-function NavButtons({
-  onPrev, onNext, nextLabel = "Continue", nextDisabled = false, loading = false,
-}: {
+function NavButtons({ onPrev, onNext, nextLabel = "Continue", nextDisabled = false, loading = false }: {
   onPrev?: () => void; onNext?: () => void;
   nextLabel?: string; nextDisabled?: boolean; loading?: boolean;
 }) {
@@ -472,10 +446,12 @@ function ScreenshotPlaceholder({ label }: { label: string }) {
 // ─── Step 1: Tutorial ─────────────────────────────────────────────────────────
 
 function TutorialStep({ onNext, onPrev }: { onNext: () => void; onPrev?: () => void }) {
-  const videoRef              = useRef<HTMLVideoElement>(null);
+  const videoRef               = useRef<HTMLVideoElement>(null);
   const [hasVideo, setHasVideo] = useState<boolean | null>(null);
   const [watched,  setWatched]  = useState(false);
   const [playing,  setPlaying]  = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
   const isDev = process.env.NODE_ENV === "development";
 
   useEffect(() => {
@@ -486,18 +462,33 @@ function TutorialStep({ onNext, onPrev }: { onNext: () => void; onPrev?: () => v
 
   const canContinue = isDev || hasVideo === false || watched;
 
+  const handleTimeUpdate = () => {
+    if (!videoRef.current) return;
+    setProgress(videoRef.current.currentTime);
+    if (videoRef.current.currentTime / videoRef.current.duration > 0.9) {
+      setWatched(true);
+    }
+  };
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Setup tutorial</h2>
         <p className="text-white/40 text-xs leading-relaxed">
-          Watch this quick walkthrough before connecting your Google Cloud Project.
+          Watch this walkthrough before connecting your Google Cloud Project.
         </p>
       </div>
 
       <div className="rounded-xl border border-white/8 bg-[#0d0c14] overflow-hidden">
-        <div className="relative aspect-video flex items-center justify-center">
-          {hasVideo === null && <Spinner className="w-4 h-4 text-white/20" />}
+        <div className="relative aspect-video flex items-center justify-center bg-black/40">
+          {hasVideo === null && <Spinner className="w-5 h-5 text-white/20" />}
+
           {hasVideo === false && (
             <div className="flex flex-col items-center gap-3 text-center px-6">
               <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/8 flex items-center justify-center">
@@ -505,10 +496,11 @@ function TutorialStep({ onNext, onPrev }: { onNext: () => void; onPrev?: () => v
               </div>
               <div>
                 <p className="text-sm font-medium text-white/35">Tutorial video coming soon</p>
-                <p className="text-xs text-white/20 mt-0.5">Continue with the written guide below.</p>
+                <p className="text-xs text-white/20 mt-0.5">Development Mode — tutorial will be uploaded later.</p>
               </div>
             </div>
           )}
+
           {hasVideo === true && (
             <>
               <video
@@ -516,6 +508,8 @@ function TutorialStep({ onNext, onPrev }: { onNext: () => void; onPrev?: () => v
                 src="/videos/google-cloud-setup.mp4"
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${playing ? "opacity-100" : "opacity-0"}`}
                 onEnded={() => setWatched(true)}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
               />
               {!playing && (
                 <button
@@ -529,15 +523,30 @@ function TutorialStep({ onNext, onPrev }: { onNext: () => void; onPrev?: () => v
               )}
               {watched && (
                 <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-600/90 text-white text-[10px] font-semibold">
-                  <Check size={10} /> Watched
+                  <Check size={10} /> Tutorial Completed
                 </div>
               )}
             </>
           )}
         </div>
+
+        {/* Progress bar — only when video exists and is playing */}
+        {hasVideo === true && playing && (
+          <div className="px-4 py-2.5 border-t border-white/8 flex items-center gap-3">
+            <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-purple-500 transition-all duration-300"
+                style={{ width: duration > 0 ? `${(progress / duration) * 100}%` : "0%" }}
+              />
+            </div>
+            <span className="text-[10px] font-mono text-white/25 shrink-0">
+              {formatTime(progress)} / {formatTime(duration)}
+            </span>
+          </div>
+        )}
       </div>
 
-      {isDev && (
+      {(isDev || hasVideo === false) && (
         <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-purple-500/20 bg-purple-500/6 text-xs text-purple-400">
           <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
           Development mode — tutorial auto-completed. Video will be added later.
@@ -557,27 +566,55 @@ function GCPStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void })
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Create a Google Cloud Project</h2>
         <p className="text-white/40 text-xs leading-relaxed">
-          You need a Google Cloud Project to generate API credentials. Create one if you don't have it already.
+          You need a Google Cloud Project to generate API credentials. Create one if you don&apos;t have it already.
         </p>
       </div>
+
       <ScreenshotPlaceholder label="Google Cloud Console · New Project" />
-      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-          <Cloud size={15} className="text-purple-400" />
+
+      <div className="space-y-2.5">
+        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
+          <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
+          <ol className="space-y-2">
+            {[
+              "Go to console.cloud.google.com",
+              "Click the project dropdown at the top",
+              'Select "New Project"',
+              "Give it a name and click Create",
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
+                <span className="w-4 h-4 rounded-full bg-purple-600/20 border border-purple-500/25 text-purple-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white">Google Cloud Console</p>
-          <p className="text-xs text-white/35">Go to <span className="text-white/50 font-mono">console.cloud.google.com</span> and create a new project.</p>
+
+        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
+            <Cloud size={14} className="text-purple-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-white">Google Cloud Console</p>
+            <p className="text-[10px] text-white/30 font-mono">console.cloud.google.com</p>
+          </div>
+          <a
+            href="https://console.cloud.google.com/projectcreate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
+          >
+            Open <ExternalLink size={10} />
+          </a>
         </div>
-        <a
-          href="https://console.cloud.google.com/projectcreate"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
-        >
-          Open <ExternalLink size={10} />
-        </a>
       </div>
+
+      <div className="flex items-center gap-2 text-[10px] text-white/25">
+        <Clock size={10} className="text-white/20" /> Estimated time: 2 minutes
+      </div>
+
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Project created" />
     </div>
   );
@@ -594,24 +631,51 @@ function EnableStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void
           Find and enable the YouTube Data API v3 in the API Library. Required before credentials will work.
         </p>
       </div>
+
       <ScreenshotPlaceholder label="Google Cloud API Library · YouTube Data API v3" />
-      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
-          <Youtube size={15} className="text-red-400" />
+
+      <div className="space-y-2.5">
+        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
+          <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
+          <ol className="space-y-2">
+            {[
+              "In the Cloud Console, open APIs & Services → Library",
+              'Search for "YouTube Data API v3"',
+              "Click the result and press Enable",
+            ].map((step, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
+                <span className="w-4 h-4 rounded-full bg-red-500/15 border border-red-500/20 text-red-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white">YouTube Data API v3</p>
-          <p className="text-xs text-white/35">Search in the API Library, then click <span className="text-white/50">Enable</span>.</p>
+
+        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+            <Youtube size={14} className="text-red-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-white">YouTube Data API v3</p>
+            <p className="text-[10px] text-white/30">Search in the API Library, then click Enable.</p>
+          </div>
+          <a
+            href="https://console.cloud.google.com/apis/library/youtube.googleapis.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
+          >
+            Open <ExternalLink size={10} />
+          </a>
         </div>
-        <a
-          href="https://console.cloud.google.com/apis/library/youtube.googleapis.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
-        >
-          Open <ExternalLink size={10} />
-        </a>
       </div>
+
+      <div className="flex items-center gap-2 text-[10px] text-white/25">
+        <Clock size={10} className="text-white/20" /> Estimated time: 1 minute
+      </div>
+
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="API enabled" />
     </div>
   );
@@ -628,25 +692,30 @@ function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void 
           Set up an OAuth consent screen, then create a Web Application client. Add the values below exactly.
         </p>
       </div>
+
       <ScreenshotPlaceholder label="Google Cloud · OAuth Client Credentials" />
-      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-          <Shield size={15} className="text-purple-400" />
+
+      <div className="space-y-2.5">
+        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
+            <Shield size={14} className="text-purple-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-white">OAuth Consent Screen</p>
+            <p className="text-[10px] text-white/30">Configure as External and add your app details.</p>
+          </div>
+          <a
+            href="https://console.cloud.google.com/apis/credentials/consent"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
+          >
+            Open <ExternalLink size={10} />
+          </a>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white">OAuth Consent Screen</p>
-          <p className="text-xs text-white/35">Configure as <span className="text-white/50">External</span> and add your app details.</p>
-        </div>
-        <a
-          href="https://console.cloud.google.com/apis/credentials/consent"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
-        >
-          Open <ExternalLink size={10} />
-        </a>
-      </div>
-      <div className="space-y-3">
+
+        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest pt-1">Add these to your OAuth client</p>
+
         {[
           { label: "Authorized JavaScript Origin", value: JS_ORIGIN },
           { label: "Authorized Redirect URI",       value: REDIRECT_URI },
@@ -659,24 +728,30 @@ function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void 
             </div>
           </div>
         ))}
-      </div>
-      <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
-          <Key size={15} className="text-purple-400" />
+
+        <div className="rounded-xl border border-white/8 bg-white/[0.025] p-3.5 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-purple-600/15 border border-purple-500/20 flex items-center justify-center shrink-0">
+            <Key size={14} className="text-purple-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-white">Create OAuth Client ID</p>
+            <p className="text-[10px] text-white/30">Application type: Web application.</p>
+          </div>
+          <a
+            href="https://console.cloud.google.com/apis/credentials"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
+          >
+            Open <ExternalLink size={10} />
+          </a>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-white">Create OAuth Client ID</p>
-          <p className="text-xs text-white/35">Application type: <span className="text-white/50">Web application</span>.</p>
-        </div>
-        <a
-          href="https://console.cloud.google.com/apis/credentials"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-[10px] font-semibold transition-all duration-200 shrink-0"
-        >
-          Open <ExternalLink size={10} />
-        </a>
       </div>
+
+      <div className="flex items-center gap-2 text-[10px] text-white/25">
+        <Clock size={10} className="text-white/20" /> Estimated time: 3–5 minutes
+      </div>
+
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Client created" />
     </div>
   );
@@ -715,7 +790,9 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
           Copy the Client ID and Client Secret from the OAuth client you just created.
         </p>
       </div>
+
       <ScreenshotPlaceholder label="Google Cloud · OAuth Client · Credentials" />
+
       <div className="space-y-3">
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Client ID</label>
@@ -727,6 +804,7 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
             className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono"
           />
         </div>
+
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Client Secret</label>
           <div className="relative">
@@ -746,11 +824,14 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
           </div>
         </div>
       </div>
+
       {error && <ErrorBanner message={error} />}
+
       <div className="flex items-center gap-2 text-xs text-white/25">
         <Lock size={11} className="text-emerald-500/50 shrink-0" />
         Encrypted before storage. Never logged or exposed via the API.
       </div>
+
       <div className="flex gap-2.5 pt-1">
         <button
           onClick={onPrev}
@@ -766,7 +847,9 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
               ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]"
               : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}
         >
-          {saving ? <><Spinner className="w-3.5 h-3.5" /> Saving…</> : <><Lock size={13} /> Save & Continue</>}
+          {saving
+            ? <><Spinner className="w-3.5 h-3.5" /> Saving…</>
+            : <><Lock size={13} /> Save & Continue</>}
         </button>
       </div>
     </div>
@@ -777,6 +860,7 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
 
 function ConnectStep({ onPrev }: { onPrev?: () => void }) {
   const [connecting, setConnecting] = useState(false);
+
   return (
     <div className="space-y-5">
       <div>
@@ -785,6 +869,7 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
           Authorize ModerateAI to read and moderate comments on your YouTube channel.
         </p>
       </div>
+
       <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-8 flex flex-col items-center gap-5 text-center">
         <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
           <Youtube size={26} className="text-red-400" />
@@ -805,6 +890,7 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
             : <><Youtube size={15} /> Connect YouTube</>}
         </button>
       </div>
+
       {onPrev && (
         <button
           onClick={onPrev}
@@ -828,14 +914,19 @@ function SetupWizard({ onConnected }: { onConnected: () => void }) {
 
   return (
     <div className="rounded-2xl border border-purple-500/15 bg-[#0d0c14] overflow-hidden shadow-2xl shadow-purple-900/15">
+      {/* Wizard header */}
       <div className="px-5 py-3.5 border-b border-white/8 flex items-center gap-2.5">
         <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
         <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Google Cloud Setup</span>
         <span className="ml-auto text-[10px] text-white/20 font-medium">Step {stepIndex + 1} of {WIZARD_FLOW.length}</span>
       </div>
+
+      {/* Step indicator */}
       <div className="px-5 py-4 border-b border-white/5">
         <StepIndicator current={stepIndex + 1} />
       </div>
+
+      {/* Step content */}
       <div className="px-5 py-5">
         {step === "tutorial"    && <TutorialStep    onNext={next} onPrev={stepIndex > 0 ? prev : undefined} />}
         {step === "gcp"         && <GCPStep         onNext={next} onPrev={prev} />}
@@ -850,9 +941,7 @@ function SetupWizard({ onConnected }: { onConnected: () => void }) {
 
 // ─── Delete Modal ─────────────────────────────────────────────────────────────
 
-function DeleteModal({
-  onCancel, onConfirm, loading, error,
-}: {
+function DeleteModal({ onCancel, onConfirm, loading, error }: {
   onCancel: () => void; onConfirm: () => void; loading: boolean; error: string | null;
 }) {
   useEffect(() => {
@@ -917,20 +1006,21 @@ function StatusBadge({ status }: { status: LogStatus }) {
 // ─── Managed Dashboard Card ───────────────────────────────────────────────────
 
 function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh: () => void }) {
-  const planLimit  = PLAN_LIMITS[managed.plan] ?? managed.actionsTotal;
-  const used       = managed.actionsUsed;
+  const planLimit = PLAN_LIMITS[managed.plan] ?? managed.actionsTotal;
+  const used      = managed.actionsUsed;
+
   const health: HealthState =
     managed.apiStatus === "operational" ? "healthy" :
     managed.apiStatus === "degraded"    ? "warning" :
     "offline";
 
-  // Auto-refresh every 30 s
+  const [lastSyncDisplay, setLastSyncDisplay] = useState(fmtRelative(managed.lastSync));
+
   useEffect(() => {
     const t = setInterval(onRefresh, 30_000);
     return () => clearInterval(t);
   }, [onRefresh]);
 
-  const [lastSyncDisplay, setLastSyncDisplay] = useState(fmtRelative(managed.lastSync));
   useEffect(() => {
     const t = setInterval(() => setLastSyncDisplay(fmtRelative(managed.lastSync)), 10_000);
     return () => clearInterval(t);
@@ -957,23 +1047,23 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
         </div>
       </div>
 
-      {/* Main stats grid */}
+      {/* Primary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/[0.04]">
-        <StatCell label="Current Plan"      value={managed.planLabel}                       icon={<Server    size={11} className="text-purple-400"  />} border="" />
-        <StatCell label="Actions Used"      value={used.toLocaleString()}                   icon={<Zap       size={11} className="text-yellow-400"  />} />
-        <StatCell label="Remaining Credits" value={managed.actionsRemaining.toLocaleString()} icon={<BarChart2 size={11} className="text-emerald-400" />} />
-        <StatCell label="Monthly Reset"     value={fmt(managed.resetDate, { month: "short", day: "numeric" })} icon={<Clock size={11} className="text-blue-400" />} />
+        <StatCell label="Current Plan"      value={managed.planLabel}                         icon={<Server    size={11} className="text-purple-400"  />} />
+        <StatCell label="AI Actions Used"   value={used.toLocaleString()}                     icon={<Zap       size={11} className="text-yellow-400"  />} />
+        <StatCell label="AI Actions Left"   value={managed.actionsRemaining.toLocaleString()} icon={<BarChart2 size={11} className="text-emerald-400" />} />
+        <StatCell label="Reset Date"        value={fmt(managed.resetDate, { month: "short", day: "numeric" })} icon={<Clock size={11} className="text-blue-400" />} />
       </div>
 
-      {/* Secondary stats grid */}
+      {/* Secondary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/[0.04] border-t border-white/[0.04]">
-        <StatCell label="Today's Requests"   value={managed.todayRequests.toLocaleString()}    icon={<TrendingUp    size={11} className="text-blue-400"    />} />
-        <StatCell label="Comments Moderated" value={managed.commentsModerated.toLocaleString()} icon={<MessageSquare size={11} className="text-purple-400"  />} />
-        <StatCell label="Replies Generated"  value={managed.repliesGenerated.toLocaleString()}  icon={<Zap           size={11} className="text-yellow-400"  />} />
-        <StatCell label="Videos Monitored"   value={managed.videosMonitored.toLocaleString()}   icon={<Video         size={11} className="text-red-400"     />} />
+        <StatCell label="Today's Requests"    value={managed.todayRequests.toLocaleString()}     icon={<TrendingUp    size={11} className="text-blue-400"   />} />
+        <StatCell label="Comments Moderated"  value={managed.commentsModerated.toLocaleString()} icon={<MessageSquare size={11} className="text-purple-400" />} />
+        <StatCell label="Replies Generated"   value={managed.repliesGenerated.toLocaleString()}  icon={<Zap           size={11} className="text-yellow-400" />} />
+        <StatCell label="Videos Monitored"    value={managed.videosMonitored.toLocaleString()}   icon={<Video         size={11} className="text-red-400"    />} />
       </div>
 
-      {/* API Health row */}
+      {/* API health row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/[0.04] border-t border-white/[0.04]">
         <StatCell
           label="Success Rate"
@@ -1000,7 +1090,18 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
         />
       </div>
 
-      {/* Quota progress bar */}
+      {/* Billing status row */}
+      {managed.billingStatus === "overdue" && (
+        <div className="px-5 py-3 border-t border-red-500/15 bg-red-500/5 flex items-center gap-2.5">
+          <AlertCircle size={13} className="text-red-400 shrink-0" />
+          <p className="text-xs text-red-400">Payment overdue — moderation may pause soon.</p>
+          <a href="/billing" className="ml-auto text-xs font-semibold text-red-300 hover:text-red-200 underline underline-offset-2 transition-colors shrink-0">
+            Update billing
+          </a>
+        </div>
+      )}
+
+      {/* Quota bar */}
       <div className="px-5 py-4 border-t border-white/5">
         <QuotaBar
           used={used}
@@ -1010,11 +1111,11 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
         />
       </div>
 
-      {/* Upgrade CTA — only when near limit */}
+      {/* Upgrade CTA — only when near limit and not agency */}
       {used / planLimit >= 0.8 && managed.plan !== "agency" && (
         <div className="px-5 py-3.5 border-t border-white/5 flex items-center justify-between gap-3 bg-purple-500/5">
           <p className="text-xs text-white/50 leading-snug">
-            You're using <span className="text-white/70 font-semibold">{Math.round((used / planLimit) * 100)}%</span> of your monthly limit.
+            You&apos;re using <span className="text-white/70 font-semibold">{Math.round((used / planLimit) * 100)}%</span> of your monthly limit.
             Upgrade to avoid interruptions.
           </p>
           <a
@@ -1029,18 +1130,47 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
   );
 }
 
+// ─── Plan Limits Info ─────────────────────────────────────────────────────────
+
+function PlanLimitsInfo() {
+  const plans = [
+    { key: "free_trial", label: "Free Trial", actions: PLAN_LIMITS.free_trial, color: "text-white/50 border-white/10" },
+    { key: "pro",        label: "Pro",         actions: PLAN_LIMITS.pro,        color: "text-purple-400 border-purple-500/25" },
+    { key: "agency",     label: "Agency",      actions: PLAN_LIMITS.agency,     color: "text-emerald-400 border-emerald-500/25" },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-white/8 bg-white/[0.02] overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-white/8">
+        <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Plan Limits</p>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-white/[0.05]">
+        {plans.map((p) => (
+          <div key={p.key} className="px-4 py-3.5 flex flex-col gap-1">
+            <span className={`text-[9px] font-bold uppercase tracking-widest border rounded-full px-1.5 py-0.5 w-fit ${p.color} bg-transparent`}>
+              {p.label}
+            </span>
+            <p className="text-sm font-semibold text-white mt-1">{p.actions.toLocaleString()}</p>
+            <p className="text-[10px] text-white/25">AI Actions / mo</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Custom Project Card ──────────────────────────────────────────────────────
 
 function CustomProjectCard({ custom, onRefresh }: { custom: CustomProjectInfo; onRefresh: () => void }) {
   const used = custom.dailyQuota - custom.remainingQuota;
 
-  // Auto-refresh every 30 s
+  const [lastSyncDisplay, setLastSyncDisplay] = useState(fmtRelative(custom.lastSync));
+
   useEffect(() => {
     const t = setInterval(onRefresh, 30_000);
     return () => clearInterval(t);
   }, [onRefresh]);
 
-  const [lastSyncDisplay, setLastSyncDisplay] = useState(fmtRelative(custom.lastSync));
   useEffect(() => {
     const t = setInterval(() => setLastSyncDisplay(fmtRelative(custom.lastSync)), 10_000);
     return () => clearInterval(t);
@@ -1070,12 +1200,22 @@ function CustomProjectCard({ custom, onRefresh }: { custom: CustomProjectInfo; o
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-white/[0.04]">
-        <StatCell label="Connected Account"  value={custom.connectedAccount || "—"}   icon={<Wifi         size={11} className="text-blue-400"   />} />
-        <StatCell label="OAuth Status"       value={custom.oauthStatus === "connected" ? "Connected" : custom.oauthStatus === "expired" ? "Expired" : "Disconnected"} icon={<Lock size={11} className="text-purple-400" />} valueClass={oauthColor} />
-        <StatCell label="API Status"         value={custom.apiStatus === "enabled" ? "Enabled" : "Disabled"} icon={<Youtube size={11} className="text-red-400" />} valueClass={apiColor} />
-        <StatCell label="Last Sync"          value={lastSyncDisplay}                  icon={<Clock        size={11} className="text-blue-400"   />} valueClass="text-white/70" />
-        <StatCell label="Daily Quota Used"   value={`${used.toLocaleString()} / ${custom.dailyQuota.toLocaleString()}`} icon={<BarChart2 size={11} className="text-emerald-400" />} />
-        <StatCell label="Remaining Today"    value={custom.remainingQuota.toLocaleString()} icon={<Zap   size={11} className="text-yellow-400"  />} />
+        <StatCell label="Connected Account"  value={custom.connectedAccount || "—"}     icon={<Wifi         size={11} className="text-blue-400"    />} />
+        <StatCell
+          label="OAuth Status"
+          value={custom.oauthStatus === "connected" ? "Connected" : custom.oauthStatus === "expired" ? "Expired" : "Disconnected"}
+          icon={<Lock size={11} className="text-purple-400" />}
+          valueClass={oauthColor}
+        />
+        <StatCell
+          label="API Status"
+          value={custom.apiStatus === "enabled" ? "Enabled" : "Disabled"}
+          icon={<Youtube size={11} className="text-red-400" />}
+          valueClass={apiColor}
+        />
+        <StatCell label="Last Sync"        value={lastSyncDisplay}                      icon={<Clock        size={11} className="text-blue-400"    />} valueClass="text-white/70" />
+        <StatCell label="Daily Quota Used" value={`${used.toLocaleString()} / ${custom.dailyQuota.toLocaleString()}`} icon={<BarChart2 size={11} className="text-emerald-400" />} />
+        <StatCell label="Remaining Today"  value={custom.remainingQuota.toLocaleString()} icon={<Zap         size={11} className="text-yellow-400"  />} />
       </div>
 
       <div className="px-5 py-4 border-t border-white/5">
@@ -1090,7 +1230,7 @@ function CustomProjectCard({ custom, onRefresh }: { custom: CustomProjectInfo; o
   );
 }
 
-// ─── Management Actions ───────────────────────────────────────────────────────
+// ─── Management Section ───────────────────────────────────────────────────────
 
 function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
   const [testState,     setTestState]  = useState<"idle" | "loading" | "ok" | "fail">("idle");
@@ -1182,7 +1322,7 @@ function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
           {rotateError && <ErrorBanner message={rotateError} />}
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => { redirectToYouTubeAuth(); }}
+              onClick={() => redirectToYouTubeAuth()}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-500/30 text-purple-300 hover:border-purple-500/50 text-xs font-medium transition-all duration-200 hover:scale-[1.02]"
             >
               <RefreshCw size={12} /> Reconnect
@@ -1230,7 +1370,6 @@ function ActivityLogsSection() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Auto-refresh every 30 s
   useEffect(() => {
     const t = setInterval(load, 30_000);
     return () => clearInterval(t);
@@ -1243,7 +1382,10 @@ function ActivityLogsSection() {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
       <div className="px-5 py-4 border-b border-white/8 flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-white/70">Activity</p>
+        <div className="flex items-center gap-2">
+          <Activity size={13} className="text-white/30" />
+          <p className="text-sm font-semibold text-white/70">Activity</p>
+        </div>
         {logs.length > 0 && (
           <span className="text-[10px] text-white/25 font-medium">{logs.length} events</span>
         )}
@@ -1253,7 +1395,7 @@ function ActivityLogsSection() {
         <EmptyState
           icon={Activity}
           title="No activity yet"
-          description="Activity will appear here as ModerateAI moderates your channel."
+          description="Events appear here as ModerateAI moderates your channel — connections, syncs, and moderation actions."
         />
       )}
 
@@ -1291,51 +1433,51 @@ function ActivityLogsSection() {
 
 // ─── Connection Method Selector ───────────────────────────────────────────────
 
-function MethodSelector({
-  method, onChange,
-}: { method: APIMethod; onChange: (m: APIMethod) => void }) {
+function MethodSelector({ method, onChange }: { method: APIMethod; onChange: (m: APIMethod) => void }) {
+  const options: { key: APIMethod; icon: React.ReactNode; label: string; sub: string; badge: string; badgeColor: string; ring: string }[] = [
+    {
+      key:        "managed",
+      icon:       <Server size={16} className="text-purple-400" />,
+      label:      "ModerateAI Shared API",
+      sub:        "Recommended · Zero setup",
+      badge:      "Recommended",
+      badgeColor: "text-purple-400 border-purple-500/25 bg-purple-500/8",
+      ring:       "border-purple-500/40 bg-purple-500/6",
+    },
+    {
+      key:        "custom",
+      icon:       <Cloud size={16} className="text-emerald-400" />,
+      label:      "My Google Cloud Project",
+      sub:        "Advanced · Your own quota",
+      badge:      "Advanced",
+      badgeColor: "text-emerald-400 border-emerald-500/25 bg-emerald-500/8",
+      ring:       "border-emerald-500/30 bg-emerald-500/4",
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {(["managed", "custom"] as const).map((m) => {
-        const active = method === m;
-        const cfg = {
-          managed: {
-            icon: <Server size={16} className="text-purple-400" />,
-            label: "ModerateAI Shared API",
-            sub: "Recommended · Zero setup",
-            badge: "Recommended",
-            badgeColor: "text-purple-400 border-purple-500/25 bg-purple-500/8",
-            ring: "border-purple-500/40 bg-purple-500/6",
-          },
-          custom: {
-            icon: <Cloud size={16} className="text-emerald-400" />,
-            label: "My Google Cloud Project",
-            sub: "Advanced · Your own quota",
-            badge: "Advanced",
-            badgeColor: "text-emerald-400 border-emerald-500/25 bg-emerald-500/8",
-            ring: "border-emerald-500/30 bg-emerald-500/4",
-          },
-        }[m];
-
+      {options.map((opt) => {
+        const active = method === opt.key;
         return (
           <button
-            key={m}
-            onClick={() => onChange(m)}
+            key={opt.key}
+            onClick={() => onChange(opt.key)}
             className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200
-              ${active ? cfg.ring : "border-white/8 bg-white/[0.02] hover:border-white/15"}`}
+              ${active ? opt.ring : "border-white/8 bg-white/[0.02] hover:border-white/15"}`}
           >
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5
               ${active ? "bg-white/8 border border-white/10" : "bg-white/4 border border-white/6"}`}>
-              {cfg.icon}
+              {opt.icon}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                <p className="text-sm font-semibold text-white">{cfg.label}</p>
-                <span className={`text-[9px] font-bold border px-1.5 py-0.5 rounded-full uppercase tracking-wide ${cfg.badgeColor}`}>
-                  {cfg.badge}
+                <p className="text-sm font-semibold text-white">{opt.label}</p>
+                <span className={`text-[9px] font-bold border px-1.5 py-0.5 rounded-full uppercase tracking-wide ${opt.badgeColor}`}>
+                  {opt.badge}
                 </span>
               </div>
-              <p className="text-xs text-white/30">{cfg.sub}</p>
+              <p className="text-xs text-white/30">{opt.sub}</p>
             </div>
             <div className={`w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all duration-200
               ${active ? "border-purple-500 bg-purple-500" : "border-white/15 bg-transparent"}`}>
@@ -1352,16 +1494,19 @@ function MethodSelector({
 
 export default function APIAccessPage() {
   const [status,       setStatus]  = useState<APIStatus | null>(null);
+  const [error,        setError]   = useState<string | null>(null);
   const [loading,      setLoading] = useState(true);
   const [activeMethod, setMethod]  = useState<APIMethod>("managed");
 
   const loadStatus = useCallback(async () => {
+    setError(null);
     try {
       const data = await fetchAPIStatus();
       setStatus(data);
       setMethod(data.method);
     } catch {
       setStatus(null);
+      setError("Unable to load API status. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -1370,6 +1515,8 @@ export default function APIAccessPage() {
   useEffect(() => { loadStatus(); }, [loadStatus]);
 
   const connected = !!status?.youtubeConnected;
+
+  // ── Loading state ──────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -1386,6 +1533,40 @@ export default function APIAccessPage() {
       </div>
     );
   }
+
+  // ── Error state ────────────────────────────────────────────────────────────
+
+  if (error && !status) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight mb-1">API Access</h1>
+            <p className="text-white/35 text-sm">Manage how ModerateAI connects to the YouTube Data API.</p>
+          </div>
+          <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-8 flex flex-col items-center gap-4 text-center">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+              <XCircle size={18} className="text-white/20" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white/40">Could not load API status</p>
+              <p className="text-xs text-white/25 mt-0.5 max-w-[260px] mx-auto leading-relaxed">
+                Check your connection and try again.
+              </p>
+            </div>
+            <button
+              onClick={loadStatus}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-xs font-semibold transition-all duration-200"
+            >
+              <RefreshCw size={12} /> Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main render ────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -1411,44 +1592,49 @@ export default function APIAccessPage() {
           )}
         </div>
 
-        {/* Connection method selector — always visible */}
+        {/* ── Not connected ── */}
         {!connected && (
-          <div className="space-y-4">
-            <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Connection Method</p>
-            <MethodSelector method={activeMethod} onChange={setMethod} />
-          </div>
-        )}
-
-        {/* Pre-connection state */}
-        {!connected && activeMethod === "managed" && (
-          <div className="rounded-2xl border border-purple-500/15 bg-[#0d0c14] p-8 flex flex-col items-center gap-5 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
-              <Server size={24} className="text-purple-400" />
+          <>
+            <div className="space-y-3">
+              <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Connection Method</p>
+              <MethodSelector method={activeMethod} onChange={setMethod} />
             </div>
-            <div>
-              <p className="text-base font-semibold text-white mb-1.5">Connect with ModerateAI Shared API</p>
-              <p className="text-sm text-white/35 leading-relaxed max-w-sm mx-auto">
-                No Google Cloud setup required. We manage the API quota and infrastructure for you.
-              </p>
-            </div>
-            <button
-              onClick={() => { redirectToYouTubeAuth(); }}
-              className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.02]"
-            >
-              <Youtube size={15} /> Connect YouTube
-            </button>
-            <p className="text-[10px] text-white/20">You&apos;ll be redirected to Google to authorize your channel.</p>
-          </div>
+
+            {activeMethod === "managed" && (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-purple-500/15 bg-[#0d0c14] p-8 flex flex-col items-center gap-5 text-center">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                    <Server size={24} className="text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-base font-semibold text-white mb-1.5">ModerateAI Shared API</p>
+                    <p className="text-sm text-white/35 leading-relaxed max-w-sm mx-auto">
+                      No Google Cloud setup required. We manage the API quota and infrastructure for you.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => redirectToYouTubeAuth()}
+                    className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.02]"
+                  >
+                    <Youtube size={15} /> Connect YouTube
+                  </button>
+                  <p className="text-[10px] text-white/20">You&apos;ll be redirected to Google to authorize your channel.</p>
+                </div>
+
+                <PlanLimitsInfo />
+              </div>
+            )}
+
+            {activeMethod === "custom" && (
+              <SetupWizard onConnected={loadStatus} />
+            )}
+          </>
         )}
 
-        {!connected && activeMethod === "custom" && (
-          <SetupWizard onConnected={loadStatus} />
-        )}
-
-        {/* Connected state */}
+        {/* ── Connected ── */}
         {connected && status && (
           <>
-            {/* Method indicator */}
+            {/* Active method badge */}
             <div className="flex items-center gap-2">
               <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Connection Method</p>
               <span className="text-[10px] font-semibold text-purple-400 border border-purple-500/25 bg-purple-500/8 px-2 py-0.5 rounded-full uppercase tracking-wide">
@@ -1456,14 +1642,21 @@ export default function APIAccessPage() {
               </span>
             </div>
 
+            {/* Dashboard card */}
             {status.method === "managed" && status.managed && (
-              <ManagedCard managed={status.managed} onRefresh={loadStatus} />
+              <>
+                <ManagedCard managed={status.managed} onRefresh={loadStatus} />
+                <PlanLimitsInfo />
+              </>
             )}
             {status.method === "custom" && status.custom && (
               <CustomProjectCard custom={status.custom} onRefresh={loadStatus} />
             )}
 
+            {/* Management */}
             <ManagementSection onRefresh={loadStatus} />
+
+            {/* Activity */}
             <ActivityLogsSection />
 
             {/* Security footer */}

@@ -202,10 +202,10 @@ export function DashboardBottomNav() {
   const [isMobile, setIsMobile] = useState(true);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
+    const check = () => setIsMobile(window.matchMedia("(pointer: coarse)").matches);
     check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    window.matchMedia("(pointer: coarse)").addEventListener("change", check);
+    return () => window.matchMedia("(pointer: coarse)").removeEventListener("change", check);
   }, []);
 
   if (!isMobile) return null;

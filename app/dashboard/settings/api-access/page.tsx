@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import {
   Shield, ChevronRight, ChevronLeft, Copy, Eye, EyeOff,
   ExternalLink, Check, Lock, Wifi, WifiOff, RotateCcw,
@@ -95,6 +96,52 @@ const PLAN_LIMITS: Record<string, number> = {
 // ─── API helpers ──────────────────────────────────────────────────────────────
 
 async function fetchAPIStatus(): Promise<APIStatus> {
+  // Primary: read youtube_connected from Firestore (same field as Dashboard)
+  try {
+    const auth = getAuth();
+    const uid  = auth.currentUser?.uid;
+    if (uid) {
+      const db   = getFirestore();
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        const connected = (data?.youtube_connected as boolean) || false;
+        const plan      = (data?.plan as string) || "free_trial";
+        const planLabel = plan === "pro" ? "Pro" : plan === "agency" ? "Agency" : "Free Trial";
+
+        if (connected) {
+          return {
+            method:           (data?.api_method as APIMethod) || "managed",
+            youtubeConnected: true,
+            managed: {
+              plan:              plan as ManagedUsage["plan"],
+              planLabel,
+              actionsUsed:       (data?.actions_used       as number) ?? 0,
+              actionsTotal:      PLAN_LIMITS[plan]         ?? 250,
+              actionsRemaining:  (data?.actions_remaining  as number) ?? PLAN_LIMITS[plan] ?? 250,
+              resetDate:         (data?.reset_date         as string) || new Date(new Date().setDate(1)).toISOString(),
+              apiStatus:         (data?.api_status         as ManagedUsage["apiStatus"]) || "operational",
+              todayRequests:     (data?.today_requests     as number) ?? 0,
+              commentsModerated: (data?.comments_moderated as number) ?? 0,
+              repliesGenerated:  (data?.replies_generated  as number) ?? 0,
+              videosMonitored:   (data?.videos_monitored   as number) ?? 0,
+              lastSync:          (data?.last_sync          as string) || null,
+              successRate:       (data?.success_rate       as number) ?? 100,
+              latencyMs:         (data?.latency_ms         as number) ?? 0,
+              connectedChannels: (data?.connected_channels as number) ?? 1,
+              billingStatus:     (data?.billing_status     as ManagedUsage["billingStatus"]) || "trial",
+            },
+          };
+        }
+        // User exists but not connected
+        return { method: "managed", youtubeConnected: false };
+      }
+    }
+  } catch (e) {
+    console.warn("[api-access] Firestore read failed, falling back to REST", e);
+  }
+
+  // Fallback: REST endpoint (if it exists)
   const res = await fetch("/api/settings/api-access", { cache: "no-store" });
   if (!res.ok) throw new Error(`${res.status}`);
   return res.json();
@@ -1503,14 +1550,27 @@ export default function APIAccessPage() {
       setStatus(data);
       setMethod(data.method);
     } catch {
-      // Backend unavailable — treat as not connected, show onboarding UI
       setStatus(null);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadStatus(); }, [loadStatus]);
+  // Wait for Firebase Auth before loading — ensures currentUser is available
+  useEffect(() => {
+    const auth = getAuth();
+    // If already signed in, load immediately
+    if (auth.currentUser) {
+      loadStatus();
+      return;
+    }
+    // Otherwise wait for auth state
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) loadStatus();
+      else setLoading(false);
+    });
+    return () => unsub();
+  }, [loadStatus]);
 
   const connected = !!status?.youtubeConnected;
 

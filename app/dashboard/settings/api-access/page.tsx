@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import {
-  Shield, ChevronRight, ChevronLeft, Copy, Eye, EyeOff,
+  Shield, Copy, Eye, EyeOff,
   ExternalLink, Check, Lock, Wifi, WifiOff, RotateCcw,
   Trash2, RefreshCw, AlertTriangle, Activity, Clock, Zap, BarChart2, X,
   Cloud, Server, Loader2, Key,
@@ -12,8 +12,17 @@ import {
   AlertCircle, Cpu, Radio, Tv2 as Youtube,
   Play, Pause, Volume2, VolumeX, Maximize, SkipForward,
   Plus, ChevronDown, Search, Settings, HelpCircle, Bell,
-  Globe, Database, Code2, Terminal, Layers,
+  Globe, Layers,
 } from "lucide-react";
+
+// ─── Origin helpers (lazy, never runs at module scope) ────────────────────────
+
+function getAppOrigin(): string {
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.NEXT_PUBLIC_APP_URL ?? "https://moderateai.site";
+}
+function getRedirectUri(): string { return `${getAppOrigin()}/api/auth/youtube/callback`; }
+function getJsOrigin(): string { return getAppOrigin(); }
 
 // ─── YouTube OAuth redirect ───────────────────────────────────────────────────
 
@@ -81,15 +90,7 @@ interface APIStatus {
   custom?: CustomProjectInfo;
 }
 
-// ─── Config ───────────────────────────────────────────────────────────────────
-
-const APP_ORIGIN =
-  typeof window !== "undefined"
-    ? window.location.origin
-    : process.env.NEXT_PUBLIC_APP_URL ?? "https://moderateai.site";
-
-const REDIRECT_URI = `${APP_ORIGIN}/api/auth/youtube/callback`;
-const JS_ORIGIN    = APP_ORIGIN;
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const PLAN_LIMITS: Record<string, number> = {
   free_trial: 250,
@@ -107,34 +108,34 @@ async function fetchAPIStatus(): Promise<APIStatus> {
       const db   = getFirestore();
       const snap = await getDoc(doc(db, "users", uid));
       if (snap.exists()) {
-        const data = snap.data();
-        const connected = (data?.youtube_connected as boolean) || false;
-        const plan      = (data?.plan as string) || "free_trial";
+        const data = snap.data() ?? {};
+        const connected = (data.youtube_connected as boolean) || false;
+        const plan      = (data.plan as string) || "free_trial";
         const planLabel = plan === "pro" ? "Pro" : plan === "agency" ? "Agency" : "Free Trial";
         if (connected) {
           return {
-            method:           (data?.api_method as APIMethod) || "managed",
+            method:           (data.api_method as APIMethod) || "managed",
             youtubeConnected: true,
             managed: {
               plan:              plan as ManagedUsage["plan"],
               planLabel,
-              actionsUsed:       (data?.actions_used       as number) ?? 0,
-              actionsTotal:      PLAN_LIMITS[plan]         ?? 250,
-              actionsRemaining:  (data?.actions_remaining  as number) ?? PLAN_LIMITS[plan] ?? 250,
-              resetDate:         (data?.reset_date         as string) || new Date(new Date().setDate(1)).toISOString(),
-              apiStatus:         (data?.api_status         as ManagedUsage["apiStatus"]) || "operational",
-              todayRequests:     (data?.today_requests     as number) ?? 0,
-              commentsModerated: (data?.comments_moderated as number) ?? 0,
-              repliesGenerated:  (data?.replies_generated  as number) ?? 0,
-              videosMonitored:   (data?.videos_monitored   as number) ?? 0,
-              lastSync:          (data?.last_sync          as string) || null,
-              successRate:       (data?.success_rate       as number) ?? 100,
-              latencyMs:         (data?.latency_ms         as number) ?? 0,
-              connectedChannels: (data?.connected_channels as number) ?? 1,
-              billingStatus:     (data?.billing_status     as ManagedUsage["billingStatus"]) || "trial",
-              channelName:       (data?.channel_name       as string) || undefined,
-              channelAvatar:     (data?.channel_avatar     as string) || undefined,
-              usageGraph:        (data?.usage_graph        as ManagedUsage["usageGraph"]) || undefined,
+              actionsUsed:       Number(data.actions_used       ?? 0),
+              actionsTotal:      PLAN_LIMITS[plan]              ?? 250,
+              actionsRemaining:  Number(data.actions_remaining  ?? PLAN_LIMITS[plan] ?? 250),
+              resetDate:         (data.reset_date as string)    || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(),
+              apiStatus:         (data.api_status as ManagedUsage["apiStatus"]) || "operational",
+              todayRequests:     Number(data.today_requests     ?? 0),
+              commentsModerated: Number(data.comments_moderated ?? 0),
+              repliesGenerated:  Number(data.replies_generated  ?? 0),
+              videosMonitored:   Number(data.videos_monitored   ?? 0),
+              lastSync:          (data.last_sync as string)     || null,
+              successRate:       Number(data.success_rate       ?? 100),
+              latencyMs:         Number(data.latency_ms         ?? 0),
+              connectedChannels: Number(data.connected_channels ?? 1),
+              billingStatus:     (data.billing_status as ManagedUsage["billingStatus"]) || "trial",
+              channelName:       (data.channel_name as string)  || undefined,
+              channelAvatar:     (data.channel_avatar as string)|| undefined,
+              usageGraph:        (data.usage_graph as ManagedUsage["usageGraph"]) || undefined,
             },
           };
         }
@@ -144,9 +145,13 @@ async function fetchAPIStatus(): Promise<APIStatus> {
   } catch (e) {
     console.warn("[api-access] Firestore read failed, falling back to REST", e);
   }
-  const res = await fetch("/api/settings/api-access", { cache: "no-store" });
-  if (!res.ok) throw new Error(`${res.status}`);
-  return res.json();
+  try {
+    const res = await fetch("/api/settings/api-access", { cache: "no-store" });
+    if (!res.ok) throw new Error(`${res.status}`);
+    return res.json();
+  } catch {
+    return { method: "managed", youtubeConnected: false };
+  }
 }
 
 async function saveOAuthCredentials(clientId: string, clientSecret: string): Promise<void> {
@@ -157,7 +162,7 @@ async function saveOAuthCredentials(clientId: string, clientSecret: string): Pro
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.message ?? "Failed to save credentials");
+    throw new Error((body as { message?: string }).message ?? "Failed to save credentials");
   }
 }
 
@@ -177,26 +182,36 @@ async function disconnectChannel(): Promise<void> {
 }
 
 async function testConnection(): Promise<{ ok: boolean; message: string }> {
-  const res  = await fetch("/api/settings/api-access/test", { method: "POST" });
-  const body = await res.json().catch(() => ({}));
-  return { ok: res.ok, message: body.message ?? (res.ok ? "Connection successful." : "Connection failed.") };
+  try {
+    const res  = await fetch("/api/settings/api-access/test", { method: "POST" });
+    const body = await res.json().catch(() => ({}));
+    return { ok: res.ok, message: (body as { message?: string }).message ?? (res.ok ? "Connection successful." : "Connection failed.") };
+  } catch {
+    return { ok: false, message: "Could not reach the server." };
+  }
 }
 
 async function fetchActivityLogs(): Promise<ActivityLog[]> {
-  const res = await fetch("/api/settings/api-access/logs", { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await fetch("/api/settings/api-access/logs", { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
 }
 
 async function fetchUsageGraph(range: GraphRange): Promise<UsagePoint[]> {
-  const res = await fetch(`/api/settings/api-access/usage?range=${range}`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await fetch(`/api/settings/api-access/usage?range=${range}`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
 }
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
-function fmt(iso: string | null, opts?: Intl.DateTimeFormatOptions): string {
+function fmt(iso: string | null | undefined, opts?: Intl.DateTimeFormatOptions): string {
   if (!iso) return "—";
   try {
     return new Intl.DateTimeFormat("en-US", opts ?? {
@@ -205,7 +220,7 @@ function fmt(iso: string | null, opts?: Intl.DateTimeFormatOptions): string {
   } catch { return "—"; }
 }
 
-function fmtRelative(iso: string | null): string {
+function fmtRelative(iso: string | null | undefined): string {
   if (!iso) return "—";
   try {
     const diff = Date.now() - new Date(iso).getTime();
@@ -220,6 +235,12 @@ function fmtSeconds(s: number): string {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+// ─── Safe number helpers ──────────────────────────────────────────────────────
+
+function safeNum(v: number | undefined | null, fallback = 0): number {
+  return typeof v === "number" && isFinite(v) ? v : fallback;
 }
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
@@ -316,7 +337,11 @@ function HealthIndicator({ health }: { health: HealthState }) {
 
 function CopyButton({ value, label }: { value: string; label?: string }) {
   const [copied, setCopied] = useState(false);
-  const handleCopy = () => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const handleCopy = () => {
+    navigator.clipboard.writeText(value).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   return (
     <button onClick={handleCopy}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all duration-200 shrink-0
@@ -327,13 +352,15 @@ function CopyButton({ value, label }: { value: string; label?: string }) {
 }
 
 function QuotaBar({ used, total, label, resetLabel }: { used: number; total: number; label?: string; resetLabel?: string }) {
-  const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+  const safeUsed  = safeNum(used);
+  const safeTotal = safeNum(total, 1);
+  const pct = safeTotal > 0 ? Math.min(100, Math.round((safeUsed / safeTotal) * 100)) : 0;
   const barColor = pct >= 90 ? "from-red-600 to-red-400" : pct >= 70 ? "from-yellow-600 to-yellow-400" : "from-purple-600 to-purple-400";
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center text-[10px] text-white/30">
         <span>{label ?? `${pct}% of limit used`}</span>
-        <span className="font-mono">{used.toLocaleString()} / {total.toLocaleString()}{resetLabel ? ` · ${resetLabel}` : ""}</span>
+        <span className="font-mono">{safeUsed.toLocaleString()} / {safeTotal.toLocaleString()}{resetLabel ? ` · ${resetLabel}` : ""}</span>
       </div>
       <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
         <div className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-700`} style={{ width: `${pct}%` }} />
@@ -353,7 +380,7 @@ function StatCell({ label, value, icon, valueClass = "text-white" }: {
   return (
     <div className="px-4 py-3.5 flex flex-col gap-1.5">
       <div className="flex items-center gap-1.5 text-[10px] text-white/30 font-medium uppercase tracking-wide">{icon}{label}</div>
-      <p className={`text-sm font-semibold truncate ${valueClass}`}>{value}</p>
+      <p className={`text-sm font-semibold truncate ${valueClass}`}>{value ?? "—"}</p>
     </div>
   );
 }
@@ -429,22 +456,23 @@ function NavButtons({ onPrev, onNext, nextLabel = "Next →", nextDisabled = fal
   );
 }
 
-// ─── Real Video Player ────────────────────────────────────────────────────────
+// ─── Video Player ─────────────────────────────────────────────────────────────
 
 function VideoPlayer({ onWatched }: { onWatched: () => void }) {
-  const videoRef           = useRef<HTMLVideoElement>(null);
-  const containerRef       = useRef<HTMLDivElement>(null);
-  const [playing,   setPlaying]   = useState(false);
-  const [muted,     setMuted]     = useState(false);
-  const [progress,  setProgress]  = useState(0);
-  const [duration,  setDuration]  = useState(0);
-  const [volume,    setVolume]    = useState(1);
-  const [watched,   setWatched]   = useState(false);
-  const [buffered,  setBuffered]  = useState(0);
-  const [showCtrl,  setShowCtrl]  = useState(true);
-  const [hasVideo,  setHasVideo]  = useState<boolean | null>(null);
-  const [ended,     setEnded]     = useState(false);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const videoRef     = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hideTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [playing,  setPlaying]  = useState(false);
+  const [muted,    setMuted]    = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume,   setVolume]   = useState(1);
+  const [watched,  setWatched]  = useState(false);
+  const [buffered, setBuffered] = useState(0);
+  const [showCtrl, setShowCtrl] = useState(true);
+  const [hasVideo, setHasVideo] = useState<boolean | null>(null);
+  const [ended,    setEnded]    = useState(false);
 
   useEffect(() => {
     fetch("/videos/google-cloud-setup.mp4", { method: "HEAD" })
@@ -452,25 +480,26 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
       .catch(() => setHasVideo(false));
   }, []);
 
-  const showControls = () => {
+  const showControls = useCallback(() => {
     setShowCtrl(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     if (playing) hideTimer.current = setTimeout(() => setShowCtrl(false), 3000);
-  };
+  }, [playing]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (playing) { videoRef.current.pause(); setPlaying(false); setShowCtrl(true); }
-    else { videoRef.current.play(); setPlaying(true); }
+    else { videoRef.current.play().catch(() => {}); setPlaying(true); }
     showControls();
   };
 
   const handleTimeUpdate = () => {
-    if (!videoRef.current) return;
-    setProgress(videoRef.current.currentTime);
-    const buf = videoRef.current.buffered;
-    if (buf.length > 0) setBuffered(buf.end(buf.length - 1));
-    if (!watched && videoRef.current.currentTime / videoRef.current.duration > 0.9) {
+    const v = videoRef.current;
+    if (!v) return;
+    setProgress(v.currentTime);
+    try { if (v.buffered.length > 0) setBuffered(v.buffered.end(v.buffered.length - 1)); } catch {}
+    const dur = v.duration;
+    if (!watched && isFinite(dur) && dur > 0 && v.currentTime / dur > 0.9) {
       setWatched(true);
       onWatched();
     }
@@ -479,6 +508,10 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
   const handleEnded = () => {
     setPlaying(false); setEnded(true); setShowCtrl(true);
     if (!watched) { setWatched(true); onWatched(); }
+  };
+
+  const handleLoadedMetadata = () => {
+    setDuration(videoRef.current?.duration ?? 0);
   };
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -505,8 +538,8 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
 
   const fullscreen = () => {
     if (!containerRef.current) return;
-    if (document.fullscreenElement) document.exitFullscreen();
-    else containerRef.current.requestFullscreen?.();
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else containerRef.current.requestFullscreen?.().catch(() => {});
   };
 
   const skip10 = () => {
@@ -518,11 +551,9 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
   const pct    = duration > 0 ? (progress / duration) * 100 : 0;
   const bufPct = duration > 0 ? (buffered / duration) * 100 : 0;
 
-  // No video available — show a styled placeholder with tutorial info
   if (hasVideo === false) {
     return (
       <div className="relative w-full aspect-video bg-[#181829] rounded-xl border border-white/8 flex flex-col items-center justify-center gap-4 overflow-hidden">
-        {/* Background grid */}
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "linear-gradient(rgba(139,92,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.3) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
         <div className="relative z-10 flex flex-col items-center gap-3">
@@ -538,7 +569,6 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
             1:00 / 1:00
           </div>
         </div>
-        {/* Progress bar at bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
           <div className="h-full bg-gradient-to-r from-purple-600 to-purple-400" style={{ width: "100%" }} />
         </div>
@@ -573,7 +603,7 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
         src="/videos/google-cloud-setup.mp4"
         className="w-full h-full object-cover"
         onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
+        onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
         preload="metadata"
       />
@@ -633,31 +663,33 @@ function VideoPlayer({ onWatched }: { onWatched: () => void }) {
 // ─── Usage Graph ──────────────────────────────────────────────────────────────
 
 function UsageGraph({ managed }: { managed: ManagedUsage }) {
-  const [range,  setRange]  = useState<GraphRange>("daily");
-  const [points, setPoints] = useState<UsagePoint[]>([]);
+  const [range,   setRange]   = useState<GraphRange>("daily");
+  const [points,  setPoints]  = useState<UsagePoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchUsageGraph(range);
-      if (data.length > 0) { setPoints(data); return; }
-      const embedded = managed.usageGraph?.[range];
-      if (embedded && embedded.length > 0) { setPoints(embedded); return; }
+      if (Array.isArray(data) && data.length > 0) { setPoints(data); return; }
+      const embedded = managed?.usageGraph?.[range];
+      if (Array.isArray(embedded) && embedded.length > 0) { setPoints(embedded); return; }
       setPoints([]);
     } catch {
-      const embedded = managed.usageGraph?.[range];
-      setPoints(embedded ?? []);
+      const embedded = managed?.usageGraph?.[range];
+      setPoints(Array.isArray(embedded) ? embedded : []);
     } finally {
       setLoading(false);
     }
-  }, [range, managed.usageGraph]);
+  }, [range, managed]);
 
   useEffect(() => { load(); }, [load]);
 
-  const max    = Math.max(...points.map((p) => p.value), 1);
-  const total  = points.reduce((s, p) => s + p.value, 0);
-  const avgVal = points.length > 0 ? Math.round(total / points.length) : 0;
+  const safePoints = Array.isArray(points) ? points : [];
+  const vals   = safePoints.map((p) => safeNum(p?.value));
+  const max    = vals.length > 0 ? Math.max(...vals, 1) : 1;
+  const total  = vals.reduce((s, v) => s + v, 0);
+  const avgVal = safePoints.length > 0 ? Math.round(total / safePoints.length) : 0;
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
@@ -678,7 +710,7 @@ function UsageGraph({ managed }: { managed: ManagedUsage }) {
       </div>
       {loading ? (
         <div className="px-5 py-10 flex items-center justify-center"><Spinner className="w-5 h-5 text-white/20" /></div>
-      ) : points.length === 0 ? (
+      ) : safePoints.length === 0 ? (
         <EmptyState icon={BarChart2} title="No usage data yet" description="Data appears here once moderation activity is recorded." />
       ) : (
         <div className="px-5 pt-5 pb-4">
@@ -691,14 +723,15 @@ function UsageGraph({ managed }: { managed: ManagedUsage }) {
             ))}
           </div>
           <div className="flex items-end gap-1 h-24">
-            {points.map((p, i) => {
-              const h = max > 0 ? Math.max(4, (p.value / max) * 96) : 4;
+            {safePoints.map((p, i) => {
+              const val = safeNum(p?.value);
+              const h   = max > 0 ? Math.max(4, (val / max) * 96) : 4;
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1 group/bar relative">
                   <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover/bar:opacity-100 pointer-events-none transition-opacity duration-150">
                     <div className="bg-[#1a1825] border border-white/15 rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-xl">
-                      <p className="text-[10px] font-semibold text-white">{p.value.toLocaleString()}</p>
-                      <p className="text-[9px] text-white/35 mt-0.5">{p.label}</p>
+                      <p className="text-[10px] font-semibold text-white">{val.toLocaleString()}</p>
+                      <p className="text-[9px] text-white/35 mt-0.5">{p?.label ?? ""}</p>
                     </div>
                   </div>
                   <div className="w-full rounded-t-md bg-gradient-to-t from-purple-700 to-purple-500 group-hover/bar:from-purple-600 group-hover/bar:to-purple-400 transition-all duration-200" style={{ height: `${h}%` }} />
@@ -707,11 +740,11 @@ function UsageGraph({ managed }: { managed: ManagedUsage }) {
             })}
           </div>
           <div className="flex items-center mt-2">
-            {points.map((p, i) => {
-              const show = i === 0 || i === Math.floor(points.length / 2) || i === points.length - 1;
+            {safePoints.map((p, i) => {
+              const show = i === 0 || i === Math.floor(safePoints.length / 2) || i === safePoints.length - 1;
               return (
                 <div key={i} className="flex-1 text-center">
-                  {show && <span className="text-[9px] text-white/20 font-mono">{p.label}</span>}
+                  {show && <span className="text-[9px] text-white/20 font-mono">{p?.label ?? ""}</span>}
                 </div>
               );
             })}
@@ -724,11 +757,9 @@ function UsageGraph({ managed }: { managed: ManagedUsage }) {
 
 // ─── GCP Console Mock UI Components ──────────────────────────────────────────
 
-/** Realistic Google Cloud Console topbar */
 function GCPTopBar({ projectName = "my-moderateai-project" }: { projectName?: string }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-[#202124] border-b border-white/10">
-      {/* Google Cloud logo */}
       <div className="flex items-center gap-1.5 mr-1">
         <div className="flex gap-0.5">
           <div className="w-2 h-2 rounded-full bg-[#4285F4]" />
@@ -755,7 +786,6 @@ function GCPTopBar({ projectName = "my-moderateai-project" }: { projectName?: st
   );
 }
 
-/** GCP left nav item */
 function GCPNavItem({ icon: Icon, label, active }: { icon: React.ElementType; label: string; active?: boolean }) {
   return (
     <div className={`flex items-center gap-2 px-3 py-1.5 rounded cursor-pointer transition-colors duration-150
@@ -766,13 +796,11 @@ function GCPNavItem({ icon: Icon, label, active }: { icon: React.ElementType; la
   );
 }
 
-/** Realistic Google Cloud Console shell */
 function GCPConsoleShell({ children, activeNav }: { children: React.ReactNode; activeNav?: string }) {
   return (
     <div className="rounded-xl border border-white/10 overflow-hidden bg-[#1a1b1e] shadow-2xl">
       <GCPTopBar />
       <div className="flex" style={{ minHeight: 220 }}>
-        {/* Left nav */}
         <div className="w-36 bg-[#202124] border-r border-white/8 py-2 shrink-0">
           <GCPNavItem icon={Layers} label="Dashboard" />
           <div className="px-3 py-1 mt-1">
@@ -786,14 +814,12 @@ function GCPConsoleShell({ children, activeNav }: { children: React.ReactNode; a
           </div>
           <GCPNavItem icon={Settings} label="Settings" />
         </div>
-        {/* Main content */}
         <div className="flex-1 p-4 overflow-auto">{children}</div>
       </div>
     </div>
   );
 }
 
-/** Simulated "New Project" dialog */
 function GCPNewProjectUI() {
   return (
     <GCPConsoleShell>
@@ -830,30 +856,23 @@ function GCPNewProjectUI() {
           </div>
         </div>
         <div className="flex gap-2 pt-1">
-          <button className="px-4 py-1.5 bg-[#4285F4] text-white text-[10px] font-semibold rounded hover:bg-[#5a95f5] transition-colors">
-            CREATE
-          </button>
-          <button className="px-4 py-1.5 text-[#8ab4f8] text-[10px] font-semibold rounded hover:bg-white/5 transition-colors">
-            CANCEL
-          </button>
+          <button className="px-4 py-1.5 bg-[#4285F4] text-white text-[10px] font-semibold rounded">CREATE</button>
+          <button className="px-4 py-1.5 text-[#8ab4f8] text-[10px] font-semibold rounded">CANCEL</button>
         </div>
       </div>
     </GCPConsoleShell>
   );
 }
 
-/** Simulated API Library view */
 function GCPAPILibraryUI() {
   return (
     <GCPConsoleShell activeNav="library">
       <div className="space-y-3">
         <p className="text-xs font-semibold text-white/70">API Library</p>
-        {/* Search bar */}
         <div className="flex items-center gap-2 px-3 py-2 bg-[#2d2e31] border border-white/10 rounded">
           <Search size={11} className="text-white/30" />
           <span className="text-[10px] text-white/40">Search APIs & Services</span>
         </div>
-        {/* YouTube API result */}
         <div className="rounded border border-[#4285F4]/40 bg-[#4285F4]/5 p-3 flex items-start gap-3">
           <div className="w-8 h-8 rounded bg-[#FF0000] flex items-center justify-center shrink-0">
             <Youtube size={14} className="text-white" />
@@ -861,18 +880,15 @@ function GCPAPILibraryUI() {
           <div className="flex-1">
             <p className="text-[11px] font-semibold text-white/80">YouTube Data API v3</p>
             <p className="text-[9px] text-white/40 mt-0.5">Google · youtube.googleapis.com</p>
-            <p className="text-[9px] text-white/30 mt-1 leading-relaxed">The YouTube Data API v3 is an API that provides access to YouTube data, such as videos, playlists, and channels.</p>
+            <p className="text-[9px] text-white/30 mt-1 leading-relaxed">Access YouTube data including videos, playlists, and channels.</p>
             <div className="flex items-center gap-2 mt-2">
-              <button className="px-3 py-1 bg-[#4285F4] text-white text-[9px] font-bold rounded hover:bg-[#5a95f5] transition-colors uppercase tracking-wide">
-                ENABLE
-              </button>
+              <button className="px-3 py-1 bg-[#4285F4] text-white text-[9px] font-bold rounded uppercase tracking-wide">ENABLE</button>
               <span className="text-[9px] text-[#34A853] font-medium flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#34A853]" /> Currently disabled
               </span>
             </div>
           </div>
         </div>
-        {/* Other APIs (greyed out) */}
         {["YouTube Analytics API", "YouTube Reporting API"].map((api) => (
           <div key={api} className="rounded border border-white/6 bg-[#2d2e31]/50 p-2.5 flex items-center gap-2.5">
             <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center shrink-0">
@@ -889,8 +905,9 @@ function GCPAPILibraryUI() {
   );
 }
 
-/** Simulated OAuth Credentials page */
 function GCPOAuthUI() {
+  // Use a static date string to avoid hydration mismatch
+  const dateStr = "1/1/2025";
   return (
     <GCPConsoleShell activeNav="credentials">
       <div className="space-y-3">
@@ -900,7 +917,6 @@ function GCPOAuthUI() {
             <Plus size={9} /> Create credentials
           </button>
         </div>
-        {/* OAuth 2.0 Client IDs table */}
         <div className="rounded border border-white/10 overflow-hidden">
           <div className="px-3 py-2 bg-[#2d2e31] border-b border-white/8">
             <p className="text-[10px] font-semibold text-white/50">OAuth 2.0 Client IDs</p>
@@ -917,16 +933,15 @@ function GCPOAuthUI() {
                 <span className="text-[10px] text-[#8ab4f8] font-medium truncate">Web client 1</span>
               </div>
               <span className="text-[10px] text-white/50">Web application</span>
-              <span className="text-[10px] text-white/40 font-mono">{new Date().toLocaleDateString()}</span>
+              <span className="text-[10px] text-white/40 font-mono">{dateStr}</span>
             </div>
           </div>
         </div>
-        {/* Authorized origins preview */}
         <div className="rounded border border-white/8 bg-[#2d2e31]/60 p-2.5 space-y-1.5">
           <p className="text-[9px] font-semibold text-white/30 uppercase tracking-wide">Authorized JavaScript origins</p>
           <div className="flex items-center gap-1.5 px-2 py-1 bg-[#202124] rounded border border-white/8">
             <div className="w-1.5 h-1.5 rounded-full bg-[#34A853]" />
-            <span className="text-[9px] text-white/50 font-mono truncate">{JS_ORIGIN}</span>
+            <span className="text-[9px] text-white/50 font-mono truncate">https://moderateai.site</span>
           </div>
         </div>
       </div>
@@ -934,7 +949,6 @@ function GCPOAuthUI() {
   );
 }
 
-/** Simulated Credentials detail page with client ID/secret */
 function GCPCredentialsDetailUI() {
   const [showSecret, setShowSecret] = useState(false);
   return (
@@ -948,7 +962,7 @@ function GCPCredentialsDetailUI() {
               <span className="text-[10px] text-white/60 font-mono flex-1 truncate">
                 491023874561-abcdefghijklmnopqrstuv.apps.googleusercontent.com
               </span>
-              <button className="text-[#8ab4f8] text-[9px] flex items-center gap-0.5 hover:text-[#4285F4] transition-colors">
+              <button className="text-[#8ab4f8] text-[9px] flex items-center gap-0.5">
                 <Copy size={9} /> Copy
               </button>
             </div>
@@ -959,10 +973,10 @@ function GCPCredentialsDetailUI() {
               <span className="text-[10px] text-white/60 font-mono flex-1 truncate">
                 {showSecret ? "GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" : "GOCSPX-••••••••••••••••••••••••••••••••"}
               </span>
-              <button onClick={() => setShowSecret(!showSecret)} className="text-[#8ab4f8] text-[9px] hover:text-[#4285F4] transition-colors">
+              <button onClick={() => setShowSecret(!showSecret)} className="text-[#8ab4f8] text-[9px]">
                 {showSecret ? <EyeOff size={9} /> : <Eye size={9} />}
               </button>
-              <button className="text-[#8ab4f8] text-[9px] flex items-center gap-0.5 hover:text-[#4285F4] transition-colors">
+              <button className="text-[#8ab4f8] text-[9px] flex items-center gap-0.5">
                 <Copy size={9} /> Copy
               </button>
             </div>
@@ -970,7 +984,7 @@ function GCPCredentialsDetailUI() {
           <div className="rounded border border-white/8 bg-[#2d2e31]/60 p-2.5 space-y-1">
             <p className="text-[9px] font-semibold text-white/30 uppercase tracking-wide">Authorized Redirect URI</p>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-white/60 font-mono flex-1 truncate">{REDIRECT_URI}</span>
+              <span className="text-[10px] text-white/60 font-mono flex-1 truncate">https://moderateai.site/api/auth/youtube/callback</span>
               <div className="w-1.5 h-1.5 rounded-full bg-[#34A853] shrink-0" />
             </div>
           </div>
@@ -980,7 +994,7 @@ function GCPCredentialsDetailUI() {
   );
 }
 
-// ─── Step 1: Tutorial ─────────────────────────────────────────────────────────
+// ─── Wizard Steps ─────────────────────────────────────────────────────────────
 
 function TutorialStep({ onNext, onPrev, onWatched, watched }: {
   onNext: () => void; onPrev?: () => void; onWatched: () => void; watched: boolean;
@@ -993,10 +1007,7 @@ function TutorialStep({ onNext, onPrev, onWatched, watched }: {
           Watch this quick walkthrough before connecting your Google Cloud Project. Steps 2–6 unlock after completion.
         </p>
       </div>
-
       <VideoPlayer onWatched={onWatched} />
-
-      {/* Trust signals */}
       <div className="grid grid-cols-3 gap-2">
         {[
           { icon: <Shield size={13} className="text-emerald-400" />, label: "100% Secure", sub: "Credentials encrypted & safe" },
@@ -1010,7 +1021,6 @@ function TutorialStep({ onNext, onPrev, onWatched, watched }: {
           </div>
         ))}
       </div>
-
       {watched && (
         <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/6 text-xs text-emerald-400">
           <CheckCircle2 size={13} className="shrink-0" />
@@ -1020,36 +1030,23 @@ function TutorialStep({ onNext, onPrev, onWatched, watched }: {
           </div>
         </div>
       )}
-
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Continue →" nextDisabled={!watched} />
     </div>
   );
 }
-
-// ─── Step 2: GCP ──────────────────────────────────────────────────────────────
 
 function GCPStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Open Google Cloud Console</h2>
-        <p className="text-white/40 text-xs leading-relaxed">
-          Click the button below to open Google Cloud Console in a new tab.
-        </p>
+        <p className="text-white/40 text-xs leading-relaxed">Create a new project in Google Cloud Console.</p>
       </div>
-
-      {/* Realistic GCP UI mock */}
       <GCPNewProjectUI />
-
       <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
         <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
         <ol className="space-y-2">
-          {[
-            "Go to console.cloud.google.com",
-            "Click the project dropdown at the top of the page",
-            'Click "New Project" in the dialog',
-            'Give it a name like "ModerateAI" and click Create',
-          ].map((step, i) => (
+          {["Go to console.cloud.google.com", "Click the project dropdown at the top", 'Click "New Project"', 'Name it "ModerateAI" and click Create'].map((step, i) => (
             <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
               <span className="w-4 h-4 rounded-full bg-purple-600/20 border border-purple-500/25 text-purple-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
               {step}
@@ -1057,44 +1054,27 @@ function GCPStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void })
           ))}
         </ol>
       </div>
-
-      <div className="flex gap-2">
-        <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
-          Open Google Console <ExternalLink size={13} />
-        </a>
-      </div>
-
-      <p className="text-center text-[10px] text-white/25">
-        Having trouble? <span className="text-purple-400 underline cursor-pointer">View Guide</span>
-      </p>
-
+      <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer"
+        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40">
+        Open Google Console <ExternalLink size={13} />
+      </a>
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Next →" />
     </div>
   );
 }
-
-// ─── Step 3: Enable API ───────────────────────────────────────────────────────
 
 function EnableStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Enable YouTube Data API v3</h2>
-        <p className="text-white/40 text-xs leading-relaxed">Click the button below to go to the YouTube Data API v3 page.</p>
+        <p className="text-white/40 text-xs leading-relaxed">Enable the YouTube Data API in your project.</p>
       </div>
-
-      {/* Realistic API Library UI */}
       <GCPAPILibraryUI />
-
       <div className="rounded-xl border border-white/8 bg-white/[0.025] p-4">
         <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest mb-3">Steps</p>
         <ol className="space-y-2">
-          {[
-            "In the Cloud Console, open APIs & Services → Library",
-            'Search for "YouTube Data API v3"',
-            "Click the result, then press Enable",
-          ].map((step, i) => (
+          {["Open APIs & Services → Library", 'Search for "YouTube Data API v3"', "Click the result, then press Enable"].map((step, i) => (
             <li key={i} className="flex items-start gap-2.5 text-xs text-white/45">
               <span className="w-4 h-4 rounded-full bg-red-500/15 border border-red-500/20 text-red-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
               {step}
@@ -1102,58 +1082,50 @@ function EnableStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void
           ))}
         </ol>
       </div>
-
       <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
+        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40">
         Open API Library <ExternalLink size={13} />
       </a>
-
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Next →" />
     </div>
   );
 }
 
-// ─── Step 4: OAuth Client ─────────────────────────────────────────────────────
-
 function OAuthStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
+  const [redirectUri, setRedirectUri] = useState("");
+  const [jsOrigin,    setJsOrigin]    = useState("");
+  useEffect(() => { setRedirectUri(getRedirectUri()); setJsOrigin(getJsOrigin()); }, []);
+
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-base font-semibold text-white mb-1">Create OAuth Client ID</h2>
-        <p className="text-white/40 text-xs leading-relaxed">Click the button below to go to the Credentials page.</p>
+        <p className="text-white/40 text-xs leading-relaxed">Create an OAuth 2.0 Client ID in the Credentials page.</p>
       </div>
-
-      {/* Realistic OAuth Credentials UI */}
       <GCPOAuthUI />
-
       <div className="space-y-2">
         <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Add these to your OAuth client</p>
-
         {[
-          { label: "Authorized JavaScript Origin", value: JS_ORIGIN },
-          { label: "Authorized Redirect URI", value: REDIRECT_URI },
+          { label: "Authorized JavaScript Origin", value: jsOrigin },
+          { label: "Authorized Redirect URI",      value: redirectUri },
         ].map(({ label, value }) => (
           <div key={label} className="space-y-1.5">
             <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">{label}</label>
             <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3">
               <code className="flex-1 text-purple-300 text-xs font-mono truncate">{value}</code>
-              <CopyButton value={value} />
+              {value && <CopyButton value={value} />}
             </div>
           </div>
         ))}
       </div>
-
       <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.01]">
+        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40">
         Open Credentials <ExternalLink size={13} />
       </a>
-
       <NavButtons onPrev={onPrev} onNext={onNext} nextLabel="Next →" />
     </div>
   );
 }
-
-// ─── Step 5: Credentials ──────────────────────────────────────────────────────
 
 function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () => void }) {
   const [clientId,     setClientId]     = useState("");
@@ -1161,6 +1133,8 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
   const [showSecret,   setShowSecret]   = useState(false);
   const [saving,       setSaving]       = useState(false);
   const [error,        setError]        = useState<string | null>(null);
+  const [redirectUri,  setRedirectUri]  = useState("");
+  useEffect(() => { setRedirectUri(getRedirectUri()); }, []);
 
   const canSave = clientId.trim().length > 0 && clientSecret.trim().length > 0;
 
@@ -1178,23 +1152,20 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
         <h2 className="text-base font-semibold text-white mb-1">Add Your Credentials</h2>
         <p className="text-white/40 text-xs leading-relaxed">Paste your OAuth Client ID and Client Secret below.</p>
       </div>
-
-      {/* Realistic GCP credentials detail UI */}
       <GCPCredentialsDetailUI />
-
       <div className="space-y-3">
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Client ID</label>
           <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)}
             placeholder="Paste your Client ID"
-            className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono" />
+            className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 transition-all duration-200 font-mono" />
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Client Secret</label>
           <div className="relative">
             <input type={showSecret ? "text" : "password"} value={clientSecret} onChange={(e) => setClientSecret(e.target.value)}
               placeholder="Paste your Client Secret"
-              className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 pr-11 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 focus:bg-purple-500/4 transition-all duration-200 font-mono" />
+              className="w-full rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3 pr-11 text-sm text-white placeholder-white/15 focus:outline-none focus:border-purple-500/50 transition-all duration-200 font-mono" />
             <button onClick={() => setShowSecret(!showSecret)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors duration-150">
               {showSecret ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -1204,19 +1175,16 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Redirect URI (Copy this)</label>
           <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#0d0c14] px-4 py-3">
-            <code className="flex-1 text-white/40 text-xs font-mono truncate">{REDIRECT_URI}</code>
-            <CopyButton value={REDIRECT_URI} />
+            <code className="flex-1 text-white/40 text-xs font-mono truncate">{redirectUri}</code>
+            {redirectUri && <CopyButton value={redirectUri} />}
           </div>
         </div>
       </div>
-
       {error && <ErrorBanner message={error} />}
-
       <div className="flex items-center gap-2 text-xs text-white/25">
         <Lock size={11} className="text-emerald-500/50 shrink-0" />
         Encrypted before storage. Never logged or exposed via the API.
       </div>
-
       <div className="flex gap-2.5 pt-1">
         <button onClick={onPrev}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-medium text-sm transition-all duration-200">
@@ -1224,15 +1192,13 @@ function CredentialsStep({ onNext, onPrev }: { onNext: () => void; onPrev: () =>
         </button>
         <button onClick={handleSave} disabled={!canSave || saving}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200
-            ${canSave && !saving ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40 hover:scale-[1.01]" : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}>
+            ${canSave && !saving ? "bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/40" : "bg-white/5 text-white/20 cursor-not-allowed border border-white/8"}`}>
           {saving ? <><Spinner className="w-3.5 h-3.5" /> Saving…</> : "Validate"}
         </button>
       </div>
     </div>
   );
 }
-
-// ─── Step 6: Connect YouTube ──────────────────────────────────────────────────
 
 function ConnectStep({ onPrev }: { onPrev?: () => void }) {
   const [connecting, setConnecting] = useState(false);
@@ -1242,7 +1208,6 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
         <h2 className="text-base font-semibold text-white mb-1">Connect Your YouTube Channel</h2>
         <p className="text-white/40 text-xs leading-relaxed">Authorize ModerateAI to access your YouTube channel.</p>
       </div>
-
       <div className="rounded-2xl border border-white/8 bg-white/[0.025] p-8 flex flex-col items-center gap-5 text-center">
         <div className="relative">
           <div className="w-16 h-16 rounded-full bg-[#FF0000] flex items-center justify-center shadow-2xl shadow-red-900/40">
@@ -1259,11 +1224,7 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
           </p>
         </div>
         <div className="w-full space-y-2 text-left">
-          {[
-            "We will only access data required for moderation.",
-            "Your data is secure and encrypted.",
-            "You can disconnect anytime.",
-          ].map((item) => (
+          {["We will only access data required for moderation.", "Your data is secure and encrypted.", "You can disconnect anytime."].map((item) => (
             <div key={item} className="flex items-center gap-2 text-xs text-white/40">
               <Check size={11} className="text-emerald-400 shrink-0" />
               {item}
@@ -1273,11 +1234,10 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
         <button
           onClick={() => { setConnecting(true); redirectToYouTubeAuth(); }}
           disabled={connecting}
-          className="w-full flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-[#FF0000] hover:bg-red-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.02] disabled:opacity-60">
+          className="w-full flex items-center justify-center gap-2 px-7 py-3 rounded-xl bg-[#FF0000] hover:bg-red-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 disabled:opacity-60">
           {connecting ? <><Spinner className="w-3.5 h-3.5" /> Redirecting…</> : <><Youtube size={15} /> Connect YouTube</>}
         </button>
       </div>
-
       {onPrev && (
         <button onClick={onPrev}
           className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/8 text-white/40 hover:text-white/70 hover:border-white/15 font-medium text-sm transition-all duration-200">
@@ -1293,14 +1253,14 @@ function ConnectStep({ onPrev }: { onPrev?: () => void }) {
 function SetupWizard({ onConnected }: { onConnected: () => void }) {
   const [stepIndex,    setStepIndex]    = useState(0);
   const [videoWatched, setVideoWatched] = useState(false);
-  const step = WIZARD_FLOW[stepIndex];
+  const step = WIZARD_FLOW[stepIndex] ?? "tutorial";
+  void onConnected;
 
   const next = () => {
     if (stepIndex > 0 && !videoWatched) return;
     setStepIndex((i) => Math.min(i + 1, WIZARD_FLOW.length - 1));
   };
   const prev = () => setStepIndex((i) => Math.max(i - 1, 0));
-  void onConnected;
 
   return (
     <div className="rounded-2xl border border-purple-500/15 bg-[#0d0c14] overflow-hidden shadow-2xl shadow-purple-900/15">
@@ -1309,22 +1269,15 @@ function SetupWizard({ onConnected }: { onConnected: () => void }) {
         <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Google Cloud Setup</span>
         <span className="ml-auto text-[10px] text-white/20 font-medium">Step {stepIndex + 1} of {WIZARD_FLOW.length}</span>
       </div>
-
       <div className="flex">
-        {/* Left sidebar nav */}
         <div className="w-44 border-r border-white/8 py-3 px-2 shrink-0">
           <StepIndicator
             current={stepIndex + 1}
             videoWatched={videoWatched}
-            onStepClick={(i) => {
-              if (i > 0 && !videoWatched) return;
-              setStepIndex(i);
-            }}
+            onStepClick={(i) => { if (i > 0 && !videoWatched) return; setStepIndex(i); }}
           />
         </div>
-
-        {/* Main content */}
-        <div className="flex-1 px-5 py-5">
+        <div className="flex-1 px-5 py-5 min-w-0">
           {step === "tutorial"    && <TutorialStep    onNext={next} onPrev={stepIndex > 0 ? prev : undefined} onWatched={() => setVideoWatched(true)} watched={videoWatched} />}
           {step === "gcp"         && <GCPStep         onNext={next} onPrev={prev} />}
           {step === "enable"      && <EnableStep      onNext={next} onPrev={prev} />}
@@ -1364,9 +1317,9 @@ function DeleteModal({ onCancel, onConfirm, loading, error }: {
         </div>
         {error && <ErrorBanner message={error} />}
         <div className="flex gap-2.5 pt-1">
-          <button onClick={onCancel} disabled={loading} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-semibold text-sm transition-all duration-200 disabled:opacity-40">Cancel</button>
+          <button onClick={onCancel} disabled={loading} className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white font-semibold text-sm transition-all duration-200 disabled:opacity-40">Cancel</button>
           <button onClick={onConfirm} disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-red-900/30 hover:scale-[1.01] disabled:opacity-60 flex items-center justify-center gap-2">
+            className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-sm transition-all duration-200 disabled:opacity-60 flex items-center justify-center gap-2">
             {loading ? <><Spinner className="w-3.5 h-3.5" /> Deleting…</> : "Delete"}
           </button>
         </div>
@@ -1384,20 +1337,21 @@ function StatusBadge({ status }: { status: LogStatus }) {
     error:   { label: "Error",   c: "bg-red-500/12 text-red-400 border-red-500/20"             },
     info:    { label: "Info",    c: "bg-blue-500/12 text-blue-400 border-blue-500/20"           },
   };
+  const m = map[status] ?? map.info;
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wide shrink-0 ${map[status].c}`}>
-      {map[status].label}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wide shrink-0 ${m.c}`}>
+      {m.label}
     </span>
   );
 }
 
 // ─── Plan Limits ──────────────────────────────────────────────────────────────
 
-function PlanLimitsInfo() {
+function PlanLimitsInfo({ activePlan }: { activePlan?: string }) {
   const plans = [
-    { key: "free_trial", label: "Free Trial", actions: PLAN_LIMITS.free_trial, color: "text-white/50 border-white/10" },
-    { key: "pro",        label: "Pro",         actions: PLAN_LIMITS.pro,        color: "text-purple-400 border-purple-500/25" },
-    { key: "agency",     label: "Agency",      actions: PLAN_LIMITS.agency,     color: "text-emerald-400 border-emerald-500/25" },
+    { key: "free_trial", label: "Free Trial", actions: PLAN_LIMITS.free_trial },
+    { key: "pro",        label: "Pro",         actions: PLAN_LIMITS.pro        },
+    { key: "agency",     label: "Agency",      actions: PLAN_LIMITS.agency     },
   ];
   return (
     <div className="rounded-2xl border border-white/8 bg-white/[0.02] overflow-hidden">
@@ -1405,13 +1359,20 @@ function PlanLimitsInfo() {
         <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest">Plan Limits</p>
       </div>
       <div className="grid grid-cols-3 divide-x divide-white/[0.05]">
-        {plans.map((p) => (
-          <div key={p.key} className="px-4 py-3.5 flex flex-col gap-1">
-            <span className={`text-[9px] font-bold uppercase tracking-widest border rounded-full px-1.5 py-0.5 w-fit ${p.color} bg-transparent`}>{p.label}</span>
-            <p className="text-sm font-semibold text-white mt-1">{p.actions.toLocaleString()}</p>
-            <p className="text-[10px] text-white/25">AI Actions / mo</p>
-          </div>
-        ))}
+        {plans.map((p) => {
+          const isActive = activePlan === p.key;
+          return (
+            <div key={p.key} className={`px-4 py-3.5 flex flex-col gap-1 ${isActive ? "bg-purple-500/5" : ""}`}>
+              <span className={`text-[9px] font-bold uppercase tracking-widest border rounded-full px-1.5 py-0.5 w-fit bg-transparent
+                ${isActive ? "text-purple-400 border-purple-500/40" : "text-white/50 border-white/10"}`}>
+                {p.label}
+              </span>
+              <p className={`text-sm font-semibold mt-1 ${isActive ? "text-purple-300" : "text-white"}`}>{p.actions.toLocaleString()}</p>
+              <p className="text-[10px] text-white/25">AI Actions / mo</p>
+              {isActive && <span className="text-[9px] text-purple-400 font-semibold">← Current</span>}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1420,16 +1381,20 @@ function PlanLimitsInfo() {
 // ─── Managed Dashboard Card ───────────────────────────────────────────────────
 
 function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh: () => void }) {
-  const planLimit = PLAN_LIMITS[managed.plan] ?? managed.actionsTotal;
-  const used      = managed.actionsUsed;
+  const planLimit = PLAN_LIMITS[managed.plan] ?? safeNum(managed.actionsTotal, 250);
+  const used      = safeNum(managed.actionsUsed);
   const health: HealthState =
     managed.apiStatus === "operational" ? "healthy" :
     managed.apiStatus === "degraded"    ? "warning" : "offline";
 
-  const [lastSyncDisplay, setLastSyncDisplay] = useState(fmtRelative(managed.lastSync));
+  const [lastSyncDisplay, setLastSyncDisplay] = useState(() => fmtRelative(managed.lastSync));
 
   useEffect(() => { const t = setInterval(onRefresh, 30_000); return () => clearInterval(t); }, [onRefresh]);
-  useEffect(() => { const t = setInterval(() => setLastSyncDisplay(fmtRelative(managed.lastSync)), 10_000); return () => clearInterval(t); }, [managed.lastSync]);
+  useEffect(() => {
+    setLastSyncDisplay(fmtRelative(managed.lastSync));
+    const t = setInterval(() => setLastSyncDisplay(fmtRelative(managed.lastSync)), 10_000);
+    return () => clearInterval(t);
+  }, [managed.lastSync]);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
@@ -1456,25 +1421,25 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/[0.04]">
-        <StatCell label="Current Plan"    value={managed.planLabel}                            icon={<Server    size={11} className="text-purple-400"  />} />
-        <StatCell label="AI Actions Used" value={used.toLocaleString()}                        icon={<Zap       size={11} className="text-yellow-400"  />} />
-        <StatCell label="AI Actions Left" value={managed.actionsRemaining.toLocaleString()}    icon={<BarChart2 size={11} className="text-emerald-400" />} />
-        <StatCell label="Reset Date"      value={fmt(managed.resetDate, { month: "short", day: "numeric" })} icon={<Clock size={11} className="text-blue-400" />} />
+        <StatCell label="Current Plan"    value={managed.planLabel}                                                          icon={<Server    size={11} className="text-purple-400"  />} />
+        <StatCell label="AI Actions Used" value={used.toLocaleString()}                                                      icon={<Zap       size={11} className="text-yellow-400"  />} />
+        <StatCell label="AI Actions Left" value={safeNum(managed.actionsRemaining).toLocaleString()}                         icon={<BarChart2 size={11} className="text-emerald-400" />} />
+        <StatCell label="Reset Date"      value={fmt(managed.resetDate, { month: "short", day: "numeric" })}                 icon={<Clock     size={11} className="text-blue-400"    />} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y divide-white/[0.04] border-t border-white/[0.04]">
-        <StatCell label="Today's Requests"   value={managed.todayRequests.toLocaleString()}     icon={<TrendingUp    size={11} className="text-blue-400"   />} />
-        <StatCell label="Comments Moderated" value={managed.commentsModerated.toLocaleString()} icon={<MessageSquare size={11} className="text-purple-400" />} />
-        <StatCell label="Replies Generated"  value={managed.repliesGenerated.toLocaleString()}  icon={<Zap           size={11} className="text-yellow-400" />} />
-        <StatCell label="Videos Monitored"   value={managed.videosMonitored.toLocaleString()}   icon={<Video         size={11} className="text-red-400"    />} />
+        <StatCell label="Today's Requests"   value={safeNum(managed.todayRequests).toLocaleString()}     icon={<TrendingUp    size={11} className="text-blue-400"   />} />
+        <StatCell label="Comments Moderated" value={safeNum(managed.commentsModerated).toLocaleString()} icon={<MessageSquare size={11} className="text-purple-400" />} />
+        <StatCell label="Replies Generated"  value={safeNum(managed.repliesGenerated).toLocaleString()}  icon={<Zap           size={11} className="text-yellow-400" />} />
+        <StatCell label="Videos Monitored"   value={safeNum(managed.videosMonitored).toLocaleString()}   icon={<Video         size={11} className="text-red-400"    />} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/[0.04] border-t border-white/[0.04]">
-        <StatCell label="Success Rate" value={`${managed.successRate}%`} icon={<CheckCircle2 size={11} className="text-emerald-400" />}
-          valueClass={managed.successRate >= 99 ? "text-emerald-400" : managed.successRate >= 95 ? "text-yellow-400" : "text-red-400"} />
-        <StatCell label="Avg Latency" value={`${managed.latencyMs}ms`} icon={<Cpu size={11} className="text-blue-400" />}
-          valueClass={managed.latencyMs < 200 ? "text-emerald-400" : managed.latencyMs < 500 ? "text-yellow-400" : "text-red-400"} />
-        <StatCell label="Connected Channels" value={managed.connectedChannels.toLocaleString()} icon={<Youtube size={11} className="text-red-400" />} />
+        <StatCell label="Success Rate" value={`${safeNum(managed.successRate, 100)}%`} icon={<CheckCircle2 size={11} className="text-emerald-400" />}
+          valueClass={safeNum(managed.successRate, 100) >= 99 ? "text-emerald-400" : safeNum(managed.successRate, 100) >= 95 ? "text-yellow-400" : "text-red-400"} />
+        <StatCell label="Avg Latency" value={`${safeNum(managed.latencyMs)}ms`} icon={<Cpu size={11} className="text-blue-400" />}
+          valueClass={safeNum(managed.latencyMs) < 200 ? "text-emerald-400" : safeNum(managed.latencyMs) < 500 ? "text-yellow-400" : "text-red-400"} />
+        <StatCell label="Channels" value={safeNum(managed.connectedChannels, 1).toLocaleString()} icon={<Youtube size={11} className="text-red-400" />} />
         <StatCell label="Last Sync" value={lastSyncDisplay} icon={<Radio size={11} className="text-purple-400" />} valueClass="text-white/70" />
       </div>
 
@@ -1490,17 +1455,17 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
         <QuotaBar
           used={used}
           total={planLimit}
-          label={`${Math.min(100, Math.round((used / planLimit) * 100))}% of monthly limit used`}
+          label={`${Math.min(100, Math.round((used / Math.max(planLimit, 1)) * 100))}% of monthly limit used`}
           resetLabel={`resets ${fmt(managed.resetDate, { month: "short", day: "numeric" })}`}
         />
       </div>
 
-      {used / planLimit >= 0.8 && managed.plan !== "agency" && (
+      {planLimit > 0 && used / planLimit >= 0.8 && managed.plan !== "agency" && (
         <div className="px-5 py-3.5 border-t border-white/5 flex items-center justify-between gap-3 bg-purple-500/5">
           <p className="text-xs text-white/50 leading-snug">
             You&apos;re using <span className="text-white/70 font-semibold">{Math.round((used / planLimit) * 100)}%</span> of your monthly limit.
           </p>
-          <a href="/billing" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-all duration-200 shrink-0 hover:scale-[1.02]">
+          <a href="/billing" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition-all duration-200 shrink-0">
             Upgrade <ArrowUpRight size={11} />
           </a>
         </div>
@@ -1512,11 +1477,18 @@ function ManagedCard({ managed, onRefresh }: { managed: ManagedUsage; onRefresh:
 // ─── Custom Project Card ──────────────────────────────────────────────────────
 
 function CustomProjectCard({ custom, onRefresh }: { custom: CustomProjectInfo; onRefresh: () => void }) {
-  const used = custom.dailyQuota - custom.remainingQuota;
-  const [lastSyncDisplay, setLastSyncDisplay] = useState(fmtRelative(custom.lastSync));
+  const dailyQuota     = safeNum(custom.dailyQuota, 10000);
+  const remainingQuota = safeNum(custom.remainingQuota);
+  const used           = Math.max(0, dailyQuota - remainingQuota);
+
+  const [lastSyncDisplay, setLastSyncDisplay] = useState(() => fmtRelative(custom.lastSync));
 
   useEffect(() => { const t = setInterval(onRefresh, 30_000); return () => clearInterval(t); }, [onRefresh]);
-  useEffect(() => { const t = setInterval(() => setLastSyncDisplay(fmtRelative(custom.lastSync)), 10_000); return () => clearInterval(t); }, [custom.lastSync]);
+  useEffect(() => {
+    setLastSyncDisplay(fmtRelative(custom.lastSync));
+    const t = setInterval(() => setLastSyncDisplay(fmtRelative(custom.lastSync)), 10_000);
+    return () => clearInterval(t);
+  }, [custom.lastSync]);
 
   const oauthColor = custom.oauthStatus === "connected" ? "text-emerald-400" : custom.oauthStatus === "expired" ? "text-yellow-400" : "text-red-400";
   const apiColor   = custom.apiStatus === "enabled" ? "text-emerald-400" : "text-red-400";
@@ -1538,18 +1510,16 @@ function CustomProjectCard({ custom, onRefresh }: { custom: CustomProjectInfo; o
           <span className="text-emerald-400">Connected</span>
         </span>
       </div>
-
       <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-white/[0.04]">
-        <StatCell label="Connected Account"  value={custom.connectedAccount || "—"}     icon={<Wifi     size={11} className="text-blue-400"   />} />
-        <StatCell label="OAuth Status"       value={custom.oauthStatus === "connected" ? "Connected" : custom.oauthStatus === "expired" ? "Expired" : "Disconnected"} icon={<Lock size={11} className="text-purple-400" />} valueClass={oauthColor} />
-        <StatCell label="API Status"         value={custom.apiStatus === "enabled" ? "Enabled" : "Disabled"} icon={<Youtube size={11} className="text-red-400" />} valueClass={apiColor} />
-        <StatCell label="Last Sync"          value={lastSyncDisplay}                    icon={<Clock    size={11} className="text-blue-400"   />} valueClass="text-white/70" />
-        <StatCell label="Daily Quota Used"   value={`${used.toLocaleString()} / ${custom.dailyQuota.toLocaleString()}`} icon={<BarChart2 size={11} className="text-emerald-400" />} />
-        <StatCell label="Remaining Today"    value={custom.remainingQuota.toLocaleString()} icon={<Zap  size={11} className="text-yellow-400" />} />
+        <StatCell label="Connected Account" value={custom.connectedAccount || "—"} icon={<Wifi size={11} className="text-blue-400" />} />
+        <StatCell label="OAuth Status" value={custom.oauthStatus === "connected" ? "Connected" : custom.oauthStatus === "expired" ? "Expired" : "Disconnected"} icon={<Lock size={11} className="text-purple-400" />} valueClass={oauthColor} />
+        <StatCell label="API Status" value={custom.apiStatus === "enabled" ? "Enabled" : "Disabled"} icon={<Youtube size={11} className="text-red-400" />} valueClass={apiColor} />
+        <StatCell label="Last Sync" value={lastSyncDisplay} icon={<Clock size={11} className="text-blue-400" />} valueClass="text-white/70" />
+        <StatCell label="Daily Quota Used" value={`${used.toLocaleString()} / ${dailyQuota.toLocaleString()}`} icon={<BarChart2 size={11} className="text-emerald-400" />} />
+        <StatCell label="Remaining Today" value={remainingQuota.toLocaleString()} icon={<Zap size={11} className="text-yellow-400" />} />
       </div>
-
       <div className="px-5 py-4 border-t border-white/5">
-        <QuotaBar used={used} total={custom.dailyQuota} label={`${Math.min(100, Math.round((used / custom.dailyQuota) * 100))}% of daily quota used`} resetLabel="resets midnight PT" />
+        <QuotaBar used={used} total={dailyQuota} label={`${Math.min(100, Math.round((used / Math.max(dailyQuota, 1)) * 100))}% of daily quota used`} resetLabel="resets midnight PT" />
       </div>
     </div>
   );
@@ -1558,20 +1528,21 @@ function CustomProjectCard({ custom, onRefresh }: { custom: CustomProjectInfo; o
 // ─── Management Section ───────────────────────────────────────────────────────
 
 function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
-  const [testState,     setTestState]  = useState<"idle" | "loading" | "ok" | "fail">("idle");
-  const [testMessage,   setTestMsg]    = useState("");
-  const [rotating,      setRotating]   = useState(false);
-  const [rotateError,   setRotateErr]  = useState<string | null>(null);
-  const [disconnecting, setDisc]       = useState(false);
-  const [discError,     setDiscErr]    = useState<string | null>(null);
-  const [showDelete,    setShowDelete] = useState(false);
-  const [deleting,      setDeleting]   = useState(false);
-  const [deleteError,   setDeleteErr]  = useState<string | null>(null);
+  const [testState,     setTestState] = useState<"idle" | "loading" | "ok" | "fail">("idle");
+  const [testMessage,   setTestMsg]   = useState("");
+  const [rotating,      setRotating]  = useState(false);
+  const [rotateError,   setRotateErr] = useState<string | null>(null);
+  const [disconnecting, setDisc]      = useState(false);
+  const [discError,     setDiscErr]   = useState<string | null>(null);
+  const [showDelete,    setShowDelete]= useState(false);
+  const [deleting,      setDeleting]  = useState(false);
+  const [deleteError,   setDeleteErr] = useState<string | null>(null);
 
   const handleTest = async () => {
     setTestState("loading");
-    try { const r = await testConnection(); setTestState(r.ok ? "ok" : "fail"); setTestMsg(r.message); }
-    catch { setTestState("fail"); setTestMsg("Could not reach the server."); }
+    const r = await testConnection();
+    setTestState(r.ok ? "ok" : "fail");
+    setTestMsg(r.message);
   };
 
   const handleRotate = async () => {
@@ -1598,7 +1569,6 @@ function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
   return (
     <>
       {showDelete && <DeleteModal onCancel={() => { setShowDelete(false); setDeleteErr(null); }} onConfirm={handleDeleteConfirm} loading={deleting} error={deleteError} />}
-
       <div className="rounded-2xl border border-white/10 bg-white/[0.025] overflow-hidden">
         <div className="px-5 py-4 border-b border-white/8">
           <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -1607,33 +1577,32 @@ function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
               <p className="text-xs text-white/30 mt-0.5">Verify the API is responding correctly.</p>
             </div>
             <button onClick={handleTest} disabled={testState === "loading"}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-xs font-semibold transition-all duration-200 hover:scale-[1.02] disabled:opacity-50">
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-600/15 hover:bg-purple-600/25 border border-purple-500/25 text-purple-300 text-xs font-semibold transition-all duration-200 disabled:opacity-50">
               {testState === "loading" ? <><Spinner className="w-3 h-3" /> Testing…</> : <><Wifi size={12} /> Test</>}
             </button>
           </div>
           {testState === "ok"   && <div className="mt-3 flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/8 border border-emerald-500/15 rounded-xl px-4 py-2.5"><Check size={12} /> {testMessage}</div>}
           {testState === "fail" && <div className="mt-3 flex items-center gap-2 text-xs text-red-400 bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-2.5"><WifiOff size={12} /> {testMessage}</div>}
         </div>
-
         <div className="px-5 py-4 space-y-3">
           <p className="text-[10px] font-semibold text-white/20 uppercase tracking-widest">Management</p>
           {discError   && <ErrorBanner message={discError} />}
           {rotateError && <ErrorBanner message={rotateError} />}
           <div className="flex flex-wrap gap-2">
             <button onClick={() => redirectToYouTubeAuth()}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-500/30 text-purple-300 hover:border-purple-500/50 text-xs font-medium transition-all duration-200 hover:scale-[1.02]">
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-purple-500/30 text-purple-300 hover:border-purple-500/50 text-xs font-medium transition-all duration-200">
               <RefreshCw size={12} /> Reconnect
             </button>
             <button onClick={handleRotate} disabled={rotating}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-yellow-500/20 text-yellow-400/70 hover:text-yellow-300 hover:border-yellow-500/35 text-xs font-medium transition-all duration-200 hover:scale-[1.02] disabled:opacity-50">
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-yellow-500/20 text-yellow-400/70 hover:text-yellow-300 hover:border-yellow-500/35 text-xs font-medium transition-all duration-200 disabled:opacity-50">
               {rotating ? <><Spinner className="w-3 h-3 text-yellow-300" /> Rotating…</> : <><RotateCcw size={12} /> Rotate credentials</>}
             </button>
             <button onClick={handleDisconnect} disabled={disconnecting}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/8 text-white/40 hover:text-red-400 hover:border-red-500/25 text-xs font-medium transition-all duration-200 hover:scale-[1.02] disabled:opacity-50">
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-white/8 text-white/40 hover:text-red-400 hover:border-red-500/25 text-xs font-medium transition-all duration-200 disabled:opacity-50">
               {disconnecting ? <><Spinner className="w-3 h-3" /> Disconnecting…</> : <><WifiOff size={12} /> Disconnect</>}
             </button>
             <button onClick={() => setShowDelete(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-500/15 text-red-400/60 hover:text-red-400 hover:border-red-500/35 text-xs font-medium transition-all duration-200 hover:scale-[1.02]">
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-500/15 text-red-400/60 hover:text-red-400 hover:border-red-500/35 text-xs font-medium transition-all duration-200">
               <Trash2 size={12} /> Delete credentials
             </button>
           </div>
@@ -1646,21 +1615,27 @@ function ManagementSection({ onRefresh }: { onRefresh: () => void }) {
 // ─── Activity Feed ────────────────────────────────────────────────────────────
 
 function ActivityLogsSection() {
-  const [logs,     setLogs]    = useState<ActivityLog[]>([]);
-  const [loading,  setLoading] = useState(true);
-  const [expanded, setExp]     = useState(false);
+  const [logs,    setLogs]   = useState<ActivityLog[]>([]);
+  const [loading, setLoading]= useState(true);
+  const [expanded,setExp]    = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setLogs(await fetchActivityLogs()); }
-    catch { setLogs([]); }
-    finally { setLoading(false); }
+    try {
+      const data = await fetchActivityLogs();
+      setLogs(Array.isArray(data) ? data : []);
+    } catch {
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { const t = setInterval(load, 30_000); return () => clearInterval(t); }, [load]);
 
-  const visible = expanded ? logs : logs.slice(0, 5);
+  const safeLogs = Array.isArray(logs) ? logs : [];
+  const visible  = expanded ? safeLogs : safeLogs.slice(0, 5);
 
   if (loading) return <SkeletonLogs />;
 
@@ -1672,32 +1647,29 @@ function ActivityLogsSection() {
           <p className="text-sm font-semibold text-white/70">Activity</p>
         </div>
         <div className="flex items-center gap-3">
-          {logs.length > 0 && <span className="text-[10px] text-white/25 font-medium">{logs.length} events</span>}
+          {safeLogs.length > 0 && <span className="text-[10px] text-white/25 font-medium">{safeLogs.length} events</span>}
           <button onClick={load} className="text-white/20 hover:text-white/50 transition-colors duration-150">
             <RefreshCw size={12} />
           </button>
         </div>
       </div>
-
-      {logs.length === 0 && (
+      {safeLogs.length === 0 ? (
         <EmptyState icon={Activity} title="No activity yet" description="Events appear here as ModerateAI moderates your channel." />
-      )}
-
-      {logs.length > 0 && (
+      ) : (
         <>
           <div className="divide-y divide-white/5">
-            {visible.map((log) => (
-              <div key={log.id} className="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.015] transition-colors duration-150 group">
-                <StatusBadge status={log.status} />
-                <p className="flex-1 text-sm text-white/55 leading-snug group-hover:text-white/70 transition-colors duration-150 truncate">{log.action}</p>
-                <span className="text-[10px] text-white/20 whitespace-nowrap shrink-0">{log.timestamp}</span>
+            {visible.map((log, idx) => (
+              <div key={log.id ?? idx} className="flex items-center gap-3 px-5 py-3 hover:bg-white/[0.015] transition-colors duration-150 group">
+                <StatusBadge status={log.status ?? "info"} />
+                <p className="flex-1 text-sm text-white/55 leading-snug group-hover:text-white/70 transition-colors duration-150 truncate">{log.action ?? "—"}</p>
+                <span className="text-[10px] text-white/20 whitespace-nowrap shrink-0">{log.timestamp ?? "—"}</span>
               </div>
             ))}
           </div>
-          {logs.length > 5 && (
+          {safeLogs.length > 5 && (
             <div className="px-5 py-3 border-t border-white/8">
               <button onClick={() => setExp(!expanded)} className="text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors duration-150">
-                {expanded ? "Show less" : `Show ${logs.length - 5} more`}
+                {expanded ? "Show less" : `Show ${safeLogs.length - 5} more`}
               </button>
             </div>
           )}
@@ -1711,10 +1683,9 @@ function ActivityLogsSection() {
 
 function MethodSelector({ method, onChange }: { method: APIMethod; onChange: (m: APIMethod) => void }) {
   const options = [
-    { key: "managed" as APIMethod, icon: <Server size={16} className="text-purple-400" />, label: "ModerateAI Shared API", sub: "Recommended · Zero setup", badge: "Recommended", badgeColor: "text-purple-400 border-purple-500/25 bg-purple-500/8", ring: "border-purple-500/40 bg-purple-500/6" },
-    { key: "custom"  as APIMethod, icon: <Cloud  size={16} className="text-emerald-400" />, label: "My Google Cloud Project", sub: "Advanced · Your own quota", badge: "Advanced",     badgeColor: "text-emerald-400 border-emerald-500/25 bg-emerald-500/8", ring: "border-emerald-500/30 bg-emerald-500/4" },
+    { key: "managed" as APIMethod, icon: <Server size={16} className="text-purple-400" />, label: "ModerateAI Shared API",    sub: "Recommended · Zero setup",    badge: "Recommended", badgeColor: "text-purple-400 border-purple-500/25 bg-purple-500/8", ring: "border-purple-500/40 bg-purple-500/6" },
+    { key: "custom"  as APIMethod, icon: <Cloud  size={16} className="text-emerald-400" />, label: "My Google Cloud Project", sub: "Advanced · Your own quota",  badge: "Advanced",     badgeColor: "text-emerald-400 border-emerald-500/25 bg-emerald-500/8", ring: "border-emerald-500/30 bg-emerald-500/4" },
   ];
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {options.map((opt) => {
@@ -1753,7 +1724,7 @@ export default function APIAccessPage() {
     try {
       const data = await fetchAPIStatus();
       setStatus(data);
-      setMethod(data.method);
+      setMethod(data.method ?? "managed");
     } catch {
       setStatus(null);
     } finally {
@@ -1762,10 +1733,17 @@ export default function APIAccessPage() {
   }, []);
 
   useEffect(() => {
-    const auth = getAuth();
-    if (auth.currentUser) { loadStatus(); return; }
-    const unsub = onAuthStateChanged(auth, (user) => { if (user) loadStatus(); else setLoading(false); });
-    return () => unsub();
+    try {
+      const auth = getAuth();
+      if (auth.currentUser) { loadStatus(); return; }
+      const unsub = onAuthStateChanged(auth, (user) => {
+        if (user) loadStatus(); else setLoading(false);
+      });
+      return () => unsub();
+    } catch (e) {
+      console.error("[api-access] Auth init failed", e);
+      setLoading(false);
+    }
   }, [loadStatus]);
 
   const connected = !!status?.youtubeConnected;
@@ -1826,7 +1804,7 @@ export default function APIAccessPage() {
                     </p>
                   </div>
                   <button onClick={() => redirectToYouTubeAuth()}
-                    className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40 hover:scale-[1.02]">
+                    className="flex items-center gap-2 px-7 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm transition-all duration-200 shadow-lg shadow-purple-900/40">
                     <Youtube size={15} /> Connect YouTube
                   </button>
                   <p className="text-[10px] text-white/20">You&apos;ll be redirected to Google to authorize your channel.</p>
@@ -1853,7 +1831,7 @@ export default function APIAccessPage() {
               <>
                 <ManagedCard managed={status.managed} onRefresh={loadStatus} />
                 <UsageGraph managed={status.managed} />
-                <PlanLimitsInfo />
+                <PlanLimitsInfo activePlan={status.managed.plan} />
               </>
             )}
 

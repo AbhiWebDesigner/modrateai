@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { Shield, Star, LogOut, MoreHorizontal, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const SIDEBAR_LINKS = [
   { href: "/dashboard", label: "Overview", icon: (
@@ -199,6 +199,16 @@ export function DashboardBottomNav() {
   const handleLogout = async () => { await signOut(auth); router.push("/"); };
 
   const isMoreActive = MORE_LINKS.some(l => pathname === l.href);
+  const [isMobile, setIsMobile] = useState(true);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  if (!isMobile) return null;
 
   return (
     <>
@@ -283,6 +293,7 @@ export function DashboardBottomNav() {
         backdropFilter: "blur(20px)",
         padding: "8px 0 env(safe-area-inset-bottom, 8px)",
         display: "flex",
+        visibility: "inherit",
       }}>
         {BOTTOM_NAV_LINKS.map((link) => {
           const active = pathname === link.href;

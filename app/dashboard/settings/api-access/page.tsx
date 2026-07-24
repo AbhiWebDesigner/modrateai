@@ -457,7 +457,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", position: "relative" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             {/* Shield icon */}
-            <div style={{
+            <div className="hero-shield" style={{
               width: 60, height: 60, borderRadius: 16,
               background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
               display: "flex", alignItems: "center", justifyContent: "center",
@@ -467,22 +467,21 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <span style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.3px" }}>ModerateAI Shared API</span>
-                <span style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(124,58,237,0.4)" }}>Recommended</span>
+                <span className="hero-title" style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.3px" }}>ModerateAI Shared API</span>                <span style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(124,58,237,0.4)" }}>Recommended</span>
               </div>
               <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 4 }}>We handle everything for you. No setup required.</div>
               {/* V2 trust badges */}
-              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+              <div className="hero-badges" style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 {[
                   { icon: <Shield size={11} />, label: "Secure" },
                   { icon: <CheckCircle size={11} />, label: "Reliable" },
                   { icon: <Zap size={11} />, label: "Always On" },
                   { icon: <Star size={11} />, label: "Optimized" },
                 ].map(b => (
-                  <span key={b.label} style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)"
+                  <span key={b.label} className="hero-badge" style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)"
                   }}>
                     <span style={{ color: "#22C55E" }}>{b.icon}</span> {b.label}
                   </span>

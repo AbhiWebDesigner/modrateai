@@ -519,7 +519,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           <style>{`@media (max-width: 700px) { .shared-stats-grid { grid-template-columns: repeat(2,1fr) !important; } }`}</style>
           {[
             { label: "Current Plan", val: planName, color: "#22C55E", highlight: true },
-            { label: "Monthly AI Actions", val: `${aiLimit.toLocaleString()}`, sub: "/ month" },
+            { label: "19 <Days /> AI Actions", val: `${aiLimit.toLocaleString()}`, sub: "/ month" },
             { label: "Used", val: `${aiUsed.toLocaleString()}`, sub: `(${pct.toFixed(0)}%)`, color: pct > 80 ? "#F43F5E" : "#FAFAFA" },
             { label: "Remaining", val: `${remaining.toLocaleString()}`, sub: `(${(100 - pct).toFixed(0)}%)`, color: "#22C55E" },
             { label: "Reset Date", val: planExpiry, sub: "In 32 days", color: "#A78BFA" },
@@ -963,7 +963,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   };
 
   const handleCopy = (text: string, key: string) => {
-    navigator.clipboard.writeText(text).then(() => { setCopiedKey(key); setTimeout(() => setCopiedKey(null), 2000); showToast("Copied!", "success"); });
+    navigator.clipboard.writeText(text).then(() => { setCopiedKey(key); setTimeout(() => setCopiedKey(null), 250); showToast("Copied!", "success"); });
   };
 
   const currentStepKey = SETUP_STEPS[currentStep]?.key ?? "watch_video";

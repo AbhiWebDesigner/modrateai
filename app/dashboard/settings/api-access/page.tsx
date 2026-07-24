@@ -500,7 +500,15 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           }}>
             <Cloud size={42} color="#A78BFA" strokeWidth={1.5} />
           </div>
-          <style>{`@media (max-width: 768px) { .cloud-box-hide { display: none !important; } }`}</style>
+          <style>{`
+   @media (max-width: 768px) { 
+    .cloud-box-hide { display: none !important; }
+    .hero-shield { width: 44px !important; height: 44px !important; }
+    .hero-title { font-size: 16px !important; }
+    .hero-badges { gap: 6px !important; margin-top: 8px !important; }
+    .hero-badge { padding: 3px 8px !important; font-size: 10px !important; }
+   }
+  `}</style>
         </div>
       </div>
 

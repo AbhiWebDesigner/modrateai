@@ -492,7 +492,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           </div>
 
           {/* Right: 3D cloud illustration area */}
-          <div style={{
+          <div className="cloud-box-hide" style={{
             width: 90, height: 90, flexShrink: 0,
             background: "radial-gradient(circle at 40% 40%, rgba(124,58,237,0.35), rgba(79,70,229,0.15))",
             borderRadius: 20, border: "1px solid rgba(124,58,237,0.25)",
@@ -500,6 +500,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           }}>
             <Cloud size={42} color="#A78BFA" strokeWidth={1.5} />
           </div>
+          <style>{`@media (max-width: 768px) { .cloud-box-hide { display: none !important; } }`}</style>
         </div>
       </div>
 

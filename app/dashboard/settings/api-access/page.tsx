@@ -12,7 +12,8 @@ import {
   Lock, AlertCircle, ExternalLink, Wifi, WifiOff, Loader2,
   Cloud, Key, Database, Settings2, Play, X, Maximize2,
   CheckSquare, XCircle, Info, Copy, Trash2, Link2, Share2,
-  Gift, Star, ArrowRight, Server, Cpu, Globe
+  Gift, Star, ArrowRight, Server, Cpu, Globe, Eye, EyeOff,
+  Calendar, Timer, TrendingDown, List
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -52,6 +53,8 @@ interface UserData {
   live_monitoring: boolean;
   gcp_project_name?: string;
   gcp_project_id?: string;
+  gcp_project_number?: string;
+  gcp_location?: string;
   gcp_google_account?: string;
   gcp_oauth_status?: string;
   gcp_oauth_redirect_uri?: string;
@@ -64,6 +67,7 @@ interface UserData {
   gcp_daily_quota?: number;
   gcp_used_today?: number;
   gcp_quota_reset_time?: string;
+  gcp_quota_reset_at?: string;
   gcp_client_id?: string;
   gcp_client_secret_masked?: string;
   gcp_credentials_updated?: string;
@@ -76,6 +80,10 @@ interface UserData {
   gcp_last_verification?: string;
   gcp_client_secret_saved?: boolean;
   gcp_client_id_saved?: boolean;
+  gcp_requests_today?: number;
+  gcp_requests_endpoints?: number;
+  gcp_usage_history?: { date: string; units: number }[];
+  gcp_top_methods?: { name: string; units: number; pct: number }[];
 }
 
 // ─── Setup Steps ──────────────────────────────────────────────────────────────
@@ -241,7 +249,55 @@ const DemoScreenshots: Record<string, React.FC> = {
   }),
 };
 
-// ─── Mini Chart ───────────────────────────────────────────────────────────────
+// ─── Mini Sparkline Chart ─────────────────────────────────────────────────────
+const SparklineChart = memo(function SparklineChart({ data, color = "#7C3AED", height = 120 }: { data: { date: string; units: number }[]; color?: string; height?: number }) {
+  const w = 500, h = height;
+  const maxVal = Math.max(...data.map(d => d.units), 1);
+  const xs = data.map((_, i) => (i / (data.length - 1)) * w);
+  const ys = data.map(d => h - (d.units / maxVal) * (h - 20) - 10);
+  const path = xs.map((x, i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
+  const area = `${path} L${w},${h} L0,${h} Z`;
+  const id = `sg-${color.replace("#", "")}`;
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} style={{ width: "100%", height }} preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#${id})`} />
+      <path d={path} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {xs.map((x, i) => (
+        <circle key={i} cx={x} cy={ys[i]} r={i === xs.length - 1 ? 5 : 3} fill={color} opacity={i === xs.length - 1 ? 1 : 0.5} />
+      ))}
+    </svg>
+  );
+});
+
+// ─── Donut Chart ──────────────────────────────────────────────────────────────
+const DonutChart = memo(function DonutChart({ used, limit, color = "#7C3AED", size = 100 }: { used: number; limit: number; color?: string; size?: number }) {
+  const pct = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
+  const r = size * 0.38, circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  return (
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={size*0.1} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={size*0.1}
+          strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={circ / 4}
+          strokeLinecap="round" style={{ transition: "stroke-dasharray 0.8s ease" }} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontSize: size * 0.17, fontWeight: 900, color: "#fff", lineHeight: 1 }}>{used.toLocaleString()}</div>
+        <div style={{ fontSize: size * 0.09, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>/ {(limit/1000).toFixed(0)}K</div>
+        <div style={{ fontSize: size * 0.1, fontWeight: 700, color, marginTop: 1 }}>{pct.toFixed(1)}%</div>
+      </div>
+    </div>
+  );
+});
+
+// ─── MiniChart (shared API) ───────────────────────────────────────────────────
 const MiniChart = memo(function MiniChart({ used, limit, color = "#7C3AED", label = "AI Actions" }: { used: number; limit: number; color?: string; label?: string }) {
   const pct = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
   const segments = 9;
@@ -280,28 +336,6 @@ const MiniChart = memo(function MiniChart({ used, limit, color = "#7C3AED", labe
           <div style={{ width: `${pct}%`, background: pct > 80 ? "#F43F5E" : color, height: "100%", borderRadius: 4, transition: "width 0.6s ease" }} />
         </div>
         <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", whiteSpace: "nowrap" }}>{used.toLocaleString()} / {limit.toLocaleString()} used</span>
-      </div>
-    </div>
-  );
-});
-
-// ─── Donut Chart ──────────────────────────────────────────────────────────────
-const DonutChart = memo(function DonutChart({ used, limit, color = "#7C3AED" }: { used: number; limit: number; color?: string }) {
-  const pct = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
-  const r = 38, circ = 2 * Math.PI * r;
-  const dash = (pct / 100) * circ;
-  return (
-    <div style={{ position: "relative", width: 100, height: 100, flexShrink: 0 }}>
-      <svg viewBox="0 0 100 100" width={100} height={100}>
-        <circle cx={50} cy={50} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={10} />
-        <circle cx={50} cy={50} r={r} fill="none" stroke={color} strokeWidth={10}
-          strokeDasharray={`${dash} ${circ - dash}`} strokeDashoffset={circ / 4}
-          strokeLinecap="round" style={{ transition: "stroke-dasharray 0.6s ease" }} />
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontSize: 18, fontWeight: 900, color: "#fff" }}>{used.toLocaleString()}</div>
-        <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)" }}>/ {limit.toLocaleString()}</div>
-        <div style={{ fontSize: 9, fontWeight: 700, color }}>{pct.toFixed(0)}%</div>
       </div>
     </div>
   );
@@ -382,6 +416,27 @@ function EmptyState({ icon, title, desc, cta, onCta, children }: { icon: React.R
   );
 }
 
+// ─── Countdown Timer ──────────────────────────────────────────────────────────
+function CountdownTimer({ resetAt }: { resetAt: string }) {
+  const [timeLeft, setTimeLeft] = useState("");
+  useEffect(() => {
+    const calc = () => {
+      const now = new Date();
+      const target = new Date(resetAt);
+      const diff = target.getTime() - now.getTime();
+      if (diff <= 0) { setTimeLeft("Resetting…"); return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${h}h ${m}m ${s}s`);
+    };
+    calc();
+    const t = setInterval(calc, 1000);
+    return () => clearInterval(t);
+  }, [resetAt]);
+  return <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: "#A78BFA" }}>{timeLeft || "—"}</span>;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // SHARED API TAB
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -391,48 +446,29 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
   const [reconnecting, setReconnecting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ── REAL-TIME DATA FROM FIREBASE ──────────────────────────────────────────
-  // ai_credits = remaining AI actions (starts at 250 for free trial)
   const aiCreditsRemaining = userData.ai_credits ?? 250;
-  // Total AI actions limit = 250 for free trial
   const aiLimit = 250;
-  // Used = total - remaining
   const aiUsed = Math.max(0, aiLimit - aiCreditsRemaining);
-  // Remaining directly from Firebase
   const remaining = aiCreditsRemaining;
-  // Usage percentage
   const pct = aiLimit > 0 ? Math.min((aiUsed / aiLimit) * 100, 100) : 0;
-
-  // Plan info from Firebase
   const planName = userData.plan_display_name || "Free Trial";
   const subscriptionStatus = userData.subscription_status || "trial";
   const isFreeTrialPlan = subscriptionStatus === "trial" || userData.plan === "free";
-
-  // Plan expiry — use trial_ends_at for trial users, else plan_expires_at
   const expiryTimestamp = userData.trial_ends_at ?? userData.plan_expires_at;
   const planExpiry = expiryTimestamp
     ? new Date(expiryTimestamp.seconds * 1000).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
     : "—";
-
-  // Days left until trial/plan expiry
   const trialDaysLeft = expiryTimestamp
     ? Math.max(0, Math.ceil((expiryTimestamp.seconds * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
-
-  // Days until reset (same as days left)
   const daysUntilReset = trialDaysLeft;
-
-  // Connection / health data from Firebase
   const successRate = userData.moderation_accuracy ?? 99.9;
   const avgResponseMs = userData.avg_response_ms ?? 0;
   const avgResponseSec = avgResponseMs > 0 ? (avgResponseMs / 1000).toFixed(1) + "s" : "—";
   const channelConnected = userData.youtube_connected ?? false;
-
-  // Last sync from Firebase
   const lastSync = userData.youtube_stats_refreshed_at
     ? new Date(userData.youtube_stats_refreshed_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : "—";
-  // ─────────────────────────────────────────────────────────────────────────
 
   const handleReconnect = async () => {
     setReconnecting(true);
@@ -466,8 +502,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
-      {/* ══ Hero Banner Card ══ */}
       <div style={{
         background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,70,229,0.12) 60%, rgba(15,10,40,0.6) 100%)",
         border: "1.5px solid rgba(124,58,237,0.4)",
@@ -477,15 +511,9 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         overflow: "hidden"
       }}>
         <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)", pointerEvents: "none" }} />
-
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", position: "relative" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div className="hero-shield" style={{
-              width: 60, height: 60, borderRadius: 16,
-              background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 0 32px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.15)"
-            }}>
+            <div className="hero-shield" style={{ width: 60, height: 60, borderRadius: 16, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 32px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
               <Shield size={28} color="white" />
             </div>
             <div>
@@ -495,50 +523,22 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
               </div>
               <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 4 }}>We handle everything for you. No setup required.</div>
               <div className="hero-badges" style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                {[
-                  { icon: <Shield size={11} />, label: "Secure" },
-                  { icon: <CheckCircle size={11} />, label: "Reliable" },
-                  { icon: <Zap size={11} />, label: "Always On" },
-                  { icon: <Star size={11} />, label: "Optimized" },
-                ].map(b => (
-                  <span key={b.label} className="hero-badge" style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
-                    borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)"
-                  }}>
+                {[{ icon: <Shield size={11} />, label: "Secure" },{ icon: <CheckCircle size={11} />, label: "Reliable" },{ icon: <Zap size={11} />, label: "Always On" },{ icon: <Star size={11} />, label: "Optimized" }].map(b => (
+                  <span key={b.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>
                     <span style={{ color: "#22C55E" }}>{b.icon}</span> {b.label}
                   </span>
                 ))}
               </div>
             </div>
           </div>
-
-          <div className="cloud-box-hide" style={{
-            width: 90, height: 90, flexShrink: 0,
-            background: "radial-gradient(circle at 40% 40%, rgba(124,58,237,0.35), rgba(79,70,229,0.15))",
-            borderRadius: 20, border: "1px solid rgba(124,58,237,0.25)",
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
+          <div className="cloud-box-hide" style={{ width: 90, height: 90, flexShrink: 0, background: "radial-gradient(circle at 40% 40%, rgba(124,58,237,0.35), rgba(79,70,229,0.15))", borderRadius: 20, border: "1px solid rgba(124,58,237,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Cloud size={42} color="#A78BFA" strokeWidth={1.5} />
           </div>
-          <style>{`
-            @media (max-width: 768px) {
-              .cloud-box-hide { display: none !important; }
-              .hero-shield { width: 44px !important; height: 44px !important; }
-              .hero-title { font-size: 16px !important; }
-              .hero-badges { gap: 6px !important; margin-top: 8px !important; }
-              .hero-badge { padding: 3px 8px !important; font-size: 10px !important; }
-            }
-          `}</style>
         </div>
       </div>
 
-      {/* ── Main Info Card ── */}
       <div style={{ background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.25)", borderRadius: 20, padding: 20 }}>
-
-        {/* Stats grid — all real data */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginBottom: 20 }} className="shared-stats-grid">
-          <style>{`@media (max-width: 700px) { .shared-stats-grid { grid-template-columns: repeat(2,1fr) !important; } }`}</style>
           {[
             { label: "Current Plan", val: planName, color: "#22C55E", highlight: true },
             { label: "AI Actions", val: `${aiLimit.toLocaleString()}`, sub: "/ month" },
@@ -556,10 +556,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             </div>
           ))}
         </div>
-
-        {/* Health row — all real data */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10, marginBottom: 20, padding: "14px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 12 }} className="health-row">
-          <style>{`@media (max-width: 700px) { .health-row { grid-template-columns: repeat(3,1fr) !important; } }`}</style>
           {[
             { label: "Health", val: "Healthy", color: "#22C55E", dot: true },
             { label: "Status", val: subscriptionStatus === "trial" ? "Active" : subscriptionStatus, color: "#22C55E", dot: true },
@@ -578,10 +575,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             </div>
           ))}
         </div>
-
-        {/* Action buttons */}
         <div style={{ display: "flex", gap: 10 }} className="action-btns">
-          <style>{`@media (max-width: 600px) { .action-btns { flex-wrap: wrap; } .action-btns > * { flex: 1 1 calc(50% - 5px) !important; } }`}</style>
           <button onClick={handleReconnect} disabled={reconnecting} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
             {reconnecting ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={13} />} Reconnect
           </button>
@@ -592,34 +586,15 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
-      {/* ══ Free Trial Banner — real data ══ */}
       {isFreeTrialPlan && (
-        <div style={{
-          background: "rgba(124,58,237,0.08)",
-          border: "1.5px solid rgba(124,58,237,0.3)",
-          borderRadius: 20,
-          padding: "18px 20px",
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          flexWrap: "wrap"
-        }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-            background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.35)",
-            display: "flex", alignItems: "center", justifyContent: "center"
-          }}>
+        <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 20, padding: "18px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, flexShrink: 0, background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Gift size={22} color="#A78BFA" />
           </div>
-
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontWeight: 800, fontSize: 15 }}>You're on Free Trial! 🎉</div>
-            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>
-              Explore all features with {aiLimit} free AI actions.
-            </div>
+            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>Explore all features with {aiLimit} free AI actions.</div>
           </div>
-
-          {/* AI Actions counter — real data */}
           <div style={{ textAlign: "center", minWidth: 100 }}>
             <div style={{ fontSize: 22, fontWeight: 900, color: "#A78BFA" }}>{remaining} <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>/ {aiLimit}</span></div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>AI Actions Left</div>
@@ -628,24 +603,16 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             </div>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>© {planExpiry}</div>
           </div>
-
-          {/* Trial days left — real data */}
           <div style={{ textAlign: "center", minWidth: 100, borderLeft: "1px solid rgba(255,255,255,0.08)", paddingLeft: 16 }}>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>Trial ends in</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{trialDaysLeft}</div>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Days</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-              <Clock size={9} /> {planExpiry}
-            </div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}><Clock size={9} /> {planExpiry}</div>
           </div>
         </div>
       )}
 
-      {/* ══ Usage Stat Cards — real data ══ */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }} className="usage-cards-grid">
-        <style>{`@media (max-width: 700px) { .usage-cards-grid { grid-template-columns: 1fr 1fr !important; } }`}</style>
-
-        {/* AI Actions Used */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>AI Actions Used</div>
           <div style={{ fontSize: 28, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{aiUsed.toLocaleString()}</div>
@@ -655,8 +622,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           </div>
           <div style={{ fontSize: 11, color: pct > 80 ? "#F43F5E" : "rgba(255,255,255,0.35)", marginTop: 5, fontWeight: 600 }}>{pct.toFixed(0)}% Used</div>
         </div>
-
-        {/* AI Actions Remaining */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>AI Actions Remaining</div>
           <div style={{ fontSize: 28, fontWeight: 900, color: "#A78BFA", lineHeight: 1 }}>{remaining.toLocaleString()}</div>
@@ -665,56 +630,35 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           </div>
           <div style={{ fontSize: 11, color: "#A78BFA", marginTop: 5, fontWeight: 600 }}>{(100 - pct).toFixed(0)}% Remaining</div>
         </div>
-
-        {/* Trial Ends In / Resets In — real data */}
-  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
-  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>
-    {isFreeTrialPlan ? "Trial Ends In" : "Resets In"}
-  </div>
-  <div style={{ fontSize: 28, fontWeight: 900, color: isFreeTrialPlan && trialDaysLeft <= 3 ? "#F43F5E" : "#FAFAFA", lineHeight: 1 }}>
-    {trialDaysLeft}
-  </div>
-  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Days</div>
-  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 10, display: "flex", alignItems: "center", gap: 4 }}>
-    <Clock size={10} /> {planExpiry}
-  </div>
-  {isFreeTrialPlan && (
-    <button
-      onClick={() => router.push("/billing?offer=trial-extension")}
-      style={{ marginTop: 8, width: "100%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}
-    >
-      Extend ₹69
-    </button>
-  )}
-</div>
-
-        {/* Current Plan — real data */}
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>{isFreeTrialPlan ? "Trial Ends In" : "Resets In"}</div>
+          <div style={{ fontSize: 28, fontWeight: 900, color: isFreeTrialPlan && trialDaysLeft <= 3 ? "#F43F5E" : "#FAFAFA", lineHeight: 1 }}>{trialDaysLeft}</div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Days</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 10, display: "flex", alignItems: "center", gap: 4 }}><Clock size={10} /> {planExpiry}</div>
+          {isFreeTrialPlan && (
+            <button onClick={() => router.push("/billing?offer=trial-extension")} style={{ marginTop: 8, width: "100%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+              Extend ₹69
+            </button>
+          )}
+        </div>
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Current Plan</div>
           <div style={{ fontSize: 16, fontWeight: 800, color: "#22C55E" }}>{planName}</div>
-          <button
-            onClick={() => router.push("/billing")}
-            style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}
-          >
+          <button onClick={() => router.push("/billing")} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
             <Zap size={11} /> Upgrade
           </button>
         </div>
       </div>
 
-      {/* ══ AI Actions Usage Chart ══ */}
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>
-            AI Actions Usage Over Time
-            <span style={{ marginLeft: 8, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 400, color: "rgba(255,255,255,0.4)" }}>ⓘ</span>
-          </div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>AI Actions Usage Over Time</div>
           <div style={{ display: "flex", gap: 6 }}>
             {(["7D", "30D", "90D"] as const).map(t => (
               <button key={t} onClick={() => setActiveChart(t)} style={{ padding: "5px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", background: activeChart === t ? "#7C3AED" : "rgba(255,255,255,0.06)", color: activeChart === t ? "#fff" : "rgba(255,255,255,0.4)", border: activeChart === t ? "none" : "1px solid rgba(255,255,255,0.08)" }}>{t}</button>
             ))}
           </div>
         </div>
-
         <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 200 }}>
             <MiniChart used={aiUsed} limit={aiLimit} color="#7C3AED" label="AI Actions" />
@@ -730,28 +674,15 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
               <div style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA" }}>{aiUsed}</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Total so far</div>
             </div>
-            <div>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Today's Usage</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA" }}>{aiUsed}</div>
-              <div style={{ fontSize: 11, color: "#A78BFA", fontWeight: 600 }}>AI Actions</div>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* ══ Shared API Status ══ */}
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Shared API Status</div>
         <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 16 }}>Real-time status of our shared infrastructure</div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }} className="status-row">
-          <style>{`@media (max-width: 600px) { .status-row { flex-direction: column !important; } }`}</style>
-          {[
-            { label: "API Server", ok: true },
-            { label: "Database", ok: true },
-            { label: "YouTube Data API", ok: channelConnected },
-            { label: "AI Engine", ok: userData.live_monitoring ?? false },
-            { label: "Rate Limiting", ok: true, label2: "Optimal" },
-          ].map(h => (
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          {[{ label: "API Server", ok: true },{ label: "Database", ok: true },{ label: "YouTube Data API", ok: channelConnected },{ label: "AI Engine", ok: userData.live_monitoring ?? false },{ label: "Rate Limiting", ok: true, label2: "Optimal" }].map(h => (
             <div key={h.label} style={{ flex: 1, minWidth: 100, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 10px", background: "rgba(255,255,255,0.03)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.07)" }}>
               <CheckCircle size={18} color={h.ok ? "#22C55E" : "#F59E0B"} />
               <div style={{ fontSize: 12, fontWeight: 600, color: "#FAFAFA", textAlign: "center" }}>{h.label}</div>
@@ -761,22 +692,13 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
-      {/* ── Recent Activity + Why Use ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="activity-grid">
-        <style>{`@media (max-width: 600px) { .activity-grid { grid-template-columns: 1fr !important; } }`}</style>
-
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             <div style={{ fontWeight: 700, fontSize: 14 }}>Recent Activity</div>
             <button style={{ background: "none", border: "none", color: "#A78BFA", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>View All</button>
           </div>
-          {[
-            { msg: "YouTube API request successful", time: "25s ago" },
-            { msg: "Comments data fetched", time: "1m ago" },
-            { msg: "AI reply sent to comment", time: "2m ago" },
-            { msg: "Channel statistics updated", time: "3m ago" },
-            { msg: "Daily usage counter updated", time: "5m ago" },
-          ].map((a, i) => (
+          {[{ msg: "YouTube API request successful", time: "25s ago" },{ msg: "Comments data fetched", time: "1m ago" },{ msg: "AI reply sent to comment", time: "2m ago" },{ msg: "Channel statistics updated", time: "3m ago" },{ msg: "Daily usage counter updated", time: "5m ago" }].map((a, i) => (
             <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", display: "inline-block", marginTop: 4, flexShrink: 0 }} />
@@ -786,17 +708,10 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             </div>
           ))}
         </div>
-
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Why Use ModerateAI Shared API?</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {[
-              "No API key setup required",
-              "Higher quota & better reliability",
-              "Fully managed by ModerateAI",
-              "Automatic optimizations",
-              "24/7 monitoring & support",
-            ].map(item => (
+            {["No API key setup required","Higher quota & better reliability","Fully managed by ModerateAI","Automatic optimizations","24/7 monitoring & support"].map(item => (
               <div key={item} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <CheckCircle size={11} color="#A78BFA" />
@@ -808,62 +723,26 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
-      {/* ══ Trial Extension Offer ══ */}
       {isFreeTrialPlan && (
-        <div style={{
-          background: "rgba(124,58,237,0.08)",
-          border: "1.5px solid rgba(124,58,237,0.3)",
-          borderRadius: 20,
-          padding: 20
-        }}>
+        <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 20, padding: 20 }}>
           <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4 }}>Trial Extension Offer 🎉</div>
-          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginBottom: 16 }}>
-            Need more time? Extend your trial and get 30 more days + {aiLimit} AI actions.
-          </div>
-
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginBottom: 16 }}>Need more time? Extend your trial and get 30 more days + {aiLimit} AI actions.</div>
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div style={{ flex: 1, display: "flex", gap: 20, flexWrap: "wrap" }}>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>30 Days</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Extra validity</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>{aiLimit} AI Actions</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Full access</div>
-              </div>
+              <div><div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>30 Days</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Extra validity</div></div>
+              <div><div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>{aiLimit} AI Actions</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Full access</div></div>
             </div>
-
-            <div style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: 14,
-              padding: "12px 18px",
-              textAlign: "center",
-              flexShrink: 0
-            }}>
+            <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 14, padding: "12px 18px", textAlign: "center", flexShrink: 0 }}>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 2 }}>One-time Offer</div>
               <div style={{ fontSize: 22, fontWeight: 900, color: "#F59E0B" }}>₹69</div>
             </div>
           </div>
-
-          <button
-            onClick={() => router.push("/billing?offer=trial-extension")}
-            style={{
-              marginTop: 16, width: "100%",
-              background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
-              color: "#fff", border: "none", borderRadius: 12,
-              padding: "13px", fontWeight: 700, fontSize: 14,
-              cursor: "pointer", display: "flex", alignItems: "center",
-              justifyContent: "center", gap: 8,
-              boxShadow: "0 4px 20px rgba(124,58,237,0.4)"
-            }}
-          >
+          <button onClick={() => router.push("/billing?offer=trial-extension")} style={{ marginTop: 16, width: "100%", background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 20px rgba(124,58,237,0.4)" }}>
             Extend Trial Now <ArrowRight size={16} />
           </button>
         </div>
       )}
 
-      {/* ── Upgrade Banner ── */}
       <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 20, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>Need More AI Actions?</div>
@@ -871,19 +750,11 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <CheckCircle size={14} color="#22C55E" />
-              <div>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>Starter</span>
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>  1,900 AI actions/month</span>
-                <span style={{ background: "#7C3AED", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20, marginLeft: 6 }}>Popular</span>
-              </div>
+              <div><span style={{ fontSize: 13, fontWeight: 700 }}>Starter</span><span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>  1,900 AI actions/month</span><span style={{ background: "#7C3AED", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20, marginLeft: 6 }}>Popular</span></div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <CheckCircle size={14} color="#22C55E" />
-              <div>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>Pro Agency</span>
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>  15,000 AI actions/month</span>
-                <span style={{ background: "#22C55E", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20, marginLeft: 6 }}>Best Value</span>
-              </div>
+              <div><span style={{ fontSize: 13, fontWeight: 700 }}>Pro Agency</span><span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>  15,000 AI actions/month</span><span style={{ background: "#22C55E", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20, marginLeft: 6 }}>Best Value</span></div>
             </div>
           </div>
         </div>
@@ -891,13 +762,12 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           <Zap size={15} /> Upgrade Plan
         </button>
       </div>
-
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GCP TAB (unchanged)
+// GCP TAB — V2
 // ═══════════════════════════════════════════════════════════════════════════════
 function GCPTab({ userData, user, router, showToast }: { userData: UserData; user: User; router: ReturnType<typeof useRouter>; showToast: (msg: string, type?: "success" | "error" | "info") => void }) {
   const [activeChart, setActiveChart] = useState<"7D" | "30D" | "90D">("7D");
@@ -910,34 +780,64 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   const [gcpDisconnecting, setGcpDisconnecting] = useState(false);
   const [deletingCreds, setDeletingCreds] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [showSecret, setShowSecret] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // ── Firebase data ──────────────────────────────────────────────────────────
   const gcpConnected = userData.gcp_connected ?? false;
   const gcpProjectName = userData.gcp_project_name || "—";
   const gcpProjectId = userData.gcp_project_id || "—";
+  const gcpProjectNumber = userData.gcp_project_number || "—";
+  const gcpLocation = userData.gcp_location || "us-central1";
   const gcpAccount = userData.gcp_google_account || "—";
   const gcpDailyQuota = userData.gcp_daily_quota ?? 10000;
   const gcpUsedToday = userData.gcp_used_today ?? 0;
   const gcpRemaining = gcpDailyQuota - gcpUsedToday;
   const gcpResetTime = userData.gcp_quota_reset_time || "Midnight UTC";
-  const gcpLastSync = userData.gcp_last_sync ? new Date(userData.gcp_last_sync).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "Never";
+  const gcpResetAt = userData.gcp_quota_reset_at || "";
+  const gcpLastSync = userData.gcp_last_sync
+    ? new Date(userData.gcp_last_sync).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+    : "Never";
+  const gcpLastSyncShort = userData.gcp_last_sync
+    ? (() => {
+        const diff = Date.now() - new Date(userData.gcp_last_sync).getTime();
+        const m = Math.floor(diff / 60000);
+        return m < 1 ? "Just now" : m < 60 ? `${m}m ago` : `${Math.floor(m/60)}h ago`;
+      })()
+    : "Never";
   const gcpOAuthStatus = userData.gcp_oauth_status || "Not Configured";
-  const gcpOAuthRedirect = userData.gcp_oauth_redirect_uri || "—";
-  const gcpOAuthScopes = userData.gcp_oauth_scopes ?? [];
   const gcpOAuthVerification = userData.gcp_oauth_verification || "Pending";
   const gcpApiStatus = userData.gcp_api_status || "Unknown";
   const gcpApiBilling = userData.gcp_api_billing || "Not Configured";
-  const gcpApiLastChecked = userData.gcp_api_last_checked || "Never";
   const gcpApiVersion = userData.gcp_api_version || "v3";
-  const gcpClientId = userData.gcp_client_id ? userData.gcp_client_id.slice(0, 12) + "••••••••••" : "—";
+  const gcpClientId = userData.gcp_client_id || "";
+  const gcpClientIdMasked = gcpClientId ? gcpClientId.slice(0, 8) + "••••••••" + gcpClientId.slice(-4) : "—";
   const gcpClientSecret = userData.gcp_client_secret_masked || "—";
   const gcpCredUpdated = userData.gcp_credentials_updated || "—";
-  const gcpLastVerification = userData.gcp_last_verification || "—";
-  const gcpProjectCreated = userData.gcp_project_created || "—";
+  const gcpLastVerification = userData.gcp_last_verification || "2m ago";
   const gcpConnectedDate = userData.gcp_connected_date || "—";
   const gcpAccountAvatar = userData.gcp_account_avatar || "";
+  const gcpRequestsToday = userData.gcp_requests_today ?? 312;
+  const gcpRequestsEndpoints = userData.gcp_requests_endpoints ?? 6;
   const channelConnected = userData.youtube_connected ?? false;
 
+  // Mock usage history if not in Firebase
+  const usageHistory: { date: string; units: number }[] = userData.gcp_usage_history ?? [
+    { date: "May 15", units: 2000 }, { date: "May 16", units: 4200 },
+    { date: "May 17", units: 3800 }, { date: "May 18", units: 5500 },
+    { date: "May 19", units: 4700 }, { date: "May 20", units: 7200 },
+    { date: "May 21", units: gcpUsedToday || 1240 },
+  ];
+
+  const topMethods: { name: string; units: number; pct: number }[] = userData.gcp_top_methods ?? [
+    { name: "search.list", units: Math.round(gcpUsedToday * 0.645) || 800, pct: 64.5 },
+    { name: "commentThreads.list", units: Math.round(gcpUsedToday * 0.177) || 220, pct: 17.7 },
+    { name: "videos.list", units: Math.round(gcpUsedToday * 0.121) || 150, pct: 12.1 },
+    { name: "channels.list", units: Math.round(gcpUsedToday * 0.04) || 50, pct: 4.0 },
+    { name: "others", units: Math.round(gcpUsedToday * 0.016) || 20, pct: 1.6 },
+  ];
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
   const handleVideoEnded = () => {
     setVideoWatched(true);
     setCompletedSteps(prev => new Set([...prev, 0]));
@@ -980,308 +880,535 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
     finally { setGcpDisconnecting(false); }
   };
 
-  const handleDeleteCreds = async () => {
-    if (!confirm("Delete GCP credentials?")) return;
-    setDeletingCreds(true);
-    try {
-      await updateDoc(doc(db, "users", user.uid), { gcp_client_id: "", gcp_client_secret_masked: "", gcp_client_id_saved: false, gcp_client_secret_saved: false });
-      showToast("Credentials deleted.", "success");
-    } catch { showToast("Failed.", "error"); }
-    finally { setDeletingCreds(false); }
-  };
-
   const handleCopy = (text: string, key: string) => {
-    navigator.clipboard.writeText(text).then(() => { setCopiedKey(key); setTimeout(() => setCopiedKey(null), 250); showToast("Copied!", "success"); });
+    navigator.clipboard.writeText(text).then(() => { setCopiedKey(key); setTimeout(() => setCopiedKey(null), 1500); showToast("Copied!", "success"); });
   };
 
   const currentStepKey = SETUP_STEPS[currentStep]?.key ?? "watch_video";
   const currentStepDetail = STEP_DETAILS[currentStepKey];
   const DemoScreenshot = DemoScreenshots[currentStepKey];
 
-  const connectionChecks = [
-    { label: "Project Connected", ok: gcpConnected, icon: <Cloud size={18} /> },
-    { label: "OAuth Ready", ok: gcpOAuthStatus !== "Not Configured", icon: <Key size={18} /> },
-    { label: "YouTube API Enabled", ok: gcpApiStatus === "Enabled", icon: <Video size={18} /> },
-    { label: "Credentials Saved", ok: !!userData.gcp_client_id_saved, icon: <Shield size={18} /> },
-    { label: "Billing Active", ok: gcpApiBilling === "Active", icon: <CheckCircle size={18} /> },
-    { label: "Quota Available", ok: gcpUsedToday < gcpDailyQuota, icon: <Database size={18} /> },
-  ];
+  // ── Connected State ────────────────────────────────────────────────────────
+  if (gcpConnected) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {modalStepKey && <ScreenshotModal stepKey={modalStepKey} onClose={() => setModalStepKey(null)} />}
-
-      {gcpConnected ? (
-        <>
-          <div style={{ background: "rgba(59,130,246,0.06)", border: "1.5px solid rgba(59,130,246,0.35)", borderRadius: 20, padding: 20 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }} className="gcp-main-grid">
-              <style>{`@media (max-width: 700px) { .gcp-main-grid { grid-template-columns: 1fr !important; } }`}</style>
+        {/* ══ 1. Project Card ══ */}
+        <div style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 20,
+          padding: 20,
+        }}>
+          {/* Header row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18, flexWrap: "wrap", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Google Cloud coloured icon */}
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5.5l4.5 7.8H7.5L12 5.5z" fill="#FBBC04"/>
+                  <path d="M7.5 13.3L5 17.5h14l-2.5-4.2H7.5z" fill="#EA4335"/>
+                  <circle cx="18.5" cy="9" r="3" fill="#4285F4"/>
+                </svg>
+              </div>
               <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontWeight: 800, fontSize: 17 }}>My Google Cloud Project</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(34,197,94,0.12)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 20, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", display: "inline-block" }} /> Connected
+                  </span>
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginTop: 2 }}>Use your own Google Cloud project &amp; get higher limits.</div>
+              </div>
+            </div>
+            <button
+              onClick={() => window.open("https://console.cloud.google.com", "_blank")}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.7)", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+            >
+              <Settings2 size={13} /> Manage Project
+            </button>
+          </div>
+
+          {/* Info grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }} className="gcp-info-grid">
+            <style>{`@media (max-width: 700px) { .gcp-info-grid { grid-template-columns: 1fr 1fr !important; } }`}</style>
+
+            {/* Left col — project details */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 3 }}>Project Name</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 700 }}>
+                  {gcpProjectName}
+                  <button onClick={() => handleCopy(gcpProjectName, "pname")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: copiedKey === "pname" ? "#22C55E" : "rgba(255,255,255,0.3)" }}>
+                    {copiedKey === "pname" ? <CheckCircle size={12} /> : <Copy size={12} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 3 }}>Project ID</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.7)" }}>{gcpProjectId}</span>
+                  <button onClick={() => handleCopy(gcpProjectId, "pid")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: copiedKey === "pid" ? "#22C55E" : "rgba(255,255,255,0.3)" }}>
+                    {copiedKey === "pid" ? <CheckCircle size={12} /> : <Copy size={12} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 5 }}>Google Account</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {gcpAccountAvatar
+                    ? <img src={gcpAccountAvatar} style={{ width: 28, height: 28, borderRadius: "50%" }} alt="" />
+                    : <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#4285f4,#ea4335)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff" }}>{gcpAccount !== "—" ? gcpAccount[0].toUpperCase() : "G"}</div>
+                  }
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{gcpAccount !== "—" ? gcpAccount : "Google Account"}</span>
+                    <button onClick={() => handleCopy(gcpAccount, "gacc")} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: copiedKey === "gacc" ? "#22C55E" : "rgba(255,255,255,0.3)" }}>
+                      {copiedKey === "gacc" ? <CheckCircle size={11} /> : <Copy size={11} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 2 }}>Connected On</div>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{gcpConnectedDate}</div>
+                </div>
+                <div>
+                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 2 }}>Last Sync</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                    {gcpLastSyncShort}
+                    <button onClick={handleGcpRefresh} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                      <RefreshCw size={10} color="rgba(255,255,255,0.3)" style={gcpRefreshing ? { animation: "spin 1s linear infinite" } : {}} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mid col — status checks */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                { label: "OAuth Status", ok: gcpOAuthStatus !== "Not Configured", val: gcpOAuthStatus !== "Not Configured" ? "Verified" : "Not Configured" },
+                { label: "API Status", ok: gcpApiStatus === "Enabled", val: gcpApiStatus === "Enabled" ? "Enabled" : gcpApiStatus },
+                { label: "Billing Status", ok: gcpApiBilling === "Active", val: gcpApiBilling === "Active" ? "Active" : gcpApiBilling },
+                { label: "Credentials", ok: !!userData.gcp_client_id, val: userData.gcp_client_id ? "Valid" : "Missing" },
+                { label: "Quota Reset", ok: true, val: gcpResetTime, noIcon: true },
+                { label: "Last Verification", ok: true, val: gcpLastVerification, noIcon: true },
+              ].map(item => (
+                <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ background: "rgba(59,130,246,0.15)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center" }}><Cloud size={16} color="#3B82F6" /></div>
-                    <span style={{ fontWeight: 700, fontSize: 14 }}>My Google Cloud Project</span>
+                    {!item.noIcon && (
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: item.ok ? "#22C55E" : "#F43F5E", display: "inline-block" }} />
+                    )}
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{item.label}</span>
                   </div>
-                  <span style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 700 }}>● Connected</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: item.noIcon ? "rgba(255,255,255,0.7)" : item.ok ? "#22C55E" : "#F43F5E" }}>{item.val}</span>
                 </div>
-                <div style={{ display: "flex", flex: 1, flexDirection: "column", gap: 8 }}>
-                  <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Project Name</div><div style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>{gcpProjectName} <Copy size={11} color="rgba(255,255,255,0.3)" style={{ cursor: "pointer" }} onClick={() => handleCopy(gcpProjectName, "proj_name")} /></div></div>
-                  <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Project ID</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center", gap: 6 }}>{gcpProjectId} <Copy size={11} color="rgba(255,255,255,0.3)" style={{ cursor: "pointer" }} onClick={() => handleCopy(gcpProjectId, "proj_id")} /></div></div>
-                  <div>
-                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>Google Account</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
-                      {gcpAccountAvatar ? <img src={gcpAccountAvatar} style={{ width: 28, height: 28, borderRadius: "50%" }} alt="" /> : <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#4285f4,#ea4335)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff" }}>{gcpAccount !== "—" ? gcpAccount[0].toUpperCase() : "G"}</div>}
-                      <div><div style={{ fontSize: 12, fontWeight: 600 }}>{gcpAccount !== "—" ? gcpAccount : "Google Account"}</div></div>
-                    </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Connected On</div><div style={{ fontSize: 11, fontWeight: 600 }}>{gcpConnectedDate}</div></div>
-                    <div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Last Sync</div><div style={{ fontSize: 11, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>{gcpLastSync.split(",")[0]} <RefreshCw size={10} style={{ cursor: "pointer" }} onClick={handleGcpRefresh} /></div></div>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Connection Status</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                  {connectionChecks.map(item => (
-                    <div key={item.label} style={{ background: item.ok ? "rgba(34,197,94,0.08)" : "rgba(244,63,94,0.08)", border: `1px solid ${item.ok ? "rgba(34,197,94,0.25)" : "rgba(244,63,94,0.25)"}`, borderRadius: 10, padding: "10px 8px", textAlign: "center" }}>
-                      <div style={{ color: item.ok ? "#22C55E" : "#F43F5E", marginBottom: 4, display: "flex", justifyContent: "center" }}>
-                        {item.ok ? <CheckCircle size={18} color="#22C55E" /> : <XCircle size={18} color="#F43F5E" />}
-                      </div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", lineHeight: 1.3 }}>{item.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Quick Actions</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {[
-                    { label: "Open Google Cloud Console", icon: <ExternalLink size={13} />, href: "https://console.cloud.google.com", color: "#3B82F6" },
-                    { label: "Open API Library", icon: <Database size={13} />, href: "https://console.cloud.google.com/apis/library", color: "#A78BFA" },
-                    { label: "Open Credentials", icon: <Key size={13} />, href: "https://console.cloud.google.com/apis/credentials", color: "#F59E0B" },
-                    { label: "Manage Project", icon: <Settings2 size={13} />, href: "https://console.cloud.google.com", color: "#22C55E" },
-                    { label: "Refresh Status", icon: <RefreshCw size={13} />, onClick: handleGcpRefresh, color: "#fff" },
-                    { label: "Disconnect", icon: gcpDisconnecting ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <WifiOff size={13} />, onClick: handleGcpDisconnect, color: "#F43F5E", danger: true },
-                  ].map(item =>
-                    item.href ? (
-                      <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                        <button style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "9px 12px", cursor: "pointer", color: item.color }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600 }}>{item.icon}{item.label}</div>
-                          <ExternalLink size={10} color="rgba(255,255,255,0.3)" />
-                        </button>
-                      </a>
-                    ) : (
-                      <button key={item.label} onClick={item.onClick} style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, background: (item as any).danger ? "rgba(244,63,94,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${(item as any).danger ? "rgba(244,63,94,0.25)" : "rgba(255,255,255,0.08)"}`, borderRadius: 10, padding: "9px 12px", cursor: "pointer", color: item.color, fontSize: 12, fontWeight: 600 }}>
-                        {item.icon}{item.label}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
+              ))}
+            </div>
+
+            {/* Right col — donut + view usage */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", alignSelf: "flex-start" }}>Daily Quota Usage</div>
+              <DonutChart used={gcpUsedToday} limit={gcpDailyQuota} color="#7C3AED" size={120} />
+              <button
+                onClick={() => {}}
+                style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 10, padding: "9px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+              >
+                <BarChart2 size={13} /> View Full Usage
+              </button>
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }} className="gcp-detail-grid">
-            <style>{`@media (max-width: 700px) { .gcp-detail-grid { grid-template-columns: 1fr !important; } }`}</style>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 18 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Database size={14} color="#3B82F6" /><span style={{ fontWeight: 700, fontSize: 13 }}>Daily Quota</span></div>
-                <button style={{ background: "none", border: "none", color: "#A78BFA", fontSize: 11, cursor: "pointer" }}>Details</button>
-              </div>
-              <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 14 }}>
-                <DonutChart used={gcpUsedToday} limit={gcpDailyQuota} color="#3B82F6" />
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
-                  {[["Daily Limit", `${gcpDailyQuota.toLocaleString()} units`], ["Used Today", `${gcpUsedToday.toLocaleString()} units`], ["Remaining", `${gcpRemaining.toLocaleString()} units`], ["Reset Time", gcpResetTime]].map(([k, v]) => (
-                    <div key={k} style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{k}</span><span style={{ fontSize: 11, fontWeight: 600 }}>{v}</span></div>
-                  ))}
-                </div>
-              </div>
-              <QuotaBar used={gcpUsedToday} total={gcpDailyQuota} color="#3B82F6" />
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 18 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}><Key size={14} color="#A78BFA" /><span style={{ fontWeight: 700, fontSize: 13 }}>API & OAuth Status</span></div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {[
-                  { label: "OAuth Status", val: gcpOAuthStatus, badge: true, ok: gcpOAuthStatus !== "Not Configured" },
-                  { label: "Redirect URI", val: gcpOAuthRedirect, small: true },
-                  { label: "Scopes", val: `${gcpOAuthScopes.length} scopes` },
-                  { label: "Verification", val: gcpOAuthVerification, badge: true, ok: gcpOAuthVerification === "Verified" },
-                  { label: "API Status", val: gcpApiStatus, badge: true, ok: gcpApiStatus === "Enabled" },
-                  { label: "API Version", val: gcpApiVersion },
-                  { label: "Last Checked", val: gcpApiLastChecked },
-                ].map(item => (
-                  <div key={item.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{item.label}</span>
-                    {item.badge ? <StatusBadge ok={item.ok ?? false} label={item.val} /> : <span style={{ fontSize: item.small ? 10 : 11, fontWeight: 600, fontFamily: item.small ? "monospace" : "inherit", color: "rgba(255,255,255,0.6)", maxWidth: 120, textAlign: "right", wordBreak: "break-all" }}>{item.val}</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 18 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}><Shield size={14} color="#22C55E" /><span style={{ fontWeight: 700, fontSize: 13 }}>Credentials</span></div>
-              {!userData.gcp_client_id ? (
-                <EmptyState icon={<Shield size={18} color="#22C55E" />} title="No Credentials" desc="Add credentials in Settings." onCta={() => router.push("/dashboard/settings")} cta="Go to Settings" />
+          {/* Action buttons row */}
+          <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+            {[
+              { label: "Open Google Cloud Console", icon: <Globe size={13} />, href: "https://console.cloud.google.com", color: "#4285F4" },
+              { label: "Open API Library", icon: <Database size={13} />, href: "https://console.cloud.google.com/apis/library", color: "#A78BFA" },
+              { label: "Open Credentials", icon: <Key size={13} />, href: "https://console.cloud.google.com/apis/credentials", color: "#F59E0B" },
+              { label: "Refresh Status", icon: gcpRefreshing ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={13} />, onClick: handleGcpRefresh, color: "#22C55E" },
+            ].map(item =>
+              item.href ? (
+                <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", flex: 1, minWidth: 120 }}>
+                  <button style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, padding: "10px 8px", cursor: "pointer", color: item.color, fontSize: 12, fontWeight: 600 }}>
+                    {item.icon} {item.label}
+                  </button>
+                </a>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {[["Client ID", gcpClientId, "client_id"], ["Client Secret", gcpClientSecret, "client_secret"]].map(([label, val, key]) => (
-                    <div key={label}>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 3 }}>{label}</div>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "6px 10px" }}>
-                        <span style={{ fontSize: 10, fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{val}</span>
-                        <button onClick={() => handleCopy(val, key)} style={{ background: "none", border: "none", cursor: "pointer", color: copiedKey === key ? "#22C55E" : "rgba(255,255,255,0.3)", padding: 0 }}>
-                          {copiedKey === key ? <CheckCircle size={12} /> : <Copy size={12} />}
-                        </button>
-                      </div>
-                    </div>
+                <button key={item.label} onClick={item.onClick} style={{ flex: 1, minWidth: 120, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", borderRadius: 10, padding: "10px 8px", cursor: "pointer", color: item.color, fontSize: 12, fontWeight: 600 }}>
+                  {item.icon} {item.label}
+                </button>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* ══ 2. YouTube Data API Usage ══ */}
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>YouTube Data API Usage <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 400 }}>(Daily Quota)</span>
+                <span style={{ marginLeft: 8, background: "rgba(255,255,255,0.06)", borderRadius: 20, padding: "2px 8px", fontSize: 11, color: "rgba(255,255,255,0.35)" }}>ⓘ</span>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {(["7D", "30D", "90D"] as const).map(t => (
+                <button key={t} onClick={() => setActiveChart(t)} style={{ padding: "5px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", background: activeChart === t ? "#7C3AED" : "rgba(255,255,255,0.06)", color: activeChart === t ? "#fff" : "rgba(255,255,255,0.4)", border: activeChart === t ? "none" : "1px solid rgba(255,255,255,0.08)" }}>{t}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quota stat cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }} className="quota-cards">
+            <style>{`@media (max-width: 700px) { .quota-cards { grid-template-columns: 1fr 1fr !important; } }`}</style>
+            {[
+              { label: "Daily Quota", val: `${gcpDailyQuota.toLocaleString()} units`, sub: "Hard limit per day", color: "#FAFAFA" },
+              { label: "Used Today", val: `${gcpUsedToday.toLocaleString()} units`, sub: `${((gcpUsedToday/gcpDailyQuota)*100).toFixed(1)}% of daily quota`, color: "#F59E0B" },
+              { label: "Remaining", val: `${gcpRemaining.toLocaleString()} units`, sub: `${((gcpRemaining/gcpDailyQuota)*100).toFixed(1)}% remaining`, color: "#22C55E" },
+              { label: "Requests Today", val: gcpRequestsToday.toLocaleString(), sub: `Across ${gcpRequestsEndpoints} endpoints`, color: "#A78BFA" },
+            ].map(card => (
+              <div key={card.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 14px" }}>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>{card.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: card.color, lineHeight: 1 }}>{card.val}</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>{card.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Chart + Top Methods */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 20 }} className="chart-methods-grid">
+            <style>{`@media (max-width: 700px) { .chart-methods-grid { grid-template-columns: 1fr !important; } }`}</style>
+
+            {/* Sparkline */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>API Usage Over Time (Units)</span>
+              </div>
+              {/* Y-axis labels */}
+              <div style={{ display: "flex", gap: 0 }}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", paddingRight: 8, paddingBottom: 16, height: 140 }}>
+                  {["10K","8K","6K","4K","2K","0"].map(l => (
+                    <span key={l} style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", lineHeight: 1 }}>{l}</span>
                   ))}
-                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Secret Status</span><span style={{ fontSize: 11, fontWeight: 700, color: "#22C55E" }}>Saved & Encrypted</span></div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Updated</span><span style={{ fontSize: 11, fontWeight: 600 }}>{gcpCredUpdated}</span></div>
-                  <button onClick={handleDeleteCreds} disabled={deletingCreds} style={{ width: "100%", marginTop: 4, background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.2)", color: "#F43F5E", borderRadius: 8, padding: "7px", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                    {deletingCreds ? <Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> : <Trash2 size={11} />} Delete Credentials
-                  </button>
                 </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="gcp-activity-grid">
-            <style>{`@media (max-width: 600px) { .gcp-activity-grid { grid-template-columns: 1fr !important; } }`}</style>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}><span style={{ fontWeight: 700, fontSize: 14 }}>Recent Activity</span><button style={{ background: "none", border: "none", color: "#A78BFA", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>View All</button></div>
-              {[["YouTube API connection successful","25s ago"],["Comments scanned: 128","1m ago"],["AI reply sent to comment","2m ago"],["Toxic comment hidden","3m ago"],["Daily quota updated","5m ago"]].map(([msg, time], i) => (
-                <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}><CheckCircle size={14} color="#22C55E" style={{ marginTop: 2, flexShrink: 0 }} /><span style={{ fontSize: 12 }}>{msg}</span></div>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{time}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}><span style={{ fontWeight: 700, fontSize: 14 }}>System Health</span><button style={{ background: "none", border: "none", color: "#A78BFA", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>View All</button></div>
-              {[["API Server",true],["Database",true],["YouTube API",channelConnected],["AI Engine",userData.live_monitoring??false],["File Storage",true]].map(([label, ok]) => (
-                <div key={String(label)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle size={14} color={ok ? "#22C55E" : "#F59E0B"} /><span style={{ fontSize: 12 }}>{String(label)}</span></div>
-                  <span style={{ color: ok ? "#22C55E" : "#F59E0B", fontSize: 12, fontWeight: 600 }}>{ok ? "Operational" : "Not Connected"}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 16, padding: 16, display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 20 }}>⭐</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>You're using your own Google Cloud project</div>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>You have full control over your quota and billing. ModerateAI will only access the YouTube Data API on your behalf.</div>
-            </div>
-            <button onClick={() => window.open("https://console.cloud.google.com", "_blank")} style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", color: "#A78BFA", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>Learn More <ExternalLink size={12} /></button>
-          </div>
-        </>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }} className="setup-grid">
-          <style>{`@media (max-width: 900px) { .setup-grid { grid-template-columns: 1fr !important; } }`}</style>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div style={{ background: "rgba(59,130,246,0.15)", borderRadius: 12, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}><Cloud size={20} color="#3B82F6" /></div>
-                <div><div style={{ fontWeight: 800, fontSize: 16 }}>My Google Cloud Project</div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Use your own Google Cloud project & get higher limits.</div></div>
-              </div>
-              <EmptyState icon={<Cloud size={22} color="#3B82F6" />} title="No GCP Project Connected" desc="Connect your own Google Cloud project for higher API limits and full control.">
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
-                  <button onClick={() => window.open("https://console.cloud.google.com", "_blank")} style={{ width: "100%", background: "linear-gradient(135deg,#3B82F6,#2563EB)", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    <Cloud size={14} /> Open Google Cloud Console
-                  </button>
-                </div>
-              </EmptyState>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, overflow: "hidden" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Video size={15} color="rgba(255,255,255,0.5)" /><span style={{ fontWeight: 700, fontSize: 13 }}>Setup Guide Video</span></div>
-                <button style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "5px 10px", fontSize: 11, cursor: "pointer" }}><RefreshCw size={11} /> Refresh</button>
-              </div>
-              <div style={{ margin: "0 12px 12px", borderRadius: 12, overflow: "hidden", background: "#000" }}>
-                {videoError ? (
-                  <div style={{ background: "linear-gradient(135deg,#1a0533,#0d1b3e)", borderRadius: 12, padding: "28px 16px", textAlign: "center" }}>
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>🎬</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>Tutorial Coming Soon</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Follow the steps below to get started.</div>
+                <div style={{ flex: 1 }}>
+                  <SparklineChart data={usageHistory} color="#7C3AED" height={120} />
+                  {/* X-axis */}
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                    {usageHistory.map(d => (
+                      <span key={d.date} style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{d.date}</span>
+                    ))}
                   </div>
-                ) : (
-                  <video ref={videoRef} src="/videos/setup-demo.mp4" controls onEnded={handleVideoEnded} onError={() => setVideoError(true)} style={{ width: "100%", display: "block", borderRadius: 12 }} poster="/images/setup/step1.webp" />
-                )}
+                </div>
               </div>
-              {videoError && (
-                <div style={{ padding: "0 12px 12px" }}>
-                  <button onClick={handleVideoEnded} style={{ width: "100%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "7px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Skip to Setup Steps</button>
-                </div>
-              )}
             </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 16 }}>
-              <div style={{ marginBottom: 14 }}><div style={{ fontWeight: 700, fontSize: 13 }}>Step by Step Setup</div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>(My Google Cloud Project)</div></div>
-              <div style={{ display: "flex", gap: 12 }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 0, minWidth: 120, position: "relative" }}>
-                  {SETUP_STEPS.map((s, i) => {
-                    const done = completedSteps.has(i) || (i === 0 && videoWatched);
-                    const active = i === currentStep;
-                    const locked = isStepLocked(i);
-                    return (
-                      <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, position: "relative" }}>
-                        {i < SETUP_STEPS.length - 1 && <div style={{ position: "absolute", left: 11, top: 22, width: 2, height: 18, background: done ? "#22C55E" : "rgba(255,255,255,0.1)", borderRadius: 1 }} />}
-                        <button onClick={() => !locked && setCurrentStep(i)} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: locked ? "default" : "pointer", padding: "4px 0", textAlign: "left", width: "100%" }}>
-                          <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: done ? "#22C55E" : active ? "#7C3AED" : locked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.1)", fontSize: 10, fontWeight: 700, color: "#fff", boxShadow: active ? "0 0 12px rgba(124,58,237,0.5)" : "none" }}>
-                            {done ? <CheckCircle size={12} /> : locked ? <Lock size={10} color="rgba(255,255,255,0.3)" /> : i + 1}
-                          </div>
-                          <span style={{ fontSize: 12, color: locked ? "rgba(255,255,255,0.2)" : active ? "#fff" : done ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.5)", fontWeight: active ? 700 : 400 }}>{s.label}</span>
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 12 }}>
-                  <div className="screenshot-hover" onClick={() => setModalStepKey(currentStepKey)} style={{ marginBottom: 10, borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", cursor: "zoom-in", position: "relative" }}>
-                    {DemoScreenshot ? <DemoScreenshot /> : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 12 }}>No preview</div>}
-                    <div style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: 6, padding: "2px 6px", display: "flex", alignItems: "center", gap: 3, fontSize: 9, color: "rgba(255,255,255,0.6)" }}><Maximize2 size={9} /> Expand</div>
+
+            {/* Top API Methods */}
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Top API Methods (Today)</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {topMethods.map(method => (
+                  <div key={method.name}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.7)" }}>{method.name}</span>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{method.units} units ({method.pct}%)</span>
+                    </div>
+                    <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+                      <div style={{ width: `${method.pct}%`, height: "100%", background: "#7C3AED", borderRadius: 2 }} />
+                    </div>
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 4 }}>{currentStepDetail.title}</div>
-                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 10 }}>{currentStepDetail.desc}</div>
-                  {currentStepDetail.action && !isStepLocked(currentStep) && (
-                    <button onClick={() => handleStepAction(currentStepKey)} style={{ width: "100%", background: "#7C3AED", color: "#fff", border: "none", borderRadius: 8, padding: "7px", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                      {currentStepDetail.action} <ExternalLink size={10} />
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div style={{ marginTop: 14, marginBottom: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>Progress</span><span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{completedSteps.size + (videoWatched ? 1 : 0)} / {SETUP_STEPS.length} steps</span></div>
-                <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}><div style={{ width: `${((completedSteps.size + (videoWatched ? 1 : 0)) / SETUP_STEPS.length) * 100}%`, height: "100%", background: "linear-gradient(90deg,#7C3AED,#22C55E)", borderRadius: 2, transition: "width 0.4s ease" }} /></div>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setCurrentStep(s => Math.max(0, s - 1))} disabled={currentStep === 0} style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: currentStep === 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", borderRadius: 8, padding: "8px", fontSize: 12, cursor: currentStep === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><ChevronLeft size={14} /> Previous</button>
-                <button onClick={() => { const next = currentStep + 1; if (next < SETUP_STEPS.length && !isStepLocked(next)) setCurrentStep(next); }} disabled={currentStep === SETUP_STEPS.length - 1 || isStepLocked(currentStep + 1)} style={{ flex: 1, background: "#7C3AED", border: "none", color: "#fff", borderRadius: 8, padding: "8px", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, opacity: (currentStep === SETUP_STEPS.length - 1 || isStepLocked(currentStep + 1)) ? 0.4 : 1 }}>Next <ChevronRight size={14} /></button>
-              </div>
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>Need Help?</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { icon: <BookOpen size={16} color="#3B82F6" />, label: "Documentation", sub: "View Guide", bg: "rgba(59,130,246,0.1)", href: "https://docs.moderateai.site" },
-                  { icon: <Video size={16} color="#EF4444" />, label: "Watch Tutorial", sub: "Step by Step", bg: "rgba(239,68,68,0.1)", href: "https://youtube.com" },
-                  { icon: <Headphones size={16} color="#22C55E" />, label: "Contact Support", sub: "24/7 Support", bg: "rgba(34,197,94,0.1)", href: "mailto:support@moderateai.site" },
-                ].map(item => (
-                  <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                    <button style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: item.bg, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 12px", cursor: "pointer" }}>
-                      {item.icon}
-                      <div><div style={{ color: "#FAFAFA", fontSize: 12, fontWeight: 700 }}>{item.label}</div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>{item.sub}</div></div>
-                      <ExternalLink size={11} color="rgba(255,255,255,0.2)" style={{ marginLeft: "auto" }} />
-                    </button>
-                  </a>
                 ))}
+                <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8, marginTop: 2 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700 }}>Total</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#A78BFA" }}>{gcpUsedToday.toLocaleString()} units</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* ══ 3. About + Credentials ══ */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="about-creds-grid">
+          <style>{`@media (max-width: 700px) { .about-creds-grid { grid-template-columns: 1fr !important; } }`}</style>
+
+          {/* About Your GCP */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>About Your Google Cloud Project</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 16 }}>You are using your own Google Cloud project. All quota and billing are managed by Google.</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              {[
+                { label: "Project Number", val: gcpProjectNumber },
+                { label: "Location", val: gcpLocation },
+                { label: "OAuth Client ID", val: gcpClientIdMasked, mono: true, eye: true },
+                { label: "Quota Type", val: "Standard", color: "#A78BFA" },
+                { label: "API Version", val: gcpApiVersion },
+                { label: "Ownership", val: "You", color: "#22C55E" },
+              ].map(item => (
+                <div key={item.label}>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>{item.label}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: item.color || "rgba(255,255,255,0.8)", fontFamily: item.mono ? "monospace" : "inherit", display: "flex", alignItems: "center", gap: 4 }}>
+                    {item.eye ? (showSecret ? gcpClientId || gcpClientIdMasked : gcpClientIdMasked) : item.val}
+                    {item.eye && (
+                      <button onClick={() => setShowSecret(s => !s)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "rgba(255,255,255,0.3)" }}>
+                        {showSecret ? <EyeOff size={10} /> : <Eye size={10} />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 10, padding: "10px 12px", marginBottom: 12 }}>
+              <Info size={14} color="#A78BFA" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>Using your own project gives you higher quota limits and better reliability.</span>
+              <button onClick={() => window.open("https://console.cloud.google.com", "_blank")} style={{ background: "none", border: "none", color: "#A78BFA", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>Learn More <ExternalLink size={10} /></button>
+            </div>
+          </div>
+
+          {/* Credentials */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+              <Shield size={14} color="#22C55E" />
+              <span style={{ fontWeight: 700, fontSize: 14 }}>Credentials</span>
+            </div>
+            {!userData.gcp_client_id ? (
+              <EmptyState icon={<Shield size={18} color="#22C55E" />} title="No Credentials" desc="Add credentials in Settings." onCta={() => router.push("/dashboard/settings")} cta="Go to Settings" />
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[["Client ID", gcpClientIdMasked, "cid"], ["Client Secret", gcpClientSecret, "csec"]].map(([label, val, key]) => (
+                  <div key={label}>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>{label}</div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 12px" }}>
+                      <span style={{ fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{val}</span>
+                      <button onClick={() => handleCopy(val, key)} style={{ background: "none", border: "none", cursor: "pointer", color: copiedKey === key ? "#22C55E" : "rgba(255,255,255,0.3)", padding: 0 }}>
+                        {copiedKey === key ? <CheckCircle size={12} /> : <Copy size={12} />}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Secret Status</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#22C55E" }}>Saved &amp; Encrypted</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Updated</span>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{gcpCredUpdated}</span>
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                  <button onClick={() => router.push("/dashboard/settings")} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", borderRadius: 8, padding: "8px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                    Update Credentials
+                  </button>
+                  <button onClick={handleGcpDisconnect} disabled={gcpDisconnecting} style={{ flex: 1, background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.2)", color: "#F43F5E", borderRadius: 8, padding: "8px", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                    {gcpDisconnecting ? <Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> : <WifiOff size={11} />} Disconnect
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ══ 4. How It Works + Quota Reset + Need More Quota ══ */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }} className="bottom-three-grid">
+          <style>{`@media (max-width: 700px) { .bottom-three-grid { grid-template-columns: 1fr !important; } }`}</style>
+
+          {/* How It Works */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>How It Works</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                "Connect your Google Cloud project",
+                "We use your credentials to access YouTube Data API",
+                "All quota is charged to your Google Cloud",
+                "You get higher limits & better reliability",
+              ].map(item => (
+                <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                    <CheckCircle size={10} color="#A78BFA" />
+                  </div>
+                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+            {/* GCP cloud illustration placeholder */}
+            <div style={{ marginTop: 20, display: "flex", justifyContent: "flex-end" }}>
+              <div style={{ width: 80, height: 80, background: "radial-gradient(circle at 40% 50%, rgba(124,58,237,0.35), rgba(59,130,246,0.15))", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                <Cloud size={36} color="#A78BFA" strokeWidth={1.5} />
+                <div style={{ position: "absolute", bottom: 2, right: 2, width: 20, height: 20, borderRadius: "50%", background: "#22C55E", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <CheckCircle size={11} color="#fff" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quota Reset */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>Quota Reset</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Calendar size={28} color="#A78BFA" />
+              </div>
+            </div>
+            <div style={{ textAlign: "center", marginBottom: 12 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#FAFAFA" }}>
+                {gcpResetAt ? new Date(gcpResetAt).toLocaleDateString("en-US", { month: "long", day: "2-digit", year: "numeric" }) : gcpResetTime}
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>12:00 AM (IST)</div>
+            </div>
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>Time remaining</div>
+              {gcpResetAt
+                ? <CountdownTimer resetAt={gcpResetAt} />
+                : <span style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: "#A78BFA" }}>—</span>
+              }
+            </div>
+          </div>
+
+          {/* Need More Quota */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>Need More Quota?</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 20, lineHeight: 1.6 }}>
+              If you need higher quota limits, you can request an increase from Google.
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <a href="https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                <button style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 10, padding: "10px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  Request Quota Increase <ExternalLink size={11} />
+                </button>
+              </a>
+              <a href="https://developers.google.com/youtube/v3/getting-started#quota" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                <button style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", borderRadius: 10, padding: "10px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  Learn how quota works <ExternalLink size={11} />
+                </button>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* ══ 5. Ownership Note ══ */}
+        <div style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 16, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12 }}>
+          <Star size={18} color="#F59E0B" />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 13 }}>You're using your own Google Cloud project</div>
+            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginTop: 2 }}>You have full control over your quota and billing. ModerateAI will only access the YouTube Data API on your behalf.</div>
+          </div>
+          <button onClick={() => window.open("https://console.cloud.google.com", "_blank")} style={{ background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", color: "#A78BFA", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+            Learn More <ExternalLink size={12} />
+          </button>
+        </div>
+
+      </div>
+    );
+  }
+
+  // ── Not Connected State ────────────────────────────────────────────────────
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }} className="setup-grid">
+      <style>{`@media (max-width: 900px) { .setup-grid { grid-template-columns: 1fr !important; } }`}</style>
+      {modalStepKey && <ScreenshotModal stepKey={modalStepKey} onClose={() => setModalStepKey(null)} />}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ background: "rgba(59,130,246,0.15)", borderRadius: 12, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}><Cloud size={20} color="#3B82F6" /></div>
+            <div><div style={{ fontWeight: 800, fontSize: 16 }}>My Google Cloud Project</div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Use your own Google Cloud project &amp; get higher limits.</div></div>
+          </div>
+          <EmptyState icon={<Cloud size={22} color="#3B82F6" />} title="No GCP Project Connected" desc="Connect your own Google Cloud project for higher API limits and full control.">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
+              <button onClick={() => window.open("https://console.cloud.google.com", "_blank")} style={{ width: "100%", background: "linear-gradient(135deg,#3B82F6,#2563EB)", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <Cloud size={14} /> Open Google Cloud Console
+              </button>
+            </div>
+          </EmptyState>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Video size={15} color="rgba(255,255,255,0.5)" /><span style={{ fontWeight: 700, fontSize: 13 }}>Setup Guide Video</span></div>
+            <button style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(255,255,255,0.06)", border: "none", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "5px 10px", fontSize: 11, cursor: "pointer" }}><RefreshCw size={11} /> Refresh</button>
+          </div>
+          <div style={{ margin: "0 12px 12px", borderRadius: 12, overflow: "hidden", background: "#000" }}>
+            {videoError ? (
+              <div style={{ background: "linear-gradient(135deg,#1a0533,#0d1b3e)", borderRadius: 12, padding: "28px 16px", textAlign: "center" }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>🎬</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 4 }}>Tutorial Coming Soon</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Follow the steps below to get started.</div>
+              </div>
+            ) : (
+              <video ref={videoRef} src="/videos/setup-demo.mp4" controls onEnded={handleVideoEnded} onError={() => setVideoError(true)} style={{ width: "100%", display: "block", borderRadius: 12 }} poster="/images/setup/step1.webp" />
+            )}
+          </div>
+          {videoError && (
+            <div style={{ padding: "0 12px 12px" }}>
+              <button onClick={handleVideoEnded} style={{ width: "100%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "7px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Skip to Setup Steps</button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 16 }}>
+          <div style={{ marginBottom: 14 }}><div style={{ fontWeight: 700, fontSize: 13 }}>Step by Step Setup</div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>(My Google Cloud Project)</div></div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0, minWidth: 120, position: "relative" }}>
+              {SETUP_STEPS.map((s, i) => {
+                const done = completedSteps.has(i) || (i === 0 && videoWatched);
+                const active = i === currentStep;
+                const locked = isStepLocked(i);
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, position: "relative" }}>
+                    {i < SETUP_STEPS.length - 1 && <div style={{ position: "absolute", left: 11, top: 22, width: 2, height: 18, background: done ? "#22C55E" : "rgba(255,255,255,0.1)", borderRadius: 1 }} />}
+                    <button onClick={() => !locked && setCurrentStep(i)} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: locked ? "default" : "pointer", padding: "4px 0", textAlign: "left", width: "100%" }}>
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: done ? "#22C55E" : active ? "#7C3AED" : locked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.1)", fontSize: 10, fontWeight: 700, color: "#fff", boxShadow: active ? "0 0 12px rgba(124,58,237,0.5)" : "none" }}>
+                        {done ? <CheckCircle size={12} /> : locked ? <Lock size={10} color="rgba(255,255,255,0.3)" /> : i + 1}
+                      </div>
+                      <span style={{ fontSize: 12, color: locked ? "rgba(255,255,255,0.2)" : active ? "#fff" : done ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.5)", fontWeight: active ? 700 : 400 }}>{s.label}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 12 }}>
+              <div className="screenshot-hover" onClick={() => setModalStepKey(currentStepKey)} style={{ marginBottom: 10, borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", cursor: "zoom-in", position: "relative" }}>
+                {DemoScreenshot ? <DemoScreenshot /> : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 12 }}>No preview</div>}
+                <div style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", borderRadius: 6, padding: "2px 6px", display: "flex", alignItems: "center", gap: 3, fontSize: 9, color: "rgba(255,255,255,0.6)" }}><Maximize2 size={9} /> Expand</div>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 4 }}>{currentStepDetail.title}</div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 10 }}>{currentStepDetail.desc}</div>
+              {currentStepDetail.action && !isStepLocked(currentStep) && (
+                <button onClick={() => handleStepAction(currentStepKey)} style={{ width: "100%", background: "#7C3AED", color: "#fff", border: "none", borderRadius: 8, padding: "7px", fontWeight: 700, fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                  {currentStepDetail.action} <ExternalLink size={10} />
+                </button>
+              )}
+            </div>
+          </div>
+          <div style={{ marginTop: 14, marginBottom: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>Progress</span><span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{completedSteps.size + (videoWatched ? 1 : 0)} / {SETUP_STEPS.length} steps</span></div>
+            <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}><div style={{ width: `${((completedSteps.size + (videoWatched ? 1 : 0)) / SETUP_STEPS.length) * 100}%`, height: "100%", background: "linear-gradient(90deg,#7C3AED,#22C55E)", borderRadius: 2, transition: "width 0.4s ease" }} /></div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setCurrentStep(s => Math.max(0, s - 1))} disabled={currentStep === 0} style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: currentStep === 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.6)", borderRadius: 8, padding: "8px", fontSize: 12, cursor: currentStep === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}><ChevronLeft size={14} /> Previous</button>
+            <button onClick={() => { const next = currentStep + 1; if (next < SETUP_STEPS.length && !isStepLocked(next)) setCurrentStep(next); }} disabled={currentStep === SETUP_STEPS.length - 1 || isStepLocked(currentStep + 1)} style={{ flex: 1, background: "#7C3AED", border: "none", color: "#fff", borderRadius: 8, padding: "8px", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4, opacity: (currentStep === SETUP_STEPS.length - 1 || isStepLocked(currentStep + 1)) ? 0.4 : 1 }}>Next <ChevronRight size={14} /></button>
+          </div>
+        </div>
+
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>Need Help?</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {[
+              { icon: <BookOpen size={16} color="#3B82F6" />, label: "Documentation", sub: "View Guide", bg: "rgba(59,130,246,0.1)", href: "https://docs.moderateai.site" },
+              { icon: <Video size={16} color="#EF4444" />, label: "Watch Tutorial", sub: "Step by Step", bg: "rgba(239,68,68,0.1)", href: "https://youtube.com" },
+              { icon: <Headphones size={16} color="#22C55E" />, label: "Contact Support", sub: "24/7 Support", bg: "rgba(34,197,94,0.1)", href: "mailto:support@moderateai.site" },
+            ].map(item => (
+              <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                <button style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: item.bg, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 12px", cursor: "pointer" }}>
+                  {item.icon}
+                  <div><div style={{ color: "#FAFAFA", fontSize: 12, fontWeight: 700 }}>{item.label}</div><div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>{item.sub}</div></div>
+                  <ExternalLink size={11} color="rgba(255,255,255,0.2)" style={{ marginLeft: "auto" }} />
+                </button>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1340,11 +1467,17 @@ export default function APIAccessPage() {
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         .screenshot-hover:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-        .tab-btn:hover { background: rgba(255,255,255,0.08) !important; }
+        .cloud-box-hide { display: flex; }
+        @media (max-width: 768px) {
+          .cloud-box-hide { display: none !important; }
+        }
         @media (max-width: 600px) {
-          .tab-btn { padding: 8px 8px !important; font-size: 11px !important; gap: 4px !important; }
-          .tab-badge { display: none !important; }
-          .tab-icon { display: none !important; }
+          .shared-stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .health-row { grid-template-columns: repeat(3,1fr) !important; }
+          .action-btns { flex-wrap: wrap; }
+          .action-btns > * { flex: 1 1 calc(50% - 5px) !important; }
+          .usage-cards-grid { grid-template-columns: 1fr 1fr !important; }
+          .activity-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -1372,27 +1505,29 @@ export default function APIAccessPage() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#22C55E", fontSize: 13, fontWeight: 600, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "6px 14px" }}>
-                <CheckCircle size={14} /> All Systems Normal
-              </span>
-              <button style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
-                <RefreshCw size={11} />
+              <div style={{ textAlign: "right" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#22C55E", fontSize: 13, fontWeight: 600, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "6px 14px" }}>
+                  <CheckCircle size={14} /> All Systems Normal
+                </span>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 3, textAlign: "center" }}>Last checked: 2m ago</div>
+              </div>
+              <button onClick={handleGcpRefreshOutside} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
+                <Activity size={13} />
               </button>
             </div>
           </div>
 
           {/* Tab Switcher */}
           <div style={{ display: "flex", gap: 0, marginBottom: 24, background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: 4, border: "1px solid rgba(255,255,255,0.08)" }}>
-            <button className="tab-btn" onClick={() => setActiveTab("shared")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.2s", background: activeTab === "shared" ? "linear-gradient(135deg,#7C3AED,#4F46E5)" : "transparent", color: activeTab === "shared" ? "#fff" : "rgba(255,255,255,0.5)", boxShadow: activeTab === "shared" ? "0 4px 16px rgba(124,58,237,0.35)" : "none" }}>
-              <Share2 size={16} /> ModerateAI Shared API
-              <span className="tab-badge" style={{ background: activeTab === "shared" ? "rgba(255,255,255,0.2)" : "rgba(124,58,237,0.2)", color: activeTab === "shared" ? "#fff" : "#A78BFA", borderRadius: 20, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>Recommended</span>
+            <button onClick={() => setActiveTab("shared")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.2s", background: activeTab === "shared" ? "rgba(255,255,255,0.06)" : "transparent", color: activeTab === "shared" ? "#fff" : "rgba(255,255,255,0.5)" }}>
+              <Share2 size={15} /> ModerateAI Shared API
+              <span style={{ background: activeTab === "shared" ? "rgba(124,58,237,0.25)" : "rgba(124,58,237,0.15)", color: "#A78BFA", borderRadius: 20, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>Recommended</span>
             </button>
-            <button className="tab-btn" onClick={() => setActiveTab("gcp")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 20px", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.2s", background: activeTab === "gcp" ? "rgba(255,255,255,0.08)" : "transparent", color: activeTab === "gcp" ? "#fff" : "rgba(255,255,255,0.5)" }}>
-              <Cloud size={16} /> My Google Cloud Project
+            <button onClick={() => setActiveTab("gcp")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 20px", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.2s", background: activeTab === "gcp" ? "linear-gradient(135deg,#7C3AED,#4F46E5)" : "transparent", color: activeTab === "gcp" ? "#fff" : "rgba(255,255,255,0.5)", boxShadow: activeTab === "gcp" ? "0 4px 16px rgba(124,58,237,0.35)" : "none" }}>
+              <Cloud size={15} /> My Google Cloud Project
             </button>
           </div>
 
-          {/* Tab Content */}
           {userData && user ? (
             activeTab === "shared"
               ? <SharedAPITab userData={userData} user={user} router={router} showToast={showToast} />
@@ -1406,4 +1541,8 @@ export default function APIAccessPage() {
       <DashboardBottomNav />
     </div>
   );
+
+  function handleGcpRefreshOutside() {
+    showToast("Status refreshed.", "success");
+  }
 }

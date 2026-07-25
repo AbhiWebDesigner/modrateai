@@ -1291,15 +1291,14 @@ export default function LiveFeedPage() {
 
         {/* ── MORE DRAWER ─────────────────────────────────────────────────── */}
         {moreOpen && (
-          <><div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(20,0,40,0.85)', backdropFilter: 'blur(12px)' }} />
+          <><div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.5)' }} />
            <div style={{
             position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60,
-             background: 'linear-gradient(180deg, rgba(30,10,60,0.88) 0%, rgba(15,5,35,0.92) 100%)',
+                background: 'rgba(18,8,40,0.55)',
                 borderTop: '2px solid rgba(124,58,237,0.5)',
                  borderRadius: '24px 24px 0 0',
              padding: '0 0 env(safe-area-inset-bottom,16px)',
              boxShadow: '0 -20px 80px rgba(100,20,220,0.5), 0 -1px 0 rgba(167,139,250,0.3)',
-                     backdropFilter: 'blur(40px)',
                 animation: 'slideUp 0.2s ease',
                 }}>
               {/* Handle */}

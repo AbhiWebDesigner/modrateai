@@ -29,7 +29,10 @@ interface UserData {
   plan: string;
   plan_display_name: string;
   plan_expires_at: { seconds: number } | null;
+  plan_comment_limit: number;
   subscription_status: string;
+  trial_ends_at: { seconds: number } | null;
+  trial_started_at: { seconds: number } | null;
   youtube_connected: boolean;
   youtube_channel_id: string;
   youtube_channel_name: string;
@@ -380,7 +383,7 @@ function EmptyState({ icon, title, desc, cta, onCta, children }: { icon: React.R
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SHARED API TAB  — V2
+// SHARED API TAB
 // ═══════════════════════════════════════════════════════════════════════════════
 function SharedAPITab({ userData, user, router, showToast }: { userData: UserData; user: User; router: ReturnType<typeof useRouter>; showToast: (msg: string, type?: "success" | "error" | "info") => void }) {
   const [activeChart, setActiveChart] = useState<"7D" | "30D" | "90D">("7D");
@@ -388,26 +391,48 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
   const [reconnecting, setReconnecting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const aiUsed = Math.max(0, (userData.comments_limit ?? 250) - (userData.ai_credits ?? 250));
-  const aiLimit = userData.comments_limit ?? 250;
+  // ── REAL-TIME DATA FROM FIREBASE ──────────────────────────────────────────
+  // ai_credits = remaining AI actions (starts at 250 for free trial)
+  const aiCreditsRemaining = userData.ai_credits ?? 250;
+  // Total AI actions limit = 250 for free trial
+  const aiLimit = 250;
+  // Used = total - remaining
+  const aiUsed = Math.max(0, aiLimit - aiCreditsRemaining);
+  // Remaining directly from Firebase
+  const remaining = aiCreditsRemaining;
+  // Usage percentage
+  const pct = aiLimit > 0 ? Math.min((aiUsed / aiLimit) * 100, 100) : 0;
+
+  // Plan info from Firebase
   const planName = userData.plan_display_name || "Free Trial";
-  const planExpiry = userData.plan_expires_at
-    ? new Date(userData.plan_expires_at.seconds * 1000).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
-    : "Jul 31, 2026";
+  const subscriptionStatus = userData.subscription_status || "trial";
+  const isFreeTrialPlan = subscriptionStatus === "trial" || userData.plan === "free";
+
+  // Plan expiry — use trial_ends_at for trial users, else plan_expires_at
+  const expiryTimestamp = userData.trial_ends_at ?? userData.plan_expires_at;
+  const planExpiry = expiryTimestamp
+    ? new Date(expiryTimestamp.seconds * 1000).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })
+    : "—";
+
+  // Days left until trial/plan expiry
+  const trialDaysLeft = expiryTimestamp
+    ? Math.max(0, Math.ceil((expiryTimestamp.seconds * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
+  // Days until reset (same as days left)
+  const daysUntilReset = trialDaysLeft;
+
+  // Connection / health data from Firebase
   const successRate = userData.moderation_accuracy ?? 99.9;
-  const avgResponseSec = userData.avg_response_ms ? (userData.avg_response_ms / 1000).toFixed(1) + "s" : "—";
+  const avgResponseMs = userData.avg_response_ms ?? 0;
+  const avgResponseSec = avgResponseMs > 0 ? (avgResponseMs / 1000).toFixed(1) + "s" : "—";
   const channelConnected = userData.youtube_connected ?? false;
+
+  // Last sync from Firebase
   const lastSync = userData.youtube_stats_refreshed_at
     ? new Date(userData.youtube_stats_refreshed_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-    : "24 Jul 2026";
-
-  const isFreeTrialPlan = planName.toLowerCase().includes("free") || planName.toLowerCase().includes("trial");
-  const trialDaysLeft = userData.plan_expires_at
-    ? Math.max(0, Math.ceil((userData.plan_expires_at.seconds * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 19;
-
-  const pct = aiLimit > 0 ? Math.min((aiUsed / aiLimit) * 100, 100) : 0;
-  const remaining = aiLimit - aiUsed;
+    : "—";
+  // ─────────────────────────────────────────────────────────────────────────
 
   const handleReconnect = async () => {
     setReconnecting(true);
@@ -442,7 +467,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-      {/* ══ V2: Hero Banner Card ══ */}
+      {/* ══ Hero Banner Card ══ */}
       <div style={{
         background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,70,229,0.12) 60%, rgba(15,10,40,0.6) 100%)",
         border: "1.5px solid rgba(124,58,237,0.4)",
@@ -451,12 +476,10 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* BG glow orb */}
         <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", position: "relative" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            {/* Shield icon */}
             <div className="hero-shield" style={{
               width: 60, height: 60, borderRadius: 16,
               background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
@@ -467,10 +490,10 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <span className="hero-title" style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.3px" }}>ModerateAI Shared API</span>                <span style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(124,58,237,0.4)" }}>Recommended</span>
+                <span className="hero-title" style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.3px" }}>ModerateAI Shared API</span>
+                <span style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(124,58,237,0.4)" }}>Recommended</span>
               </div>
               <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 4 }}>We handle everything for you. No setup required.</div>
-              {/* V2 trust badges */}
               <div className="hero-badges" style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 {[
                   { icon: <Shield size={11} />, label: "Secure" },
@@ -479,9 +502,9 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
                   { icon: <Star size={11} />, label: "Optimized" },
                 ].map(b => (
                   <span key={b.label} className="hero-badge" style={{
-                  display: "inline-flex", alignItems: "center", gap: 5,
-                  background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)"
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)"
                   }}>
                     <span style={{ color: "#22C55E" }}>{b.icon}</span> {b.label}
                   </span>
@@ -490,7 +513,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             </div>
           </div>
 
-          {/* Right: 3D cloud illustration area */}
           <div className="cloud-box-hide" style={{
             width: 90, height: 90, flexShrink: 0,
             background: "radial-gradient(circle at 40% 40%, rgba(124,58,237,0.35), rgba(79,70,229,0.15))",
@@ -500,29 +522,29 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             <Cloud size={42} color="#A78BFA" strokeWidth={1.5} />
           </div>
           <style>{`
-   @media (max-width: 768px) { 
-    .cloud-box-hide { display: none !important; }
-    .hero-shield { width: 44px !important; height: 44px !important; }
-    .hero-title { font-size: 16px !important; }
-    .hero-badges { gap: 6px !important; margin-top: 8px !important; }
-    .hero-badge { padding: 3px 8px !important; font-size: 10px !important; }
-   }
-  `}</style>
+            @media (max-width: 768px) {
+              .cloud-box-hide { display: none !important; }
+              .hero-shield { width: 44px !important; height: 44px !important; }
+              .hero-title { font-size: 16px !important; }
+              .hero-badges { gap: 6px !important; margin-top: 8px !important; }
+              .hero-badge { padding: 3px 8px !important; font-size: 10px !important; }
+            }
+          `}</style>
         </div>
       </div>
 
-      {/* ── Existing Main Info Card (kept, trimmed slightly) ── */}
+      {/* ── Main Info Card ── */}
       <div style={{ background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.25)", borderRadius: 20, padding: 20 }}>
 
-        {/* Stats grid */}
+        {/* Stats grid — all real data */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginBottom: 20 }} className="shared-stats-grid">
           <style>{`@media (max-width: 700px) { .shared-stats-grid { grid-template-columns: repeat(2,1fr) !important; } }`}</style>
           {[
             { label: "Current Plan", val: planName, color: "#22C55E", highlight: true },
-            { label: "19 <Days /> AI Actions", val: `${aiLimit.toLocaleString()}`, sub: "/ month" },
+            { label: "AI Actions", val: `${aiLimit.toLocaleString()}`, sub: "/ month" },
             { label: "Used", val: `${aiUsed.toLocaleString()}`, sub: `(${pct.toFixed(0)}%)`, color: pct > 80 ? "#F43F5E" : "#FAFAFA" },
             { label: "Remaining", val: `${remaining.toLocaleString()}`, sub: `(${(100 - pct).toFixed(0)}%)`, color: "#22C55E" },
-            { label: "Reset Date", val: planExpiry, sub: "In 32 days", color: "#A78BFA" },
+            { label: "Reset Date", val: planExpiry, sub: daysUntilReset > 0 ? `In ${daysUntilReset} days` : "Expired", color: "#A78BFA" },
           ].map((s) => (
             <div key={s.label}>
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>{s.label}</div>
@@ -535,15 +557,15 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           ))}
         </div>
 
-        {/* Health row */}
+        {/* Health row — all real data */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10, marginBottom: 20, padding: "14px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 12 }} className="health-row">
           <style>{`@media (max-width: 700px) { .health-row { grid-template-columns: repeat(3,1fr) !important; } }`}</style>
           {[
             { label: "Health", val: "Healthy", color: "#22C55E", dot: true },
-            { label: "Status", val: "Active", color: "#22C55E", dot: true },
+            { label: "Status", val: subscriptionStatus === "trial" ? "Active" : subscriptionStatus, color: "#22C55E", dot: true },
             { label: "Connected Channels", val: channelConnected ? "1 Channel" : "None" },
             { label: "Success Rate", val: successRate > 0 ? `${successRate}%` : "—", color: "#22C55E" },
-            { label: "Avg. Latency", val: avgResponseSec, color: avgResponseSec !== "—" ? "#22C55E" : "#FAFAFA" },
+            { label: "Avg. Latency", val: avgResponseSec },
             { label: "Last Sync", val: lastSync, refresh: true },
           ].map((item) => (
             <div key={item.label}>
@@ -570,7 +592,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
-      {/* ══ V2: Free Trial Banner ══ */}
+      {/* ══ Free Trial Banner — real data ══ */}
       {isFreeTrialPlan && (
         <div style={{
           background: "rgba(124,58,237,0.08)",
@@ -582,7 +604,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           gap: 16,
           flexWrap: "wrap"
         }}>
-          {/* Gift icon */}
           <div style={{
             width: 48, height: 48, borderRadius: 14, flexShrink: 0,
             background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.35)",
@@ -591,7 +612,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             <Gift size={22} color="#A78BFA" />
           </div>
 
-          {/* Text */}
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontWeight: 800, fontSize: 15 }}>You're on Free Trial! 🎉</div>
             <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>
@@ -599,16 +619,17 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             </div>
           </div>
 
-          {/* AI Actions counter */}
+          {/* AI Actions counter — real data */}
           <div style={{ textAlign: "center", minWidth: 100 }}>
             <div style={{ fontSize: 22, fontWeight: 900, color: "#A78BFA" }}>{remaining} <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>/ {aiLimit}</span></div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>AI Actions Left</div>
             <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, marginTop: 6 }}>
               <div style={{ width: `${(remaining / aiLimit) * 100}%`, height: "100%", background: "linear-gradient(90deg,#7C3AED,#A78BFA)", borderRadius: 3, transition: "width 0.6s ease" }} />
             </div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>© {planExpiry}</div>
           </div>
 
-          {/* Trial ends in */}
+          {/* Trial days left — real data */}
           <div style={{ textAlign: "center", minWidth: 100, borderLeft: "1px solid rgba(255,255,255,0.08)", paddingLeft: 16 }}>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>Trial ends in</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{trialDaysLeft}</div>
@@ -620,7 +641,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       )}
 
-      {/* ══ V2: Usage Stat Cards (4 cards) ══ */}
+      {/* ══ Usage Stat Cards — real data ══ */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }} className="usage-cards-grid">
         <style>{`@media (max-width: 700px) { .usage-cards-grid { grid-template-columns: 1fr 1fr !important; } }`}</style>
 
@@ -645,17 +666,17 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           <div style={{ fontSize: 11, color: "#A78BFA", marginTop: 5, fontWeight: 600 }}>{(100 - pct).toFixed(0)}% Remaining</div>
         </div>
 
-        {/* Resets In */}
+        {/* Resets In — real data */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Resets In</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>32</div>
+          <div style={{ fontSize: 28, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{daysUntilReset}</div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Days</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 10, display: "flex", alignItems: "center", gap: 4 }}>
             <Clock size={10} /> {planExpiry}
           </div>
         </div>
 
-        {/* Current Plan */}
+        {/* Current Plan — real data */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Current Plan</div>
           <div style={{ fontSize: 16, fontWeight: 800, color: "#22C55E" }}>{planName}</div>
@@ -668,7 +689,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
-      {/* ══ V2: AI Actions Usage Over Time (chart) ══ */}
+      {/* ══ AI Actions Usage Chart ══ */}
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
           <div style={{ fontWeight: 700, fontSize: 15 }}>
@@ -683,21 +704,19 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
 
         <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-          {/* Chart */}
           <div style={{ flex: 1, minWidth: 200 }}>
             <MiniChart used={aiUsed} limit={aiLimit} color="#7C3AED" label="AI Actions" />
           </div>
-          {/* Right stats */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 130 }}>
             <div>
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Daily Average</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA" }}>0</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA" }}>{aiUsed > 0 ? Math.round(aiUsed / Math.max(1, 30 - daysUntilReset)) : 0}</div>
               <div style={{ fontSize: 11, color: "#A78BFA", fontWeight: 600 }}>AI Actions</div>
             </div>
             <div>
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Peak Usage</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA" }}>0</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>May 21, 2025</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA" }}>{aiUsed}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Total so far</div>
             </div>
             <div>
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Today's Usage</div>
@@ -708,7 +727,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
-      {/* ══ V2: Shared API Status (horizontal row) ══ */}
+      {/* ══ Shared API Status ══ */}
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Shared API Status</div>
         <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 16 }}>Real-time status of our shared infrastructure</div>
@@ -730,7 +749,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
-      {/* ── Recent Activity + Shared API Status (old side-by-side) ── */}
+      {/* ── Recent Activity + Why Use ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="activity-grid">
         <style>{`@media (max-width: 600px) { .activity-grid { grid-template-columns: 1fr !important; } }`}</style>
 
@@ -756,7 +775,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           ))}
         </div>
 
-        {/* ══ V2: Why Use ModerateAI Shared API ══ */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Why Use ModerateAI Shared API?</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -778,7 +796,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
-      {/* ══ V2: Trial Extension Offer ══ */}
+      {/* ══ Trial Extension Offer ══ */}
       {isFreeTrialPlan && (
         <div style={{
           background: "rgba(124,58,237,0.08)",
@@ -792,7 +810,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            {/* Offer details */}
             <div style={{ flex: 1, display: "flex", gap: 20, flexWrap: "wrap" }}>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>30 Days</div>
@@ -804,7 +821,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
               </div>
             </div>
 
-            {/* Price badge */}
             <div style={{
               background: "rgba(255,255,255,0.08)",
               border: "1px solid rgba(255,255,255,0.15)",
@@ -869,7 +885,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GCP TAB  (unchanged from original)
+// GCP TAB (unchanged)
 // ═══════════════════════════════════════════════════════════════════════════════
 function GCPTab({ userData, user, router, showToast }: { userData: UserData; user: User; router: ReturnType<typeof useRouter>; showToast: (msg: string, type?: "success" | "error" | "info") => void }) {
   const [activeChart, setActiveChart] = useState<"7D" | "30D" | "90D">("7D");
@@ -1322,7 +1338,6 @@ export default function APIAccessPage() {
         </div>
       )}
 
-      {/* main — no paddingBottom on desktop, 80px on mobile for bottom nav */}
       <main className="main-content" style={{ flex: 1, overflowX: "hidden", paddingBottom: 80 }}>
         <style>{`@media (pointer: fine) { .main-content { margin-left: 240px !important; padding-bottom: 24px !important; } }`}</style>
 

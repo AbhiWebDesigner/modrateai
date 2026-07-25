@@ -733,7 +733,7 @@ export default function LiveFeedPage() {
 
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(24px);
           border-bottom:1px solid rgba(255,255,255,0.05);padding:0 22px;height:56px;
-          display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,0.25);}
+          display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,0.25);overflow:visible;}
         .r-search{flex:1;max-width:380px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:8px;padding:0 10px 0 32px;height:33px;color:#FAFAFA;font-size:12px;outline:none;transition:all 0.2s;}
         .r-search:focus{border-color:rgba(124,58,237,0.3);background:rgba(255,255,255,0.05);}
@@ -923,10 +923,10 @@ export default function LiveFeedPage() {
             <div style={{ flex: '1 1 0' }} />
 
             {/* Icon buttons */}
-            <button className="r-icon-btn">
+            <button className="r-icon-btn" style={{ flexShrink: 0 }}>
               <Bell size={12} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
             </button>
-            <button className="r-icon-btn">
+            <button className="r-icon-btn" style={{ flexShrink: 0 }}>
               <Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} />
             </button>
 
@@ -1266,26 +1266,26 @@ export default function LiveFeedPage() {
         {/* ── BOTTOM NAV ──────────────────────────────────────────────────── */}
         <nav className="r-bottom-nav">
           <Link href="/dashboard" className="r-bnav-item">
-            <span className="r-bnav-icon"><LayoutDashboard size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9 }}>Overview</span>
+            <span className="r-bnav-icon"><LayoutDashboard size={24} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 11 }}>Overview</span>
           </Link>
           <Link href="/live-feed" className={`r-bnav-item${currentPath === '/live-feed' ? ' active' : ''}`}>
-            <span className="r-bnav-icon"><Rss size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9 }}>Live Feed</span>
+            <span className="r-bnav-icon"><Rss size={24} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 11 }}>Live Feed</span>
           </Link>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
             <button className="r-bnav-fab" onClick={() => router.push('/automation')}>
-              <Plus size={22} color="white" strokeWidth={2.5} />
+              <Plus size={24} color="white" strokeWidth={2.5} />
             </button>
-            <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
+            <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
           </div>
           <Link href="/alerts" className="r-bnav-item">
-            <span className="r-bnav-icon"><Bell size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9 }}>Alerts</span>
+            <span className="r-bnav-icon"><Bell size={24} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 11 }}>Alerts</span>
           </Link>
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
-            <span className="r-bnav-icon"><MoreHorizontal size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9 }}>More</span>
+            <span className="r-bnav-icon"><MoreHorizontal size={24} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 11 }}>More</span>
           </button>
         </nav>
 
@@ -1302,18 +1302,18 @@ export default function LiveFeedPage() {
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 13 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <item.icon size={14} color={item.color} strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 14px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 16 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <item.icon size={18} color={item.color} strokeWidth={1.8} />
                   </div>
                   {item.label}
                 </Link>
               ))}
               <div style={{ margin: '6px 12px 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 6 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 13, width: '100%' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LogOut size={14} color="#f87171" strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 16, width: '100%' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LogOut size={18} color="#f87171" strokeWidth={1.8} />
                   </div>
                   Logout
                 </button>

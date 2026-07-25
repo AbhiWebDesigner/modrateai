@@ -1294,9 +1294,9 @@ export default function LiveFeedPage() {
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }} />
             <div style={{
-              position: 'fixed', bottom: 68, left: 0, right: 0, zIndex: 60,
-              background: 'linear-gradient(160deg,#12082a 0%,#0e0520 40%,#0a0a1a 100%)',
-              borderTop: '1px solid rgba(124,58,237,0.25)',
+              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60,
+              background: 'rgba(13,8,28,0.98)',
+              borderTop: '1px solid rgba(124,58,237,0.3)',
               borderRadius: '24px 24px 0 0',
               padding: '0 0 16px',
               boxShadow: '0 -12px 60px rgba(80,0,180,0.35), 0 -2px 0 rgba(124,58,237,0.15)',

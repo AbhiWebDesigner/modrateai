@@ -729,11 +729,11 @@ export default function LiveFeedPage() {
         .r-btn-upgrade{width:100%;background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;font-weight:700;font-size:11.5px;
           padding:8px;border-radius:8px;border:none;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;display:block;}
 
-        .r-main{margin-left:216px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;width:calc(100% - 216px);}
+        .r-main{margin-left:216px;min-height:100vh;display:flex;flex-direction:column;position:relative;z-index:1;width:calc(100% - 216px);overflow:visible;}
 
         .r-topbar{position:sticky;top:0;z-index:30;background:rgba(10,10,15,0.92);backdrop-filter:blur(24px);
-          border-bottom:1px solid rgba(255,255,255,0.05);padding:0 22px;height:56px;
-          display:flex;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(0,0,0,0.25);overflow:visible;}
+          border-bottom:1px solid rgba(255,255,255,0.05);padding:0 22px 0 16px;height:56px;
+          display:flex;align-items:center;gap:8px;box-shadow:0 4px 24px rgba(0,0,0,0.25);overflow:visible;}
         .r-search{flex:1;max-width:380px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
           border-radius:8px;padding:0 10px 0 32px;height:33px;color:#FAFAFA;font-size:12px;outline:none;transition:all 0.2s;}
         .r-search:focus{border-color:rgba(124,58,237,0.3);background:rgba(255,255,255,0.05);}

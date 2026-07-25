@@ -1341,6 +1341,11 @@ export default function APIAccessPage() {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         .screenshot-hover:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
         .tab-btn:hover { background: rgba(255,255,255,0.08) !important; }
+        @media (max-width: 600px) {
+          .tab-btn { padding: 8px 8px !important; font-size: 11px !important; gap: 4px !important; }
+          .tab-badge { display: none !important; }
+          .tab-icon { display: none !important; }
+        }
       `}</style>
 
       {toastMsg && (
@@ -1378,9 +1383,9 @@ export default function APIAccessPage() {
 
           {/* Tab Switcher */}
           <div style={{ display: "flex", gap: 0, marginBottom: 24, background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: 4, border: "1px solid rgba(255,255,255,0.08)" }}>
-            <button className="tab-btn" onClick={() => setActiveTab("shared")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 20px", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.2s", background: activeTab === "shared" ? "linear-gradient(135deg,#7C3AED,#4F46E5)" : "transparent", color: activeTab === "shared" ? "#fff" : "rgba(255,255,255,0.5)", boxShadow: activeTab === "shared" ? "0 4px 16px rgba(124,58,237,0.35)" : "none" }}>
+            <button className="tab-btn" onClick={() => setActiveTab("shared")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 12px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.2s", background: activeTab === "shared" ? "linear-gradient(135deg,#7C3AED,#4F46E5)" : "transparent", color: activeTab === "shared" ? "#fff" : "rgba(255,255,255,0.5)", boxShadow: activeTab === "shared" ? "0 4px 16px rgba(124,58,237,0.35)" : "none" }}>
               <Share2 size={16} /> ModerateAI Shared API
-              <span style={{ background: activeTab === "shared" ? "rgba(255,255,255,0.2)" : "rgba(124,58,237,0.2)", color: activeTab === "shared" ? "#fff" : "#A78BFA", borderRadius: 20, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>Recommended</span>
+              <span className="tab-badge" style={{ background: activeTab === "shared" ? "rgba(255,255,255,0.2)" : "rgba(124,58,237,0.2)", color: activeTab === "shared" ? "#fff" : "#A78BFA", borderRadius: 20, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>Recommended</span>
             </button>
             <button className="tab-btn" onClick={() => setActiveTab("gcp")} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 20px", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", border: "none", transition: "all 0.2s", background: activeTab === "gcp" ? "rgba(255,255,255,0.08)" : "transparent", color: activeTab === "gcp" ? "#fff" : "rgba(255,255,255,0.5)" }}>
               <Cloud size={16} /> My Google Cloud Project

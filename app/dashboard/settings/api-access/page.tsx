@@ -544,7 +544,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
             { label: "AI Actions", val: `${aiLimit.toLocaleString()}`, sub: "/ month" },
             { label: "Used", val: `${aiUsed.toLocaleString()}`, sub: `(${pct.toFixed(0)}%)`, color: pct > 80 ? "#F43F5E" : "#FAFAFA" },
             { label: "Remaining", val: `${remaining.toLocaleString()}`, sub: `(${(100 - pct).toFixed(0)}%)`, color: "#22C55E" },
-            { label: "Reset Date", val: planExpiry, sub: daysUntilReset > 0 ? `In ${daysUntilReset} days` : "Expired", color: "#A78BFA" },
+            { label: isFreeTrialPlan ? "Trial Ends" : "Reset Date", val: planExpiry, sub: daysUntilReset > 0 ? `In ${trialDaysLeft} days` : "Expired", color: "#A78BFA" },
           ].map((s) => (
             <div key={s.label}>
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>{s.label}</div>

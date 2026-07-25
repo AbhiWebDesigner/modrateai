@@ -1291,74 +1291,49 @@ export default function LiveFeedPage() {
 
         {/* ── MORE DRAWER ─────────────────────────────────────────────────── */}
         {moreOpen && (
-          <><div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.5)' }} />
+          <><div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'transparent' }} />
            <div style={{
             position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60,
-                background: 'rgba(18,8,40,0.55)',
-                borderTop: '2px solid rgba(124,58,237,0.5)',
-                 borderRadius: '24px 24px 0 0',
-             padding: '0 0 env(safe-area-inset-bottom,16px)',
-             boxShadow: '0 -20px 80px rgba(100,20,220,0.5), 0 -1px 0 rgba(167,139,250,0.3)',
-                animation: 'slideUp 0.2s ease',
-                }}>
+            background: 'rgba(8,5,20,0.3)',
+            borderTop: '1px solid rgba(124,58,237,0.25)',
+            borderRadius: '20px 20px 0 0',
+            padding: '0 0 env(safe-area-inset-bottom,16px)',
+            boxShadow: '0 -12px 60px rgba(124,58,237,0.2), 0 -8px 40px rgba(0,0,0,0.7)',
+            animation: 'slideUp 0.22s ease',
+          }}>
               {/* Handle */}
               <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '12px auto 8px' }} />
 
-              {/* Header */}
-              <div style={{ padding: '8px 20px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Menu</span>
+              {/* User Profile */}
+              <div style={{ padding: '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <UserAvatar src={userPhoto} initials={initials} size={38} />
+                  <div>
+                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14 }}>{firstName}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>{user?.email}</div>
+                  </div>
+                </div>
               </div>
 
               {/* Menu Items */}
               {[
-                { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B', glow: 'rgba(245,158,11,0.15)'   },
-                { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399', glow: 'rgba(52,211,153,0.15)'   },
-                { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa', glow: 'rgba(96,165,250,0.15)'   },
-                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa', glow: 'rgba(167,139,250,0.15)'  },
-                { icon: Bell,       label: 'Alerts',     href: '/alerts',     color: '#f472b6', glow: 'rgba(244,114,182,0.15)'  },
+                { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
+                { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
+                { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
+                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 14,
-                    padding: '13px 20px',
-                    textDecoration: 'none',
-                    color: '#FAFAFA',
-                    fontWeight: 600, fontSize: 15,
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                    transition: 'background 0.15s',
-                  }}>
-                  <div style={{
-                    width: 42, height: 42, borderRadius: 13, flexShrink: 0,
-                    background: item.glow,
-                    border: `1px solid ${item.color}30`,
-                    boxShadow: `0 0 14px ${item.glow}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <item.icon size={19} color={item.color} strokeWidth={1.8} />
-                  </div>
-                  <span style={{ flex: 1 }}>{item.label}</span>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', color: '#ffffff', fontWeight: 500, fontSize: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <item.icon size={20} color={item.color} strokeWidth={1.8} />
+                  {item.label}
                 </Link>
               ))}
 
               {/* Logout */}
-              <div style={{ padding: '8px 20px 0' }}>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 14,
-                    width: '100%', padding: '13px 0',
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: '#f87171', fontWeight: 700, fontSize: 15,
-                  }}>
-                  <div style={{
-                    width: 42, height: 42, borderRadius: 13, flexShrink: 0,
-                    background: 'rgba(248,113,113,0.12)',
-                    border: '1px solid rgba(248,113,113,0.25)',
-                    boxShadow: '0 0 14px rgba(248,113,113,0.12)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <LogOut size={19} color="#f87171" strokeWidth={1.8} />
-                  </div>
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 500, fontSize: 15, width: '100%' }}>
+                  <LogOut size={20} color="#f87171" strokeWidth={1.8} />
                   Logout
                 </button>
               </div>

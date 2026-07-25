@@ -1370,7 +1370,6 @@ export default function APIAccessPage() {
               <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#22C55E", fontSize: 13, fontWeight: 600, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "6px 14px" }}>
                 <CheckCircle size={14} /> All Systems Normal
               </span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Last checked: 2m ago</span>
               <button style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
                 <RefreshCw size={11} />
               </button>

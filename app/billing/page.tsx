@@ -24,7 +24,7 @@ const PLANS = [
     price: "₹0",
     period: "/month",
     badge: null as string | null,
-    trialNote: "✦ 19-day free trial",
+    trialNote: "✦ 19-day free trial · Extend for ₹69",
     color: "rgba(255,255,255,0.06)",
     borderColor: "rgba(255,255,255,0.09)",
     btnStyle: { background: "rgba(255,255,255,0.08)", color: "#FAFAFA" } as React.CSSProperties,
@@ -42,6 +42,7 @@ const PLANS = [
       "Basic analytics dashboard",
       "10+ languages",
       "Email support",
+      "Extend trial: ₹69 for 30 more days",
     ],
   },
   {

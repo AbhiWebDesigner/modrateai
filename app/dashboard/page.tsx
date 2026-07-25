@@ -730,12 +730,12 @@ export default function Dashboard() {
 
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
-          backdrop-filter:blur(24px);padding:6px 4px env(safe-area-inset-bottom,6px);}
+          backdrop-filter:blur(24px);padding:10px 4px env(safe-area-inset-bottom,10px);}
         .r-bnav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;
           flex:1;padding:5px 4px;text-decoration:none;color:rgba(255,255,255,0.32);
           border:none;background:none;cursor:pointer;transition:color 0.18s;-webkit-tap-highlight-color:transparent;}
         .r-bnav-item.active{color:#a78bfa;}
-        .r-bnav-icon{width:38px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:9px;transition:background 0.18s;}
+        .r-bnav-icon{width:44px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:9px;transition:background 0.18s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(124,58,237,0.13);}
         .r-bnav-fab{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6D28D9);
           display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
@@ -751,6 +751,12 @@ export default function Dashboard() {
         .r-bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 
         .r-pending-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
+
+        @media(min-width:768px) and (max-width:1023px){
+          .r-bnav-icon{width:44px!important;height:34px!important;}
+          .r-bnav-item span:last-child{font-size:11px!important;}
+          .r-bottom-nav{padding:10px 4px env(safe-area-inset-bottom,10px)!important;}
+        }
 
         @media(min-width:1024px){
           .r-bottom-nav{display:none!important;}
@@ -1375,26 +1381,26 @@ export default function Dashboard() {
         {/* BOTTOM NAV */}
         <nav className="r-bottom-nav">
           <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
-            <span className="r-bnav-icon"><LayoutDashboard size={19} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
+            <span className="r-bnav-icon"><LayoutDashboard size={24} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>
+            <span style={{ fontSize: 11, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
           </Link>
           <Link href="/live-feed" className="r-bnav-item">
-            <span className="r-bnav-icon"><Rss size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: 500 }}>Live Feed</span>
+            <span className="r-bnav-icon"><Rss size={24} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 11, fontWeight: 500 }}>Live Feed</span>
           </Link>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
             <button className="r-bnav-fab" onClick={() => router.push('/automation')}>
-              <Plus size={22} color="white" strokeWidth={2.5} />
+              <Plus size={24} color="white" strokeWidth={2.5} />
             </button>
-            <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
+            <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
           </div>
           <Link href="/alerts" className="r-bnav-item">
-            <span className="r-bnav-icon"><Bell size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9, fontWeight: 500 }}>Alerts</span>
+            <span className="r-bnav-icon"><Bell size={24} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 11, fontWeight: 500 }}>Alerts</span>
           </Link>
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
-            <span className="r-bnav-icon"><MoreHorizontal size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9 }}>More</span>
+            <span className="r-bnav-icon"><MoreHorizontal size={24} strokeWidth={1.7} /></span>
+            <span style={{ fontSize: 11 }}>More</span>
           </button>
         </nav>
 

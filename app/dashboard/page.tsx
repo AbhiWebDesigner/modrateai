@@ -1407,28 +1407,28 @@ export default function Dashboard() {
         {/* MORE DRAWER */}
         {moreOpen && (
           <>
-            <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />
-            <div style={{ position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60, background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '6px 6px 10px', boxShadow: '0 -8px 40px rgba(0,0,0,0.65)', backdropFilter: 'blur(28px)', animation: 'slideUp 0.18s ease' }}>
-              <div style={{ width: 30, height: 3, background: 'rgba(255,255,255,0.09)', borderRadius: 3, margin: '6px auto 12px' }} />
+            <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }} />
+            <div style={{ position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60, background: 'linear-gradient(180deg,rgba(18,14,40,0.99) 0%,rgba(12,10,28,0.99) 100%)', border: '1px solid rgba(124,58,237,0.18)', borderRadius: 22, padding: '6px 10px 14px', boxShadow: '0 -8px 40px rgba(0,0,0,0.7), 0 0 60px rgba(124,58,237,0.08)', backdropFilter: 'blur(32px)', animation: 'slideUp 0.18s ease' }}>
+              <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '8px auto 14px' }} />
               {[
-                { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
-                { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Hash,       label: 'Moderation', href: '/moderation', color: '#60a5fa' },
-                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
+                { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B', bg: 'rgba(245,158,11,0.15)',   border: 'rgba(245,158,11,0.25)'   },
+                { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399', bg: 'rgba(52,211,153,0.15)',   border: 'rgba(52,211,153,0.25)'   },
+                { icon: Hash,       label: 'Moderation', href: '/moderation', color: '#60a5fa', bg: 'rgba(96,165,250,0.15)',   border: 'rgba(96,165,250,0.25)'   },
+                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa', bg: 'rgba(167,139,250,0.15)',  border: 'rgba(167,139,250,0.25)'  },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 14px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 16 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 11, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <item.icon size={18} color={item.color} strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 10px', borderRadius: 13, textDecoration: 'none', color: '#FAFAFA', fontWeight: 700, fontSize: 16, marginBottom: 2, transition: 'background 0.15s' }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 13, background: item.bg, border: `1.5px solid ${item.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 12px ${item.color}22` }}>
+                    <item.icon size={20} color={item.color} strokeWidth={2} />
                   </div>
                   {item.label}
                 </Link>
               ))}
-              <div style={{ margin: '6px 12px 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 6 }}>
+              <div style={{ margin: '6px 4px 0', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 16, width: '100%' }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 11, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LogOut size={18} color="#f87171" strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 10px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 700, fontSize: 16, width: '100%', borderRadius: 13 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 13, background: 'rgba(248,113,113,0.15)', border: '1.5px solid rgba(248,113,113,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 12px rgba(248,113,113,0.15)' }}>
+                    <LogOut size={20} color="#f87171" strokeWidth={2} />
                   </div>
                   Logout
                 </button>

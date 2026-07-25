@@ -14,7 +14,7 @@ import {
   CheckSquare, XCircle, Info, Copy, Trash2, Link2, Share2,
   Gift, Star, ArrowRight, Server, Cpu, Globe, Eye, EyeOff,
   Calendar, Timer, TrendingDown, List, Save, ChevronDown,
-  FileText, MessageCircle, Youtube
+  FileText, MessageCircle, Video as YoutubeIcon
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1399,7 +1399,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Need Help?</div>
             {[
               { icon: <FileText size={14} color="#3B82F6" />, label: "Documentation", href: "https://docs.moderateai.site" },
-              { icon: <Youtube size={14} color="#EF4444" />, label: "Watch Tutorial", href: "https://youtube.com" },
+              { icon: <YoutubeIcon size={13} color="#EF4444" />, label: "YouTube Data API Docs", href: "https://developers.google.com/youtube/v3" },
               { icon: <MessageCircle size={14} color="#22C55E" />, label: "Chat with Support", href: "mailto:support@moderateai.site" },
               { icon: <Globe size={14} color="#A78BFA" />, label: "Join Discord", href: "https://discord.gg/moderateai" },
             ].map(item => (
@@ -1621,7 +1621,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             {[
               { icon: <Cloud size={13} color="#4285F4" />, label: "Google Cloud Console", href: "https://console.cloud.google.com" },
               { icon: <FileText size={13} color="#A78BFA" />, label: "Google Cloud Docs", href: "https://cloud.google.com/docs" },
-              { icon: <Youtube size={13} color="#EF4444" />, label: "YouTube Data API Docs", href: "https://developers.google.com/youtube/v3" },
+              { icon: <YoutubeIcon size={13} color="#EF4444" />, label: "YouTube Data API Docs", href: "https://developers.google.com/youtube/v3" },
             ].map(item => (
               <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" }}>
@@ -1825,7 +1825,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             </a>
             <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
               <button style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", color: "#EF4444", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                <Youtube size={13} /> Watch Demo Video
+                <YoutubeIcon size={13} />
               </button>
             </a>
           </div>

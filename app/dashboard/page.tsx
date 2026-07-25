@@ -1417,18 +1417,18 @@ export default function Dashboard() {
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 13 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <item.icon size={14} color={item.color} strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 14px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 16 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <item.icon size={18} color={item.color} strokeWidth={1.8} />
                   </div>
                   {item.label}
                 </Link>
               ))}
               <div style={{ margin: '6px 12px 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 6 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 13, width: '100%' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LogOut size={14} color="#f87171" strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 16, width: '100%' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 11, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LogOut size={18} color="#f87171" strokeWidth={1.8} />
                   </div>
                   Logout
                 </button>

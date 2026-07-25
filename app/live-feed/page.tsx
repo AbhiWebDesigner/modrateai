@@ -694,7 +694,7 @@ export default function LiveFeedPage() {
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:3px}
 
-        .r-bg{min-height:100vh;background:#0a0a0f;position:relative;width:100%;overflow-x:hidden;}
+        .r-bg{min-height:100vh;background:#0d0520;position:relative;width:100%;overflow-x:hidden;}
         .r-bg::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
           background:radial-gradient(ellipse 55% 45% at -5% -5%,rgba(124,58,237,0.09) 0%,transparent 55%),
             radial-gradient(ellipse 45% 35% at 108% 108%,rgba(245,158,11,0.06) 0%,transparent 55%);}

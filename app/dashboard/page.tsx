@@ -1407,9 +1407,21 @@ export default function Dashboard() {
         {/* MORE DRAWER */}
         {moreOpen && (
           <>
-            <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)' }} />
-            <div style={{ position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60, background: 'linear-gradient(180deg,rgba(18,14,40,0.99) 0%,rgba(12,10,28,0.99) 100%)', border: '1px solid rgba(124,58,237,0.18)', borderRadius: 22, padding: '6px 10px 14px', boxShadow: '0 -8px 40px rgba(0,0,0,0.7), 0 0 60px rgba(124,58,237,0.08)', backdropFilter: 'blur(32px)', animation: 'slideUp 0.18s ease' }}>
+            <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.5)' }} />
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60, background: 'rgba(13,11,26,0.98)', borderTop: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px 20px 0 0', padding: '0 0 env(safe-area-inset-bottom,16px)', boxShadow: '0 -8px 40px rgba(0,0,0,0.8)', backdropFilter: 'blur(40px)', animation: 'slideUp 0.22s ease' }}>
               <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '8px auto 14px' }} />
+              <div style={{ padding: '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {userPhoto
+                    ? <img src={userPhoto} style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
+                    : <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 13 }}>{initials}</div>
+                  }
+                  <div>
+                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14 }}>{firstName}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>{user?.email}</div>
+                  </div>
+                </div>
+              </div>
               {[
                 { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B', bg: 'rgba(245,158,11,0.15)',   border: 'rgba(245,158,11,0.25)'   },
                 { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399', bg: 'rgba(52,211,153,0.15)',   border: 'rgba(52,211,153,0.25)'   },
@@ -1417,20 +1429,22 @@ export default function Dashboard() {
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa', bg: 'rgba(167,139,250,0.15)',  border: 'rgba(167,139,250,0.25)'  },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 10px', borderRadius: 13, textDecoration: 'none', color: '#FAFAFA', fontWeight: 700, fontSize: 16, marginBottom: 2, transition: 'background 0.15s' }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 13, background: item.bg, border: `1.5px solid ${item.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 2px 12px ${item.color}22` }}>
-                    <item.icon size={20} color={item.color} strokeWidth={2} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 0, textDecoration: 'none', color: '#FAFAFA', fontWeight: 600, fontSize: 15, borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: item.bg, border: `1px solid ${item.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <item.icon size={18} color={item.color} strokeWidth={2} />
                   </div>
                   {item.label}
+                  <ChevronRight size={16} color="rgba(255,255,255,0.2)" style={{ marginLeft: 'auto' }} />
                 </Link>
               ))}
               <div style={{ margin: '6px 4px 0', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 10px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 700, fontSize: 16, width: '100%', borderRadius: 13 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 13, background: 'rgba(248,113,113,0.15)', border: '1.5px solid rgba(248,113,113,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 12px rgba(248,113,113,0.15)' }}>
-                    <LogOut size={20} color="#f87171" strokeWidth={2} />
+                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 15, width: '100%', borderRadius: 0 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <LogOut size={18} color="#f87171" strokeWidth={2} />
                   </div>
                   Logout
+                  <ChevronRight size={16} color="rgba(248,113,113,0.3)" style={{ marginLeft: 'auto' }} />
                 </button>
               </div>
             </div>

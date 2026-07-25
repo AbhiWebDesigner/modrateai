@@ -629,7 +629,7 @@ export default function LiveFeedPage() {
 
   const firstName = user?.displayName?.split(' ')[0] || 'there';
   const initials  = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const userPhoto = user?.photoURL || (userData?.photo as string) || null;
+  const userPhoto = user?.photoURL ?? (userData?.photo as string) ?? null;
 
   const lastScanTime = timeAgoFn(lastScanTimestamp);
 

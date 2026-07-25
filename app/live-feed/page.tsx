@@ -1294,11 +1294,12 @@ export default function LiveFeedPage() {
           <><div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'transparent' }} />
            <div style={{
             position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60,
-            background: 'rgba(8,5,20,0.3)',
-            borderTop: '1px solid rgba(124,58,237,0.25)',
+            background: 'rgba(20,8,45,0.75)',
+            borderTop: '1px solid rgba(124,58,237,0.3)',
             borderRadius: '20px 20px 0 0',
             padding: '0 0 env(safe-area-inset-bottom,16px)',
-            boxShadow: '0 -12px 60px rgba(124,58,237,0.2), 0 -8px 40px rgba(0,0,0,0.7)',
+            boxShadow: '0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(10px)',
             animation: 'slideUp 0.22s ease',
           }}>
               {/* Handle */}

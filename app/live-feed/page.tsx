@@ -1291,18 +1291,17 @@ export default function LiveFeedPage() {
 
         {/* ── MORE DRAWER ─────────────────────────────────────────────────── */}
         {moreOpen && (
-          <>
-            <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }} />
-            <div style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60,
-              background: 'rgba(13,8,28,0.98)',
-              borderTop: '1px solid rgba(124,58,237,0.3)',
-              borderRadius: '24px 24px 0 0',
-              padding: '0 0 16px',
-              boxShadow: '0 -12px 60px rgba(80,0,180,0.35), 0 -2px 0 rgba(124,58,237,0.15)',
-              backdropFilter: 'blur(32px)',
-              animation: 'slideUp 0.2s ease',
-            }}>
+          <><div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(20,0,40,0.85)', backdropFilter: 'blur(12px)' }} />
+           <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60,
+             background: 'linear-gradient(180deg, rgba(30,10,60,0.99) 0%, rgba(15,5,35,0.99) 100%)',
+                borderTop: '2px solid rgba(124,58,237,0.5)',
+                 borderRadius: '24px 24px 0 0',
+             padding: '0 0 env(safe-area-inset-bottom,16px)',
+             boxShadow: '0 -20px 80px rgba(100,20,220,0.5), 0 -1px 0 rgba(167,139,250,0.3)',
+                     backdropFilter: 'blur(40px)',
+                animation: 'slideUp 0.2s ease',
+                }}>
               {/* Handle */}
               <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '12px auto 8px' }} />
 

@@ -2004,30 +2004,78 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             ))}
           </div>
 
-          {/* Need Help Card */}
+          {/* All Steps Card */}
           <div style={{
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 16,
             padding: "14px",
-            display: "flex", alignItems: "center", gap: 10,
           }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%",
-              background: "rgba(124,58,237,0.15)",
-              border: "1px solid rgba(124,58,237,0.25)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-              fontSize: 13, color: "#A78BFA", fontWeight: 700,
-            }}>?</div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: "#fff" }}>Need Help?</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Our support team is here to help you.</div>
-            </div>
+            <div style={{ fontWeight: 700, fontSize: 13, color: "#fff", marginBottom: 10 }}>All Steps</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {SETUP_STEPS.map((s, i) => {
+                const done = completedSteps.has(i);
+                const active = i === currentStep;
+                return (
+                  <button
+                    key={i}
+                    className="all-steps-btn"
+                    onClick={() => setCurrentStep(i)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 9,
+                      background: active ? "rgba(124,58,237,0.1)" : "transparent",
+                      border: "none",
+                      borderRadius: 8,
+                      padding: "7px 6px",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%",
+                      flexShrink: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: done
+                        ? "rgba(34,197,94,0.15)"
+                        : active
+                          ? "linear-gradient(135deg,#7C3AED,#4F46E5)"
+                          : "rgba(255,255,255,0.07)",
+                      border: done
+                        ? "1px solid rgba(34,197,94,0.3)"
+                        : active
+                          ? "none"
+                          : "1px solid rgba(255,255,255,0.09)",
+                      fontSize: 10, fontWeight: 700,
+                      color: done ? "#22C55E" : "#fff",
+                      boxShadow: active ? "0 2px 8px rgba(124,58,237,0.35)" : "none",
+                    }}>
+                      {done ? <CheckCircle size={11} color="#22C55E" /> : i + 1}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: 11, fontWeight: active ? 700 : 500,
+                        color: active ? "#fff" : done ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.4)",
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                      }}>
+                        {s.label}
+                      </div>
+                      <div style={{
+                        fontSize: 10, fontWeight: 600,
+                        color: done ? "#22C55E" : active ? "#A78BFA" : "rgba(255,255,255,0.2)",
+                        marginTop: 1,
+                      }}>
+                        {done ? "Completed" : active ? "In Progress" : "Pending"}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
           </div>
-        </div>
-      </div>
-
+         </div>
+         </div> {/* RIGHT SIDEBAR close */}
+        </div> {/* LAPTOP LAYOUT close */}
+        
       {/* ── MOBILE LAYOUT (untouched) ── */}
       <div className="gcp-v2-mobile">
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: 18 }}>

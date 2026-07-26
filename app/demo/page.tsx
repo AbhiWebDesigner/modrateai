@@ -125,7 +125,6 @@ export default function DemoPage() {
     if (!trimmed) return;
     setLoading(true);
     setAnimateResult(false);
-    setComment('');
 
     let newResult: Result;
 
@@ -166,6 +165,7 @@ export default function DemoPage() {
     setAnimateResult(true);
     setHistory(prev => [newResult, ...prev.slice(0, 9)]);
     setLoading(false);
+    setComment('');
   };
 
   return (

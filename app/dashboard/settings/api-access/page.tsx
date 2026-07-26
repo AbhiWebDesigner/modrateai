@@ -1324,9 +1324,9 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   return (
     <div>
       <style>{`
-        .gcp-v2-laptop { display: grid; grid-template-columns: 230px 1fr 260px; gap: 16px; align-items: start; }
+        .gcp-v2-laptop { display: grid; grid-template-columns: 210px 1fr 230px; gap: 20px; align-items: start; }
         .gcp-v2-mobile { display: none; }
-        .step-pill-bar { display: flex; align-items: center; gap: 0; overflow-x: auto; padding-bottom: 2px; }
+        .step-pill-bar { display: flex; align-items: center; gap: 0; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; }
         .step-pill-bar::-webkit-scrollbar { height: 0; }
         @media (pointer: coarse), (max-width: 900px) {
           .gcp-v2-laptop { display: none !important; }
@@ -1414,7 +1414,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    padding: "11px 14px",
+                    padding: "12px 14px",
                     background: active ? "rgba(124,58,237,0.14)" : "transparent",
                     border: "none",
                     borderBottom: i < SETUP_STEPS.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
@@ -1631,7 +1631,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 </div>
               )}
 
-              {/* Callback URL (save_project step) */}
+              {/* Form fields — save_project step only */}
               {currentStepKey === "save_project" && (
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginBottom: 7 }}>
@@ -1660,17 +1660,8 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 </div>
               )}
 
-              {/* Save Project Form */}
               {currentStepKey === "save_project" && (
-                <div style={{
-                  background: "rgba(255,255,255,0.02)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  borderRadius: 14,
-                  padding: 16,
-                  marginBottom: 20,
-                }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 14 }}>Save Your Project Details</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
                     {[
                       { label: "Project Name", placeholder: "e.g. ModerateAI User Project", value: formProjectName, onChange: setFormProjectName },
                       { label: "Project ID", placeholder: "e.g. moderateai-user-project-123456", value: formProjectId, onChange: setFormProjectId },
@@ -1714,7 +1705,6 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                       </div>
                     </div>
                   </div>
-                </div>
               )}
 
               {/* Action Buttons */}
@@ -1781,7 +1771,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 border: "1px solid rgba(124,58,237,0.2)",
                 borderRadius: 14,
                 overflow: "hidden",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,58,237,0.1)",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.15), 0 0 24px rgba(124,58,237,0.18)",
               }}>
                 {/* Preview header */}
                 <div style={{
@@ -1928,11 +1918,11 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
               }}>
                 {/* Glow ring */}
                 <div style={{
-                  width: 48, height: 48, borderRadius: "50%",
-                  background: "rgba(255,255,255,0.1)",
-                  border: "2px solid rgba(255,255,255,0.22)",
+                  width: 56, height: 56, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.12)",
+                  border: "2px solid rgba(255,255,255,0.28)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 0 24px rgba(124,58,237,0.4)",
+                  boxShadow: "0 0 32px rgba(124,58,237,0.55), 0 0 60px rgba(124,58,237,0.2)",
                 }}>
                   <Play size={20} color="#fff" fill="#fff" style={{ marginLeft: 2 }} />
                 </div>

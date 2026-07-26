@@ -87,15 +87,15 @@ interface UserData {
   gcp_top_methods?: { name: string; units: number; pct: number }[];
 }
 
-// ─── Setup Steps (7 steps — Image 2 reference) ───────────────────────────────
+// ─── Setup Steps ──────────────────────────────────────────────────────────────
 const SETUP_STEPS = [
   { label: "Create Project", key: "create_project" },
-  { label: "Enable API", key: "enable_api" },
-  { label: "OAuth Consent", key: "oauth_consent" },
-  { label: "OAuth Client", key: "oauth_client" },
-  { label: "Copy Credentials", key: "copy_credentials" },
-  { label: "Save Project", key: "save_project" },
-  { label: "Authorization", key: "authorization" },
+  { label: "Enable YouTube Data API v3", key: "enable_api" },
+  { label: "OAuth Consent Screen", key: "oauth_consent" },
+  { label: "Create OAuth Client ID", key: "oauth_client" },
+  { label: "Add Redirect URI", key: "copy_credentials" },
+  { label: "Copy Project Details", key: "save_project" },
+  { label: "Save & Connect", key: "authorization" },
 ];
 
 const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: string[]; action: string; url: string; tip?: string; duration: string }> = {
@@ -103,7 +103,7 @@ const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: strin
     title: "Create a New Google Cloud Project",
     desc: "A project is required to use Google APIs.",
     bullets: [
-      "Click the button below to open Google Cloud Console",
+      "Go to Google Cloud Console",
       "Click on the project dropdown at the top",
       'Click "New Project"',
       "Enter project name",
@@ -112,7 +112,7 @@ const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: strin
     action: "Open Google Cloud Console",
     url: "https://console.cloud.google.com",
     tip: "Use a unique name that you will remember easily.",
-    duration: "10 sec",
+    duration: "3:45",
   },
   enable_api: {
     title: "Enable YouTube Data API v3",
@@ -124,11 +124,11 @@ const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: strin
     ],
     action: "Open API Library",
     url: "https://console.cloud.google.com/apis/library",
-    duration: "15 sec",
+    duration: "2:30",
   },
   oauth_consent: {
     title: "Configure OAuth Consent Screen",
-    desc: "Go to OAuth consent screen and fill in the required details. Then click \"Save and Continue\".",
+    desc: "Go to OAuth consent screen and fill in the required details.",
     bullets: [
       "Go to APIs & Services > OAuth consent screen",
       "Select External user type",
@@ -137,11 +137,11 @@ const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: strin
     ],
     action: "Open OAuth Consent Screen",
     url: "https://console.cloud.google.com/apis/credentials/consent",
-    duration: "15 sec",
+    duration: "2:15",
   },
   oauth_client: {
     title: "Create OAuth Client ID",
-    desc: "Go to Credentials and click \"+ CREATE CREDENTIALS\" then select \"OAuth client ID\".",
+    desc: "Go to Credentials and create a new OAuth 2.0 Client ID.",
     bullets: [
       "Go to APIs & Services > Credentials",
       'Click "+ CREATE CREDENTIALS"',
@@ -151,10 +151,10 @@ const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: strin
     ],
     action: "Open Credentials",
     url: "https://console.cloud.google.com/apis/credentials",
-    duration: "15 sec",
+    duration: "2:00",
   },
   copy_credentials: {
-    title: "Copy Client ID & Client Secret",
+    title: "Add Redirect URI",
     desc: "Copy your Client ID and Client Secret. You'll need these in the next step.",
     bullets: [
       "After creating OAuth client, a popup appears",
@@ -164,11 +164,11 @@ const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: strin
     ],
     action: "Open Credentials",
     url: "https://console.cloud.google.com/apis/credentials",
-    duration: "10 sec",
+    duration: "1:30",
   },
   save_project: {
-    title: "Add Callback URL & Save in ModerateAI",
-    desc: "Add the Callback URL in Google Console under Authorized redirect URIs and click \"Save\". Then paste all details below and click \"Save & Connect Project\".",
+    title: "Copy Project Details",
+    desc: "Add the Callback URL in Google Console and paste all details below.",
     bullets: [
       "Copy the Callback URL below",
       "Add it in Google Console under Authorized redirect URIs",
@@ -177,11 +177,11 @@ const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: strin
     ],
     action: "Save & Connect Project",
     url: "",
-    duration: "20 sec",
+    duration: "1:45",
   },
   authorization: {
-    title: "Authorize ModerateAI",
-    desc: "Sign in with your Google account to authorize ModerateAI to access your YouTube channel.",
+    title: "Save & Connect",
+    desc: "Sign in with your Google account to authorize ModerateAI.",
     bullets: [
       "Click the button below to start authorization",
       "Sign in with your Google account",
@@ -190,7 +190,7 @@ const STEP_DETAILS: Record<string, { title: string; desc: string; bullets: strin
     ],
     action: "Connect YouTube",
     url: "/api/auth/youtube",
-    duration: "10 sec",
+    duration: "1:00",
   },
 };
 
@@ -214,13 +214,26 @@ const DemoScreenshots: Record<string, React.FC> = {
               <div style={{ background: "#1a73e8", color: "#fff", fontSize: 7, padding: "2px 6px", borderRadius: 3, fontWeight: 600 }}>NEW PROJECT</div>
             </div>
             <div style={{ background: "#f8f9fa", border: "1px solid #e8eaed", borderRadius: 4, padding: "3px 6px", fontSize: 8, color: "#5f6368", marginBottom: 6 }}>🔍 Search projects and folders</div>
+            <div style={{ display: "flex", gap: 20, marginBottom: 4 }}>
+              {["RECENT","STARRED","ALL"].map((t,i) => (
+                <span key={t} style={{ fontSize: 7, color: i===0?"#1a73e8":"#5f6368", fontWeight: i===0?700:400, borderBottom: i===0?"2px solid #1a73e8":"none", paddingBottom: 2 }}>{t}</span>
+              ))}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "2px 4px", marginBottom: 2 }}>
+              <span style={{ fontSize: 7, color: "#5f6368" }}>Name</span>
+              <span style={{ fontSize: 7, color: "#5f6368" }}>ID</span>
+            </div>
             {[["My Project 1","1234567890"],["ModerateAI","8070564421"],["Test Project","12255442033"]].map(([n,id]) => (
               <div key={n} style={{ display: "flex", justifyContent: "space-between", padding: "3px 4px", borderBottom: "1px solid #f0f0f0", fontSize: 8 }}>
-                <span style={{ color: "#202124" }}>{n}</span>
+                <span style={{ color: "#202124" }}>⚙ {n}</span>
                 <span style={{ color: "#5f6368" }}>{id}</span>
               </div>
             ))}
+            <div style={{ fontSize: 7, color: "#1a73e8", marginTop: 6, cursor: "pointer" }}>View all projects</div>
           </div>
+        </div>
+        <div style={{ background: "#f0f7ff", borderTop: "1px solid #e8eaed", padding: "6px 10px", fontSize: 7.5, color: "#3c4043", display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ color: "#1a73e8" }}>ℹ</span> After creating the project, you will be redirected to the Google Cloud Console dashboard.
         </div>
       </div>
     );
@@ -393,7 +406,7 @@ const DonutChart = memo(function DonutChart({ used, limit, color = "#7C3AED", si
   );
 });
 
-// ─── MiniChart (shared API) ───────────────────────────────────────────────────
+// ─── MiniChart ────────────────────────────────────────────────────────────────
 const MiniChart = memo(function MiniChart({ used, limit, color = "#7C3AED", label = "AI Actions" }: { used: number; limit: number; color?: string; label?: string }) {
   const pct = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
   const segments = 9;
@@ -459,7 +472,7 @@ function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
-// ─── Connection Test Button ────────────────────────────────────────────────────
+// ─── Connection Test Button ───────────────────────────────────────────────────
 type TestState = "idle" | "checking" | "success" | "failed";
 function ConnectionTestBtn({ state, onClick }: { state: TestState; onClick: () => void }) {
   const configs = {
@@ -511,7 +524,7 @@ function CountdownTimer({ resetAt }: { resetAt: string }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SHARED API TAB
+// SHARED API TAB (untouched)
 // ═══════════════════════════════════════════════════════════════════════════════
 function SharedAPITab({ userData, user, router, showToast }: { userData: UserData; user: User; router: ReturnType<typeof useRouter>; showToast: (msg: string, type?: "success" | "error" | "info") => void }) {
   const [activeChart, setActiveChart] = useState<"7D" | "30D" | "90D">("7D");
@@ -852,7 +865,6 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   const [showSecret, setShowSecret] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Save Project form state
   const [formProjectName, setFormProjectName] = useState("");
   const [formProjectId, setFormProjectId] = useState("");
   const [formClientId, setFormClientId] = useState("");
@@ -860,7 +872,6 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
 
   const CALLBACK_URL = "https://moderateai.site/api/auth/youtube/callback";
 
-  // ── Firebase data ──────────────────────────────────────────────────────────
   const gcpConnected = userData.gcp_connected ?? false;
   const gcpProjectName = userData.gcp_project_name || "—";
   const gcpProjectId = userData.gcp_project_id || "—";
@@ -913,7 +924,9 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
     { name: "others", units: Math.round(gcpUsedToday * 0.016) || 20, pct: 1.6 },
   ];
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // Dynamic progress %
+  const progressPct = Math.round((completedSteps.size / SETUP_STEPS.length) * 100);
+
   const handleGcpRefresh = async () => {
     setGcpRefreshing(true);
     try { await getDoc(doc(db, "users", user.uid)); showToast("GCP stats refreshed.", "success"); }
@@ -958,7 +971,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
 
   const handleStepAction = (stepKey: string) => {
     const detail = STEP_DETAILS[stepKey];
-    if (stepKey === "save_project") return; // handled by form
+    if (stepKey === "save_project") return;
     if (stepKey === "authorization") { window.location.href = `/api/auth/youtube?uid=${user.uid}`; return; }
     if (detail?.url?.startsWith("/")) { router.push(detail.url); return; }
     if (detail?.url) window.open(detail.url, "_blank", "noopener noreferrer");
@@ -1307,43 +1320,33 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // NOT CONNECTED STATE — V2
-  // Mobile (DSO) = Image 1 style | Laptop = Image 2 style
+  // NOT CONNECTED — V2 LAPTOP LAYOUT
   // ═══════════════════════════════════════════════════════════════════════════
   return (
     <div>
       <style>{`
-        /* ── Laptop layout ── */
         .gcp-v2-laptop { display: grid; grid-template-columns: 260px 1fr 300px; gap: 20px; }
         .gcp-v2-mobile { display: none; }
-
-        /* ── Step pill bar (laptop top) ── */
         .step-pill-bar { display: flex; align-items: center; gap: 0; overflow-x: auto; padding-bottom: 2px; }
         .step-pill-bar::-webkit-scrollbar { height: 0; }
-
-        /* ── Mobile (DSO on/off) uses column stack ── */
         @media (pointer: coarse), (max-width: 900px) {
           .gcp-v2-laptop { display: none !important; }
           .gcp-v2-mobile { display: flex !important; flex-direction: column; gap: 16px; }
         }
-
-        /* ── Smooth input focus ── */
         .gcp-input:focus { outline: none; border-color: rgba(124,58,237,0.6) !important; background: rgba(124,58,237,0.06) !important; }
-
         @keyframes gcpFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         .gcp-step-body { animation: gcpFadeIn 0.2s ease; }
       `}</style>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          LAPTOP LAYOUT — Image 2 style
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── LAPTOP LAYOUT ── */}
       <div className="gcp-v2-laptop">
 
-        {/* Left sidebar — step list */}
+        {/* LEFT SIDEBAR */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {/* Header card */}
+
+          {/* Progress card — V2 upgraded */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "16px 14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Cloud size={18} color="#3B82F6" />
               </div>
@@ -1352,10 +1355,28 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Setup Guide</div>
               </div>
             </div>
-            <div style={{ height: 5, background: "rgba(255,255,255,0.07)", borderRadius: 3, marginTop: 10 }}>
-              <div style={{ width: `${(completedSteps.size / SETUP_STEPS.length) * 100}%`, height: "100%", background: "linear-gradient(90deg,#7C3AED,#22C55E)", borderRadius: 3, transition: "width 0.4s ease" }} />
+
+            {/* "Your Setup Progress" label row */}
+            <div style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Your Setup Progress</div>
+
+            {/* Progress bar */}
+            <div style={{ height: 6, background: "rgba(255,255,255,0.07)", borderRadius: 3, marginBottom: 8 }}>
+              <div style={{
+                width: `${progressPct}%`,
+                height: "100%",
+                background: progressPct === 100
+                  ? "#22C55E"
+                  : "linear-gradient(90deg,#7C3AED,#A78BFA)",
+                borderRadius: 3,
+                transition: "width 0.4s ease"
+              }} />
             </div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 5 }}>{completedSteps.size} / {SETUP_STEPS.length} completed</div>
+
+            {/* % and X of 7 row */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#A78BFA" }}>{progressPct}% Completed</span>
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{completedSteps.size} of {SETUP_STEPS.length} Completed</span>
+            </div>
           </div>
 
           {/* Steps list */}
@@ -1387,6 +1408,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                     <div style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? "#fff" : done ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.5)" }}>{s.label}</div>
                     {done && <div style={{ fontSize: 10, color: "#22C55E", fontWeight: 600 }}>Completed</div>}
                     {active && !done && <div style={{ fontSize: 10, color: "#A78BFA" }}>In progress</div>}
+                    {!active && !done && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>Pending</div>}
                   </div>
                   {active && <ChevronRight size={14} color="#A78BFA" />}
                 </button>
@@ -1397,14 +1419,12 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           {/* Need Help */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px" }}>
             <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Need Help?</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 10 }}>Read our documentation or watch the step-by-step demo.</div>
             {[
               { icon: <FileText size={14} color="#3B82F6" />, label: "Documentation", href: "https://docs.moderateai.site" },
-              { icon: <YoutubeIcon size={13} color="#EF4444" />, label: "YouTube Data API Docs", href: "https://developers.google.com/youtube/v3" },
-              { icon: <MessageCircle size={14} color="#22C55E" />, label: "Chat with Support", href: "mailto:support@moderateai.site" },
-              { icon: <Globe size={14} color="#A78BFA" />, label: "Join Discord", href: "https://discord.gg/moderateai" },
             ].map(item => (
               <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "9px 12px", cursor: "pointer" }}>
                   {item.icon}
                   <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{item.label}</span>
                   <ExternalLink size={10} color="rgba(255,255,255,0.2)" style={{ marginLeft: "auto" }} />
@@ -1414,9 +1434,10 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           </div>
         </div>
 
-        {/* Center — main step content */}
+        {/* CENTER — main step content */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          {/* Top pill bar */}
+
+          {/* Top pill step bar */}
           <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
             <div className="step-pill-bar">
               {SETUP_STEPS.map((s, i) => {
@@ -1449,22 +1470,33 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
 
           {/* Step body */}
           <div className="gcp-step-body" key={currentStep} style={{ flex: 1, padding: 24, display: "flex", gap: 24 }}>
+
             {/* Left — instructions */}
             <div style={{ flex: 1, minWidth: 0 }}>
+              {/* Step badge */}
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 20, padding: "4px 12px", fontSize: 12, color: "#A78BFA", fontWeight: 600, marginBottom: 14 }}>
                 Step {currentStep + 1} of {SETUP_STEPS.length}
               </div>
+
               <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", marginBottom: 6, lineHeight: 1.3 }}>{currentStepDetail.title}</div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 20 }}>{currentStepDetail.desc}</div>
+
+              {/* "What you'll do" label — V2 NEW */}
+              <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.8)", marginBottom: 12 }}>What you'll do</div>
 
               {/* Bullets */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
                 {currentStepDetail.bullets.map((b, bi) => (
                   <div key={bi} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%",
+                      background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0, marginTop: 1
+                    }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: "#A78BFA" }}>{bi + 1}</span>
                     </div>
-                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>{b}</span>
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{b}</span>
                   </div>
                 ))}
               </div>
@@ -1477,7 +1509,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 </div>
               )}
 
-              {/* Callback URL (step 6: save_project) */}
+              {/* Callback URL (save_project step) */}
               {currentStepKey === "save_project" && (
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>Your Callback URL <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>(Copy this)</span></div>
@@ -1511,15 +1543,11 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                           value={field.value}
                           onChange={e => field.onChange(e.target.value)}
                           placeholder={field.placeholder}
-                          style={{
-                            width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-                            borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 12,
-                            boxSizing: "border-box", transition: "all 0.15s",
-                          }}
+                          style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 12, boxSizing: "border-box", transition: "all 0.15s" }}
                         />
                       </div>
                     ))}
-                    <div style={{ marginTop: 2 }}>
+                    <div>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 5 }}>Callback URL</div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "9px 12px" }}>
                         <span style={{ flex: 1, fontSize: 11, fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>{CALLBACK_URL}</span>
@@ -1551,67 +1579,122 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 </button>
               )}
 
-              {/* Having trouble */}
-              <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-                <span>Having trouble?</span>
-                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={{ color: "#A78BFA", textDecoration: "none", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-                  Watch this step <ExternalLink size={10} />
+              {/* Doc + video links row */}
+              <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 16 }}>
+                <a href="https://docs.moderateai.site" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
+                  <FileText size={13} color="#3B82F6" /> Documentation
+                </a>
+                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
+                  <Play size={13} color="#EF4444" /> Watch Video
                 </a>
               </div>
             </div>
 
-            {/* Right — screenshot preview */}
-            <div style={{ width: 280, flexShrink: 0 }}>
+            {/* Right — preview screenshot */}
+            <div style={{ width: 300, flexShrink: 0 }}>
               <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, overflow: "hidden" }}>
                 <div style={{ padding: "10px 12px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>Preview</span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>{currentStepDetail.duration}</span>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Preview</span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.06)", borderRadius: 6, padding: "2px 7px" }}>{currentStepDetail.duration}</span>
                 </div>
                 <div style={{ padding: 12 }}>
                   {DemoScreenshot ? <DemoScreenshot /> : <div style={{ height: 100, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 12 }}>No preview</div>}
+                </div>
+                {/* Info note below preview — V2 NEW */}
+                <div style={{ padding: "0 12px 12px" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 7, background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", borderRadius: 8, padding: "8px 10px" }}>
+                    <Info size={12} color="#3B82F6" style={{ flexShrink: 0, marginTop: 1 }} />
+                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+                      After completing this step, you will proceed to the next step automatically.
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom nav */}
-          <div style={{ padding: "14px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          {/* Bottom navigation — V2 upgraded */}
+          <div style={{ padding: "14px 24px", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.01)" }}>
             <button
               onClick={() => setCurrentStep(s => Math.max(0, s - 1))}
               disabled={currentStep === 0}
-              style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: currentStep === 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: currentStep === 0 ? "default" : "pointer" }}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                color: currentStep === 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+                borderRadius: 10, padding: "9px 20px", fontSize: 13, fontWeight: 600,
+                cursor: currentStep === 0 ? "default" : "pointer",
+                opacity: currentStep === 0 ? 0.5 : 1,
+              }}
             >
               <ChevronLeft size={15} /> Previous
             </button>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }}>Step {currentStep + 1} of {SETUP_STEPS.length}</span>
+
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>
+              Step {currentStep + 1} of {SETUP_STEPS.length}
+            </span>
+
             <button
-              onClick={() => { setCompletedSteps(prev => new Set([...prev, currentStep])); setCurrentStep(s => Math.min(SETUP_STEPS.length - 1, s + 1)); }}
+              onClick={() => {
+                setCompletedSteps(prev => new Set([...prev, currentStep]));
+                setCurrentStep(s => Math.min(SETUP_STEPS.length - 1, s + 1));
+              }}
               disabled={currentStep === SETUP_STEPS.length - 1}
-              style={{ display: "flex", alignItems: "center", gap: 6, background: currentStep === SETUP_STEPS.length - 1 ? "rgba(255,255,255,0.04)" : "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", color: currentStep === SETUP_STEPS.length - 1 ? "rgba(255,255,255,0.2)" : "#fff", borderRadius: 10, padding: "9px 18px", fontSize: 13, fontWeight: 700, cursor: currentStep === SETUP_STEPS.length - 1 ? "default" : "pointer" }}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: currentStep === SETUP_STEPS.length - 1
+                  ? "rgba(255,255,255,0.04)"
+                  : "linear-gradient(135deg,#7C3AED,#4F46E5)",
+                border: "none",
+                color: currentStep === SETUP_STEPS.length - 1 ? "rgba(255,255,255,0.2)" : "#fff",
+                borderRadius: 10, padding: "9px 20px", fontSize: 13, fontWeight: 700,
+                cursor: currentStep === SETUP_STEPS.length - 1 ? "default" : "pointer",
+                boxShadow: currentStep === SETUP_STEPS.length - 1 ? "none" : "0 4px 14px rgba(124,58,237,0.4)",
+                opacity: currentStep === SETUP_STEPS.length - 1 ? 0.4 : 1,
+              }}
             >
               Next Step <ChevronRight size={15} />
             </button>
           </div>
         </div>
 
-        {/* Right sidebar — video + quick links */}
+        {/* RIGHT SIDEBAR */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {/* Step Video Guide */}
+
+          {/* Step Video Guide — V2 */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, overflow: "hidden" }}>
             <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <div style={{ fontWeight: 700, fontSize: 13 }}>Step Video Guide</div>
             </div>
-            <div style={{ position: "relative", background: "linear-gradient(135deg,#1a0533,#0d1b3e)", paddingTop: "56%", cursor: "pointer" }} onClick={() => window.open("https://youtube.com", "_blank")}>
+            {/* Video thumbnail */}
+            <div
+              style={{ position: "relative", background: "linear-gradient(135deg,#1a0533,#0d1b3e)", paddingTop: "56%", cursor: "pointer" }}
+              onClick={() => window.open("https://youtube.com", "_blank")}
+            >
               <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.12)", border: "2px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Play size={18} color="#fff" fill="#fff" />
+                <div style={{
+                  width: 48, height: 48, borderRadius: "50%",
+                  background: "rgba(255,255,255,0.12)", border: "2px solid rgba(255,255,255,0.25)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 0 20px rgba(124,58,237,0.3)"
+                }}>
+                  <Play size={20} color="#fff" fill="#fff" style={{ marginLeft: 2 }} />
                 </div>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>0:45</div>
+                {/* Duration badge — V2 NEW */}
+                <div style={{
+                  background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 6, padding: "3px 8px", fontSize: 11, fontWeight: 600,
+                  color: "rgba(255,255,255,0.8)", fontFamily: "monospace"
+                }}>
+                  {currentStepDetail.duration}
+                </div>
               </div>
             </div>
             <div style={{ padding: "10px 14px" }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>How to Create Google Cloud Project</div>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#A78BFA", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>Watch on YouTube <ExternalLink size={10} /></a>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 4 }}>How to Create Google Cloud Project</div>
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#A78BFA", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+                Watch on YouTube <ExternalLink size={10} />
+              </a>
             </div>
           </div>
 
@@ -1633,64 +1716,71 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             ))}
           </div>
 
-          {/* Need Help */}
+          {/* All Steps sidebar — V2 NEW (matches reference image) */}
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(124,58,237,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 14 }}>?</span>
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 13 }}>Need Help?</div>
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 12 }}>Our support team is here to help you.</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <a href="mailto:support@moderateai.site" style={{ textDecoration: "none" }}>
-                <button style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.25)", color: "#A78BFA", borderRadius: 8, padding: "8px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                  <MessageCircle size={13} /> Chat with Support
-                </button>
-              </a>
-              <a href="https://discord.gg/moderateai" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                <button style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "transparent", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "8px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                  <Globe size={13} /> Join Discord
-                </button>
-              </a>
-            </div>
-          </div>
-
-          {/* Step thumbnail strip */}
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 10 }}>All Steps</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>All Steps</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {SETUP_STEPS.map((s, i) => {
                 const done = completedSteps.has(i);
                 const active = i === currentStep;
-                const DemoComp = DemoScreenshots[s.key];
                 return (
                   <button
                     key={i}
                     onClick={() => setCurrentStep(i)}
-                    style={{ display: "flex", alignItems: "center", gap: 8, background: active ? "rgba(124,58,237,0.15)" : "transparent", border: active ? "1px solid rgba(124,58,237,0.3)" : "1px solid transparent", borderRadius: 8, padding: "6px 8px", cursor: "pointer", textAlign: "left" }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      background: active ? "rgba(124,58,237,0.12)" : "transparent",
+                      border: "none",
+                      borderRadius: 8, padding: "8px 6px",
+                      cursor: "pointer", textAlign: "left", transition: "background 0.15s",
+                    }}
                   >
-                    <div style={{ width: 40, height: 28, borderRadius: 5, overflow: "hidden", background: "#1a1a2e", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {DemoComp ? <div style={{ transform: "scale(0.28)", transformOrigin: "center", width: 140, height: 100 }}><DemoComp /></div> : <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />}
+                    {/* Step number circle */}
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: done ? "#22C55E" : active ? "#7C3AED" : "rgba(255,255,255,0.08)",
+                      fontSize: 10, fontWeight: 700, color: "#fff",
+                    }}>
+                      {done ? <CheckCircle size={11} /> : i + 1}
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 10, fontWeight: 600, color: active ? "#fff" : "rgba(255,255,255,0.5)" }}>{s.label}</div>
-                      <div style={{ fontSize: 9, color: done ? "#22C55E" : active ? "#A78BFA" : "rgba(255,255,255,0.25)" }}>{done ? "✓ Completed" : active ? "In progress" : "Pending"}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: 12, fontWeight: active ? 700 : 500,
+                        color: active ? "#fff" : done ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.5)",
+                        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"
+                      }}>
+                        {s.label}
+                      </div>
+                      <div style={{
+                        fontSize: 10, fontWeight: 600,
+                        color: done ? "#22C55E" : active ? "#A78BFA" : "rgba(255,255,255,0.25)",
+                        marginTop: 1
+                      }}>
+                        {done ? "Completed" : active ? "In Progress" : "Pending"}
+                      </div>
                     </div>
                   </button>
                 );
               })}
             </div>
           </div>
+
+          {/* Need Help */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(124,58,237,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 13 }}>?</span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: 13 }}>Need Help?</div>
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Our support team is here to help you.</div>
+          </div>
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          MOBILE LAYOUT (DSO on/off) — Image 1 style
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* ── MOBILE LAYOUT (untouched) ── */}
       <div className="gcp-v2-mobile">
-
-        {/* Hero section */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
             <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1709,7 +1799,6 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           </div>
         </div>
 
-        {/* Video preview */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, overflow: "hidden" }}>
           <div style={{ position: "relative", background: "linear-gradient(135deg,#1a0533,#0d1b3e)", paddingTop: "52%", cursor: "pointer" }} onClick={() => window.open("https://youtube.com", "_blank")}>
             <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
@@ -1727,14 +1816,12 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           </div>
         </div>
 
-        {/* 7 Steps — mobile card per step (Image 1 style) */}
         {SETUP_STEPS.map((s, i) => {
           const done = completedSteps.has(i);
           const detail = STEP_DETAILS[s.key];
           const DemoComp = DemoScreenshots[s.key];
           return (
             <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${done ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: 18, overflow: "hidden" }}>
-              {/* Step header */}
               <div style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "16px 16px 14px" }}>
                 <div style={{ width: 32, height: 32, borderRadius: "50%", background: done ? "#22C55E" : "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(124,58,237,0.35)" }}>
                   {done ? <CheckCircle size={16} color="#fff" /> : <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{i + 1}</span>}
@@ -1747,13 +1834,9 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 4, lineHeight: 1.5 }}>{detail.desc}</div>
                 </div>
               </div>
-
-              {/* Screenshot */}
               <div style={{ margin: "0 16px 14px", borderRadius: 10, overflow: "hidden", background: "#0d0d1a" }}>
                 {DemoComp ? <DemoComp /> : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 12 }}>Preview</div>}
               </div>
-
-              {/* Save form (mobile, step 6) */}
               {s.key === "save_project" && (
                 <div style={{ margin: "0 16px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 12 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10 }}>Save Your Project Details</div>
@@ -1765,13 +1848,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                   ].map(field => (
                     <div key={field.label} style={{ marginBottom: 10 }}>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>{field.label}</div>
-                      <input
-                        className="gcp-input"
-                        value={field.value}
-                        onChange={e => field.onChange(e.target.value)}
-                        placeholder={field.placeholder}
-                        style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 10px", color: "#fff", fontSize: 12, boxSizing: "border-box" }}
-                      />
+                      <input className="gcp-input" value={field.value} onChange={e => field.onChange(e.target.value)} placeholder={field.placeholder} style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "8px 10px", color: "#fff", fontSize: 12, boxSizing: "border-box" }} />
                     </div>
                   ))}
                   <div style={{ marginBottom: 12 }}>
@@ -1789,14 +1866,9 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                   </button>
                 </div>
               )}
-
-              {/* Action button */}
               {s.key !== "save_project" && (
                 <div style={{ padding: "0 16px 16px" }}>
-                  <button
-                    onClick={() => handleStepAction(s.key)}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: done ? "rgba(34,197,94,0.1)" : "rgba(124,58,237,0.15)", border: `1px solid ${done ? "rgba(34,197,94,0.3)" : "rgba(124,58,237,0.3)"}`, color: done ? "#22C55E" : "#A78BFA", borderRadius: 10, padding: "10px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
-                  >
+                  <button onClick={() => handleStepAction(s.key)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: done ? "rgba(34,197,94,0.1)" : "rgba(124,58,237,0.15)", border: `1px solid ${done ? "rgba(34,197,94,0.3)" : "rgba(124,58,237,0.3)"}`, color: done ? "#22C55E" : "#A78BFA", borderRadius: 10, padding: "10px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                     {done ? <CheckCircle size={14} /> : <ExternalLink size={14} />}
                     {done ? "Completed" : detail.action}
                   </button>
@@ -1806,7 +1878,6 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           );
         })}
 
-        {/* Bottom help */}
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: 16, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(124,58,237,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>

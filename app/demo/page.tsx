@@ -137,14 +137,16 @@ export default function DemoPage() {
       if (!res.ok) throw new Error('API failed');
       const data = await res.json();
 
+      const validActions = ['HIDDEN', 'TIMEOUT', 'SPAM', 'REPLIED', 'KEPT'];
+      const safeAction = validActions.includes(data.action) ? data.action : 'KEPT';
       newResult = {
         comment: text,
-        action: data.action,
-        reason: data.reason,
-        reply: data.reply || undefined,
+        action: safeAction,
+        reason: data.reason || 'AI analyzed',
+        reply: (data.reply && data.reply !== 'null' && data.reply !== null) ? data.reply : undefined,
         language: data.language || detectLanguage(text),
         time: new Date().toLocaleTimeString(),
-        confidence: data.confidence || 90,
+        confidence: Number(data.confidence) || 90,
       };
       setUsingAI(true);
     } catch {

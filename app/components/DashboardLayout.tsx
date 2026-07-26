@@ -86,10 +86,10 @@ export function DashboardSidebar() {
           border-color: rgba(245,158,11,0.08);
         }
         .snav-item.active {
-          background: linear-gradient(135deg, rgba(245,158,11,0.20) 0%, rgba(245,158,11,0.10) 50%, rgba(245,158,11,0.06) 100%);
+          background: linear-gradient(135deg, rgba(245,158,11,0.32) 0%, rgba(245,158,11,0.18) 50%, rgba(245,158,11,0.10) 100%);
           color: #FBBF24; font-weight: 700;
-          border-color: rgba(245,158,11,0.25);
-          box-shadow: 0 0 0 1px rgba(245,158,11,0.12), 0 2px 20px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.18), inset 0 0 28px rgba(245,158,11,0.06);
+          border-color: rgba(245,158,11,0.40);
+          box-shadow: 0 0 0 1px rgba(245,158,11,0.18), 0 2px 24px rgba(245,158,11,0.22), 0 0 40px rgba(245,158,11,0.10), inset 0 1px 0 rgba(245,158,11,0.25), inset 0 0 32px rgba(245,158,11,0.10);
         }
         .snav-item.active::before {
           content: ''; position: absolute; left: 0; top: 50%;

@@ -32,10 +32,112 @@ const sampleComments = [
   'hmm interesting',
 ];
 
-const TOXIC_PATTERNS = /denganu|errypuka|lanajakodaka|lanjakodka|puku|modda|gudda|denge|dengudu|naayala|nakkalata|lanja|lanjakoduku|nee amma|ni amma|mee amma|chutiya|gaandu|lavde|bhosdi|maderchod|behenchod|madarchod|bhadwa|randi|harami|kutte|saala|haramzada|teri maa|teri behen|tere baap|bhad mein|gand|lund|fuck\s*you|fuck off|motherfucker|sisterfucker|kys|kill yourself|die\b|asshole|bastard|bitch\b|cunt\b|dick\b|prick\b|whore\b|slut\b|nigger|faggot|retard|idiot|stupid|trash|bc\b|mc\b|sala\b|кретин|ублюдок|сука\b|блядь|мудак|придурок|шлюха|дебил|خنزير|كلب\b|عاهرة|لعنة|يلعن|حمار\b|connard|merde\b|putain|salope|puta\b|cabron|pendejo|chinga|hijo de puta|coño|joder|scheisse|scheiße|arschloch|wichser|fotze|hurensohn|vaffanculo|coglione|stronzo|porra\b|caralho|filho da puta|গাধা|শালা|মাদারচোদ|বেশ্যা|haraamzada|kamina|kameena/i;
-const SPAM_PATTERNS = /click here|free iphone|win \$|earn money|make \$\d+|work from home|limited offer|buy now|check my channel|follow me|subscribe to my|visit my|www\.|http|\.com\b|\.net\b|giveaway|free gift|promo code|discount code|check bio|link in bio|dm me for|inbox me|whatsapp me|call me at|\d{10}|t\.me\/|join now|sign up now|exclusive deal|act now/i;
-const POSITIVE_PATTERNS = /good|great|nice|excellent|amazing|awesome|wonderful|fantastic|superb|brilliant|love|best|beautiful|perfect|helpful|thank|thanks|appreciated|incredible|outstanding|impressive|well done|keep it up|bagundi|chala bagundi|super|bohot acha|bahut accha|mast hai|zabardast|wah|bahut badhiya|shandar|kamaal|நன்றாக|மிகவும்|சூப்பர்|அருமை|رائع|ممتاز|جميل|شكرا|отлично|хорошее|молодец|спасибо|très bien|magnifique|bravo|merci|muy bien|excelente|increíble|gracias|sehr gut|ausgezeichnet|wunderbar|danke|ottimo|molto bene|grazie|muito bom|obrigado|すごい|良い|ありがとう|좋아요|감사합니다|대박|很好|谢谢|棒|厉害/i;
-const GREETING_PATTERNS = /^(hi+|hello+|hey+|hii+|helo|sup|howdy|yo+|namaste|vanakkam|నమస్కారం|مرحبا|привет|bonjour|hola|ciao|oi\b|salut)[\s!.]*$/i;
+// ─── TOXIC PATTERNS: 100+ languages ───────────────────────────────────────────
+const TOXIC_PATTERNS = new RegExp([
+  // Telugu
+  'denganu','errypuka','lanajakodaka','lanjakodka','lanjakoduku','lanja','puku','modda','gudda','denge','dengudu','naayala','nakkalata','nee amma','ni amma','mee amma','dengutha','pukulo','pooku','moddaloki','guddaloki','lavadaniki','lavada','bokka','bokkaloki','dengestanu','dengesthanu','pukka','erri','erripuka','erripooka','naayintiki','naayinamma','ammani','akka','akkalani','dengali','dengeru','lavadanikodaka','pukodi','guddi','guddu',
+  // Hindi / Urdu
+  'chutiya','gaandu','lavde','bhosdi','maderchod','behenchod','madarchod','bhadwa','randi','harami','kutte','saala','haramzada','teri maa','teri behen','tere baap','bhad mein','gand','lund','chut','bhosdike','bhenchod','mc\\b','bc\\b','sala\\b','kamina','kameena','haraamzada','ullu','bakwaas','gadha','suar','kutta','randi ki aulad','maa ki aankh','baap ki','teri maa ki','teri bhen ki','chodu','chodna','chod','chodenge','chodoge','chudai','chudwao',
+  // Tamil
+  'ookku','otha','thevidiya','pundai','sunni','vayangarai','koothi','loosu','thevdiya','myir','paiyan','ennoda','oombu','ombu','poolai','poolu','thevidiyaa','pundaikku',
+  // Kannada
+  'tika','haadya','sule','nin tika','nin amma','nin akka','maga','hoogali','tikkala','thika','suliya','ninna','okkali',
+  // Malayalam
+  'myre','myru','poda','podi','thendi','kunna','kundi','poorr','oombu','thevadichi','njayinte','ningalude','thayoli','kothipidikkan','malaparambile',
+  // Arabic
+  'خنزير','كلب\\b','عاهرة','لعنة','يلعن','حمار\\b','شرموطة','ابن الشرموطة','كس','زب','منيوك','عرص','طيز','ابن العاهرة','ابن الكلب','يلعن دينك','يلعن ابوك','يلعن امك','قحبة','قواد',
+  // Russian
+  'кретин','ублюдок','сука\\b','блядь','мудак','придурок','шлюха','дебил','пиздец','ёбаный','пошёл нахуй','иди нахуй','ёб твою мать','пизда','хуй','хуйло','залупа','манда','ёбтвоюмать','нахуй','пиздюк','мразь','гандон','пидор','педик',
+  // Spanish
+  'puta\\b','cabron','pendejo','chinga','hijo de puta','coño','joder','maricon','hijueputa','verga','polla','cojon','cojones','malparido','gonorrea','marica','culero','pinche','chingada','chingadera',
+  // French
+  'connard','merde\\b','putain','salope','enculé','va te faire foutre','fils de pute','ta gueule','batard','nique ta mere','fdp\\b','ptn\\b',
+  // German
+  'scheisse','scheiße','arschloch','wichser','fotze','hurensohn','scheisskopf','mistkerl','dummkopf','dreckssau','vollidiot','depp\\b',
+  // Italian
+  'vaffanculo','coglione','stronzo','figlio di puttana','cazzo','minchia','porco dio','porco','troia','bastardo',
+  // Portuguese
+  'porra\\b','caralho','filho da puta','foda','fodase','fdp\\b','puta que pariu','vai se foder','viado','buceta','cu\\b',
+  // Bengali
+  'গাধা','শালা','মাদারচোদ','বেশ্যা','শুয়োরের বাচ্চা','হারামজাদা','চুদি','চোদ','মাগি','খানকি',
+  // Punjabi
+  'bhen di tere','bhen di','teri bhen di','teri maa di','madarchod','bhenchod','gandu','lund','chut\\b',
+  // Turkish
+  'orospu','orospu çocuğu','sik\\b','amk\\b','göt\\b','piç\\b','ibne','bok\\b','salak','mal\\b',
+  // Polish
+  'kurwa','chuj','pierdol','jebany','skurwysyn','dupek','cipa\\b','spierdalaj','pizda',
+  // Dutch
+  'kut\\b','lul\\b','godverdomme','kanker','tering','hoer\\b','mongool','tyfus',
+  // English
+  'fuck\\s*you','fuck off','motherfucker','sisterfucker','kys','kill yourself','die\\b','asshole','bastard','bitch\\b','cunt\\b','dick\\b','prick\\b','whore\\b','slut\\b','nigger','faggot','retard','idiot','stupid','trash','dumbass','jackass','dipshit','shithead','bullshit','son of a bitch','piece of shit','go to hell','shut up','loser\\b','moron','imbecile',
+  // Japanese
+  'バカ','死ね','うざい','きもい','消えろ','ゴミ','クズ','死にさらせ',
+  // Korean
+  '씨발','개새끼','죽어','바보','미친','꺼져','지랄','병신','창녀',
+  // Chinese
+  '他妈的','操你','去死','傻逼','混蛋','妓女','滚开','废物',
+  // Indonesian/Malay
+  'anjing','babi\\b','bangsat','keparat','bajingan','monyet\\b','kontol','memek','ngentot','kampret',
+].join('|'), 'i');
+
+// ─── SPAM PATTERNS ────────────────────────────────────────────────────────────
+const SPAM_PATTERNS = new RegExp([
+  // Links & URLs
+  'click here','www\\.','http','https','bit\\.ly','\\.com\\b','\\.net\\b','\\.org\\b','\\.io\\b','\\.xyz\\b','t\\.me\\/','telegram\\.me','wa\\.me',
+  // Promos
+  'free iphone','win \\$','earn money','make \\$\\d+','work from home','limited offer','buy now','exclusive deal','act now','sign up now','join now','limited time','don\'t miss','claim now','get paid','passive income','make money fast',
+  // Channel spam
+  'check my channel','follow me','subscribe to my','visit my','check bio','link in bio','dm me for','inbox me','whatsapp me','call me at','contact me at',
+  // Giveaway
+  'giveaway','free gift','promo code','discount code','coupon code','offer ends',
+  // Phone / numbers
+  '\\d{10,}','\\+\\d{1,3}\\s?\\d{9,}',
+  // Repeated chars (spam)
+  '(.)\\1{6,}',
+  // Hindi spam
+  'मुफ्त','फ्री','कमाओ','पैसे कमाओ','सब्सक्राइब करो','फॉलो करो',
+  // Arabic spam
+  'اشترك','متابعة','مجاني','ربح','فرصة',
+  // Russian spam
+  'бесплатно','заработок','подпишись','переходи по ссылке',
+].join('|'), 'i');
+
+// ─── POSITIVE PATTERNS ───────────────────────────────────────────────────────
+const POSITIVE_PATTERNS = new RegExp([
+  // English
+  'good','great','nice','excellent','amazing','awesome','wonderful','fantastic','superb','brilliant','love','best','beautiful','perfect','helpful','thank','thanks','appreciate','incredible','outstanding','impressive','well done','keep it up','congrats','brilliant','marvelous','splendid',
+  // Telugu
+  'bagundi','chala bagundi','super','bagunaru','chustunnanu','naccindi','nachindi','chala nachindi','bhale','baga','manchidi','manchigundi',
+  // Hindi
+  'bohot acha','bahut accha','mast hai','zabardast','wah','bahut badhiya','shandar','kamaal','badiya','shukriya','dhanyawad','bahut sundar','maza aaya',
+  // Tamil
+  'நன்றாக','மிகவும்','சூப்பர்','அருமை','நன்றி','மிக நல்லது',
+  // Arabic
+  'رائع','ممتاز','جميل','شكرا','أحسنت','جزاك الله','ماشاء الله','بارك الله',
+  // Russian
+  'отлично','хорошее','молодец','спасибо','прекрасно','замечательно','супер',
+  // French
+  'très bien','magnifique','bravo','merci','excellent','formidable','super',
+  // Spanish
+  'muy bien','excelente','increíble','gracias','genial','fenomenal','maravilloso',
+  // German
+  'sehr gut','ausgezeichnet','wunderbar','danke','toll','prima','klasse',
+  // Italian
+  'ottimo','molto bene','grazie','bravo','fantastico','meraviglioso',
+  // Portuguese
+  'muito bom','obrigado','parabéns','excelente','incrível','fantástico',
+  // Japanese
+  'すごい','良い','ありがとう','素晴らしい','最高','感謝',
+  // Korean
+  '좋아요','감사합니다','대박','훌륭해','최고','멋지다',
+  // Chinese
+  '很好','谢谢','棒','厉害','太好了','非常好','感谢',
+  // Indonesian
+  'bagus','keren','terima kasih','mantap','luar biasa','hebat',
+].join('|'), 'i');
+
+// ─── GREETING PATTERNS ───────────────────────────────────────────────────────
+const GREETING_PATTERNS = /^(hi+|hello+|hey+|hii+|helo+|sup|howdy|yo+|namaste|vanakkam|నమస్కారం|مرحبا|привет|bonjour|hola|ciao|oi\b|salut|salam|namaskar|sat sri akal|kem cho|kemon acho|merhaba|konnichiwa|annyeong|ni hao|xin chào)[\s!.,]*$/i;
 
 const POSITIVE_REPLIES = [
   'Thank you so much! 🙏 Really appreciate your support!',
@@ -43,14 +145,16 @@ const POSITIVE_REPLIES = [
   'Your support means everything! Stay tuned 🙌',
   'Thanks a lot! Drop a like if you loved it ❤️',
   'Hey! Thanks for stopping by 😊 Stay connected!',
+  'Love the positivity! See you in the next one 🙌',
+  'You made our day! Thanks for the kind words 💙',
 ];
 
 function detectLanguage(text: string): string {
   if (/[\u0C00-\u0C7F]/.test(text)) return 'Telugu';
-  if (/[\u0900-\u097F]/.test(text)) return 'Hindi / Devanagari';
+  if (/[\u0900-\u097F]/.test(text)) return 'Hindi';
   if (/[\u0B80-\u0BFF]/.test(text)) return 'Tamil';
   if (/[\u0600-\u06FF]/.test(text)) return 'Arabic';
-  if (/[\u0400-\u04FF]/.test(text)) return 'Russian / Cyrillic';
+  if (/[\u0400-\u04FF]/.test(text)) return 'Russian';
   if (/[\u4E00-\u9FFF]/.test(text)) return 'Chinese';
   if (/[\u3040-\u30FF]/.test(text)) return 'Japanese';
   if (/[\uAC00-\uD7AF]/.test(text)) return 'Korean';
@@ -58,8 +162,10 @@ function detectLanguage(text: string): string {
   if (/[\u0A80-\u0AFF]/.test(text)) return 'Gujarati';
   if (/[\u0D00-\u0D7F]/.test(text)) return 'Malayalam';
   if (/[\u0C80-\u0CFF]/.test(text)) return 'Kannada';
-  if (/\b(amma|anna|bhai|yaar|bro|acha|bagundi|chala|errypuka|denganu)\b/i.test(text)) return 'Indian (Tenglish/Hinglish)';
-  return 'English / Latin';
+  if (/[\u0B00-\u0B7F]/.test(text)) return 'Odia';
+  if (/[\u0A00-\u0A7F]/.test(text)) return 'Punjabi';
+  if (/\b(amma|anna|bhai|yaar|bro|acha|bagundi|chala|errypuka|denganu|lanja|puku)\b/i.test(text)) return 'Telugu/Hinglish';
+  return 'English';
 }
 
 function fallbackClassify(text: string): Omit<Result, 'comment' | 'time'> {
@@ -69,42 +175,54 @@ function fallbackClassify(text: string): Omit<Result, 'comment' | 'time'> {
   const isGreeting = GREETING_PATTERNS.test(text.trim());
   const isRepetitive = /(.{3,})\1{2,}/.test(text);
   const wordCount = text.trim().split(/\s+/).length;
+  const lang = detectLanguage(text);
+
+  // Priority: toxic > spam > greeting > positive > neutral
+  if (isToxic) {
+    const isSevere = /(kys|kill yourself|die\b|motherfucker|maderchod|denganu|errypuka|lanajakodaka|lanjakodaka|madarchod|behenchod|nee amma|ni amma|fuck\s*you|сука|блядь|chutiya|bhenchod|puku|modda|thevidiya|otha|vaffanculo|hijo de puta|teri maa|teri behen|خنزير|شرموطة|كس\b|زب\b)/i.test(text);
+    return {
+      action: isSevere ? 'HIDDEN' : 'TIMEOUT',
+      reason: isSevere ? 'Severe abuse detected — hidden from public' : 'Abusive language — comment timed out',
+      language: lang,
+      confidence: isSevere ? 97 : 91,
+    };
+  }
+
+  if (isSpam || isRepetitive) {
+    return {
+      action: 'SPAM',
+      reason: 'Spam or promotional content detected',
+      language: lang,
+      confidence: 94,
+    };
+  }
 
   if (isGreeting) {
     return {
       action: 'REPLIED',
       reason: 'Greeting detected — friendly reply sent',
       reply: 'Hey! Thanks for stopping by 😊 Stay connected!',
-      language: detectLanguage(text),
+      language: lang,
       confidence: 90,
     };
   }
 
-  if (isToxic) {
-    const isSevere = /(kys|kill yourself|die\b|motherfucker|maderchod|denganu|errypuka|lanajakodaka|madarchod|behenchod|nee amma|ni amma|fuck\s*you|сука|блядь)/i.test(text);
-    return {
-      action: isSevere ? 'HIDDEN' : 'TIMEOUT',
-      reason: isSevere ? 'Severe abuse detected — hidden from public' : 'Abusive language — comment timed out',
-      language: detectLanguage(text),
-      confidence: isSevere ? 97 : 91,
-    };
-  }
-
-  if (isSpam || isRepetitive) {
-    return { action: 'SPAM', reason: 'Spam or promotional content detected', language: detectLanguage(text), confidence: 93 };
-  }
-
-  if (isPositive || wordCount >= 3) {
+  if (isPositive || wordCount >= 4) {
     return {
       action: 'REPLIED',
       reason: 'Positive comment — AI auto-reply sent',
       reply: POSITIVE_REPLIES[Math.floor(Math.random() * POSITIVE_REPLIES.length)],
-      language: detectLanguage(text),
+      language: lang,
       confidence: 88,
     };
   }
 
-  return { action: 'KEPT', reason: 'Neutral comment — kept as is', language: detectLanguage(text), confidence: 82 };
+  return {
+    action: 'KEPT',
+    reason: 'Neutral comment — kept as is',
+    language: lang,
+    confidence: 82,
+  };
 }
 
 const ACTION_CONFIG = {
@@ -140,39 +258,52 @@ export default function DemoPage() {
 
     let newResult: Result;
 
-    try {
-      const res = await fetch('/api/moderate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comment: trimmed }),
-      });
+    // Always run fallback first for known toxic/spam words (don't trust API alone)
+    const localCheck = fallbackClassify(trimmed);
+    const isLocallyToxicOrSpam = localCheck.action === 'HIDDEN' || localCheck.action === 'SPAM' || localCheck.action === 'TIMEOUT';
 
-      if (!res.ok) throw new Error('API failed');
-      const data = await res.json();
-
-      const validActions = ['HIDDEN', 'TIMEOUT', 'SPAM', 'REPLIED', 'KEPT'];
-      const safeAction = validActions.includes(data.action) ? data.action : 'KEPT';
-
+    if (isLocallyToxicOrSpam) {
+      // Trust local regex for toxic/spam — don't even call API
       newResult = {
         comment: trimmed,
-        action: safeAction,
-        reason: data.reason || 'AI analyzed',
-        reply: safeAction === 'REPLIED'
-          ? (data.reply && data.reply !== 'null' ? data.reply : 'Thank you so much! 🙏 Really appreciate your support!')
-          : undefined,
-        language: data.language || detectLanguage(trimmed),
-        time: new Date().toLocaleTimeString(),
-        confidence: Number(data.confidence) || 90,
-      };
-      setUsingAI(true);
-    } catch {
-      const fallback = fallbackClassify(trimmed);
-      newResult = {
-        comment: trimmed,
-        ...fallback,
+        ...localCheck,
         time: new Date().toLocaleTimeString(),
       };
       setUsingAI(false);
+    } else {
+      try {
+        const res = await fetch('/api/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ comment: trimmed }),
+        });
+
+        if (!res.ok) throw new Error('API failed');
+        const data = await res.json();
+
+        const validActions = ['HIDDEN', 'TIMEOUT', 'SPAM', 'REPLIED', 'KEPT'];
+        const safeAction = validActions.includes(data.action) ? data.action : 'KEPT';
+
+        newResult = {
+          comment: trimmed,
+          action: safeAction,
+          reason: data.reason || 'AI analyzed',
+          reply: safeAction === 'REPLIED'
+            ? (data.reply && data.reply !== 'null' ? data.reply : 'Thank you so much! 🙏 Really appreciate your support!')
+            : undefined,
+          language: data.language || detectLanguage(trimmed),
+          time: new Date().toLocaleTimeString(),
+          confidence: Number(data.confidence) || 90,
+        };
+        setUsingAI(true);
+      } catch {
+        newResult = {
+          comment: trimmed,
+          ...localCheck,
+          time: new Date().toLocaleTimeString(),
+        };
+        setUsingAI(false);
+      }
     }
 
     setResult(newResult);
@@ -248,7 +379,7 @@ export default function DemoPage() {
                 onChange={(e) => setComment(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); analyzeComment(comment); } }}
                 placeholder="Type any comment in Telugu, Hindi, Tamil, English, Arabic, Russian... AI will analyze instantly!"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-white focus:outline-none focus:border-blue-400 resize-none h-28 transition-colors"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:border-blue-400 resize-none h-28 transition-colors"
               />
               <button
                 onClick={() => analyzeComment(comment)}
@@ -314,7 +445,7 @@ export default function DemoPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h2 className="font-black text-gray-900">AI Decision</h2>
-                      <p className="text-xs text-gray-400 mt-0.5">{usingAI ? '⚡ Powered by ModerateAI' : '📡 Offline regex mode'}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{usingAI ? '⚡ Powered by ModerateAI' : '📡 Pattern detection mode'}</p>
                     </div>
                     <ActionBadge action={result.action} />
                   </div>

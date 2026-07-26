@@ -315,13 +315,13 @@ export default function ModerationPage() {
           background-image:linear-gradient(rgba(255,255,255,0.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.011) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        .r-sidebar{width:216px;min-width:216px;background:#0c0c14;border-right:1px solid rgba(124,58,237,0.11);
+        .r-sidebar{width:216px;min-width:216px;background:#0c0a0e;border-right:1px solid rgba(245,158,11,0.12);
           display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;}
         .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
-          background:linear-gradient(180deg,transparent,rgba(124,58,237,0.2) 30%,rgba(124,58,237,0.3) 50%,rgba(124,58,237,0.2) 70%,transparent);pointer-events:none;}
+          background:linear-gradient(180deg,transparent,rgba(245,158,11,0.15) 30%,rgba(245,158,11,0.22) 50%,rgba(245,158,11,0.15) 70%,transparent);pointer-events:none;}
         .r-logo{padding:18px 14px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
         .r-logo-mark{width:34px;height:34px;border-radius:10px;
-          background:linear-gradient(135deg,#7C3AED 0%,#5B21B6 60%,#4C1D95 100%);
+          background:linear-gradient(135deg,#F59E0B 0%,#D97706 40%,#7C3AED 100%);
           display:flex;align-items:center;justify-content:center;
           box-shadow:0 2px 14px rgba(124,58,237,0.38),inset 0 1px 0 rgba(255,255,255,0.14);}
         .r-nav{flex:1;padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
@@ -427,7 +427,9 @@ export default function ModerationPage() {
 
         {/* SIDEBAR */}
         <aside className="r-sidebar">
-          <div className="r-logo">
+        <div style={{ position: "absolute", top: "-60px", left: "-80px", width: "340px", height: "340px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,90,0,0.55) 0%, rgba(160,65,0,0.28) 35%, transparent 70%)", pointerEvents: "none", zIndex: 0, filter: "blur(18px)" }} />
+        <div style={{ position: "absolute", top: "160px", left: "-60px", width: "220px", height: "220px", borderRadius: "50%", background: "radial-gradient(circle, rgba(180,75,0,0.30) 0%, rgba(130,55,0,0.12) 40%, transparent 70%)", pointerEvents: "none", zIndex: 0, filter: "blur(22px)" }} />
+        <div className="r-logo">
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <div className="r-logo-mark"><Shield size={16} color="white" strokeWidth={2.2} /></div>
               <div>
@@ -739,13 +741,13 @@ export default function ModerationPage() {
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />
-            <div style={{ position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60, background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '6px 6px 10px', boxShadow: '0 -8px 40px rgba(0,0,0,0.65)', backdropFilter: 'blur(28px)', animation: 'slideUp 0.18s ease' }}>
+            <div style={{ position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60, background: 'rgba(20,8,45,0.75)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 18, padding: '6px 6px 10px', boxShadow: '0 -8px 40px rgba(0,0,0,0.65)', backdropFilter: 'blur(28px)', animation: 'slideUp 0.18s ease' }}>
               <div style={{ width: 30, height: 3, background: 'rgba(255,255,255,0.09)', borderRadius: 3, margin: '6px auto 12px' }} />
               {[
                 { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
                 { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
                 { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
-                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#94a3b8' },
+                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 13 }}>

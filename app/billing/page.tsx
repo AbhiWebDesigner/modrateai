@@ -124,14 +124,12 @@ function RazorpayModal({ plan, onClose }: { plan: Plan; onClose: () => void }) {
   const [step, setStep] = useState<"confirm" | "processing" | "done">("confirm");
   const backdropRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  // ESC to close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
@@ -290,7 +288,7 @@ export default function BillingPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         *, *::before, *::after { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; letter-spacing: -0.02em; box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { background: #09090B; color: white; }
+        html, body { background: #07030F; color: white; }
         .desktop-sidebar { display: none; }
         .bottom-nav-wrap { display: flex; }
         .main-content { margin-left: 0; padding: 20px 16px 100px; }
@@ -301,6 +299,13 @@ export default function BillingPage() {
         }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
+
+      {/* ── Orange glow background (matches Automation page) ── */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 0,
+        background: "radial-gradient(ellipse 55% 50% at 5% 15%, rgba(245,158,11,0.10) 0%, transparent 60%), radial-gradient(ellipse 60% 55% at 5% 95%, rgba(109,40,217,0.18) 0%, transparent 62%), #07030F",
+        pointerEvents: "none",
+      }} />
 
       <div className="desktop-sidebar"><DashboardSidebar /></div>
       <div className="bottom-nav-wrap"><DashboardBottomNav /></div>
@@ -335,7 +340,11 @@ export default function BillingPage() {
                 border: `1.5px solid ${isCurrentPlan ? "rgba(245,158,11,0.50)" : plan.borderColor}`,
                 borderRadius: 20, padding: "24px 22px",
                 position: "relative",
-                boxShadow: plan.id === "pro" ? "0 0 40px rgba(245,158,11,0.08)" : "none",
+                boxShadow: plan.id === "pro"
+                  ? "0 0 40px rgba(245,158,11,0.12), 0 0 80px rgba(245,158,11,0.06)"
+                  : plan.id === "agency"
+                  ? "0 0 40px rgba(124,58,237,0.08)"
+                  : "none",
               }}>
                 {plan.badge && (
                   <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#F59E0B,#EA580C)", borderRadius: 20, padding: "4px 14px", fontSize: 10, fontWeight: 800, color: "white", whiteSpace: "nowrap" }}>
@@ -394,7 +403,7 @@ export default function BillingPage() {
           <h2 style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA", marginBottom: 4 }}>Billing</h2>
           <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 20 }}>Payment method & invoices</p>
 
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid #27272A", borderRadius: 16, padding: "20px 22px" }}>
+          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "20px 22px" }}>
             <div style={{ fontWeight: 600, fontSize: 14, color: "#FAFAFA", marginBottom: 16 }}>Invoices</div>
             <div style={{ textAlign: "center", padding: "32px 0" }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>🧾</div>

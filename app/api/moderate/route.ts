@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
+export const runtime = 'edge';
+
 const SYSTEM_PROMPT = `You are a strict comment moderation AI for a YouTube/Instagram channel.
 
 Analyze the given comment and respond with ONLY a valid JSON object. No explanation, no markdown, no extra text.

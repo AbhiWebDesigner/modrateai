@@ -248,7 +248,7 @@ export default function DemoPage() {
                 onChange={(e) => setComment(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); analyzeComment(comment); } }}
                 placeholder="Type any comment in Telugu, Hindi, Tamil, English, Arabic, Russian... AI will analyze instantly!"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400 resize-none h-28 transition-colors"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-white focus:outline-none focus:border-blue-400 resize-none h-28 transition-colors"
               />
               <button
                 onClick={() => analyzeComment(comment)}

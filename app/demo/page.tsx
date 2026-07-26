@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Shield, Send, Trash2, Check, MessageSquare, ArrowLeft, AlertTriangle, Clock, Ban } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, Send, Trash2, Check, MessageSquare, ArrowLeft, Clock, Ban } from 'lucide-react';
 import Link from 'next/link';
 
 interface Result {
@@ -14,26 +14,32 @@ interface Result {
 }
 
 const sampleComments = [
+  // Good (REPLIED)
   'Bhai bohot acha video tha! 🙌',
   'ella unaru anna? video chala bagundi!',
-  'ni amma [abusive Telugu]',
-  'Great content keep it up!',
-  'nee amma denganu',
+  'Great content keep it up! 🔥',
   'Super video bro 👍',
-  'kys bro you are trash',
   'مرحبا، فيديو رائع جداً!',
   'очень хорошее видео!',
-  'Click here to win FREE iPhone!!!',
-  'nee amma denganu errypuka',
   'வீடியோ மிகவும் நன்றாக இருந்தது!',
+  'Zabardast video hai bhai! 🙏',
+  // Toxic / Bad (HIDDEN or TIMEOUT)
+  'lanajakodaka',
+  'nee amma denganu errypuka',
+  'kys bro you are trash',
+  'madarchod saala',
+  // Spam (SPAM)
+  'Click here to win FREE iPhone!!!',
+  'Subscribe to my channel for free gifts! www.spam.com',
+  // Neutral (KEPT)
+  'ok',
+  'hmm interesting',
 ];
 
-// 100+ language toxic word patterns
-const TOXIC_PATTERNS = /amma|denganu|kys|trash|idiot|stupid|randi|madarch|bc\b|mc\b|sala\b|harami|nee amma|ni amma|errypuka|bewako|chutiya|gaandu|lavde|bhosdi|maderchod|behenchod|sisterfucker|motherfucker|fuck\s*you|fuck off|die\b|kill yourself|кретин|ублюдок|сука\b|блядь|мудак|придурок|connard|merde\b|putain|puta\b|cabron|pendejo|chinga|hijo de|coño|joder|scheisse|scheiße|arschloch|wichser|fotze|testa di cazzo|vaffanculo|coglione|stronzo|porra\b|caralho|filho da|خنزير|كلب\b|عاهرة|لعنة|يلعن|حمار\b|গাধা|শালা|মাদারচোদ|বেশ্যা|teri maa|teri behen|bhad mein jao|tere baap|saala|kutte|haraamzade|rascal|bastard|asshole|bitch\b|cunt\b|dick\b|prick\b|whore\b|slut\b|nigger|faggot|retard/i;
-
-const SPAM_PATTERNS = /click here|free iphone|win \$|earn money|make \$\d+|work from home|limited offer|buy now|check my|follow me|subscribe to my|visit my|www\.|http|\.com|\.net|giveaway|free gift|promo code|discount code|check bio|link in bio|dm me for|inbox me/i;
-
-const POSITIVE_PATTERNS = /good|great|nice|excellent|amazing|awesome|wonderful|fantastic|superb|brilliant|love|best|beautiful|perfect|bagundi|chala bagundi|bohot acha|bahut accha|mast hai|zabardast|wah|bahut badhiya|நன்றாக|மிகவும்|رائع|ممتاز|отлично|хорошее|très bien|magnifique|muy bien|excelente|ottimo|molto bene|sehr gut|ausgezeichnet/i;
+// Fallback regex patterns (if API fails)
+const TOXIC_PATTERNS = /denganu|errypuka|lanajakodaka|lanjakodka|puku|modda|gudda|denge|dengudu|naayala|nakkalata|lanja|lanjakoduku|nee amma|ni amma|mee amma|chutiya|gaandu|lavde|bhosdi|maderchod|behenchod|madarchod|bhadwa|randi|harami|kutte|saala|haramzada|teri maa|teri behen|tere baap|bhad mein|gand|lund|fuck\s*you|fuck off|motherfucker|sisterfucker|kys|kill yourself|die\b|asshole|bastard|bitch\b|cunt\b|dick\b|prick\b|whore\b|slut\b|nigger|faggot|retard|idiot|stupid|trash|bc\b|mc\b|sala\b|кретин|ублюдок|сука\b|блядь|мудак|придурок|шлюха|дебил|خنزير|كلب\b|عاهرة|لعنة|يلعن|حمار\b|connard|merde\b|putain|salope|puta\b|cabron|pendejo|chinga|hijo de puta|coño|joder|scheisse|scheiße|arschloch|wichser|fotze|hurensohn|vaffanculo|coglione|stronzo|porra\b|caralho|filho da puta|গাধা|শালা|মাদারচোদ|বেশ্যা|haraamzada|kamina|kameena/i;
+const SPAM_PATTERNS = /click here|free iphone|win \$|earn money|make \$\d+|work from home|limited offer|buy now|check my channel|follow me|subscribe to my|visit my|www\.|http|\.com\b|\.net\b|giveaway|free gift|promo code|discount code|check bio|link in bio|dm me for|inbox me|whatsapp me|call me at|\d{10}|t\.me\/|join now|sign up now|exclusive deal|act now/i;
+const POSITIVE_PATTERNS = /good|great|nice|excellent|amazing|awesome|wonderful|fantastic|superb|brilliant|love|best|beautiful|perfect|helpful|thank|thanks|appreciated|incredible|outstanding|impressive|well done|keep it up|bagundi|chala bagundi|super|bohot acha|bahut accha|mast hai|zabardast|wah|bahut badhiya|shandar|kamaal|நன்றாக|மிகவும்|சூப்பர்|அருமை|رائع|ممتاز|جميل|شكرا|отлично|хорошее|молодец|спасибо|très bien|magnifique|bravo|merci|muy bien|excelente|increíble|gracias|sehr gut|ausgezeichnet|wunderbar|danke|ottimo|molto bene|grazie|muito bom|obrigado|すごい|良い|ありがとう|좋아요|감사합니다|대박|很好|谢谢|棒|厉害/i;
 
 function detectLanguage(text: string): string {
   if (/[\u0C00-\u0C7F]/.test(text)) return 'Telugu';
@@ -44,37 +50,32 @@ function detectLanguage(text: string): string {
   if (/[\u4E00-\u9FFF]/.test(text)) return 'Chinese';
   if (/[\u3040-\u30FF]/.test(text)) return 'Japanese';
   if (/[\uAC00-\uD7AF]/.test(text)) return 'Korean';
-  if (/[\u0370-\u03FF]/.test(text)) return 'Greek';
   if (/[\u0980-\u09FF]/.test(text)) return 'Bengali';
   if (/[\u0A80-\u0AFF]/.test(text)) return 'Gujarati';
-  if (/[\u0A00-\u0A7F]/.test(text)) return 'Punjabi';
   if (/[\u0D00-\u0D7F]/.test(text)) return 'Malayalam';
-  if (/[\u0B00-\u0B7F]/.test(text)) return 'Odia';
   if (/[\u0C80-\u0CFF]/.test(text)) return 'Kannada';
   if (/\b(amma|anna|bhai|yaar|bro|acha|bagundi|chala|errypuka|denganu)\b/i.test(text)) return 'Indian (Tenglish/Hinglish)';
   return 'English / Latin';
 }
 
-function classifyComment(text: string): Pick<Result, 'action' | 'reason' | 'reply' | 'confidence'> {
+function fallbackClassify(text: string): Omit<Result, 'comment' | 'time'> {
   const isToxic = TOXIC_PATTERNS.test(text);
   const isSpam = SPAM_PATTERNS.test(text);
   const isPositive = POSITIVE_PATTERNS.test(text);
-  const wordCount = text.trim().split(/\s+/).length;
   const isRepetitive = /(.{3,})\1{2,}/.test(text);
+  const wordCount = text.trim().split(/\s+/).length;
 
-  if (isToxic && isSpam) {
-    return { action: 'HIDDEN', reason: 'Toxic + spam content detected — permanently hidden', confidence: 99 };
-  }
   if (isToxic) {
-    // Severe toxic → HIDDEN, moderate → TIMEOUT
-    const isSevere = /(kys|kill yourself|die\b|motherfucker|maderchod|denganu|errypuka)/i.test(text);
-    if (isSevere) {
-      return { action: 'HIDDEN', reason: 'Severe abusive language detected — hidden from public', confidence: 97 };
-    }
-    return { action: 'TIMEOUT', reason: 'Abusive language detected — user comment timed out', confidence: 91 };
+    const isSevere = /(kys|kill yourself|die\b|motherfucker|maderchod|denganu|errypuka|lanajakodaka|madarchod|behenchod|nee amma|ni amma|fuck\s*you|сука|блядь)/i.test(text);
+    return {
+      action: isSevere ? 'HIDDEN' : 'TIMEOUT',
+      reason: isSevere ? 'Severe abuse detected — hidden from public' : 'Abusive language — comment timed out',
+      language: detectLanguage(text),
+      confidence: isSevere ? 97 : 91,
+    };
   }
   if (isSpam || isRepetitive) {
-    return { action: 'SPAM', reason: 'Spam or promotional content detected — flagged and hidden', confidence: 93 };
+    return { action: 'SPAM', reason: 'Spam or promotional content detected', language: detectLanguage(text), confidence: 93 };
   }
   if (isPositive || wordCount >= 3) {
     const replies = [
@@ -87,24 +88,25 @@ function classifyComment(text: string): Pick<Result, 'action' | 'reason' | 'repl
       action: 'REPLIED',
       reason: 'Positive comment — AI auto-reply sent',
       reply: replies[Math.floor(Math.random() * replies.length)],
+      language: detectLanguage(text),
       confidence: 88,
     };
   }
-  return { action: 'KEPT', reason: 'Neutral comment — kept as is', confidence: 82 };
+  return { action: 'KEPT', reason: 'Neutral comment — kept as is', language: detectLanguage(text), confidence: 82 };
 }
 
 const ACTION_CONFIG = {
-  HIDDEN: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300', glow: 'shadow-red-100', icon: <Trash2 className="w-4 h-4" />, dot: 'bg-red-500' },
-  SPAM:   { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300', glow: 'shadow-orange-100', icon: <Ban className="w-4 h-4" />, dot: 'bg-orange-500' },
-  TIMEOUT:{ bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300', glow: 'shadow-yellow-100', icon: <Clock className="w-4 h-4" />, dot: 'bg-yellow-500' },
-  REPLIED:{ bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-300', glow: 'shadow-blue-100', icon: <MessageSquare className="w-4 h-4" />, dot: 'bg-blue-500' },
-  KEPT:   { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-300', glow: 'shadow-green-100', icon: <Check className="w-4 h-4" />, dot: 'bg-green-500' },
+  HIDDEN:  { bg: 'bg-red-100',    text: 'text-red-700',    border: 'border-red-300',    glow: 'shadow-red-100',    dot: 'bg-red-500',    icon: <Trash2 className="w-4 h-4" /> },
+  SPAM:    { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300', glow: 'shadow-orange-100', dot: 'bg-orange-500', icon: <Ban className="w-4 h-4" /> },
+  TIMEOUT: { bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-300', glow: 'shadow-yellow-100', dot: 'bg-yellow-500', icon: <Clock className="w-4 h-4" /> },
+  REPLIED: { bg: 'bg-blue-100',   text: 'text-blue-700',   border: 'border-blue-300',   glow: 'shadow-blue-100',  dot: 'bg-blue-500',  icon: <MessageSquare className="w-4 h-4" /> },
+  KEPT:    { bg: 'bg-green-100',  text: 'text-green-700',  border: 'border-green-300',  glow: 'shadow-green-100', dot: 'bg-green-500', icon: <Check className="w-4 h-4" /> },
 };
 
 function ActionBadge({ action }: { action: Result['action'] }) {
   const cfg = ACTION_CONFIG[action];
   return (
-    <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black ${cfg.bg} ${cfg.text} transition-all`}>
+    <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black ${cfg.bg} ${cfg.text}`}>
       {cfg.icon} {action}
     </span>
   );
@@ -116,109 +118,72 @@ export default function DemoPage() {
   const [result, setResult] = useState<Result | null>(null);
   const [history, setHistory] = useState<Result[]>([]);
   const [animateResult, setAnimateResult] = useState(false);
-  const [animateHistory, setAnimateHistory] = useState(false);
+  const [usingAI, setUsingAI] = useState(true);
 
   const analyzeComment = async (text: string) => {
     if (!text.trim()) return;
     setLoading(true);
     setAnimateResult(false);
 
-    // Simulate AI processing delay (realistic feel)
-    await new Promise(r => setTimeout(r, 900 + Math.random() * 600));
-
     let newResult: Result;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/test-comment`, {
+      const res = await fetch('/api/moderate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ comment: text }),
       });
-      if (!res.ok) throw new Error('Failed');
+
+      if (!res.ok) throw new Error('API failed');
       const data = await res.json();
 
-      const decision = data.final_decision?.toUpperCase() || '';
-      const classified = classifyComment(text);
-      const action: Result['action'] = decision.includes('DELETE') || decision.includes('HIDE')
-        ? 'HIDDEN'
-        : decision.includes('SPAM') ? 'SPAM'
-        : decision.includes('TIMEOUT') ? 'TIMEOUT'
-        : classified.action;
-
       newResult = {
         comment: text,
-        action,
-        reason: classified.reason,
-        reply: classified.reply,
-        language: detectLanguage(text),
+        action: data.action,
+        reason: data.reason,
+        reply: data.reply || undefined,
+        language: data.language || detectLanguage(text),
         time: new Date().toLocaleTimeString(),
-        confidence: classified.confidence,
+        confidence: data.confidence || 90,
       };
+      setUsingAI(true);
     } catch {
-      // Offline fallback — full local classification
-      const classified = classifyComment(text);
+      // Fallback to regex
+      const fallback = fallbackClassify(text);
       newResult = {
         comment: text,
-        ...classified,
-        language: detectLanguage(text),
+        ...fallback,
         time: new Date().toLocaleTimeString(),
       };
+      setUsingAI(false);
     }
 
     setResult(newResult);
     setAnimateResult(true);
-    setAnimateHistory(true);
     setHistory(prev => [newResult, ...prev.slice(0, 9)]);
     setLoading(false);
     setComment('');
-
-    setTimeout(() => setAnimateHistory(false), 600);
   };
 
   return (
     <main className="min-h-screen bg-gray-50">
       <style>{`
-        @keyframes slideInDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeScale {
-          from { opacity: 0; transform: scale(0.96); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes pulseOnce {
-          0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
-          70%  { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
-          100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
-        }
-        @keyframes shimmer {
-          0%   { background-position: -400px 0; }
-          100% { background-position: 400px 0; }
-        }
-        .animate-slide-down  { animation: slideInDown 0.4s cubic-bezier(0.22,1,0.36,1) both; }
-        .animate-slide-up    { animation: slideInUp 0.4s cubic-bezier(0.22,1,0.36,1) both; }
-        .animate-fade-scale  { animation: fadeScale 0.35s cubic-bezier(0.22,1,0.36,1) both; }
-        .animate-pulse-once  { animation: pulseOnce 0.8s ease both; }
-        .shimmer-bar {
-          background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-          background-size: 400px 100%;
-          animation: shimmer 1.2s infinite;
-          border-radius: 6px;
-          height: 14px;
-        }
-        .history-item-new { animation: slideInUp 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+        @keyframes slideInDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeScale { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
+        @keyframes slideInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulseRing { 0% { box-shadow:0 0 0 0 rgba(59,130,246,0.4); } 70% { box-shadow:0 0 0 10px rgba(59,130,246,0); } 100% { box-shadow:0 0 0 0 rgba(59,130,246,0); } }
+        @keyframes shimmer { 0% { background-position:-400px 0; } 100% { background-position:400px 0; } }
+        .anim-down  { animation: slideInDown 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+        .anim-scale { animation: fadeScale 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+        .anim-up    { animation: slideInUp 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+        .anim-ring  { animation: pulseRing 0.8s ease both; }
+        .shimmer-bar { background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%); background-size:400px 100%; animation:shimmer 1.2s infinite; border-radius:6px; height:14px; }
       `}</style>
 
       {/* HEADER */}
       <header className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
+          <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
           <div className="flex items-center gap-2 font-black text-lg text-blue-600">
             <Shield className="w-5 h-5" /> ModerateAI
           </div>
@@ -226,9 +191,9 @@ export default function DemoPage() {
           <span className="text-gray-600 font-bold">Live Demo</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-green-50 border border-green-200 px-4 py-2 rounded-xl">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-sm font-medium text-green-700">AI Active</span>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium ${usingAI ? 'bg-green-50 border-green-200 text-green-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700'}`}>
+            <span className={`w-2 h-2 rounded-full animate-pulse ${usingAI ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+            {usingAI ? 'Groq AI Active' : 'Offline Mode'}
           </div>
           <Link href="/login" className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors">
             Get Started →
@@ -239,15 +204,13 @@ export default function DemoPage() {
       <div className="max-w-6xl mx-auto p-8">
 
         {/* HERO */}
-        <div className="text-center mb-10 animate-slide-down">
+        <div className="text-center mb-10 anim-down">
           <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-4 py-2 text-sm font-medium mb-4">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-            Test any comment in 100+ languages
+            Real AI · 100+ languages · Powered by Groq
           </div>
           <h1 className="text-4xl font-black text-gray-900 mb-3">See ModerateAI in action</h1>
           <p className="text-gray-500 text-lg">Type any comment in Telugu, Hindi, Tamil, Arabic, Russian or any language. AI judges instantly.</p>
-
-          {/* Action legend */}
           <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
             {(['HIDDEN','SPAM','TIMEOUT','REPLIED','KEPT'] as const).map(a => (
               <span key={a} className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${ACTION_CONFIG[a].bg} ${ACTION_CONFIG[a].text}`}>
@@ -261,8 +224,6 @@ export default function DemoPage() {
 
           {/* LEFT */}
           <div className="space-y-6">
-
-            {/* INPUT */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <h2 className="font-black text-gray-900 mb-4">Test a comment</h2>
               <textarea
@@ -278,14 +239,13 @@ export default function DemoPage() {
                 className="w-full mt-3 bg-blue-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-all active:scale-95"
               >
                 {loading ? (
-                  <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Analyzing...</>
+                  <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> AI Analyzing...</>
                 ) : (
                   <><Send className="w-4 h-4" /> Analyze Comment</>
                 )}
               </button>
             </div>
 
-            {/* SAMPLE COMMENTS */}
             <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
               <h2 className="font-black text-gray-900 mb-4">Try sample comments</h2>
               <div className="space-y-2">
@@ -308,7 +268,7 @@ export default function DemoPage() {
 
             {/* LOADING SKELETON */}
             {loading && (
-              <div className="bg-white rounded-2xl border-2 border-blue-200 p-6 animate-fade-scale shadow-lg shadow-blue-50">
+              <div className="bg-white rounded-2xl border-2 border-blue-200 p-6 anim-scale shadow-lg shadow-blue-50">
                 <div className="flex items-center justify-between mb-5">
                   <div className="shimmer-bar w-28"></div>
                   <div className="shimmer-bar w-20 h-7 rounded-full"></div>
@@ -320,10 +280,11 @@ export default function DemoPage() {
                 <div className="space-y-3">
                   <div className="flex gap-3"><div className="shimmer-bar w-20"></div><div className="shimmer-bar flex-1"></div></div>
                   <div className="flex gap-3"><div className="shimmer-bar w-20"></div><div className="shimmer-bar flex-1"></div></div>
+                  <div className="flex gap-3"><div className="shimmer-bar w-20"></div><div className="shimmer-bar flex-1"></div></div>
                 </div>
                 <div className="mt-4 flex items-center gap-2 text-blue-500 text-xs font-bold">
                   <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                  AI is analyzing in 100+ languages...
+                  Groq AI analyzing in 100+ languages...
                 </div>
               </div>
             )}
@@ -332,17 +293,18 @@ export default function DemoPage() {
             {result && !loading && (() => {
               const cfg = ACTION_CONFIG[result.action];
               return (
-                <div className={`bg-white rounded-2xl border-2 ${cfg.border} p-6 shadow-lg ${cfg.glow} ${animateResult ? 'animate-fade-scale animate-pulse-once' : ''}`}>
+                <div className={`bg-white rounded-2xl border-2 ${cfg.border} p-6 shadow-lg ${cfg.glow} ${animateResult ? 'anim-scale anim-ring' : ''}`}>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="font-black text-gray-900">AI Decision</h2>
+                    <div>
+                      <h2 className="font-black text-gray-900">AI Decision</h2>
+                      <p className="text-xs text-gray-400 mt-0.5">{usingAI ? '⚡ Powered by Groq AI' : '📡 Offline regex mode'}</p>
+                    </div>
                     <ActionBadge action={result.action} />
                   </div>
-
                   <div className="bg-gray-50 rounded-xl p-4 mb-4">
                     <p className="text-xs font-bold text-gray-400 uppercase mb-1">Comment</p>
                     <p className="text-gray-800 text-sm">{result.comment}</p>
                   </div>
-
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <span className="text-xs font-bold text-gray-400 uppercase mt-0.5 w-24 flex-shrink-0">Reason</span>
@@ -356,10 +318,7 @@ export default function DemoPage() {
                       <span className="text-xs font-bold text-gray-400 uppercase mt-0.5 w-24 flex-shrink-0">Confidence</span>
                       <div className="flex-1 flex items-center gap-2">
                         <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-700 ${cfg.dot}`}
-                            style={{ width: `${result.confidence}%` }}
-                          ></div>
+                          <div className={`h-2 rounded-full transition-all duration-700 ${cfg.dot}`} style={{ width: `${result.confidence}%` }}></div>
                         </div>
                         <span className="text-xs font-black text-gray-600">{result.confidence}%</span>
                       </div>
@@ -376,10 +335,10 @@ export default function DemoPage() {
             })()}
 
             {!result && !loading && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center animate-slide-up shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center anim-up shadow-sm">
                 <Shield className="w-12 h-12 text-gray-200 mx-auto mb-3" />
                 <p className="text-gray-400 font-bold">Enter a comment to see AI analysis</p>
-                <p className="text-gray-300 text-sm mt-1">Supports 100+ languages including Telugu, Hindi, Arabic, Russian</p>
+                <p className="text-gray-300 text-sm mt-1">Supports 100+ languages · Powered by Groq AI</p>
               </div>
             )}
 
@@ -392,10 +351,7 @@ export default function DemoPage() {
                 </div>
                 <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
                   {history.map((item, i) => (
-                    <div
-                      key={i}
-                      className={`px-6 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${i === 0 && animateHistory ? 'history-item-new' : ''}`}
-                    >
+                    <div key={i} className={`px-6 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${i === 0 ? 'anim-up' : ''}`}>
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${ACTION_CONFIG[item.action].dot}`}></div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-700 truncate">{item.comment}</p>
@@ -430,10 +386,7 @@ export default function DemoPage() {
         <div className="mt-10 bg-blue-600 rounded-2xl p-8 text-center text-white">
           <h2 className="text-2xl font-black mb-2">Ready to protect your channel?</h2>
           <p className="text-blue-200 mb-6">Start your 19-day free trial — no credit card needed</p>
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl font-black hover:bg-blue-50 transition-colors active:scale-95"
-          >
+          <Link href="/login" className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl font-black hover:bg-blue-50 transition-colors active:scale-95">
             Start free trial →
           </Link>
         </div>

@@ -4,51 +4,59 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export const runtime = 'edge';
 
-const SYSTEM_PROMPT = `You are an extremely strict AI comment moderator for ModerateAI. You must detect abusive, toxic, spam, and hateful content in ANY language including Telugu, Hindi, Tamil, Kannada, Malayalam, Arabic, Russian, Spanish, French, German, Italian, Portuguese, Bengali, Punjabi, Turkish, Polish, Dutch, Japanese, Korean, Chinese, Indonesian, Urdu, and all other languages including mixed/slang forms.
+const SYSTEM_PROMPT = `You are a precise AI comment moderator for ModerateAI. Analyze comments in ANY language and return ONLY raw JSON.
 
-CRITICAL RULES — NEVER BREAK THESE:
-1. ANY abusive word, insult, slur, or sexual word in ANY language = HIDDEN or TIMEOUT. Never KEPT.
-2. Single abusive word alone = HIDDEN (severe) or TIMEOUT (mild)
-3. Spam links, URLs, promos, phone numbers = SPAM
-4. Greetings (hi, hello, namaste, vanakkam, salam, etc.) = REPLIED with friendly reply
-5. Positive, appreciative, supportive comments = REPLIED with warm reply
-6. Only truly neutral factual questions or statements = KEPT
-7. When in doubt between KEPT and TIMEOUT — always choose TIMEOUT
+CLASSIFICATION RULES:
 
-CLASSIFICATION:
-- HIDDEN: severe abuse, death threats, extreme sexual content, slurs, hate speech in ANY language
-- TIMEOUT: mild insults, rude words, offensive slang in ANY language  
-- SPAM: links, URLs, http, www, phone numbers, promotional content, repeated spam text
-- REPLIED: greetings, positive, appreciative, supportive, encouraging comments — MUST include a warm reply string
-- KEPT: only neutral factual questions or completely harmless neutral statements
+HIDDEN — severe abuse only:
+- Explicit sexual words, extreme slurs, death threats, extreme hate speech
+- Telugu examples: lanajakodaka, denganu, errypuka, puku, modda, nee amma denganu
+- Hindi examples: madarchod, behenchod, bhosdi, chutiya, teri maa ki
+- English examples: motherfucker, cunt, nigger, kys, kill yourself
+- Arabic: شرموطة, كس, زب  | Russian: блядь, хуй, пиздец | Spanish: hijo de puta, coño
 
-TELUGU TOXIC EXAMPLES (these and similar = HIDDEN/TIMEOUT):
-lanajakodaka, lanjakoduku, denganu, errypuka, puku, modda, gudda, dengutha, pukodi, modaga, moda ga, entra (used as insult), nakka, lavada, bokka, erri, naayala, nee amma, ni amma
+TIMEOUT — mild rude words only:
+- Light insults, mild offensive slang — actual bad words, NOT normal sentences
+- Telugu examples: entra (as insult), nakka, lavada, erri
+- Hindi: saala, haramzada, gaandu | English: bitch, asshole, bastard, idiot, stupid
 
-HINDI TOXIC EXAMPLES (these and similar = HIDDEN/TIMEOUT):
-chutiya, madarchod, behenchod, gaandu, bhosdi, lund, randi, harami, saala, haramzada, teri maa, mc, bc
+SPAM — promotional/link content:
+- URLs, www, http, phone numbers, "click here", "free gift", "subscribe to my channel", "check bio"
 
-ENGLISH TOXIC EXAMPLES (these and similar = HIDDEN/TIMEOUT):
-fuck, bitch, cunt, nigger, kys, kill yourself, asshole, motherfucker, bastard, whore, slut, faggot
+REPLIED — greetings and positive comments:
+- Greetings: hi, hello, hey, namaste, vanakkam, salam, bonjour, hola, konnichiwa
+- Positive: good, great, amazing, bagundi, superb, شكرا, отлично, gracias, 很好
+- MUST include a warm reply string
 
-ARABIC TOXIC EXAMPLES: خنزير, كلب, شرموطة, كس, زب, يلعن, عاهرة
-RUSSIAN TOXIC EXAMPLES: сука, блядь, мудак, пиздец, хуй, иди нахуй
-SPANISH TOXIC EXAMPLES: puta, pendejo, cabron, hijo de puta, verga, coño
-TAMIL TOXIC EXAMPLES: otha, thevidiya, pundai, sunni, koothi, thevdiya
-KANNADA TOXIC EXAMPLES: sule, nin tika, nin amma, thika, suliya
-MALAYALAM TOXIC EXAMPLES: myre, thendi, kunna, kundi, thevadichi, thayoli
+KEPT — everything else that is NOT abusive:
+- Normal questions in any language: "nee name enti" = "what is your name" = KEPT
+- Neutral statements: "arthm kaledu" = "no meaning" = KEPT
+- Factual comments, opinions, observations
+- Short neutral words: ok, hmm, nice, interesting
+- ANY normal sentence that does not contain actual abusive words
+
+IMPORTANT — DO NOT over-moderate:
+- Normal Telugu/Hindi/Tamil sentences are NOT toxic
+- Questions about anything = KEPT
+- Statements of fact or opinion = KEPT
+- Only ACTUAL abusive/sexual/slur words = HIDDEN or TIMEOUT
+- "nee name enti" = question = KEPT (NOT timeout)
+- "arthm kaledu" = neutral = KEPT (NOT timeout)
+- "video bagundi" = positive = REPLIED
+- "entra" alone as insult = TIMEOUT
+- "lanajakodaka" = HIDDEN
 
 REPLY RULES:
-- When action is REPLIED, reply field MUST be a warm friendly response (never null, never empty)
-- Greetings → "Hey! Thanks for stopping by 😊 Stay connected!"
-- Positive comments → vary between: "Thank you so much! 🙏", "Glad you enjoyed it! More coming soon 🔥", "Your support means everything! 🙌", "Thanks! Drop a like if you loved it ❤️"
+- REPLIED action: reply field MUST be warm and friendly (never null)
+- Greeting reply: "Hey! Thanks for stopping by 😊 Stay connected!"
+- Positive reply: vary between "Thank you so much! 🙏", "Glad you enjoyed it! More coming soon 🔥", "Your support means everything! 🙌", "Thanks! Drop a like ❤️"
 
-Return ONLY raw JSON, no markdown, no backticks, no explanation:
-{"action":"REPLIED","reason":"positive comment","reply":"Thank you so much! 🙏 Really appreciate your support!","language":"English","confidence":92}
+Return ONLY this JSON (no markdown, no backticks, no explanation):
+{"action":"KEPT","reason":"neutral question","reply":null,"language":"Telugu","confidence":88}
 
-action must be one of: HIDDEN | TIMEOUT | SPAM | REPLIED | KEPT
-reply: warm string when REPLIED, null otherwise
-confidence: number 0-100`;
+action: HIDDEN | TIMEOUT | SPAM | REPLIED | KEPT
+reply: string when REPLIED, null otherwise
+confidence: 0-100`;
 
 export async function POST(req: NextRequest) {
   try {

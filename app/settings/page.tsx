@@ -166,7 +166,7 @@ export default function SettingsPage() {
           background:linear-gradient(180deg,transparent,rgba(245,158,11,0.15) 30%,rgba(245,158,11,0.22) 50%,rgba(245,158,11,0.15) 70%,transparent);pointer-events:none;}
         .r-logo{padding:18px 14px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
         .r-logo-mark{width:34px;height:34px;border-radius:10px;
-          background:linear-gradient(135deg,#7C3AED 0%,#5B21B6 60%,#4C1D95 100%);
+        background:linear-gradient(135deg,#F59E0B 0%,#D97706 40%,#7C3AED 100%);
           display:flex;align-items:center;justify-content:center;
           box-shadow:0 2px 14px rgba(124,58,237,0.38),inset 0 1px 0 rgba(255,255,255,0.14);}
         .r-nav{flex:1;padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
@@ -560,9 +560,11 @@ export default function SettingsPage() {
       <div className={`r-bg${isDesktopSiteOn ? ' dso' : ''}`}>
 
         {/* SIDEBAR */}
-        <aside className="r-sidebar">
-          <div className="r-logo">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+      <aside className="r-sidebar">
+      <div style={{ position: "absolute", top: "-60px", left: "-80px", width: "340px", height: "340px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,90,0,0.55) 0%, rgba(160,65,0,0.28) 35%, transparent 70%)", pointerEvents: "none", zIndex: 0, filter: "blur(18px)" }} />
+    <div style={{ position: "absolute", top: "160px", left: "-60px", width: "220px", height: "220px", borderRadius: "50%", background: "radial-gradient(circle, rgba(180,75,0,0.30) 0%, rgba(130,55,0,0.12) 40%, transparent 70%)", pointerEvents: "none", zIndex: 0, filter: "blur(22px)" }} />
+   <div className="r-logo">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <div className="r-logo-mark"><Shield size={16} color="white" strokeWidth={2.2} /></div>
               <div>
                 <div style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.02em' }}>ModerateAI</div>

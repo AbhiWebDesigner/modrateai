@@ -32,7 +32,7 @@ const MORE_ITEMS = [
   { href: '/billing',         icon: CreditCard,    label: 'Billing',          color: '#F59E0B' },
   { href: '/analytics',       icon: BarChart2,     label: 'Analytics',        color: '#a78bfa' },
   { href: '/moderation',      icon: Shield,        label: 'Moderation',       color: '#34d399' },
-  { href: '/settings',        icon: Settings,      label: 'Settings',         color: '#94a3b8' },
+{ href: '/settings',          icon: Settings,       label: 'Settings',         color: '#a78bfa' },
 ];
 
 const NOTIFICATION_EVENTS = [
@@ -409,7 +409,7 @@ export default function AlertsPage() {
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />
             <div style={{
               position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60,
-              background: 'rgba(14,14,20,0.98)', border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(20,8,45,0.75)', border: '1px solid rgba(124,58,237,0.3)',
               borderRadius: 20, overflow: 'hidden',
               boxShadow: '0 -8px 48px rgba(0,0,0,0.7)', backdropFilter: 'blur(28px)',
               animation: 'slideUp 0.2s ease',

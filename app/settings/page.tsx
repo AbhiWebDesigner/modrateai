@@ -244,13 +244,12 @@ export default function SettingsPage() {
           text-decoration:none;
         }
         .tab-btn:hover{background:rgba(255,255,255,0.045);border-color:rgba(255,255,255,0.08);color:rgba(255,255,255,0.72);transform:translateY(-1px);}
-        .tab-btn.active{
-          background:linear-gradient(160deg,rgba(124,58,237,0.18) 0%,rgba(109,40,217,0.11) 100%);
-          color:#c4b5fd;
-          border-color:rgba(139,92,246,0.32);
-          box-shadow:0 0 0 1px rgba(139,92,246,0.12),0 2px 8px rgba(124,58,237,0.15),inset 0 1px 0 rgba(255,255,255,0.05);
+          .tab-btn.active{
+          background:linear-gradient(135deg,rgba(245,158,11,0.20) 0%,rgba(245,158,11,0.10) 50%,rgba(245,158,11,0.06) 100%);
+          color:#FBBF24;
+       border-color:rgba(245,158,11,0.25);
+        box-shadow:0 0 0 1px rgba(245,158,11,0.12),0 2px 20px rgba(245,158,11,0.10),inset 0 1px 0 rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.06);
         }
-
         /* CARDS */
         .cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
         .card-full{grid-column:1 / -1;}

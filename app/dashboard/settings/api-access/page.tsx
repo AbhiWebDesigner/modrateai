@@ -1101,8 +1101,8 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           </div>
           <div style={{ display: "flex", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
             {[
-              { label: "Open Google Cloud Console", icon: <Globe size={13} />, href: "https://console.cloud.google.com", color: "#4285F4" },
-              { label: "Open API Library", icon: <Database size={13} />, href: "https://console.cloud.google.com/apis/library", color: "#A78BFA" },
+              { label: "Open Google Cloud Console", icon: <Globe size={13} />, href: "https://console.cloud.google.com/projectcreate?previousPage=%2Fwelcome%3Fproject%3Dneon-fiber-503217-n9&organizationId=0", color: "#4285F4" },
+              { label: "Open API Library", icon: <Database size={13} />, href: "https://console.cloud.google.com/apis/library/youtube.googleapis.com?project=neon-fiber-503217-n9", color: "#A78BFA" },
               { label: "Open Credentials", icon: <Key size={13} />, href: "https://console.cloud.google.com/apis/credentials", color: "#F59E0B" },
               { label: "Refresh Status", icon: gcpRefreshing ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={13} />, onClick: handleGcpRefresh, color: "#22C55E" },
             ].map(item =>

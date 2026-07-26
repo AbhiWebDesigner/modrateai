@@ -1325,7 +1325,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   return (
     <div>
       <style>{`
-        .gcp-v2-laptop { display: grid; grid-template-columns: 260px 1fr 300px; gap: 20px; }
+        .gcp-v2-laptop { display: grid; grid-template-columns: 240px 1fr 280px; gap: 16px; }
         .gcp-v2-mobile { display: none; }
         .step-pill-bar { display: flex; align-items: center; gap: 0; overflow-x: auto; padding-bottom: 2px; }
         .step-pill-bar::-webkit-scrollbar { height: 0; }
@@ -1392,7 +1392,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                     width: "100%", display: "flex", alignItems: "center", gap: 10,
                     padding: "12px 14px", background: active ? "rgba(124,58,237,0.15)" : "transparent",
                     border: "none", borderBottom: i < SETUP_STEPS.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                    borderLeft: active ? "3px solid #7C3AED" : "3px solid transparent",
+                    borderLeft: active ? "3px solid #A78BFA" : "3px solid transparent",
                     cursor: "pointer", textAlign: "left", transition: "all 0.15s",
                   }}
                 >
@@ -1469,7 +1469,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           </div>
 
           {/* Step body */}
-          <div className="gcp-step-body" key={currentStep} style={{ flex: 1, padding: 24, display: "flex", gap: 24 }}>
+          <div className="gcp-step-body" key={currentStep} style={{ flex: 1, padding: 24, display: "flex", gap: 20 }}>
 
             {/* Left — instructions */}
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1591,8 +1591,8 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             </div>
 
             {/* Right — preview screenshot */}
-            <div style={{ width: 300, flexShrink: 0 }}>
-              <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ width: 260, flexShrink: 0 }}>
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 14, overflow: "hidden", boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
                 <div style={{ padding: "10px 12px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Preview</span>
                   <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.06)", borderRadius: 6, padding: "2px 7px" }}>{currentStepDetail.duration}</span>

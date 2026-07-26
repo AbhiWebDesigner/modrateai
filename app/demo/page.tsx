@@ -14,7 +14,6 @@ interface Result {
 }
 
 const sampleComments = [
-  // Good (REPLIED)
   'Bhai bohot acha video tha! 🙌',
   'ella unaru anna? video chala bagundi!',
   'Great content keep it up! 🔥',
@@ -23,23 +22,28 @@ const sampleComments = [
   'очень хорошее видео!',
   'வீடியோ மிகவும் நன்றாக இருந்தது!',
   'Zabardast video hai bhai! 🙏',
-  // Toxic / Bad (HIDDEN or TIMEOUT)
   'lanajakodaka',
   'nee amma denganu errypuka',
   'kys bro you are trash',
   'madarchod saala',
-  // Spam (SPAM)
   'Click here to win FREE iPhone!!!',
   'Subscribe to my channel for free gifts! www.spam.com',
-  // Neutral (KEPT)
   'ok',
   'hmm interesting',
 ];
 
-// Fallback regex patterns (if API fails)
 const TOXIC_PATTERNS = /denganu|errypuka|lanajakodaka|lanjakodka|puku|modda|gudda|denge|dengudu|naayala|nakkalata|lanja|lanjakoduku|nee amma|ni amma|mee amma|chutiya|gaandu|lavde|bhosdi|maderchod|behenchod|madarchod|bhadwa|randi|harami|kutte|saala|haramzada|teri maa|teri behen|tere baap|bhad mein|gand|lund|fuck\s*you|fuck off|motherfucker|sisterfucker|kys|kill yourself|die\b|asshole|bastard|bitch\b|cunt\b|dick\b|prick\b|whore\b|slut\b|nigger|faggot|retard|idiot|stupid|trash|bc\b|mc\b|sala\b|кретин|ублюдок|сука\b|блядь|мудак|придурок|шлюха|дебил|خنزير|كلب\b|عاهرة|لعنة|يلعن|حمار\b|connard|merde\b|putain|salope|puta\b|cabron|pendejo|chinga|hijo de puta|coño|joder|scheisse|scheiße|arschloch|wichser|fotze|hurensohn|vaffanculo|coglione|stronzo|porra\b|caralho|filho da puta|গাধা|শালা|মাদারচোদ|বেশ্যা|haraamzada|kamina|kameena/i;
 const SPAM_PATTERNS = /click here|free iphone|win \$|earn money|make \$\d+|work from home|limited offer|buy now|check my channel|follow me|subscribe to my|visit my|www\.|http|\.com\b|\.net\b|giveaway|free gift|promo code|discount code|check bio|link in bio|dm me for|inbox me|whatsapp me|call me at|\d{10}|t\.me\/|join now|sign up now|exclusive deal|act now/i;
 const POSITIVE_PATTERNS = /good|great|nice|excellent|amazing|awesome|wonderful|fantastic|superb|brilliant|love|best|beautiful|perfect|helpful|thank|thanks|appreciated|incredible|outstanding|impressive|well done|keep it up|bagundi|chala bagundi|super|bohot acha|bahut accha|mast hai|zabardast|wah|bahut badhiya|shandar|kamaal|நன்றாக|மிகவும்|சூப்பர்|அருமை|رائع|ممتاز|جميل|شكرا|отлично|хорошее|молодец|спасибо|très bien|magnifique|bravo|merci|muy bien|excelente|increíble|gracias|sehr gut|ausgezeichnet|wunderbar|danke|ottimo|molto bene|grazie|muito bom|obrigado|すごい|良い|ありがとう|좋아요|감사합니다|대박|很好|谢谢|棒|厉害/i;
+const GREETING_PATTERNS = /^(hi+|hello+|hey+|hii+|helo|sup|howdy|yo+|namaste|vanakkam|నమస్కారం|مرحبا|привет|bonjour|hola|ciao|oi\b|salut)[\s!.]*$/i;
+
+const POSITIVE_REPLIES = [
+  'Thank you so much! 🙏 Really appreciate your support!',
+  'Glad you enjoyed it! More coming soon 🔥',
+  'Your support means everything! Stay tuned 🙌',
+  'Thanks a lot! Drop a like if you loved it ❤️',
+  'Hey! Thanks for stopping by 😊 Stay connected!',
+];
 
 function detectLanguage(text: string): string {
   if (/[\u0C00-\u0C7F]/.test(text)) return 'Telugu';
@@ -62,8 +66,19 @@ function fallbackClassify(text: string): Omit<Result, 'comment' | 'time'> {
   const isToxic = TOXIC_PATTERNS.test(text);
   const isSpam = SPAM_PATTERNS.test(text);
   const isPositive = POSITIVE_PATTERNS.test(text);
+  const isGreeting = GREETING_PATTERNS.test(text.trim());
   const isRepetitive = /(.{3,})\1{2,}/.test(text);
   const wordCount = text.trim().split(/\s+/).length;
+
+  if (isGreeting) {
+    return {
+      action: 'REPLIED',
+      reason: 'Greeting detected — friendly reply sent',
+      reply: 'Hey! Thanks for stopping by 😊 Stay connected!',
+      language: detectLanguage(text),
+      confidence: 90,
+    };
+  }
 
   if (isToxic) {
     const isSevere = /(kys|kill yourself|die\b|motherfucker|maderchod|denganu|errypuka|lanajakodaka|madarchod|behenchod|nee amma|ni amma|fuck\s*you|сука|блядь)/i.test(text);
@@ -74,24 +89,21 @@ function fallbackClassify(text: string): Omit<Result, 'comment' | 'time'> {
       confidence: isSevere ? 97 : 91,
     };
   }
+
   if (isSpam || isRepetitive) {
     return { action: 'SPAM', reason: 'Spam or promotional content detected', language: detectLanguage(text), confidence: 93 };
   }
+
   if (isPositive || wordCount >= 3) {
-    const replies = [
-      'Thank you so much! 🙏 Really appreciate your support!',
-      'Glad you enjoyed it! More coming soon 🔥',
-      'Your support means everything! Stay tuned 🙌',
-      'Thanks a lot! Drop a like if you loved it ❤️',
-    ];
     return {
       action: 'REPLIED',
       reason: 'Positive comment — AI auto-reply sent',
-      reply: replies[Math.floor(Math.random() * replies.length)],
+      reply: POSITIVE_REPLIES[Math.floor(Math.random() * POSITIVE_REPLIES.length)],
       language: detectLanguage(text),
       confidence: 88,
     };
   }
+
   return { action: 'KEPT', reason: 'Neutral comment — kept as is', language: detectLanguage(text), confidence: 82 };
 }
 
@@ -140,18 +152,20 @@ export default function DemoPage() {
 
       const validActions = ['HIDDEN', 'TIMEOUT', 'SPAM', 'REPLIED', 'KEPT'];
       const safeAction = validActions.includes(data.action) ? data.action : 'KEPT';
+
       newResult = {
         comment: trimmed,
         action: safeAction,
         reason: data.reason || 'AI analyzed',
-        reply: (data.reply && data.reply !== 'null' && data.reply !== null) ? data.reply : undefined,
-        language: data.language || detectLanguage(text),
+        reply: safeAction === 'REPLIED'
+          ? (data.reply && data.reply !== 'null' ? data.reply : 'Thank you so much! 🙏 Really appreciate your support!')
+          : undefined,
+        language: data.language || detectLanguage(trimmed),
         time: new Date().toLocaleTimeString(),
         confidence: Number(data.confidence) || 90,
       };
       setUsingAI(true);
     } catch {
-      // Fallback to regex
       const fallback = fallbackClassify(trimmed);
       newResult = {
         comment: trimmed,

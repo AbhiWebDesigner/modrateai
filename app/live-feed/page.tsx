@@ -702,9 +702,9 @@ export default function LiveFeedPage() {
           background-image:linear-gradient(rgba(255,255,255,0.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.011) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        .r-sidebar{width:216px;min-width:216px;background:#0c0a0e;border-right:1px solid rgba(245,158,11,0.12);
-          display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;}
-        .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
+         .r-sidebar{width:216px;min-width:216px;border-right:1px solid rgba(245,158,11,0.12);
+          display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;
+          background:radial-gradient(ellipse 80% 40% at -10% 0%, rgba(180,90,0,0.35) 0%, transparent 60%), radial-gradient(ellipse 60% 30% at -5% 30%, rgba(150,70,0,0.20) 0%, transparent 55%), #0c0a0e;}        .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
           background:linear-gradient(180deg,transparent,rgba(245,158,11,0.15) 30%,rgba(245,158,11,0.22) 50%,rgba(245,158,11,0.15) 70%,transparent);pointer-events:none;}
         .r-logo{padding:18px 14px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
         .r-logo-mark{width:34px;height:34px;border-radius:10px;

@@ -121,9 +121,11 @@ export default function DemoPage() {
   const [usingAI, setUsingAI] = useState(true);
 
   const analyzeComment = async (text: string) => {
-    if (!text.trim()) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
     setLoading(true);
     setAnimateResult(false);
+    setComment('');
 
     let newResult: Result;
 
@@ -131,7 +133,7 @@ export default function DemoPage() {
       const res = await fetch('/api/moderate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ comment: text }),
+        body: JSON.stringify({ comment: trimmed }),
       });
 
       if (!res.ok) throw new Error('API failed');
@@ -140,7 +142,7 @@ export default function DemoPage() {
       const validActions = ['HIDDEN', 'TIMEOUT', 'SPAM', 'REPLIED', 'KEPT'];
       const safeAction = validActions.includes(data.action) ? data.action : 'KEPT';
       newResult = {
-        comment: text,
+        comment: trimmed,
         action: safeAction,
         reason: data.reason || 'AI analyzed',
         reply: (data.reply && data.reply !== 'null' && data.reply !== null) ? data.reply : undefined,
@@ -151,9 +153,9 @@ export default function DemoPage() {
       setUsingAI(true);
     } catch {
       // Fallback to regex
-      const fallback = fallbackClassify(text);
+      const fallback = fallbackClassify(trimmed);
       newResult = {
-        comment: text,
+        comment: trimmed,
         ...fallback,
         time: new Date().toLocaleTimeString(),
       };
@@ -164,7 +166,6 @@ export default function DemoPage() {
     setAnimateResult(true);
     setHistory(prev => [newResult, ...prev.slice(0, 9)]);
     setLoading(false);
-    setComment('');
   };
 
   return (
@@ -195,7 +196,7 @@ export default function DemoPage() {
         <div className="flex items-center gap-3">
           <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium ${usingAI ? 'bg-green-50 border-green-200 text-green-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700'}`}>
             <span className={`w-2 h-2 rounded-full animate-pulse ${usingAI ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
-            {usingAI ? 'Groq AI Active' : 'Offline Mode'}
+            {usingAI ? 'ModerateAI Active' : 'Offline Mode'}
           </div>
           <Link href="/login" className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors">
             Get Started →
@@ -209,7 +210,7 @@ export default function DemoPage() {
         <div className="text-center mb-10 anim-down">
           <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-4 py-2 text-sm font-medium mb-4">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-            Real AI · 100+ languages · Powered by Groq
+            Real AI · 100+ languages · Powered by ModerateAI
           </div>
           <h1 className="text-4xl font-black text-gray-900 mb-3">See ModerateAI in action</h1>
           <p className="text-gray-500 text-lg">Type any comment in Telugu, Hindi, Tamil, Arabic, Russian or any language. AI judges instantly.</p>
@@ -286,7 +287,7 @@ export default function DemoPage() {
                 </div>
                 <div className="mt-4 flex items-center gap-2 text-blue-500 text-xs font-bold">
                   <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-                  Groq AI analyzing in 100+ languages...
+                  ModerateAI analyzing in 100+ languages...
                 </div>
               </div>
             )}
@@ -299,7 +300,7 @@ export default function DemoPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h2 className="font-black text-gray-900">AI Decision</h2>
-                      <p className="text-xs text-gray-400 mt-0.5">{usingAI ? '⚡ Powered by Groq AI' : '📡 Offline regex mode'}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{usingAI ? '⚡ Powered by ModerateAI' : '📡 Offline regex mode'}</p>
                     </div>
                     <ActionBadge action={result.action} />
                   </div>
@@ -340,7 +341,7 @@ export default function DemoPage() {
               <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center anim-up shadow-sm">
                 <Shield className="w-12 h-12 text-gray-200 mx-auto mb-3" />
                 <p className="text-gray-400 font-bold">Enter a comment to see AI analysis</p>
-                <p className="text-gray-300 text-sm mt-1">Supports 100+ languages · Powered by Groq AI</p>
+                <p className="text-gray-300 text-sm mt-1">Supports 100+ languages · Powered by ModerateAI</p>
               </div>
             )}
 

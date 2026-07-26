@@ -315,9 +315,9 @@ export default function ModerationPage() {
           background-image:linear-gradient(rgba(255,255,255,0.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.011) 1px,transparent 1px);
           background-size:44px 44px;}
 
-        .r-sidebar{width:216px;min-width:216px;background:#0c0a0e;border-right:1px solid rgba(245,158,11,0.12);
-          display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;}
-        .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
+         .r-sidebar{width:216px;min-width:216px;background:#0c0a0e;border-right:1px solid rgba(245,158,11,0.12);
+         display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;
+           background:radial-gradient(ellipse 80% 40% at -10% 0%, rgba(180,90,0,0.35) 0%, transparent 60%), radial-gradient(ellipse 60% 30% at -5% 30%, rgba(150,70,0,0.20) 0%, transparent 55%), #0c0a0e;}        .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
           background:linear-gradient(180deg,transparent,rgba(245,158,11,0.15) 30%,rgba(245,158,11,0.22) 50%,rgba(245,158,11,0.15) 70%,transparent);pointer-events:none;}
         .r-logo{padding:18px 14px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
         .r-logo-mark{width:34px;height:34px;border-radius:10px;
@@ -329,11 +329,12 @@ export default function ModerationPage() {
           font-size:12.5px;font-weight:500;text-decoration:none;color:rgba(255,255,255,0.36);
           transition:all 0.18s;border:1px solid transparent;position:relative;overflow:hidden;}
         .r-nav-item:hover{background:rgba(124,58,237,0.06);color:rgba(255,255,255,0.7);}
-        .r-nav-item.active{background:linear-gradient(135deg,rgba(124,58,237,0.2) 0%,rgba(124,58,237,0.09) 100%);
-          color:#a78bfa;border-color:rgba(124,58,237,0.2);font-weight:700;}
+        .r-nav-item.active{background:linear-gradient(135deg,rgba(245,158,11,0.20) 0%,rgba(245,158,11,0.10) 50%,rgba(245,158,11,0.06) 100%);
+         color:#FBBF24;border-color:rgba(245,158,11,0.25);font-weight:700;
+         box-shadow:0 0 0 1px rgba(245,158,11,0.12),0 2px 20px rgba(245,158,11,0.10),inset 0 1px 0 rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.06);}
         .r-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
-          width:3px;height:18px;border-radius:0 3px 3px 0;
-          background:linear-gradient(180deg,#a78bfa,#7C3AED);box-shadow:0 0 7px rgba(124,58,237,0.65);}
+         width:3px;height:18px;border-radius:0 3px 3px 0;
+        background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);box-shadow:0 0 10px rgba(245,158,11,0.8),0 0 24px rgba(245,158,11,0.3);}
         .r-upgrade{margin:0 7px 7px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.14);border-radius:13px;padding:13px;}
         .r-sidebar-bottom{padding:7px 7px 18px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:2px;}
         .r-btn-logout{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:500;

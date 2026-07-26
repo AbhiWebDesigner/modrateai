@@ -284,14 +284,14 @@ function BottomNav({ pathname, moreOpen, setMoreOpen }: { pathname: string; more
           <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,.35)", transition: "color 0.18s", position: "relative" }}>
             {active && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 34, borderRadius: 10, background: active ? "rgba(245,158,11,0.15)" : "transparent", boxShadow: active ? "0 0 14px rgba(245,158,11,0.4)" : "none", transition: "all 0.2s" }}>{link.icon}</span>
-            <span style={{ fontSize: 9, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
+            <span style={{ fontSize: 10, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
           </Link>
         );
       })}
       <button onClick={() => setMoreOpen(v => !v)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", background: "none", border: "none", cursor: "pointer", color: moreOpen ? "#F59E0B" : "rgba(255,255,255,.35)", position: "relative" }}>
         {moreOpen && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
-        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-        <span style={{ fontSize: 9, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
+        <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+        <span style={{ fontSize: 10, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
       </button>
     </div>
   );

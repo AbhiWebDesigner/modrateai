@@ -183,7 +183,7 @@ export default function DemoPage() {
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (comment.trim().length >= 3 && !loading) {
+    if (comment.trim().length >= 2 && !loading) {
       debounceRef.current = setTimeout(() => analyzeComment(comment), 800);
     }
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };

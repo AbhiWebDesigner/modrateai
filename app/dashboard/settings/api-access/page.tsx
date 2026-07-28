@@ -1891,12 +1891,13 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
         </div>
       </div>
 {/* ══════════════════════════════════════════
-          MOBILE LAYOUT — V3 (Reference Match)
+          MOBILE LAYOUT — Reference Match (Image 1 + Image 2)
+          Replace entire <div className="gcp-v2-mobile"> block with this
       ══════════════════════════════════════════ */}
       <div className="gcp-v2-mobile">
 
         {/* ── Video Guide Card ── */}
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, overflow: "hidden", marginBottom: 0 }}>
+        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px" }}>
             <div
               onClick={() => window.open("https://youtube.com", "_blank")}
@@ -1929,7 +1930,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
         <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "16px 16px 14px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <span style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Setup Progress</span>
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>{completedSteps.size} of {SETUP_STEPS.length} Steps Completed</span>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>Step {currentStep + 1} of {SETUP_STEPS.length}</span>
           </div>
           <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, marginBottom: 6 }}>
             <div style={{ width: `${progressPct}%`, height: "100%", background: "linear-gradient(90deg,#7C3AED,#A78BFA)", borderRadius: 3, transition: "width 0.5s ease" }} />
@@ -1937,87 +1938,165 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           <div style={{ fontSize: 12, fontWeight: 700, color: "#A78BFA" }}>{progressPct}% Completed</div>
         </div>
 
-        {/* ── Step Cards ── */}
+        {/* ── Step Cards — Reference Match (Image 1 & 2) ── */}
         {SETUP_STEPS.map((s, i) => {
           const done = completedSteps.has(i);
           const detail = STEP_DETAILS[s.key];
           const DemoComp = DemoScreenshots[s.key];
 
-          return (
-            <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${done ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`, borderRadius: 18, overflow: "hidden" }}>
+          const primaryLabel =
+            s.key === "create_project" ? "Open Google Cloud Console" :
+            s.key === "enable_api" ? "Open API Library" :
+            s.key === "oauth_consent" ? "Open OAuth Consent Screen" :
+            s.key === "oauth_client" ? "Open Credentials" :
+            s.key === "copy_credentials" ? "Copy URI" :
+            s.key === "save_project" ? "Copy Details" :
+            "Save & Connect Project";
 
-              {/* Top: Number + Title + Desc */}
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 14px 10px" }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: done ? "#22C55E" : "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: done ? "0 0 10px rgba(34,197,94,0.4)" : "0 0 10px rgba(124,58,237,0.4)" }}>
-                  {done ? <CheckCircle size={16} color="#fff" /> : <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{i + 1}</span>}
+          return (
+            <div key={i} style={{
+              background: "rgba(255,255,255,0.03)",
+              border: `1px solid ${done ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`,
+              borderRadius: 18,
+              overflow: "hidden",
+            }}>
+
+              {/* Row 1: Number circle + Title + Desc + green ✓ badge when done */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 14px 12px" }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: "50%",
+                  background: done ? "#22C55E" : "linear-gradient(135deg,#7C3AED,#4F46E5)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                  boxShadow: done ? "0 0 10px rgba(34,197,94,0.4)" : "0 0 10px rgba(124,58,237,0.4)",
+                }}>
+                  {done
+                    ? <CheckCircle size={16} color="#fff" />
+                    : <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{i + 1}</span>
+                  }
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.3, marginBottom: 4 }}>{detail.title}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.3, marginBottom: 3 }}>{detail.title}</div>
                   <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>{detail.desc}</div>
+                </div>
+                {/* Green checkmark badge — Image 2 style, shown when step completed */}
+                {done && (
+                  <div style={{
+                    width: 28, height: 28, borderRadius: "50%",
+                    background: "rgba(34,197,94,0.15)",
+                    border: "1.5px solid rgba(34,197,94,0.4)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                    <CheckCircle size={14} color="#22C55E" />
+                  </div>
+                )}
+              </div>
+
+              {/* Row 2: Demo screenshot (left ~45%) + Buttons (right ~55%) — side by side like reference */}
+              <div style={{ display: "flex", gap: 10, padding: "0 14px 14px", alignItems: "stretch" }}>
+
+                {/* Demo screenshot — left */}
+                <div style={{
+                  flex: "0 0 44%",
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  background: "#0d0d1a",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  minHeight: 90,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  {DemoComp
+                    ? <div style={{ width: "100%" }}><DemoComp /></div>
+                    : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 11 }}>Preview</div>
+                  }
+                </div>
+
+                {/* Buttons — right, stacked */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
+
+                  {/* Primary action button */}
+                  {s.key === "authorization" ? (
+                    <button
+                      onClick={() => handleStepAction(s.key)}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        background: "linear-gradient(135deg,#22C55E,#16A34A)",
+                        color: "#fff", border: "none", borderRadius: 10,
+                        padding: "11px 6px", fontWeight: 800, fontSize: 12,
+                        cursor: "pointer", boxShadow: "0 4px 14px rgba(34,197,94,0.3)",
+                        lineHeight: 1.2, textAlign: "center",
+                      }}
+                    >
+                      <Lock size={13} /> Save & Connect Project
+                    </button>
+                  ) : s.key === "copy_credentials" ? (
+                    <button
+                      onClick={() => handleCopy(CALLBACK_URL, `step-${i}`)}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+                        color: "#fff", border: "none", borderRadius: 10,
+                        padding: "11px 6px", fontWeight: 700, fontSize: 12,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {copiedKey === `step-${i}` ? <CheckCircle size={13} /> : <Copy size={13} />}
+                      {copiedKey === `step-${i}` ? "Copied!" : "Copy URI"}
+                    </button>
+                  ) : s.key === "save_project" ? (
+                    <button
+                      onClick={handleSaveProject}
+                      disabled={saving}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+                        color: "#fff", border: "none", borderRadius: 10,
+                        padding: "11px 6px", fontWeight: 700, fontSize: 12,
+                        cursor: saving ? "default" : "pointer",
+                      }}
+                    >
+                      {saving ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Copy size={13} />}
+                      {saving ? "Saving…" : "Copy Details"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleStepAction(s.key)}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                        background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+                        color: "#fff", border: "none", borderRadius: 10,
+                        padding: "11px 6px", fontWeight: 700, fontSize: 12,
+                        cursor: "pointer", boxShadow: "0 3px 10px rgba(124,58,237,0.35)",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      <ExternalLink size={12} /> {primaryLabel}
+                    </button>
+                  )}
+
+                  {/* View Documentation — secondary */}
+                  <button
+                    onClick={() => window.open("https://developers.google.com/youtube/v3", "_blank")}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      color: "rgba(255,255,255,0.55)",
+                      borderRadius: 10, padding: "10px 6px",
+                      fontWeight: 600, fontSize: 12,
+                      cursor: "pointer",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    <FileText size={12} /> View Documentation <ExternalLink size={11} />
+                  </button>
                 </div>
               </div>
 
-              {/* Demo Screenshot — full width */}
-              <div style={{ margin: "0 14px 10px", borderRadius: 10, overflow: "hidden", background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.06)" }}>
-                {DemoComp
-                  ? <DemoComp />
-                  : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 11 }}>Preview</div>
-                }
-              </div>
-
-              {/* Buttons — full width below demo */}
-              <div style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-                {s.key === "authorization" ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <button
-                      onClick={() => handleStepAction(s.key)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#22C55E,#16A34A)", color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontWeight: 800, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 14px rgba(34,197,94,0.3)" }}
-                    >
-                      <Lock size={14} /> Save & Connect Project
-                    </button>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
-                      <CheckCircle size={10} color="#22C55E" /> We never store your data in plain text.
-                    </div>
-                  </div>
-                ) : s.key === "copy_credentials" ? (
-                  <button
-                    onClick={() => handleCopy(CALLBACK_URL, `step-${i}`)}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
-                  >
-                    {copiedKey === `step-${i}` ? <CheckCircle size={13} /> : <Copy size={13} />}
-                    {copiedKey === `step-${i}` ? "Copied!" : "Copy URI"}
-                  </button>
-                ) : s.key === "save_project" ? (
-                  <button
-                    onClick={handleSaveProject}
-                    disabled={saving}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 700, fontSize: 13, cursor: saving ? "default" : "pointer" }}
-                  >
-                    {saving ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Copy size={13} />}
-                    {saving ? "Saving…" : "Copy Details"}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleStepAction(s.key)}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 3px 10px rgba(124,58,237,0.35)" }}
-                  >
-                    <ExternalLink size={13} />
-                    {s.key === "create_project" ? "Open Google Cloud Console" :
-                     s.key === "enable_api" ? "Open API Library" :
-                     s.key === "oauth_consent" ? "Open OAuth Consent Screen" :
-                     s.key === "oauth_client" ? "Open Credentials" : "Open"}
-                    <ExternalLink size={12} />
-                  </button>
-                )}
-                <button
-                  onClick={() => window.open("https://developers.google.com/youtube/v3", "_blank")}
-                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)", borderRadius: 10, padding: "11px", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-                >
-                  <FileText size={13} /> View Documentation <ExternalLink size={12} />
-                </button>
-              </div>
-
-              {/* Save Project form — full width below */}
+              {/* Save Project form — save_project step only */}
               {s.key === "save_project" && (
                 <div style={{ margin: "0 14px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.22)", borderRadius: 9, padding: "8px 12px", marginBottom: 10 }}>
@@ -2034,9 +2113,22 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                   ].map(field => (
                     <div key={field.label} style={{ marginBottom: 8 }}>
                       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>{field.label}</div>
-                      <input className="gcp-input" value={field.value} onChange={e => field.onChange(e.target.value)} placeholder={field.placeholder} style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "9px 11px", color: "#fff", fontSize: 12, boxSizing: "border-box" }} />
+                      <input
+                        className="gcp-input"
+                        value={field.value}
+                        onChange={e => field.onChange(e.target.value)}
+                        placeholder={field.placeholder}
+                        style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "9px 11px", color: "#fff", fontSize: 12, boxSizing: "border-box" }}
+                      />
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Confirmation note — authorization step only */}
+              {s.key === "authorization" && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.4)", padding: "0 14px 14px" }}>
+                  <CheckCircle size={10} color="#22C55E" /> We never store your data in plain text.
                 </div>
               )}
 
@@ -2054,8 +2146,8 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>We use industry-standard encryption to store your credentials securely. We never share your data with third parties.</div>
           </div>
           <ChevronRight size={16} color="rgba(255,255,255,0.25)" style={{ flexShrink: 0 }} />
-        </div> 
-        </div>
+        </div>     
+       </div>
         </div>
   );
 }

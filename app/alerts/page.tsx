@@ -330,7 +330,7 @@ export default function AlertsPage() {
               <div className="r-logo-mark"><Shield size={18} color="white" strokeWidth={2.2} /></div>
               <div>
                 <div style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 15.5, letterSpacing: '-0.025em' }}>ModerateAI</div>
-                <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 10, fontWeight: 500, marginTop: 1 }}>Enterprise · v2</div>
+                <div style={{ color: 'rgba(255,255,255,0.26)', fontSize: 10, fontWeight: 500, marginTop: 1 }}>YouTube AI Moderator</div>
               </div>
             </div>
           </div>

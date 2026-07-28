@@ -312,10 +312,15 @@ export default function AlertsPage() {
           .a-channel-grid{grid-template-columns:1fr 1fr!important;}
           .a-stats-grid{grid-template-columns:repeat(4,1fr)!important;}
         }
-        @media(min-width:1024px){.r-bnav{display:none!important;}}
-      `}</style>
+      @media(min-width:600px) and (max-width:1023px){
+  .r-main{height:auto!important;min-height:unset!important;}
+  .r-wrapper{min-height:unset!important;height:auto!important;}
+  .r-content{flex:none!important;}
+  html,body{height:auto!important;}
+}
+`}</style>
 
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', width: '100%', overflowX: 'hidden' }}>
+      <div className="r-wrapper" style={{ minHeight: '100vh', background: '#0a0a0f', display: 'flex', width: '100%', overflowX: 'hidden', height: 'auto' }}>
 
         {/* SIDEBAR */}
         <aside className="r-sidebar">
@@ -387,7 +392,7 @@ export default function AlertsPage() {
           </header>
 
           {/* CONTENT */}
-          <div className="r-content" style={{ padding: '20px 32px', flex: 1, animation: 'fadeIn 0.3s ease', maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
+          <div className="r-content" style={{ padding: '20px 32px', flex: 'none', animation: 'fadeIn 0.3s ease', maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
 
             <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13, marginBottom: 16 }}>Monitor important activity and system alerts in real time</p>
 

@@ -1946,84 +1946,75 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           return (
             <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${done ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`, borderRadius: 18, overflow: "hidden" }}>
 
-              {/* Reference layout: Left = number+title+desc, Right = demo+buttons */}
-              <div style={{ display: "flex", gap: 12, padding: "14px 14px 14px" }}>
-
-                {/* LEFT: Number + Title + Desc */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: "50%", background: done ? "#22C55E" : "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: done ? "0 0 10px rgba(34,197,94,0.4)" : "0 0 10px rgba(124,58,237,0.4)" }}>
-                      {done ? <CheckCircle size={16} color="#fff" /> : <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{i + 1}</span>}
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", lineHeight: 1.3 }}>{detail.title}</div>
-                  </div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, paddingLeft: 44 }}>{detail.desc}</div>
+              {/* Top: Number + Title + Desc */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 14px 10px" }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: done ? "#22C55E" : "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: done ? "0 0 10px rgba(34,197,94,0.4)" : "0 0 10px rgba(124,58,237,0.4)" }}>
+                  {done ? <CheckCircle size={16} color="#fff" /> : <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{i + 1}</span>}
                 </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1.3, marginBottom: 4 }}>{detail.title}</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.55 }}>{detail.desc}</div>
+                </div>
+              </div>
 
-                {/* RIGHT: Demo + Buttons */}
-                <div style={{ width: 180, flexShrink: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+              {/* Demo Screenshot — full width */}
+              <div style={{ margin: "0 14px 10px", borderRadius: 10, overflow: "hidden", background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.06)" }}>
+                {DemoComp
+                  ? <DemoComp />
+                  : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 11 }}>Preview</div>
+                }
+              </div>
 
-                  {/* Demo Screenshot */}
-                  <div style={{ borderRadius: 10, overflow: "hidden", background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.06)" }}>
-                    {DemoComp
-                      ? <DemoComp />
-                      : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 11 }}>Preview</div>
-                    }
-                  </div>
-
-                  {/* Primary Button */}
-                  {s.key === "authorization" ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <button
-                        onClick={() => handleStepAction(s.key)}
-                        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#22C55E,#16A34A)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 8px", fontWeight: 800, fontSize: 12, cursor: "pointer", boxShadow: "0 4px 14px rgba(34,197,94,0.3)" }}
-                      >
-                        <Lock size={13} /> Save & Connect Project
-                      </button>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
-                        <CheckCircle size={10} color="#22C55E" /> We never store your data in plain text.
-                      </div>
-                    </div>
-                  ) : s.key === "copy_credentials" ? (
-                    <button
-                      onClick={() => handleCopy(CALLBACK_URL, `step-${i}`)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 8px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
-                    >
-                      {copiedKey === `step-${i}` ? <CheckCircle size={13} /> : <Copy size={13} />}
-                      {copiedKey === `step-${i}` ? "Copied!" : "Copy URI"}
-                    </button>
-                  ) : s.key === "save_project" ? (
-                    <button
-                      onClick={handleSaveProject}
-                      disabled={saving}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 8px", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer" }}
-                    >
-                      {saving ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Copy size={13} />}
-                      {saving ? "Saving…" : "Copy Details"}
-                    </button>
-                  ) : (
+              {/* Buttons — full width below demo */}
+              <div style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+                {s.key === "authorization" ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     <button
                       onClick={() => handleStepAction(s.key)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 8px", fontWeight: 700, fontSize: 12, cursor: "pointer", boxShadow: "0 3px 10px rgba(124,58,237,0.35)" }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#22C55E,#16A34A)", color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontWeight: 800, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 14px rgba(34,197,94,0.3)" }}
                     >
-                      <ExternalLink size={12} />
-                      {s.key === "create_project" ? "Open Google Cloud Console" :
-                       s.key === "enable_api" ? "Open API Library" :
-                       s.key === "oauth_consent" ? "Open OAuth Consent Screen" :
-                       s.key === "oauth_client" ? "Open Credentials" : "Open"}
-                      <ExternalLink size={11} />
+                      <Lock size={14} /> Save & Connect Project
                     </button>
-                  )}
-
-                  {/* View Documentation Button */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+                      <CheckCircle size={10} color="#22C55E" /> We never store your data in plain text.
+                    </div>
+                  </div>
+                ) : s.key === "copy_credentials" ? (
                   <button
-                    onClick={() => window.open("https://developers.google.com/youtube/v3", "_blank")}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)", borderRadius: 10, padding: "9px 8px", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+                    onClick={() => handleCopy(CALLBACK_URL, `step-${i}`)}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
                   >
-                    <FileText size={12} /> View Documentation <ExternalLink size={11} />
+                    {copiedKey === `step-${i}` ? <CheckCircle size={13} /> : <Copy size={13} />}
+                    {copiedKey === `step-${i}` ? "Copied!" : "Copy URI"}
                   </button>
-
-                </div>
+                ) : s.key === "save_project" ? (
+                  <button
+                    onClick={handleSaveProject}
+                    disabled={saving}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 700, fontSize: 13, cursor: saving ? "default" : "pointer" }}
+                  >
+                    {saving ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Copy size={13} />}
+                    {saving ? "Saving…" : "Copy Details"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleStepAction(s.key)}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 3px 10px rgba(124,58,237,0.35)" }}
+                  >
+                    <ExternalLink size={13} />
+                    {s.key === "create_project" ? "Open Google Cloud Console" :
+                     s.key === "enable_api" ? "Open API Library" :
+                     s.key === "oauth_consent" ? "Open OAuth Consent Screen" :
+                     s.key === "oauth_client" ? "Open Credentials" : "Open"}
+                    <ExternalLink size={12} />
+                  </button>
+                )}
+                <button
+                  onClick={() => window.open("https://developers.google.com/youtube/v3", "_blank")}
+                  style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)", borderRadius: 10, padding: "11px", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
+                >
+                  <FileText size={13} /> View Documentation <ExternalLink size={12} />
+                </button>
               </div>
 
               {/* Save Project form — full width below */}

@@ -1890,7 +1890,6 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           </div>
         </div>
       </div>
-
 {/* ══════════════════════════════════════════
           MOBILE LAYOUT — V3 (Reference Match)
       ══════════════════════════════════════════ */}
@@ -1947,47 +1946,48 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
           return (
             <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${done ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.08)"}`, borderRadius: 18, overflow: "hidden" }}>
 
-              {/* Header row */}
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px 10px" }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: done ? "#22C55E" : "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {done ? <CheckCircle size={16} color="#fff" /> : <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{i + 1}</span>}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", marginBottom: 3 }}>{detail.title}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>{detail.desc}</div>
-                </div>
-                {done && (
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#22C55E", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <CheckCircle size={15} color="#fff" />
+              {/* Reference layout: Left = number+title+desc, Right = demo+buttons */}
+              <div style={{ display: "flex", gap: 12, padding: "14px 14px 14px" }}>
+
+                {/* LEFT: Number + Title + Desc */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: "50%", background: done ? "#22C55E" : "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: done ? "0 0 10px rgba(34,197,94,0.4)" : "0 0 10px rgba(124,58,237,0.4)" }}>
+                      {done ? <CheckCircle size={16} color="#fff" /> : <span style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{i + 1}</span>}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#fff", lineHeight: 1.3 }}>{detail.title}</div>
                   </div>
-                )}
-              </div>
-
-              {/* Demo Screenshot + Buttons: side by side */}
-              <div style={{ display: "flex", gap: 10, padding: "0 14px 14px", alignItems: "flex-start" }}>
-
-                {/* Demo */}
-                <div style={{ width: 160, flexShrink: 0, borderRadius: 10, overflow: "hidden", background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  {DemoComp
-                    ? <DemoComp />
-                    : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 11 }}>Preview</div>
-                  }
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.6, paddingLeft: 44 }}>{detail.desc}</div>
                 </div>
 
-                {/* Buttons column */}
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* RIGHT: Demo + Buttons */}
+                <div style={{ width: 180, flexShrink: 0, display: "flex", flexDirection: "column", gap: 8 }}>
 
+                  {/* Demo Screenshot */}
+                  <div style={{ borderRadius: 10, overflow: "hidden", background: "#0d0d1a", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    {DemoComp
+                      ? <DemoComp />
+                      : <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.2)", fontSize: 11 }}>Preview</div>
+                    }
+                  </div>
+
+                  {/* Primary Button */}
                   {s.key === "authorization" ? (
-                    <button
-                      onClick={() => handleStepAction(s.key)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#22C55E,#16A34A)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 8px", fontWeight: 800, fontSize: 12, cursor: "pointer", boxShadow: "0 4px 14px rgba(34,197,94,0.3)" }}
-                    >
-                      <Lock size={13} /> Save & Connect Project
-                    </button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <button
+                        onClick={() => handleStepAction(s.key)}
+                        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#22C55E,#16A34A)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 8px", fontWeight: 800, fontSize: 12, cursor: "pointer", boxShadow: "0 4px 14px rgba(34,197,94,0.3)" }}
+                      >
+                        <Lock size={13} /> Save & Connect Project
+                      </button>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+                        <CheckCircle size={10} color="#22C55E" /> We never store your data in plain text.
+                      </div>
+                    </div>
                   ) : s.key === "copy_credentials" ? (
                     <button
                       onClick={() => handleCopy(CALLBACK_URL, `step-${i}`)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 8px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 8px", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
                     >
                       {copiedKey === `step-${i}` ? <CheckCircle size={13} /> : <Copy size={13} />}
                       {copiedKey === `step-${i}` ? "Copied!" : "Copy URI"}
@@ -1996,7 +1996,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                     <button
                       onClick={handleSaveProject}
                       disabled={saving}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 8px", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer" }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 8px", fontWeight: 700, fontSize: 12, cursor: saving ? "default" : "pointer" }}
                     >
                       {saving ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Copy size={13} />}
                       {saving ? "Saving…" : "Copy Details"}
@@ -2004,23 +2004,23 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                   ) : (
                     <button
                       onClick={() => handleStepAction(s.key)}
-                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "11px 8px", fontWeight: 700, fontSize: 12, cursor: "pointer", boxShadow: "0 3px 10px rgba(124,58,237,0.35)" }}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 10, padding: "10px 8px", fontWeight: 700, fontSize: 12, cursor: "pointer", boxShadow: "0 3px 10px rgba(124,58,237,0.35)" }}
                     >
                       <ExternalLink size={12} />
-                      {s.key === "create_project" ? "Open Console" :
+                      {s.key === "create_project" ? "Open Google Cloud Console" :
                        s.key === "enable_api" ? "Open API Library" :
-                       s.key === "oauth_consent" ? "Open OAuth Consent" :
+                       s.key === "oauth_consent" ? "Open OAuth Consent Screen" :
                        s.key === "oauth_client" ? "Open Credentials" : "Open"}
                       <ExternalLink size={11} />
                     </button>
                   )}
 
-                  {/* Docs button */}
+                  {/* View Documentation Button */}
                   <button
                     onClick={() => window.open("https://developers.google.com/youtube/v3", "_blank")}
-                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.55)", borderRadius: 10, padding: "9px 8px", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, background: "transparent", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)", borderRadius: 10, padding: "9px 8px", fontWeight: 600, fontSize: 12, cursor: "pointer" }}
                   >
-                    <FileText size={12} /> Docs <ExternalLink size={11} />
+                    <FileText size={12} /> View Documentation <ExternalLink size={11} />
                   </button>
 
                 </div>
@@ -2063,7 +2063,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>We use industry-standard encryption to store your credentials securely. We never share your data with third parties.</div>
           </div>
           <ChevronRight size={16} color="rgba(255,255,255,0.25)" style={{ flexShrink: 0 }} />
-        </div>
+        </div> 
         </div>
         </div>
   );
@@ -2147,25 +2147,22 @@ export default function APIAccessPage() {
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 16px" }}>
 
           {/* Header */}
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", borderRadius: 14, width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 24px rgba(124,58,237,0.35)" }}>
-                <Shield size={22} color="white" />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", borderRadius: 12, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 0 18px rgba(124,58,237,0.35)" }}>
+                <Shield size={18} color="white" />
               </div>
               <div>
-                <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>API Access</h1>
-                <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, margin: 0 }}>Manage how ModerateAI connects to the YouTube Data API</p>
+                <h1 style={{ fontSize: 18, fontWeight: 800, margin: 0, lineHeight: 1.2 }}>API Access</h1>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, margin: 0, lineHeight: 1.3 }}>Manage how ModerateAI connects to the YouTube Data API</p>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ textAlign: "right" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#22C55E", fontSize: 13, fontWeight: 600, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "6px 14px" }}>
-                  <CheckCircle size={14} /> All Systems Normal
-                </span>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 3, textAlign: "center" }}>Last checked: 2m ago</div>
-              </div>
-              <button onClick={() => showToast("Status refreshed.", "success")} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
-                <Activity size={13} />
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, color: "#22C55E", fontSize: 11, fontWeight: 600, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "5px 10px", whiteSpace: "nowrap" }}>
+                <CheckCircle size={11} /> All Systems Normal
+              </span>
+              <button onClick={() => showToast("Status refreshed.", "success")} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", borderRadius: 8, padding: "5px 8px", cursor: "pointer", display: "flex", alignItems: "center" }}>
+                <Activity size={12} />
               </button>
             </div>
           </div>

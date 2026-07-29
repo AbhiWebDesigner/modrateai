@@ -57,8 +57,7 @@ npm run dev
 
 ## 🌐 Live Demo
 
-https://moderateai.site
-
+https://moderateai.site/demo
 ---
 
 ## 📚 Documentation
@@ -84,4 +83,14 @@ This repository is licensed under the MIT License.
 
 ---
 
-## ❤️ Built with Next.js, Firebase & Cloudflare.
+---
+
+<div align="center">
+
+🛡️ ModerateAI
+
+Built with ❤️ for creators worldwide.
+
+© 2026 ModerateAI. All rights reserved.
+
+</div>

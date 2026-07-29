@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🛡️ ModerateAI
 
-## Getting Started
+> AI-powered YouTube Moderation Platform for Creators & Businesses.
 
-First, run the development server:
+ModerateAI helps creators and businesses automatically moderate YouTube comments using AI, detect spam and toxic content, automate workflows, receive real-time alerts, and monitor channel activity from one powerful dashboard.
+
+🌐 **Website:** https://moderateai.site
+
+---
+
+## ✨ Features
+
+- 🤖 AI Comment Moderation
+- 🚫 Spam & Toxic Comment Detection
+- 💬 Smart AI Auto Replies
+- ⚡ Automation Workflows
+- 📊 Analytics Dashboard
+- 🔔 Real-time Alerts
+- ☁️ Google Cloud Integration
+- 🔐 Google OAuth 2.0
+- 📱 Fully Responsive Dashboard
+- 🌙 Premium Dark UI
+
+---
+
+## 🖼️ Screenshots
+
+> Coming Soon
+
+---
+
+## 🚀 Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Frontend | Next.js |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| Authentication | Google OAuth |
+| APIs | YouTube Data API v3 |
+
+---
+
+## 📦 Installation
 
 ```bash
+git clone https://github.com/AbhiWebDesigner/moderateai.git
+
+cd moderateai
+
+npm install
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🌐 Live Demo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+https://moderateai.site
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📚 Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Documentation will be published soon.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠 Roadmap
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- AI Moderation
+- Smart Automation
+- Live Alerts
+- Advanced Analytics
+- Google Cloud Integration
+- Multi-language Support
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📄 License
+
+This repository is licensed under the MIT License.
+
+---
+
+## ❤️ Built with Next.js, Firebase & Cloudflare.

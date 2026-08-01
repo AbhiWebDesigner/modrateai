@@ -133,7 +133,7 @@ const faqs = [
   },
   {
     q: "How can I contact support?",
-    a: "You can reach our support team at contact@moderateai.site. We aim to respond within 1–2 business days.",
+    a: "You can reach our support team at ModerateAiSite@protonmail.com. We aim to respond within 1–2 business days.",
   },
 ];
 
@@ -402,7 +402,7 @@ export default function DocsPage() {
             {[
               { label: "Privacy Policy", href: "/privacy", internal: true, icon: "🔏" },
               { label: "Terms & Conditions", href: "/terms", internal: true, icon: "📄" },
-              { label: "Contact Us", href: "mailto:contact@moderateai.site", internal: false, icon: "✉️" },
+              { label: "Contact Us", href: "mailto:ModerateAiSite@protonmail.com", internal: false, icon: "✉️" },
               { label: "Google Account Permissions", href: "https://myaccount.google.com/permissions", internal: false, icon: "🔗" },
             ].map((link, i) =>
               link.internal ? (

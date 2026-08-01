@@ -355,8 +355,8 @@ export default function TermsPage() {
                 <span className="text-[#ff6b00] mt-1">✓</span>
                 <span>
                   Email:{" "}
-                  <a href="mailto:contact@moderateai.site" className="text-[#ff6b00] hover:underline">
-                    contact@moderateai.site
+                  <a href="mailto:ModerateAiSite@protonmail.com" className="text-[#ff6b00] hover:underline">
+                    ModerateAiSite@protonmail.com
                   </a>
                 </span>
               </li>

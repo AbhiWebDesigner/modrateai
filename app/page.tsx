@@ -818,7 +818,7 @@ export default function LandingPage() {
               <div className="foot-col">
                 <h4>Support</h4>
                 <Link href="/help" className="foot-a">Help Center</Link>
-                <Link href="mailto:support@moderateai.site" className="foot-a">Contact</Link>
+                <Link href="mailto:ModerateAiSite@protonmail.com" className="foot-a">Contact</Link>
                 <Link href="/privacy" className="foot-a">Privacy Policy</Link>
                 <Link href="/terms" className="foot-a">Terms</Link>
               </div>

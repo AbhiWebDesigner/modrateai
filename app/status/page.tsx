@@ -152,10 +152,10 @@ export default function StatusPage() {
               If you are experiencing an issue not reflected on this page, please contact our support team.
             </p>
             <a
-              href="mailto:support@moderateai.site"
+              href="mailto:ModerateAiSite@protonmail.com"
               className="inline-flex items-center gap-2 text-[#ff6b00] hover:underline font-medium text-sm mb-6"
             >
-              ✉️ support@moderateai.site
+              ✉️ ModerateAiSite@protonmail.com
             </a>
             <div className="flex flex-wrap gap-3 mt-2">
               <Link

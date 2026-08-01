@@ -1760,7 +1760,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                     <ExternalLink size={10} color="rgba(255,255,255,0.2)" style={{ marginLeft: "auto" }} />
                   </div>
                 </a>
-                <a href="mailto:support@moderateai.site" style={{ textDecoration: "none" }}>
+                <a href="mailto:ModerateAiSite@protonmail.com" style={{ textDecoration: "none" }}>
                   <div className="gcp-quick-link" style={{
                     display: "flex", alignItems: "center", gap: 9,
                     background: "rgba(124,58,237,0.08)",

@@ -57,7 +57,7 @@ const faqs = [
   },
   {
     q: "How do I contact support?",
-    a: "You can reach our support team at support@moderateai.site. We typically respond within 24–48 business hours on business days.",
+    a: "You can reach our support team at ModerateAiSite@protonmail.com. We typically respond within 24–48 business hours on business days.",
   },
 ];
 
@@ -154,7 +154,7 @@ export default function HelpPage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <a
-              href="mailto:support@moderateai.site"
+              href="mailto:ModerateAiSite@protonmail.com"
               className="px-5 py-2.5 rounded-xl bg-[#ff6b00] text-white font-semibold text-sm hover:bg-[#ff6b00]/90 transition"
             >
               Contact Support
@@ -245,10 +245,10 @@ export default function HelpPage() {
               <div>
                 <p className="text-gray-400 text-xs uppercase tracking-wide mb-1">Support Email</p>
                 <a
-                  href="mailto:support@moderateai.site"
+                  href="mailto:ModerateAiSite@protonmail.com"
                   className="text-[#ff6b00] hover:underline font-medium text-sm"
                 >
-                  support@moderateai.site
+                  ModerateAiSite@protonmail.com
                 </a>
               </div>
             </div>

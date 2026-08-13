@@ -116,9 +116,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const uid = searchParams.get('uid');
 
   if (!isValidFirebaseUid(uid)) {
-    return NextResponse.json({ error: 'Missing or invalid uid' }, { status: 400 });
-  }
+  return NextResponse.json({ error: 'Missing or invalid uid' }, { status: 400 });
+}
 
+const authToken = request.headers.get('Authorization')?.replace('Bearer ', '');
+if (!authToken) {
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+}
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!projectId) {
     return NextResponse.json({ error: 'Server config error' }, { status: 500 });

@@ -411,10 +411,9 @@ export default function Dashboard() {
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
 
-      fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
+      firebaseUser.getIdToken().then(token => { fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {}); }).catch(() => {});
       const statsInterval = setInterval(() => {
-        fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`).catch(() => {});
-      }, 30_000);
+      firebaseUser.getIdToken().then(token => { fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {}); }).catch(() => {});      }, 30_000);
       unsubRefs.current.push(() => clearInterval(statsInterval));
 
       const userDocRef = doc(db, 'users', firebaseUser.uid);

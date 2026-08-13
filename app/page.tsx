@@ -8,6 +8,9 @@ import {
   CheckCircle, Languages, Cpu,
   TrendingUp, Filter, Bell, X, Menu, Sparkles
 } from 'lucide-react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
 /* ── FADE IN WRAPPER ── */
 function FadeIn({ children, delay = 0, className = '', style = {} }: {
@@ -299,16 +302,33 @@ const FAQS = [
 
 /* ══════════════════════════════════════════ MAIN ══════════════════════════════════════════ */
 export default function LandingPage() {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [annual, setAnnual] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // ── Auth redirect: logged-in users go straight to dashboard ──
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.replace('/dashboard');
+      } else {
+        setAuthChecked(true);
+      }
+    });
+    return () => unsub();
+  }, [router]);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 36);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
+
+  // Don't render landing page until auth check completes
+  if (!authChecked) return null;
 
   return (
     <>
@@ -825,7 +845,7 @@ export default function LandingPage() {
               <div className="foot-col">
                 <h4>Connect</h4>
                 <Link href="https://github.com" target="_blank" rel="noreferrer" className="foot-a">GitHub</Link>
-                <Link href="https://youtube.com" target="_blank" rel="noreferrer" className="foot-a">YouTube</Link>
+                <Link href="https://www.youtube.com/channel/UCTOhz49DO1Oyo64-ux0DiSw" target="_blank" rel="noreferrer" className="foot-a">YouTube</Link>
               </div>
             </div>
             <div className="foot-bot">

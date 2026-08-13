@@ -149,8 +149,6 @@ export default function ModerationPage() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>(DEFAULT_FILTERS);
   const filtersInitialized = useRef(false);
-  // Tracks how many of the two required listeners (users + automations) have
-  // delivered their first snapshot. Loading clears exactly once when both reach 2.
   const initialSnapCount = useRef(0);
   const unsubRefs = useRef<Array<() => void>>([]);
 
@@ -163,20 +161,19 @@ export default function ModerationPage() {
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
 
-      // Called by each required listener after its first snapshot fires.
-      // setLoading(false) is called exactly once, when both have settled.
+      // FIX: guard prevents count from exceeding 2 on subsequent snapshots
       const onRequiredSnapReady = () => {
+        if (initialSnapCount.current >= 2) return;
         initialSnapCount.current += 1;
         if (initialSnapCount.current === 2) {
           setLoading(false);
         }
       };
 
+      // FIX: onRequiredSnapReady called unconditionally (outside snap.exists() check)
       const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
-        // Signal that this listener has delivered its first snapshot.
-        // Guard ensures subsequent real-time updates don't call it again.
-        if (initialSnapCount.current < 2) onRequiredSnapReady();
+        onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubUser);
 
@@ -185,13 +182,11 @@ export default function ModerationPage() {
       });
       unsubRefs.current.push(unsubAnalytics);
 
+      // FIX: onRequiredSnapReady called unconditionally (outside snap.exists() check)
       const unsubAutomation = onSnapshot(doc(db, 'automations', firebaseUser.uid), (snap) => {
         if (snap.exists()) {
           const data = snap.data();
           setAutomationData(data);
-          // Restore persisted activeFilters on first snapshot only.
-          // Accepts empty array [] as a valid saved value; only falls back
-          // to DEFAULT_FILTERS when the field is absent or not an array.
           if (!filtersInitialized.current) {
             filtersInitialized.current = true;
             if (Array.isArray(data.activeFilters)) {
@@ -199,9 +194,7 @@ export default function ModerationPage() {
             }
           }
         }
-        // Signal that this listener has delivered its first snapshot.
-        // Guard ensures subsequent real-time updates don't call it again.
-        if (initialSnapCount.current < 2) onRequiredSnapReady();
+        onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubAutomation);
     });
@@ -221,17 +214,14 @@ export default function ModerationPage() {
 
   const toggleFilter = async (key: string) => {
     if (!user) return;
-    // Capture previous state for rollback on Firestore failure.
     const previous = activeFilters;
     const updated = previous.includes(key)
       ? previous.filter(k => k !== key)
       : [...previous, key];
-    // Optimistic UI update.
     setActiveFilters(updated);
     try {
       await setDoc(doc(db, 'automations', user.uid), { activeFilters: updated }, { merge: true });
     } catch (error) {
-      // Restore previous state so the UI stays consistent with the database.
       setActiveFilters(previous);
       console.error('Failed to persist filters:', error);
     }
@@ -265,14 +255,9 @@ export default function ModerationPage() {
   const autoLiveTimeout = (automationData?.liveTimeout as boolean) ?? false;
   const autoHide        = (automationData?.autoHide    as boolean) ?? false;
 
-  // Dynamic active rules count
   const activeRules = [
-    autoHideSpam,
-    autoHideToxic,
-    autoHide,
-    autoAiReplies,
-    autoLiveChat,
-    autoLiveTimeout,
+    autoHideSpam, autoHideToxic, autoHide,
+    autoAiReplies, autoLiveChat, autoLiveTimeout,
   ].filter(Boolean).length;
 
   const totalScanned  = (analyticsData?.totalScanned        as number) ?? 0;
@@ -315,9 +300,10 @@ export default function ModerationPage() {
           background-image:linear-gradient(rgba(255,255,255,0.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.011) 1px,transparent 1px);
           background-size:44px 44px;}
 
-         .r-sidebar{width:216px;min-width:216px;background:#0c0a0e;border-right:1px solid rgba(245,158,11,0.12);
-         display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;
-           background:radial-gradient(ellipse 80% 40% at -10% 0%, rgba(180,90,0,0.35) 0%, transparent 60%), radial-gradient(ellipse 60% 30% at -5% 30%, rgba(150,70,0,0.20) 0%, transparent 55%), #0c0a0e;}        .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
+        .r-sidebar{width:216px;min-width:216px;background:#0c0a0e;border-right:1px solid rgba(245,158,11,0.12);
+          display:flex;flex-direction:column;position:fixed;height:100vh;left:0;top:0;z-index:40;overflow:hidden;
+          background:radial-gradient(ellipse 80% 40% at -10% 0%, rgba(180,90,0,0.35) 0%, transparent 60%), radial-gradient(ellipse 60% 30% at -5% 30%, rgba(150,70,0,0.20) 0%, transparent 55%), #0c0a0e;}
+        .r-sidebar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:1px;
           background:linear-gradient(180deg,transparent,rgba(245,158,11,0.15) 30%,rgba(245,158,11,0.22) 50%,rgba(245,158,11,0.15) 70%,transparent);pointer-events:none;}
         .r-logo{padding:18px 14px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
         .r-logo-mark{width:34px;height:34px;border-radius:10px;
@@ -330,11 +316,11 @@ export default function ModerationPage() {
           transition:all 0.18s;border:1px solid transparent;position:relative;overflow:hidden;}
         .r-nav-item:hover{background:rgba(124,58,237,0.06);color:rgba(255,255,255,0.7);}
         .r-nav-item.active{background:linear-gradient(135deg,rgba(245,158,11,0.20) 0%,rgba(245,158,11,0.10) 50%,rgba(245,158,11,0.06) 100%);
-         color:#FBBF24;border-color:rgba(245,158,11,0.25);font-weight:700;
-         box-shadow:0 0 0 1px rgba(245,158,11,0.12),0 2px 20px rgba(245,158,11,0.10),inset 0 1px 0 rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.06);}
+          color:#FBBF24;border-color:rgba(245,158,11,0.25);font-weight:700;
+          box-shadow:0 0 0 1px rgba(245,158,11,0.12),0 2px 20px rgba(245,158,11,0.10),inset 0 1px 0 rgba(245,158,11,0.18),inset 0 0 28px rgba(245,158,11,0.06);}
         .r-nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
-         width:3px;height:18px;border-radius:0 3px 3px 0;
-        background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);box-shadow:0 0 10px rgba(245,158,11,0.8),0 0 24px rgba(245,158,11,0.3);}
+          width:3px;height:18px;border-radius:0 3px 3px 0;
+          background:linear-gradient(180deg,#FBBF24,#F59E0B,#D97706);box-shadow:0 0 10px rgba(245,158,11,0.8),0 0 24px rgba(245,158,11,0.3);}
         .r-upgrade{margin:0 7px 7px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.14);border-radius:13px;padding:13px;}
         .r-sidebar-bottom{padding:7px 7px 18px;border-top:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:2px;}
         .r-btn-logout{display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:9px;font-size:12px;font-weight:500;
@@ -428,9 +414,9 @@ export default function ModerationPage() {
 
         {/* SIDEBAR */}
         <aside className="r-sidebar">
-        <div style={{ position: "absolute", top: "-60px", left: "-80px", width: "340px", height: "340px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,90,0,0.55) 0%, rgba(160,65,0,0.28) 35%, transparent 70%)", pointerEvents: "none", zIndex: 0, filter: "blur(18px)" }} />
-        <div style={{ position: "absolute", top: "160px", left: "-60px", width: "220px", height: "220px", borderRadius: "50%", background: "radial-gradient(circle, rgba(180,75,0,0.30) 0%, rgba(130,55,0,0.12) 40%, transparent 70%)", pointerEvents: "none", zIndex: 0, filter: "blur(22px)" }} />
-        <div className="r-logo">
+          <div style={{ position: "absolute", top: "-60px", left: "-80px", width: "340px", height: "340px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,90,0,0.55) 0%, rgba(160,65,0,0.28) 35%, transparent 70%)", pointerEvents: "none", zIndex: 0, filter: "blur(18px)" }} />
+          <div style={{ position: "absolute", top: "160px", left: "-60px", width: "220px", height: "220px", borderRadius: "50%", background: "radial-gradient(circle, rgba(180,75,0,0.30) 0%, rgba(130,55,0,0.12) 40%, transparent 70%)", pointerEvents: "none", zIndex: 0, filter: "blur(22px)" }} />
+          <div className="r-logo">
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <div className="r-logo-mark"><Shield size={16} color="white" strokeWidth={2.2} /></div>
               <div>
@@ -699,12 +685,12 @@ export default function ModerationPage() {
               </div>
               <div style={{ padding: '12px 14px 14px' }}>
                 <div className="mod-stats-grid">
-                  <StatBox label="Comments Scanned"  value={totalScanned.toLocaleString()}                              color="#a78bfa" icon={MessageSquare} iconColor="#a78bfa" />
-                  <StatBox label="Hidden Comments"   value={totalHidden.toLocaleString()}                               color="#f87171" icon={EyeIcon}       iconColor="#f87171" />
-                  <StatBox label="AI Replies"        value={totalReplies.toLocaleString()}                              color="#F59E0B" icon={Bot}           iconColor="#F59E0B" />
-                  <StatBox label="Detection Accuracy" value={totalScanned === 0 ? '—' : `${moderationAcc.toFixed(1)}%`} color="#34d399" icon={CheckCircle}  iconColor="#34d399" />
-                  <StatBox label="Last Scan"          value={lastScanLabel}                                              color="#60a5fa" icon={RefreshCw}    iconColor="#60a5fa" />
-                  <StatBox label="Active Rules"       value={activeRules}                                                color="#FAFAFA" icon={Zap}          iconColor="#a78bfa" />
+                  <StatBox label="Comments Scanned"   value={totalScanned.toLocaleString()}                               color="#a78bfa" icon={MessageSquare} iconColor="#a78bfa" />
+                  <StatBox label="Hidden Comments"    value={totalHidden.toLocaleString()}                                color="#f87171" icon={EyeIcon}       iconColor="#f87171" />
+                  <StatBox label="AI Replies"         value={totalReplies.toLocaleString()}                               color="#F59E0B" icon={Bot}           iconColor="#F59E0B" />
+                  <StatBox label="Detection Accuracy" value={totalScanned === 0 ? '—' : `${moderationAcc.toFixed(1)}%`}  color="#34d399" icon={CheckCircle}   iconColor="#34d399" />
+                  <StatBox label="Last Scan"          value={lastScanLabel}                                               color="#60a5fa" icon={RefreshCw}     iconColor="#60a5fa" />
+                  <StatBox label="Active Rules"       value={activeRules}                                                 color="#FAFAFA" icon={Zap}           iconColor="#a78bfa" />
                 </div>
               </div>
             </div>

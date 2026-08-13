@@ -126,10 +126,10 @@ function MobileDashboardPreview() {
   return (
     <div style={{
       background: '#0D0D10',
-      border: '1.5px solid rgba(139,92,246,0.5)',
+      border: '1px solid rgba(139,92,246,0.3)',
       borderRadius: 18,
       overflow: 'hidden',
-      boxShadow: '0 0 0 1px rgba(236,72,153,0.15), 0 0 40px rgba(139,92,246,0.35), 0 0 80px rgba(236,72,153,0.15), 0 32px 80px rgba(0,0,0,0.8)',
+      boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 32px 80px rgba(0,0,0,0.8), 0 0 60px rgba(139,92,246,0.12), 0 0 100px rgba(245,158,11,0.06)',
     }}>
       {/* Top bar */}
       <div style={{ background: '#111116', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '9px 13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -165,8 +165,12 @@ function MobileDashboardPreview() {
             <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 8, marginBottom: 4, lineHeight: 1.3 }}>{s.label}</div>
             <div style={{ color: s.color, fontWeight: 800, fontSize: 13, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.value}</div>
             <div style={{ color: '#34d399', fontSize: 8, fontWeight: 600 }}>{s.change}</div>
+            {/* Mini sparkline */}
             <svg width="100%" height="22" viewBox="0 0 60 22" style={{ marginTop: 5 }}>
-              <polyline points="0,18 10,14 20,16 30,10 40,12 50,6 60,4" fill="none" stroke={s.lineColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <polyline
+                points="0,18 10,14 20,16 30,10 40,12 50,6 60,4"
+                fill="none" stroke={s.lineColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+              />
             </svg>
           </div>
         ))}
@@ -184,6 +188,7 @@ function MobileDashboardPreview() {
           </div>
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 5, padding: '3px 8px', fontSize: 8.5, color: 'rgba(255,255,255,0.3)' }}>Today ▾</div>
         </div>
+        {/* Chart */}
         <div style={{ position: 'relative', height: 48 }}>
           <svg width="100%" height="48" viewBox="0 0 300 48" preserveAspectRatio="none">
             <defs>
@@ -195,6 +200,7 @@ function MobileDashboardPreview() {
             <path d="M0,40 C20,38 40,32 60,28 C80,24 100,30 120,22 C140,14 160,18 180,12 C200,6 220,10 240,6 C260,2 280,4 300,3" fill="none" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" />
             <path d="M0,40 C20,38 40,32 60,28 C80,24 100,30 120,22 C140,14 160,18 180,12 C200,6 220,10 240,6 C260,2 280,4 300,3 L300,48 L0,48 Z" fill="url(#chartGrad)" />
           </svg>
+          {/* X axis labels */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
             {['00:00','04:00','08:00','12:00','16:00','20:00','24:00'].map(t => (
               <span key={t} style={{ color: 'rgba(255,255,255,0.2)', fontSize: 7 }}>{t}</span>
@@ -407,50 +413,39 @@ export default function LandingPage() {
         .n-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
         .n-login { color: #FAFAFA; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 16px; border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; transition: all 0.25s; }
         .n-login:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.80); background: rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(255,255,255,0.25), 0 0 40px rgba(255,255,255,0.10); }
-        .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; }
+        .n-cta { background: #F59E0B; color: #080808; font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 8px; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+        .n-cta:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.35); }
+        .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; margin-left: auto; }
 
         /* ══ NAVBAR — Mobile (desktop site ON) ══ */
         @media (max-width: 800px) {
+          .n-links, .n-login { display: none !important; }
+          .n-burger { display: flex; }
+
+          /* Mobile navbar: full width, flat, no floating pill */
           .lp-nav {
             top: 0; left: 0; transform: none;
             width: 100%; border-radius: 0;
             border-left: none; border-right: none; border-top: none;
             border-bottom: 1px solid rgba(255,255,255,0.06);
             padding: 0 16px; height: 56px;
-            background: rgba(6,6,10,0.97);
-            max-width: 100%;
+            background: rgba(6,6,10,0.95);
           }
           .lp-nav.scrolled { height: 52px; }
 
-          /* Show all nav links on mobile desktop site ON */
-          .n-links {
+          /* Show Login as text-only on right */
+          .n-mob-login {
             display: flex !important;
-            margin: 0 12px !important;
-            gap: 0 !important;
+            color: #FAFAFA;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 7px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            margin-left: auto;
+            margin-right: 8px;
           }
-          .n-link {
-            font-size: 11px !important;
-            padding: 5px 7px !important;
-            color: rgba(255,255,255,0.5) !important;
-          }
-
-          /* Show login button */
-          .n-right { display: flex !important; }
-          .n-login {
-            font-size: 11.5px !important;
-            padding: 6px 13px !important;
-            border: 1px solid rgba(139,92,246,0.5) !important;
-            border-radius: 7px !important;
-            color: #FAFAFA !important;
-          }
-          .n-login:hover {
-            border-color: rgba(139,92,246,0.9) !important;
-            box-shadow: 0 0 16px rgba(139,92,246,0.25) !important;
-          }
-
-          /* Hide burger on desktop-site-on mode */
-          .n-burger { display: none !important; }
-          .n-mob-login { display: none !important; }
         }
 
         .n-mob-login { display: none; }
@@ -497,92 +492,92 @@ export default function LandingPage() {
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
-        /* ══ HERO — Mobile V2 (desktop site ON) ══ */
+        /* ══ HERO — Mobile V2 ══ */
         @media (max-width: 800px) {
           .hero {
-            padding: 64px 0 40px;
+            padding: 72px 0 0;
             background:
-              radial-gradient(ellipse 100% 50% at 70% 0%, rgba(139,92,246,0.18) 0%, transparent 55%),
-              radial-gradient(ellipse 60% 40% at 10% 70%, rgba(245,158,11,0.07) 0%, transparent 55%),
-              radial-gradient(ellipse 80% 60% at 90% 80%, rgba(236,72,153,0.08) 0%, transparent 55%),
+              radial-gradient(ellipse 120% 60% at 50% -10%, rgba(139,92,246,0.18) 0%, transparent 60%),
+              radial-gradient(ellipse 80% 50% at 10% 60%, rgba(245,158,11,0.07) 0%, transparent 55%),
               #06060E;
             min-height: 100svh;
+            display: flex; flex-direction: column;
           }
 
+          /* Hide the desktop grid dots on mobile — replaced by custom bg */
           .hero-grid { display: none; }
 
-          /* Side-by-side layout like reference */
+          /* Mobile hero: stack vertically, text on top, card below */
           .hero-inner {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 16px !important;
-            padding: 0 16px !important;
-            align-items: center !important;
-            max-width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0 !important;
+            padding: 0 !important;
+            align-items: stretch !important;
+            flex: 1;
           }
 
-          /* Left: text block */
+          /* ── Text block ── */
           .hero-left-mob {
-            padding: 0 !important;
+            padding: 28px 20px 24px;
           }
 
           .h-badge {
-            margin-bottom: 14px !important;
-            padding: 4px 10px 4px 8px !important;
-            border-radius: 16px !important;
+            margin-bottom: 18px;
+            padding: 4px 12px 4px 9px;
           }
-          .h-badge-text { font-size: 9px !important; }
+          .h-badge-text { font-size: 11px; }
 
           .h1 {
-            font-size: 20px !important;
-            line-height: 1.15 !important;
-            margin-bottom: 10px !important;
-            letter-spacing: -0.025em !important;
+            font-size: 30px !important;
+            line-height: 1.12 !important;
+            margin-bottom: 14px !important;
+            letter-spacing: -0.03em !important;
           }
 
           .h-desc {
-            font-size: 11px !important;
-            line-height: 1.55 !important;
-            margin-bottom: 16px !important;
+            font-size: 13.5px !important;
+            line-height: 1.65 !important;
+            margin-bottom: 22px !important;
             color: rgba(255,255,255,0.38) !important;
             max-width: 100% !important;
           }
 
+          /* Mobile CTA buttons: side by side */
           .h-btns {
-            flex-direction: column !important;
-            gap: 7px !important;
-            margin-bottom: 14px !important;
+            flex-direction: row !important;
+            gap: 8px !important;
+            margin-bottom: 18px !important;
           }
           .btn-p {
-            font-size: 11px !important;
-            padding: 9px 12px !important;
-            border-radius: 8px !important;
-            width: 100% !important;
-            justify-content: center !important;
+            font-size: 13px !important;
+            padding: 11px 18px !important;
+            border-radius: 9px !important;
+            flex: 1;
+            justify-content: center;
           }
           .btn-g {
-            font-size: 11px !important;
-            padding: 9px 10px !important;
-            border-radius: 8px !important;
-            width: 100% !important;
-            justify-content: center !important;
+            font-size: 13px !important;
+            padding: 11px 14px !important;
+            border-radius: 9px !important;
+            flex: 1;
+            justify-content: center;
             gap: 5px !important;
           }
 
+          /* Mobile trust row */
           .h-trust {
-            gap: 6px !important;
-            flex-direction: column !important;
-            align-items: flex-start !important;
+            gap: 10px !important;
+            flex-wrap: wrap !important;
           }
-          .h-trust-item {
-            font-size: 9.5px !important;
-            gap: 4px !important;
-          }
+          .h-trust-item { font-size: 11px !important; gap: 4px !important; }
 
-          /* Right: dashboard card */
+          /* ── Dashboard card block ── */
           .hero-right {
             animation: none !important;
-            padding: 0 !important;
+            padding: 20px 16px 32px;
+            /* purple/amber glow behind card */
+            background: radial-gradient(ellipse 90% 70% at 50% 30%, rgba(139,92,246,0.14) 0%, transparent 70%);
           }
         }
 
@@ -594,47 +589,48 @@ export default function LandingPage() {
         .s-num { font-size: 28px; font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
         .s-lbl { color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500; margin-top: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
 
-        /* Desktop: hide s-icon-wrap */
-        .s-icon-wrap { display: none; }
-
-        /* ══ STATS — Mobile V2 (desktop site ON) ══ */
+        /* ══ STATS — Mobile V2 ══ */
         @media (max-width: 800px) {
           .stats {
-            background: transparent;
-            border: none;
-            padding: 20px 16px 0;
+            background: #08080F;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            margin: 0 16px;
+            padding: 0;
           }
           .stats-row {
             display: grid !important;
-            grid-template-columns: repeat(4, 1fr) !important;
+            grid-template-columns: repeat(2, 1fr) !important;
             gap: 0 !important;
-            background: rgba(255,255,255,0.03) !important;
-            border: 1px solid rgba(255,255,255,0.07) !important;
-            border-radius: 14px !important;
-            overflow: hidden !important;
           }
           .s-cell {
-            padding: 14px 8px !important;
-            flex-direction: column !important;
+            padding: 16px 12px !important;
+            flex-direction: row !important;
             align-items: center !important;
-            gap: 6px !important;
-            border-right: 1px solid rgba(255,255,255,0.06) !important;
+            gap: 12px !important;
           }
-          .s-cell:last-child { border-right: none !important; }
           .s-cell + .s-cell::before { display: none !important; }
-          /* hide 5th stat */
+          /* inner borders via box-shadow */
+          .s-cell:nth-child(1) { border-bottom: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(2) { border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(3) {}
+          .s-cell:nth-child(4) { border-left: 1px solid rgba(255,255,255,0.05); }
+          /* hide 5th cell (0 lines of code) on mobile */
           .s-cell:nth-child(5) { display: none !important; }
 
           .s-icon-wrap {
             display: flex !important;
-            width: 28px; height: 28px; border-radius: 8px;
+            width: 36px; height: 36px; border-radius: 10px;
             align-items: center; justify-content: center;
             flex-shrink: 0;
           }
-          .s-text { display: flex; flex-direction: column; align-items: center; }
-          .s-num { font-size: 13px !important; font-weight: 800 !important; }
-          .s-lbl { font-size: 8px !important; margin-top: 1px !important; letter-spacing: 0.02em !important; text-align: center !important; }
+          .s-text { display: flex; flex-direction: column; align-items: flex-start; }
+          .s-num { font-size: 20px !important; }
+          .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.03em !important; }
         }
+
+        /* Desktop: hide s-icon-wrap */
+        .s-icon-wrap { display: none; }
 
         /* ══ SECTIONS ══ */
         .section { padding: 96px 24px; }
@@ -663,21 +659,21 @@ export default function LandingPage() {
         /* ══ HOW IT WORKS — Mobile V2 ══ */
         @media (max-width: 800px) {
           .how-bg { background: #06060E; }
-          .how-grid { grid-template-columns: 1fr 1fr !important; gap: 24px !important; align-items: start !important; }
-          .section { padding: 48px 16px !important; }
-          .tl { margin-top: 20px !important; }
-          .tl-line { left: 17px !important; background: linear-gradient(180deg, rgba(139,92,246,0.5) 0%, rgba(245,158,11,0.15) 100%) !important; }
-          .tl-row { gap: 10px !important; padding-bottom: 18px !important; }
+          .how-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
+          .section { padding: 56px 20px !important; }
+
+          /* Mobile timeline: icon left + colored dot, bigger icons */
+          .tl { margin-top: 28px !important; }
+          .tl-line { left: 21px !important; background: linear-gradient(180deg, rgba(139,92,246,0.5) 0%, rgba(245,158,11,0.15) 100%) !important; }
+          .tl-row { gap: 14px !important; padding-bottom: 24px !important; }
           .tl-dot {
-            width: 34px !important; height: 34px !important;
-            border-radius: 10px !important;
+            width: 42px !important; height: 42px !important;
+            border-radius: 12px !important;
             background: var(--step-bg, rgba(139,92,246,0.1)) !important;
             border: 1px solid var(--step-border, rgba(139,92,246,0.25)) !important;
           }
-          .tl-body h3 { font-size: 11.5px !important; margin-bottom: 2px !important; }
-          .tl-body p { font-size: 10px !important; color: rgba(255,255,255,0.28) !important; line-height: 1.45 !important; }
-          .sh { font-size: 22px !important; margin-bottom: 10px !important; }
-          .sub { font-size: 12px !important; }
+          .tl-body h3 { font-size: 13.5px !important; }
+          .tl-body p { font-size: 12px !important; color: rgba(255,255,255,0.28) !important; }
         }
 
         /* ══ FEATURES ══ */
@@ -696,22 +692,22 @@ export default function LandingPage() {
           .feat-bg { background: #06060E; }
           .feat-grid {
             grid-template-columns: repeat(3,1fr) !important;
-            gap: 8px !important;
-            margin-top: 20px !important;
+            gap: 10px !important;
+            margin-top: 24px !important;
           }
           .f-card {
-            padding: 14px 10px !important;
-            border-radius: 12px !important;
-            background: rgba(255,255,255,0.025) !important;
+            padding: 16px 14px !important;
+            border-radius: 14px !important;
+            background: rgba(255,255,255,0.03) !important;
             border: 1px solid rgba(255,255,255,0.06) !important;
           }
           .f-icon {
-            width: 32px !important; height: 32px !important;
-            border-radius: 9px !important;
-            margin-bottom: 8px !important;
+            width: 36px !important; height: 36px !important;
+            border-radius: 10px !important;
+            margin-bottom: 10px !important;
           }
-          .f-card h3 { font-size: 11px !important; margin-bottom: 4px !important; }
-          .f-card p { font-size: 10px !important; line-height: 1.45 !important; color: rgba(255,255,255,0.28) !important; }
+          .f-card h3 { font-size: 12px !important; margin-bottom: 5px !important; }
+          .f-card p { font-size: 10.5px !important; line-height: 1.5 !important; color: rgba(255,255,255,0.3) !important; }
         }
 
         /* ══ LANGUAGES ══ */
@@ -722,8 +718,8 @@ export default function LandingPage() {
 
         @media (max-width: 800px) {
           .lang-bg { background: #06060E; }
-          .l-chip { font-size: 11px !important; padding: 5px 10px !important; }
-          .lang-chips { gap: 5px !important; margin-top: 20px !important; }
+          .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; }
+          .lang-chips { gap: 6px !important; margin-top: 24px !important; }
         }
 
         /* ══ SECURITY ══ */
@@ -814,21 +810,13 @@ export default function LandingPage() {
             border: 1px solid rgba(139,92,246,0.25);
             border-radius: 20px;
             padding: 4px 12px;
-            margin-bottom: 14px;
-            font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em;
+            margin-bottom: 16px;
+            font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
             text-transform: uppercase;
             color: rgba(139,92,246,0.9);
           }
         }
         .mob-eyebrow-pill { display: none; }
-
-        /* Preview toggle */
-        .mob-preview-v2 { display: none; }
-        .desk-preview { display: block; }
-        @media (max-width: 800px) {
-          .mob-preview-v2 { display: block; }
-          .desk-preview { display: none; }
-        }
       `}</style>
 
       <div className="lp">
@@ -840,10 +828,11 @@ export default function LandingPage() {
             <span className="n-name">Moderate<span>AI</span></span>
           </Link>
           <div className="n-links">
-            {['Features','Pricing','Docs','Security'].map(item => (
-              <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="n-link">{item}</a>
+            {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
+              <a key={item} href={item === 'Documentation' ? '/documentation' : `#${item.toLowerCase().replace(/\s+/g,'-')}`} className="n-link">{item}</a>
             ))}
           </div>
+          <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
           </div>
@@ -855,8 +844,8 @@ export default function LandingPage() {
         <AnimatePresence>
           {menuOpen && (
             <motion.div className="mob-menu" initial={{ opacity:0,y:-8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0,y:-8 }} transition={{ duration:0.18 }}>
-              {['Features','Pricing','Docs','Security'].map(item => (
-                <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
+              {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
+                <a key={item} href={item === 'Documentation' ? '/documentation' : `#${item.toLowerCase().replace(/\s+/g,'-')}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
               ))}
               <div style={{ height:1, background:'rgba(255,255,255,0.05)', margin:'7px 0' }} />
               <Link href="/login" style={{ display:'block', background:'#F59E0B', color:'#080808', fontWeight:700, fontSize:14, padding:'11px 14px', borderRadius:8, textDecoration:'none', textAlign:'center', marginTop:4 }}>Start Free Trial →</Link>
@@ -869,6 +858,7 @@ export default function LandingPage() {
           <div className="hero-grid" />
           <div className="hero-inner">
 
+            {/* Text block — wrapped in div for mobile class targeting */}
             <div className="hero-left-mob">
               <motion.div initial={{ opacity:0,y:16 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.05 }}>
                 <div className="h-badge">
@@ -899,6 +889,7 @@ export default function LandingPage() {
             <motion.div className="hero-right"
               initial={{ opacity:0,y:24,scale:0.97 }} animate={{ opacity:1,y:0,scale:1 }}
               transition={{ duration:0.85,delay:0.18,ease:[0.22,1,0.36,1] }}>
+              {/* Mobile: show upgraded V2 preview; Desktop: show original */}
               <div className="mob-preview-v2">
                 <MobileDashboardPreview />
               </div>
@@ -909,15 +900,27 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Mobile: stats below hero */}
+        <style>{`
+          .mob-preview-v2 { display: none; }
+          .desk-preview { display: block; }
+          @media (max-width: 800px) {
+            .mob-preview-v2 { display: block; }
+            .desk-preview { display: none; }
+            .mob-stats-wrap { display: block !important; padding: 16px 16px 0; }
+          }
+          .mob-stats-wrap { display: none; }
+        `}</style>
+
         {/* ── STATS ── */}
         <div className="stats">
           <div className="stats-row">
             {[
-              { display: <><Counter to={100} suffix="+" /></>, label: 'Languages', icon: <Globe size={14} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.12)' },
-              { display: '24/7', label: 'Real-time Protection', icon: <Shield size={14} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.12)' },
-              { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={14} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.12)' },
-              { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={14} color="#f87171" />, iconBg: 'rgba(239,68,68,0.12)' },
-              { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={14} color="#34d399" />, iconBg: 'rgba(16,185,129,0.12)' },
+              { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={16} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.1)' },
+              { display: '24/7', label: 'Real-time Protection', icon: <Shield size={16} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.1)' },
+              { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={16} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.1)' },
+              { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={16} color="#f87171" />, iconBg: 'rgba(239,68,68,0.1)' },
+              { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={16} color="#34d399" />, iconBg: 'rgba(16,185,129,0.1)' },
             ].map((s, i) => (
               <FadeIn key={i} delay={i * 0.06}>
                 <div className="s-cell">
@@ -938,11 +941,12 @@ export default function LandingPage() {
             <div className="how-grid">
               <FadeIn>
                 <div className="mob-eyebrow-pill"><Zap size={10} /> Our Process</div>
+                <div className="eyebrow" style={{ display: 'none' }}><Zap size={11} /> Process</div>
                 <h2 className="sh serif">
                   From posted to <span className="grad-text">protected</span>{' '}in under a second.
                 </h2>
                 <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review.</p>
-                <a href="/login" style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:20, color:'rgba(255,255,255,0.55)', fontSize:13, fontWeight:600, textDecoration:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'9px 16px', transition:'all 0.2s' }}>Learn More <ArrowRight size={13} /></a>
+                <a href="/login" style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:24, color:'rgba(255,255,255,0.55)', fontSize:13, fontWeight:600, textDecoration:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'9px 16px', transition:'all 0.2s' }}>Learn More <ArrowRight size={13} /></a>
               </FadeIn>
               <div className="tl">
                 <div className="tl-line" />

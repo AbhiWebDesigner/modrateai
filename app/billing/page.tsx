@@ -12,6 +12,8 @@ type PlanId = "free" | "pro" | "agency";
 interface FirestoreUser {
   plan: PlanId;
   trial_active?: boolean;
+  trial_ends_at?: { toDate: () => Date } | string;
+  subscription_status?: string;
 }
 
 // ─── Plan definitions ─────────────────────────────────────────────────────────
@@ -110,17 +112,40 @@ const PLANS = [
 
 type Plan = typeof PLANS[number];
 
+// ─── Extend Trial Plan (₹69) ──────────────────────────────────────────────────
+
+interface ExtendPlan {
+  name: string;
+  tagline: string;
+  price: string;
+  period: string;
+}
+
+const EXTEND_TRIAL_PLAN: ExtendPlan = {
+  name: "Extend Trial",
+  tagline: "30 more days + 250 AI actions",
+  price: "₹69",
+  period: "/one-time",
+};
+
 // ─── Plan badge label ─────────────────────────────────────────────────────────
 
-function planBadgeLabel(plan: PlanId, trialActive: boolean): string {
-  if (plan === "free") return trialActive ? "FREE · Trial" : "FREE";
+function planBadgeLabel(plan: PlanId, trialExpired: boolean): string {
+  if (plan === "free") return trialExpired ? "FREE · Trial Expired" : "FREE · Trial";
   if (plan === "pro") return "PRO";
   return "AGENCY";
 }
 
 // ─── Razorpay modal ───────────────────────────────────────────────────────────
 
-function RazorpayModal({ plan, onClose }: { plan: Plan; onClose: () => void }) {
+interface ModalPlan {
+  name: string;
+  tagline: string;
+  price: string;
+  period: string;
+}
+
+function RazorpayModal({ plan, onClose }: { plan: ModalPlan; onClose: () => void }) {
   const [step, setStep] = useState<"confirm" | "processing" | "done">("confirm");
   const backdropRef = useRef<HTMLDivElement>(null);
 
@@ -173,8 +198,9 @@ function RazorpayModal({ plan, onClose }: { plan: Plan; onClose: () => void }) {
 
             <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "16px 18px", marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>{plan.name.replace(" ✦", "")} Plan</span>
-                <span style={{ fontWeight: 700, fontSize: 15, color: "#FAFAFA" }}>{plan.price}/mo</span>
+                <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>{plan.name.replace(" ✦", "")}</span>
+                <span style={{ fontWeight: 700, fontSize: 15, color: "#FAFAFA" }}>{plan.price}{plan.period === "/one-time" ? " (one-time)" : "/mo"}</span>
+
               </div>
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -252,8 +278,9 @@ function RazorpayModal({ plan, onClose }: { plan: Plan; onClose: () => void }) {
 export default function BillingPage() {
   const [currentPlan, setCurrentPlan] = useState<PlanId>("free");
   const [trialActive, setTrialActive] = useState(true);
+  const [trialExpired, setTrialExpired] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
-  const [modalPlan, setModalPlan] = useState<Plan | null>(null);
+  const [modalPlan, setModalPlan] = useState<ModalPlan | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -262,8 +289,26 @@ export default function BillingPage() {
         const snap = await getDoc(doc(db, "users", user.uid));
         if (snap.exists()) {
           const data = snap.data() as FirestoreUser;
-          setCurrentPlan(data.plan ?? "free");
+          const plan = data.plan ?? "free";
+          setCurrentPlan(plan);
           setTrialActive(data.trial_active ?? false);
+
+          // ── Check trial expiry ──────────────────────────────────────────
+          if (plan === "free") {
+            let trialEndsAt: Date | null = null;
+
+            if (data.trial_ends_at) {
+              if (typeof data.trial_ends_at === "object" && "toDate" in data.trial_ends_at) {
+                trialEndsAt = data.trial_ends_at.toDate();
+              } else if (typeof data.trial_ends_at === "string") {
+                trialEndsAt = new Date(data.trial_ends_at);
+              }
+            }
+
+            if (trialEndsAt && trialEndsAt < new Date()) {
+              setTrialExpired(true);
+            }
+          }
         }
       } catch (err) {
         if (process.env.NODE_ENV === "development") {
@@ -277,9 +322,14 @@ export default function BillingPage() {
   }, []);
 
   const openModal = useCallback((plan: Plan) => {
-    if (plan.id === "free" || plan.id === currentPlan) return;
-    setModalPlan(plan);
-  }, [currentPlan]);
+    if (plan.id === "free") return;
+    if (plan.id === currentPlan && !trialExpired) return;
+    setModalPlan({ name: plan.name.replace(" ✦", ""), tagline: plan.tagline, price: plan.price, period: plan.period });
+  }, [currentPlan, trialExpired]);
+
+  const openExtendModal = useCallback(() => {
+    setModalPlan(EXTEND_TRIAL_PLAN);
+  }, []);
 
   const closeModal = useCallback(() => setModalPlan(null), []);
 
@@ -298,9 +348,14 @@ export default function BillingPage() {
           .main-content { margin-left: 240px; padding: 36px 48px; }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse-glow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.40); }
+          50% { box-shadow: 0 0 0 6px rgba(239,68,68,0.0); }
+        }
+        .extend-btn:hover { opacity: 0.92; transform: translateY(-1px); transition: all 0.15s ease; }
       `}</style>
 
-      {/* ── Orange glow background (matches Automation page) ── */}
+      {/* ── Orange glow background ── */}
       <div style={{
         position: "fixed", inset: 0, zIndex: 0,
         background: "radial-gradient(ellipse 55% 50% at 5% 15%, rgba(245,158,11,0.10) 0%, transparent 60%), radial-gradient(ellipse 60% 55% at 5% 95%, rgba(109,40,217,0.18) 0%, transparent 62%), #07030F",
@@ -322,22 +377,78 @@ export default function BillingPage() {
               <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.30)" }}>Loading…</span>
             </div>
           ) : (
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 20, padding: "5px 14px" }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B" }}>{planBadgeLabel(currentPlan, trialActive)}</span>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: trialExpired ? "rgba(239,68,68,0.10)" : "rgba(245,158,11,0.10)", border: `1px solid ${trialExpired ? "rgba(239,68,68,0.30)" : "rgba(245,158,11,0.25)"}`, borderRadius: 20, padding: "5px 14px" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: trialExpired ? "#ef4444" : "#F59E0B", display: "inline-block" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: trialExpired ? "#ef4444" : "#F59E0B" }}>{planBadgeLabel(currentPlan, trialExpired)}</span>
             </div>
           )}
         </div>
+
+        {/* ── Trial Expired Banner ─────────────────────────────────────────── */}
+        {!loadingUser && trialExpired && (
+          <div style={{
+            background: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(124,58,237,0.08) 100%)",
+            border: "1px solid rgba(239,68,68,0.25)",
+            borderRadius: 16,
+            padding: "20px 24px",
+            marginBottom: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 16,
+            animation: "pulse-glow 2.5s ease-in-out infinite",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 44, height: 44, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+                🎁
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 15, color: "#FAFAFA", marginBottom: 3 }}>
+                  Your free trial has expired
+                </div>
+                <div style={{ color: "rgba(255,255,255,0.50)", fontSize: 13 }}>
+                  Extend for 30 more days + 250 AI actions — one-time offer
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>One-time offer</div>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#FAFAFA" }}>₹69</div>
+              </div>
+              <button
+                className="extend-btn"
+                onClick={openExtendModal}
+                style={{
+                  background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "12px 22px",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "white",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Extend Trial →
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Plans grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 48 }}>
           {PLANS.map(plan => {
             const isCurrentPlan = plan.id === currentPlan;
-            const isDisabled = isCurrentPlan || plan.id === "free";
+            const isFree = plan.id === "free";
+            const isDisabled = isFree || (isCurrentPlan && !trialExpired);
+
             return (
               <div key={plan.id} style={{
                 background: plan.color,
-                border: `1.5px solid ${isCurrentPlan ? "rgba(245,158,11,0.50)" : plan.borderColor}`,
+                border: `1.5px solid ${isCurrentPlan ? (trialExpired ? "rgba(239,68,68,0.40)" : "rgba(245,158,11,0.50)") : plan.borderColor}`,
                 borderRadius: 20, padding: "24px 22px",
                 position: "relative",
                 boxShadow: plan.id === "pro"
@@ -352,8 +463,8 @@ export default function BillingPage() {
                   </div>
                 )}
                 {isCurrentPlan && (
-                  <div style={{ position: "absolute", top: 16, right: 16, background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.30)", borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 700, color: "#F59E0B" }}>
-                    Current
+                  <div style={{ position: "absolute", top: 16, right: 16, background: trialExpired ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)", border: `1px solid ${trialExpired ? "rgba(239,68,68,0.30)" : "rgba(245,158,11,0.30)"}`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 700, color: trialExpired ? "#ef4444" : "#F59E0B" }}>
+                    {trialExpired ? "Expired" : "Current"}
                   </div>
                 )}
 
@@ -365,10 +476,36 @@ export default function BillingPage() {
                   <span style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, paddingBottom: 5 }}>{plan.period}</span>
                 </div>
 
-                {plan.trialNote && (
+                {plan.trialNote && !trialExpired && (
                   <div style={{ background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "#FBBF24", fontWeight: 600, marginBottom: 16 }}>
                     {plan.trialNote}
                   </div>
+                )}
+
+                {/* ── Extend Trial button inside Free Trial card ── */}
+                {isFree && trialExpired && (
+                  <button
+                    className="extend-btn"
+                    onClick={openExtendModal}
+                    style={{
+                      background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+                      border: "none",
+                      borderRadius: 10,
+                      padding: "8px 14px",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "white",
+                      cursor: "pointer",
+                      marginBottom: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      width: "100%",
+                      justifyContent: "center",
+                    }}
+                  >
+                    🎁 Extend Trial for ₹69 — 30 more days
+                  </button>
                 )}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
@@ -391,7 +528,7 @@ export default function BillingPage() {
                     opacity: isDisabled ? 0.6 : 1,
                   }}
                 >
-                  {isCurrentPlan ? "Current Plan" : plan.btnLabel}
+                  {isCurrentPlan && !trialExpired ? "Current Plan" : plan.btnLabel}
                 </button>
               </div>
             );

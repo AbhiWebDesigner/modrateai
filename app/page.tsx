@@ -6,7 +6,7 @@ import {
   Shield, Zap, Globe, Lock, BarChart3, MessageSquare,
   ChevronDown, Check, ArrowRight, Eye, EyeOff,
   CheckCircle, Languages, Cpu,
-  TrendingUp, Filter, Bell, X, Menu, Sparkles
+  TrendingUp, Filter, Bell, X, Menu, Sparkles, Play
 } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -50,21 +50,21 @@ function Counter({ to, suffix = '', prefix = '' }: { to: number; suffix?: string
 
 /* ── LIVE FEED ── */
 const COMMENTS = [
-  { id: 1, author: 'Alex_Gaming99', text: 'This is absolute trash content, go delete yourself', badge: 'toxic', avatar: 'A' },
-  { id: 2, author: 'SarahCreates', text: 'Amazing tutorial! I learned so much from this 🙌', badge: 'safe', avatar: 'S' },
-  { id: 3, author: 'SpamBot_4921', text: 'FREE ROBUX → click my profile link NOW!!!', badge: 'spam', avatar: '?' },
-  { id: 4, author: 'Rahul_K', text: 'यह वीडियो बहुत अच्छी है, धन्यवाद भाई', badge: 'safe', avatar: 'R' },
-  { id: 5, author: 'h8r_2024', text: 'Nobody asked for your stupid opinion lmao', badge: 'toxic', avatar: 'H' },
-  { id: 6, author: 'María_ES', text: 'Increíble contenido, sigue así campeón 🔥', badge: 'safe', avatar: 'M' },
-  { id: 7, author: 'PromoKing', text: 'Earn $500/day from home - DM me NOW', badge: 'spam', avatar: 'P' },
+  { id: 1, author: 'Alex_Gaming98', text: 'This is spam content promoting...', badge: 'toxic', avatar: 'A', time: '2s ago' },
+  { id: 2, author: 'CryptoMaster', text: 'Potential scam or misleading info...', badge: 'spam', avatar: 'C', time: '5s ago' },
+  { id: 3, author: 'CreatorFan_123', text: 'Thanks for the great content!', badge: 'safe', avatar: 'CF', time: '8s ago' },
+  { id: 4, author: 'Rahul_K', text: 'यह वीडियो बहुत अच्छी है, धन्यवाद', badge: 'safe', avatar: 'R', time: '12s ago' },
+  { id: 5, author: 'h8r_2024', text: 'Nobody asked for your opinion lmao', badge: 'toxic', avatar: 'H', time: '15s ago' },
+  { id: 6, author: 'PromoKing', text: 'Earn $500/day from home - DM me NOW', badge: 'spam', avatar: 'P', time: '18s ago' },
 ];
-const BADGE: Record<string, { bg: string; color: string; label: string }> = {
-  toxic: { bg: 'rgba(239,68,68,0.12)', color: '#f87171', label: 'Hidden' },
-  spam:  { bg: 'rgba(249,115,22,0.12)', color: '#fb923c', label: 'Blocked' },
-  safe:  { bg: 'rgba(16,185,129,0.12)', color: '#34d399', label: 'Approved' },
+
+const BADGE: Record<string, { bg: string; color: string; label: string; border: string }> = {
+  toxic: { bg: 'rgba(239,68,68,0.15)', color: '#f87171', label: 'Hidden', border: 'rgba(239,68,68,0.3)' },
+  spam:  { bg: 'rgba(249,115,22,0.15)', color: '#fb923c', label: 'Flagged', border: 'rgba(249,115,22,0.3)' },
+  safe:  { bg: 'rgba(16,185,129,0.15)', color: '#34d399', label: 'Replied', border: 'rgba(16,185,129,0.3)' },
 };
 
-function LiveFeed() {
+function LiveFeed({ compact = false }: { compact?: boolean }) {
   const [items, setItems] = useState<typeof COMMENTS>([]);
   const [scanning, setScanning] = useState(false);
   const idx = useRef(0);
@@ -74,22 +74,23 @@ function LiveFeed() {
       setTimeout(() => {
         const c = COMMENTS[idx.current % COMMENTS.length];
         idx.current++;
-        setItems(prev => [c, ...prev].slice(0, 4));
+        setItems(prev => [c, ...prev].slice(0, compact ? 3 : 4));
         setScanning(false);
       }, 900);
     };
     tick();
     const t = setInterval(tick, 3000);
     return () => clearInterval(t);
-  }, []);
+  }, [compact]);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       <AnimatePresence>
         {scanning && (
           <motion.div key="sc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 8, padding: '7px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 7, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 7 }}>
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', animation: 'lp-pulse 1s infinite' }} />
-            <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: 11 }}>AI scanning…</span>
+            <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: 10 }}>AI scanning…</span>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
               {[0,1,2].map(i => <div key={i} style={{ width: 3, height: 3, borderRadius: '50%', background: '#F59E0B', opacity: 0.5, animation: `lp-bounce 0.8s ${i*0.18}s infinite` }} />)}
             </div>
@@ -101,17 +102,17 @@ function LiveFeed() {
           const b = BADGE[c.badge];
           return (
             <motion.div key={`${c.id}-${i}`}
-              initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1 - i * 0.2, y: 0 }} transition={{ duration: 0.28 }}
-              style={{ background: c.badge === 'safe' ? 'rgba(255,255,255,0.02)' : 'rgba(239,68,68,0.03)', border: `1px solid ${c.badge === 'safe' ? 'rgba(255,255,255,0.05)' : 'rgba(239,68,68,0.1)'}`, borderRadius: 8, padding: '8px 11px', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 22, height: 22, borderRadius: '50%', flexShrink: 0, background: c.badge === 'safe' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.badge === 'safe' ? '#34d399' : '#f87171', fontSize: 9, fontWeight: 700 }}>{c.avatar}</div>
+              initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1 - i * 0.18, y: 0 }} transition={{ duration: 0.28 }}
+              style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 7, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, background: c.badge === 'safe' ? 'rgba(16,185,129,0.15)' : c.badge === 'spam' ? 'rgba(249,115,22,0.15)' : 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.badge === 'safe' ? '#34d399' : c.badge === 'spam' ? '#fb923c' : '#f87171', fontSize: 8, fontWeight: 700 }}>{c.avatar}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10.5, fontWeight: 600 }}>{c.author}</span>
-                  <span style={{ background: b.bg, color: b.color, fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 3 }}>{b.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 10, fontWeight: 600 }}>@{c.author}</span>
+                  <span style={{ background: b.bg, color: b.color, border: `1px solid ${b.border}`, fontSize: 8.5, fontWeight: 700, padding: '1px 6px', borderRadius: 4 }}>{b.label}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9, marginLeft: 'auto' }}>{c.time}</span>
                 </div>
-                <p style={{ color: c.badge === 'safe' ? 'rgba(255,255,255,0.3)' : 'rgba(255,80,80,0.35)', fontSize: 10.5, margin: 0, textDecoration: c.badge !== 'safe' ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.text}</p>
+                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.text}</p>
               </div>
-              {c.badge !== 'safe' ? <EyeOff size={11} color="rgba(239,68,68,0.4)" /> : <Eye size={11} color="rgba(16,185,129,0.4)" />}
             </motion.div>
           );
         })}
@@ -120,7 +121,107 @@ function LiveFeed() {
   );
 }
 
-/* ── PRODUCT PREVIEW ── */
+/* ── MOBILE DASHBOARD PREVIEW (V2) ── */
+function MobileDashboardPreview() {
+  return (
+    <div style={{
+      background: '#0D0D10',
+      border: '1px solid rgba(139,92,246,0.3)',
+      borderRadius: 18,
+      overflow: 'hidden',
+      boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 32px 80px rgba(0,0,0,0.8), 0 0 60px rgba(139,92,246,0.12), 0 0 100px rgba(245,158,11,0.06)',
+    }}>
+      {/* Top bar */}
+      <div style={{ background: '#111116', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '9px 13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 7, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield size={11} color="white" />
+          </div>
+          <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 12 }}>Moderate<span style={{ color: '#F59E0B' }}>AI</span></span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Bell size={13} color="rgba(255,255,255,0.35)" />
+          <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 8.5, fontWeight: 700, padding: '2px 8px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(16,185,129,0.2)' }}>
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
+          </span>
+        </div>
+      </div>
+
+      {/* Nav tabs */}
+      <div style={{ background: '#0E0E12', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 13px', display: 'flex', gap: 0, overflowX: 'auto' }}>
+        {['Overview','Analytics','Automation','Alerts','Settings'].map((t, i) => (
+          <div key={t} style={{ padding: '8px 9px', fontSize: 9.5, fontWeight: i===0 ? 700 : 400, color: i===0 ? '#F59E0B' : 'rgba(255,255,255,0.28)', borderBottom: i===0 ? '1.5px solid #F59E0B' : '1.5px solid transparent', whiteSpace: 'nowrap' }}>{t}</div>
+        ))}
+      </div>
+
+      {/* Stats row */}
+      <div style={{ background: '#080810', padding: '10px 13px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
+        {[
+          { label:'Comments Scanned', value:'12,847', change:'+18.6%', color:'#F59E0B', lineColor:'rgba(245,158,11,0.6)' },
+          { label:'Toxic Hidden', value:'1,203', change:'+24.5%', color:'#f87171', lineColor:'rgba(239,68,68,0.6)' },
+          { label:'AI Replied', value:'847', change:'+16.3%', color:'#60a5fa', lineColor:'rgba(96,165,250,0.6)' },
+        ].map(s => (
+          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 9, padding: '8px 9px' }}>
+            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 8, marginBottom: 4, lineHeight: 1.3 }}>{s.label}</div>
+            <div style={{ color: s.color, fontWeight: 800, fontSize: 13, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.value}</div>
+            <div style={{ color: '#34d399', fontSize: 8, fontWeight: 600 }}>{s.change}</div>
+            {/* Mini sparkline */}
+            <svg width="100%" height="22" viewBox="0 0 60 22" style={{ marginTop: 5 }}>
+              <polyline
+                points="0,18 10,14 20,16 30,10 40,12 50,6 60,4"
+                fill="none" stroke={s.lineColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        ))}
+      </div>
+
+      {/* Accuracy chart */}
+      <div style={{ background: '#060610', padding: '10px 13px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <div>
+            <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: 8.5, marginBottom: 3 }}>Detection Accuracy</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+              <span style={{ color: '#F0F0F0', fontWeight: 900, fontSize: 17, letterSpacing: '-0.03em' }}>98.2%</span>
+              <span style={{ color: '#34d399', fontSize: 9, fontWeight: 600 }}>+2.4%</span>
+            </div>
+          </div>
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 5, padding: '3px 8px', fontSize: 8.5, color: 'rgba(255,255,255,0.3)' }}>Today ▾</div>
+        </div>
+        {/* Chart */}
+        <div style={{ position: 'relative', height: 48 }}>
+          <svg width="100%" height="48" viewBox="0 0 300 48" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0,40 C20,38 40,32 60,28 C80,24 100,30 120,22 C140,14 160,18 180,12 C200,6 220,10 240,6 C260,2 280,4 300,3" fill="none" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M0,40 C20,38 40,32 60,28 C80,24 100,30 120,22 C140,14 160,18 180,12 C200,6 220,10 240,6 C260,2 280,4 300,3 L300,48 L0,48 Z" fill="url(#chartGrad)" />
+          </svg>
+          {/* X axis labels */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+            {['00:00','04:00','08:00','12:00','16:00','20:00','24:00'].map(t => (
+              <span key={t} style={{ color: 'rgba(255,255,255,0.2)', fontSize: 7 }}>{t}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Live Feed */}
+      <div style={{ padding: '10px 13px', background: '#06060E', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9.5, fontWeight: 600 }}>Live Moderation Feed</span>
+          <span style={{ color: '#8B5CF6', fontSize: 9, fontWeight: 600 }}>View All</span>
+        </div>
+        <LiveFeed compact />
+      </div>
+    </div>
+  );
+}
+
+/* ── DESKTOP PRODUCT PREVIEW (unchanged) ── */
 function ProductPreview() {
   return (
     <div style={{ background: '#0A0A0A', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)' }}>
@@ -173,21 +274,21 @@ function ProductPreview() {
 
 /* ── DATA ── */
 const STEPS = [
-  { icon: Shield, label: 'Connect YouTube', detail: 'One-click OAuth — read-only comment access, revocable anytime.' },
-  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment is analyzed in real time by our AI — before anyone sees it.' },
-  { icon: Languages, label: 'Language auto-detected', detail: 'The AI identifies language and applies culturally-aware rules automatically.' },
-  { icon: EyeOff, label: 'Harmful content hidden', detail: 'Toxic and spam comments are hidden instantly — never permanently deleted.' },
-  { icon: MessageSquare, label: 'AI replies naturally', detail: 'Genuine comments receive contextual replies in the commenter\'s own language.' },
-  { icon: BarChart3, label: 'Analytics updated', detail: 'Every moderation event is logged to your dashboard in real time.' },
+  { icon: Shield, label: 'Connect YouTube', detail: 'Secure OAuth connection with read-only access.', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment is analyzed in real time by our AI.', color: '#8B5CF6', bg: 'rgba(139,92,246,0.15)' },
+  { icon: Languages, label: 'Language auto-detected', detail: 'Detects 100+ languages and applies cultural rules.', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
+  { icon: EyeOff, label: 'Harmful content hidden', detail: 'Toxic and spam comments are hidden instantly.', color: '#f87171', bg: 'rgba(239,68,68,0.15)' },
+  { icon: MessageSquare, label: 'AI replies naturally', detail: 'Genuine comments receive contextual replies.', color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
+  { icon: BarChart3, label: 'Analytics updated', detail: 'Every moderation event is logged in real time.', color: '#34d399', bg: 'rgba(16,185,129,0.15)' },
 ];
 
 const FEATURES = [
-  { icon: Cpu, color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', title: 'Context-Aware AI', body: 'Reads intent, not just keywords. Sarcasm, mixed-language attacks — caught before anyone sees them.' },
-  { icon: Languages, color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', title: '100+ Languages', body: 'Hindi, Tamil, Arabic, Spanish, Korean — auto-detected. No manual language setup ever needed.' },
-  { icon: MessageSquare, color: '#a78bfa', bg: 'rgba(167,139,250,0.1)', title: 'AI Auto-Replies', body: 'Genuine comments get a human-sounding reply in the commenter\'s own language. No templates.' },
+  { icon: Cpu, color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', title: 'AI Spam & Toxic Detection', body: 'Advanced AI models detect spam, hate speech, scams, and harmful content.' },
+  { icon: Zap, color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)', title: 'Auto Moderation', body: 'Automatically hide, block, or take action based on your custom rules.' },
+  { icon: MessageSquare, color: '#f87171', bg: 'rgba(239,68,68,0.1)', title: 'AI-Powered Replies', body: 'Smart, context-aware replies that engage your audience naturally.' },
   { icon: Bell, color: '#fb923c', bg: 'rgba(251,146,60,0.1)', title: 'Instant Alerts', body: 'Get notified the moment a coordinated spam attack begins on your channel.' },
-  { icon: TrendingUp, color: '#34d399', bg: 'rgba(16,185,129,0.1)', title: 'Engagement Analytics', body: 'Comment volume, toxicity trends, reply performance — one dashboard, real time.' },
-  { icon: Filter, color: '#f87171', bg: 'rgba(239,68,68,0.1)', title: 'Custom Rules', body: 'Keyword blocklists, sensitivity thresholds, safe-lists, language filters — fully configurable.' },
+  { icon: TrendingUp, color: '#34d399', bg: 'rgba(16,185,129,0.1)', title: 'Engagement Analytics', body: 'Comment volume, toxicity trends, reply performance — one dashboard.' },
+  { icon: Filter, color: '#60a5fa', bg: 'rgba(96,165,250,0.1)', title: 'Custom Rules', body: 'Keyword blocklists, sensitivity thresholds, safe-lists — fully configurable.' },
 ];
 
 const SEC = [
@@ -211,83 +312,22 @@ const LANGS = [
 
 const PLANS = [
   {
-    name: 'Free Trial',
-    monthly: 0,
-    annual: 0,
+    name: 'Free Trial', monthly: 0, annual: 0,
     desc: 'Try ModerateAI free for 19 days.',
-    features: [
-      '19-Day Free Trial',
-      '1 YouTube Channel',
-      '2,000 Comments Scanned',
-      'AI Toxic Detection',
-      'AI Spam Detection',
-      'Review Queue',
-      '250 AI Actions',
-      'Smart AI Replies (Max 3 Per Video)',
-      'Basic Analytics Dashboard',
-      '10+ Languages',
-      'Email Support',
-    ],
-    missing: [],
-    cta: 'Start Free Trial',
-    primary: false,
-    hl: false,
-    badge: null,
+    features: ['19-Day Free Trial','1 YouTube Channel','2,000 Comments Scanned','AI Toxic Detection','AI Spam Detection','Review Queue','250 AI Actions','Smart AI Replies (Max 3 Per Video)','Basic Analytics Dashboard','10+ Languages','Email Support'],
+    missing: [], cta: 'Start Free Trial', primary: false, hl: false, badge: null,
   },
   {
-    name: 'Pro',
-    monthly: 349,
-    annual: 299,
+    name: 'Pro', monthly: 349, annual: 299,
     desc: 'Perfect for growing creators.',
-    features: [
-      '1 YouTube Channel',
-      '25,000 Comments Scanned / Month',
-      'AI Toxic Detection',
-      'AI Spam Detection',
-      'Auto Hide',
-      'Review Queue',
-      'Live Chat Moderation',
-      'Progressive Live Chat Timeouts',
-      '1,900 AI Actions / Month',
-      'Smart AI Replies (Max 3 Per Video)',
-      'Unlimited Automation Rules',
-      'Full Analytics Dashboard',
-      '50+ Languages',
-      'Priority Email Support',
-    ],
-    missing: [],
-    cta: 'Start 19-Day Trial',
-    primary: true,
-    hl: true,
-    badge: 'Most Popular',
+    features: ['1 YouTube Channel','25,000 Comments Scanned / Month','AI Toxic Detection','AI Spam Detection','Auto Hide','Review Queue','Live Chat Moderation','Progressive Live Chat Timeouts','1,900 AI Actions / Month','Smart AI Replies (Max 3 Per Video)','Unlimited Automation Rules','Full Analytics Dashboard','50+ Languages','Priority Email Support'],
+    missing: [], cta: 'Start 19-Day Trial', primary: true, hl: true, badge: 'Most Popular',
   },
   {
-    name: 'Agency',
-    monthly: 2499,
-    annual: 2149,
+    name: 'Agency', monthly: 2499, annual: 2149,
     desc: 'Built for businesses & agencies.',
-    features: [
-      '2 YouTube Channels',
-      '150,000 Comments Scanned / Month',
-      'AI Toxic Detection',
-      'AI Spam Detection',
-      'Auto Hide',
-      'Review Queue',
-      'Live Chat Moderation',
-      'Progressive Live Chat Timeouts',
-      '15,000 AI Actions / Month',
-      'Smart AI Replies (Max 3 Per Video)',
-      'Unlimited Automation Rules',
-      'Advanced Analytics Dashboard',
-      'Telegram Alerts',
-      '100+ Languages',
-      'Dedicated Priority Support',
-    ],
-    missing: [],
-    cta: 'Get Agency',
-    primary: false,
-    hl: false,
-    badge: null,
+    features: ['2 YouTube Channels','150,000 Comments Scanned / Month','AI Toxic Detection','AI Spam Detection','Auto Hide','Review Queue','Live Chat Moderation','Progressive Live Chat Timeouts','15,000 AI Actions / Month','Smart AI Replies (Max 3 Per Video)','Unlimited Automation Rules','Advanced Analytics Dashboard','Telegram Alerts','100+ Languages','Dedicated Priority Support'],
+    missing: [], cta: 'Get Agency', primary: false, hl: false, badge: null,
   },
 ];
 
@@ -309,14 +349,9 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // ── Auth redirect: logged-in users go straight to dashboard ──
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.replace('/dashboard');
-      } else {
-        setAuthChecked(true);
-      }
+      if (user) { router.replace('/dashboard'); } else { setAuthChecked(true); }
     });
     return () => unsub();
   }, [router]);
@@ -327,7 +362,6 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-  // Don't render landing page until auth check completes
   if (!authChecked) return null;
 
   return (
@@ -347,6 +381,7 @@ export default function LandingPage() {
         @keyframes lp-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
         @keyframes lp-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         @keyframes lp-grad { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        @keyframes lp-glow-pulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
 
         .serif { font-family: 'Playfair Display', Georgia, serif; }
 
@@ -357,6 +392,7 @@ export default function LandingPage() {
           background-clip: text; animation: lp-grad 5s ease infinite;
         }
 
+        /* ══ NAVBAR — Desktop ══ */
         .lp-nav {
           position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
           z-index: 200; width: calc(100% - 32px); max-width: 1120px;
@@ -370,6 +406,7 @@ export default function LandingPage() {
         .n-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
         .n-mark { background: linear-gradient(135deg,#F59E0B,#7C3AED); border-radius: 8px; width: 27px; height: 27px; display: flex; align-items: center; justify-content: center; }
         .n-name { color: #F0F0F0; font-weight: 800; font-size: 14.5px; letter-spacing: -0.025em; }
+        .n-name span { color: #F59E0B; }
         .n-links { display: flex; align-items: center; margin: 0 auto; }
         .n-link { color: rgba(255,255,255,0.42); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 10px; border-radius: 7px; transition: color 0.2s, background 0.2s; }
         .n-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
@@ -379,17 +416,50 @@ export default function LandingPage() {
         .n-cta { background: #F59E0B; color: #080808; font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 8px; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
         .n-cta:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.35); }
         .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; margin-left: auto; }
-        @media (max-width: 800px) { .n-links, .n-login { display: none !important; } .n-burger { display: flex; } }
+
+        /* ══ NAVBAR — Mobile (desktop site ON) ══ */
+        @media (max-width: 800px) {
+          .n-links, .n-login { display: none !important; }
+          .n-burger { display: flex; }
+
+          /* Mobile navbar: full width, flat, no floating pill */
+          .lp-nav {
+            top: 0; left: 0; transform: none;
+            width: 100%; border-radius: 0;
+            border-left: none; border-right: none; border-top: none;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0 16px; height: 56px;
+            background: rgba(6,6,10,0.95);
+          }
+          .lp-nav.scrolled { height: 52px; }
+
+          /* Show Login as text-only on right */
+          .n-mob-login {
+            display: flex !important;
+            color: #FAFAFA;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 7px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            margin-left: auto;
+            margin-right: 8px;
+          }
+        }
+
+        .n-mob-login { display: none; }
 
         .mob-menu {
-          position: fixed; top: 72px; left: 14px; right: 14px; z-index: 199;
-          background: rgba(10,10,12,0.97); border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 14px; padding: 12px; backdrop-filter: blur(28px);
-          display: flex; flex-direction: column; gap: 3;
+          position: fixed; top: 56px; left: 0; right: 0; z-index: 199;
+          background: rgba(6,6,10,0.98); border-bottom: 1px solid rgba(255,255,255,0.06);
+          padding: 12px 16px 16px; backdrop-filter: blur(28px);
+          display: flex; flex-direction: column; gap: 2px;
         }
-        .mob-a { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 14px; border-radius: 9px; transition: all 0.18s; display: block; }
+        .mob-a { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-decoration: none; padding: 11px 14px; border-radius: 9px; transition: all 0.18s; display: block; }
         .mob-a:hover { background: rgba(255,255,255,0.04); color: #F0F0F0; }
 
+        /* ══ HERO — Desktop ══ */
         .hero {
           padding: 112px 24px 72px; position: relative; overflow: hidden;
           background:
@@ -421,16 +491,148 @@ export default function LandingPage() {
         .h-trust { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
-        @media (max-width: 820px) { .hero-inner { grid-template-columns: 1fr; gap: 44px; } .hero { padding: 96px 20px 56px; } .hero-right { animation: none; } }
 
+        /* ══ HERO — Mobile V2 ══ */
+        @media (max-width: 800px) {
+          .hero {
+            padding: 72px 0 0;
+            background:
+              radial-gradient(ellipse 120% 60% at 50% -10%, rgba(139,92,246,0.18) 0%, transparent 60%),
+              radial-gradient(ellipse 80% 50% at 10% 60%, rgba(245,158,11,0.07) 0%, transparent 55%),
+              #06060E;
+            min-height: 100svh;
+            display: flex; flex-direction: column;
+          }
+
+          /* Hide the desktop grid dots on mobile — replaced by custom bg */
+          .hero-grid { display: none; }
+
+          /* Mobile hero: stack vertically, text on top, card below */
+          .hero-inner {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0 !important;
+            padding: 0 !important;
+            align-items: stretch !important;
+            flex: 1;
+          }
+
+          /* ── Text block ── */
+          .hero-left-mob {
+            padding: 28px 20px 24px;
+          }
+
+          .h-badge {
+            margin-bottom: 18px;
+            padding: 4px 12px 4px 9px;
+          }
+          .h-badge-text { font-size: 11px; }
+
+          .h1 {
+            font-size: 30px !important;
+            line-height: 1.12 !important;
+            margin-bottom: 14px !important;
+            letter-spacing: -0.03em !important;
+          }
+
+          .h-desc {
+            font-size: 13.5px !important;
+            line-height: 1.65 !important;
+            margin-bottom: 22px !important;
+            color: rgba(255,255,255,0.38) !important;
+            max-width: 100% !important;
+          }
+
+          /* Mobile CTA buttons: side by side */
+          .h-btns {
+            flex-direction: row !important;
+            gap: 8px !important;
+            margin-bottom: 18px !important;
+          }
+          .btn-p {
+            font-size: 13px !important;
+            padding: 11px 18px !important;
+            border-radius: 9px !important;
+            flex: 1;
+            justify-content: center;
+          }
+          .btn-g {
+            font-size: 13px !important;
+            padding: 11px 14px !important;
+            border-radius: 9px !important;
+            flex: 1;
+            justify-content: center;
+            gap: 5px !important;
+          }
+
+          /* Mobile trust row */
+          .h-trust {
+            gap: 10px !important;
+            flex-wrap: wrap !important;
+          }
+          .h-trust-item { font-size: 11px !important; gap: 4px !important; }
+
+          /* ── Dashboard card block ── */
+          .hero-right {
+            animation: none !important;
+            padding: 20px 16px 32px;
+            /* purple/amber glow behind card */
+            background: radial-gradient(ellipse 90% 70% at 50% 30%, rgba(139,92,246,0.14) 0%, transparent 70%);
+          }
+        }
+
+        /* ══ STATS — Desktop ══ */
         .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
         .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; }
         .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
         .s-cell + .s-cell::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:1px; height:26px; background:rgba(255,255,255,0.07); }
         .s-num { font-size: 28px; font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
         .s-lbl { color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500; margin-top: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
-        @media (max-width: 580px) { .stats-row { display: grid; grid-template-columns: 1fr 1fr; } .s-cell { padding: 16px 20px; } .s-cell + .s-cell::before { display: none; } .s-cell:nth-child(odd):not(:first-child) { border-top: 1px solid rgba(255,255,255,0.05); } .s-cell:nth-child(even) { border-left: 1px solid rgba(255,255,255,0.05); border-top: 1px solid rgba(255,255,255,0.05); } }
 
+        /* ══ STATS — Mobile V2 ══ */
+        @media (max-width: 800px) {
+          .stats {
+            background: #08080F;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            margin: 0 16px;
+            padding: 0;
+          }
+          .stats-row {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0 !important;
+          }
+          .s-cell {
+            padding: 16px 12px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 12px !important;
+          }
+          .s-cell + .s-cell::before { display: none !important; }
+          /* inner borders via box-shadow */
+          .s-cell:nth-child(1) { border-bottom: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(2) { border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(3) {}
+          .s-cell:nth-child(4) { border-left: 1px solid rgba(255,255,255,0.05); }
+          /* hide 5th cell (0 lines of code) on mobile */
+          .s-cell:nth-child(5) { display: none !important; }
+
+          .s-icon-wrap {
+            display: flex !important;
+            width: 36px; height: 36px; border-radius: 10px;
+            align-items: center; justify-content: center;
+            flex-shrink: 0;
+          }
+          .s-text { display: flex; flex-direction: column; align-items: flex-start; }
+          .s-num { font-size: 20px !important; }
+          .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.03em !important; }
+        }
+
+        /* Desktop: hide s-icon-wrap */
+        .s-icon-wrap { display: none; }
+
+        /* ══ SECTIONS ══ */
         .section { padding: 96px 24px; }
         .section-sm { padding: 80px 24px; }
         .con { max-width: 1120px; margin: 0 auto; }
@@ -441,6 +643,7 @@ export default function LandingPage() {
         .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; font-weight: 400; }
         .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; font-weight: 400; }
 
+        /* ══ HOW IT WORKS ══ */
         .how-bg { background: linear-gradient(180deg, #0C0C0C 0%, #0F0F0F 100%); }
         .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
         .tl { position: relative; margin-top: 48px; }
@@ -452,8 +655,28 @@ export default function LandingPage() {
         .tl-body { padding-top: 7px; }
         .tl-body h3 { font-size: 14.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
         .tl-body p { font-size: 13px; color: rgba(255,255,255,0.33); line-height: 1.55; }
-        @media (max-width: 780px) { .how-grid { grid-template-columns: 1fr; gap: 40px; } }
 
+        /* ══ HOW IT WORKS — Mobile V2 ══ */
+        @media (max-width: 800px) {
+          .how-bg { background: #06060E; }
+          .how-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
+          .section { padding: 56px 20px !important; }
+
+          /* Mobile timeline: icon left + colored dot, bigger icons */
+          .tl { margin-top: 28px !important; }
+          .tl-line { left: 21px !important; background: linear-gradient(180deg, rgba(139,92,246,0.5) 0%, rgba(245,158,11,0.15) 100%) !important; }
+          .tl-row { gap: 14px !important; padding-bottom: 24px !important; }
+          .tl-dot {
+            width: 42px !important; height: 42px !important;
+            border-radius: 12px !important;
+            background: var(--step-bg, rgba(139,92,246,0.1)) !important;
+            border: 1px solid var(--step-border, rgba(139,92,246,0.25)) !important;
+          }
+          .tl-body h3 { font-size: 13.5px !important; }
+          .tl-body p { font-size: 12px !important; color: rgba(255,255,255,0.28) !important; }
+        }
+
+        /* ══ FEATURES ══ */
         .feat-bg { background: #090909; }
         .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
         .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 26px; transition: all 0.3s cubic-bezier(0.22,1,0.36,1); position: relative; overflow: hidden; }
@@ -463,14 +686,43 @@ export default function LandingPage() {
         .f-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
         .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; letter-spacing: -0.02em; }
         .f-card p { font-size: 13px; color: rgba(255,255,255,0.36); line-height: 1.6; }
-        @media (max-width: 780px) { .feat-grid { grid-template-columns: repeat(2,1fr); } }
-        @media (max-width: 480px) { .feat-grid { grid-template-columns: 1fr; } }
 
+        /* ══ FEATURES — Mobile V2 ══ */
+        @media (max-width: 800px) {
+          .feat-bg { background: #06060E; }
+          .feat-grid {
+            grid-template-columns: repeat(3,1fr) !important;
+            gap: 10px !important;
+            margin-top: 24px !important;
+          }
+          .f-card {
+            padding: 16px 14px !important;
+            border-radius: 14px !important;
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+          }
+          .f-icon {
+            width: 36px !important; height: 36px !important;
+            border-radius: 10px !important;
+            margin-bottom: 10px !important;
+          }
+          .f-card h3 { font-size: 12px !important; margin-bottom: 5px !important; }
+          .f-card p { font-size: 10.5px !important; line-height: 1.5 !important; color: rgba(255,255,255,0.3) !important; }
+        }
+
+        /* ══ LANGUAGES ══ */
         .lang-bg { background: linear-gradient(180deg, #0D0D0D 0%, #0A0A0A 100%); }
         .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
         .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 7px 15px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
         .l-chip:hover { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.2); color: rgba(255,255,255,0.82); }
 
+        @media (max-width: 800px) {
+          .lang-bg { background: #06060E; }
+          .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; }
+          .lang-chips { gap: 6px !important; margin-top: 24px !important; }
+        }
+
+        /* ══ SECURITY ══ */
         .sec-bg { background: #FAFAFA; }
         .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
         .s-card { background: #F2F2F0; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 24px; transition: all 0.22s; }
@@ -481,6 +733,7 @@ export default function LandingPage() {
         @media (max-width: 780px) { .sec-grid { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 460px) { .sec-grid { grid-template-columns: 1fr; } }
 
+        /* ══ PRICING ══ */
         .price-bg { background: #F5F5F3; }
         .p-toggle { display: inline-flex; background: rgba(0,0,0,0.06); border-radius: 9px; padding: 3px; margin: 24px auto 0; }
         .pt-btn { padding: 6px 17px; border-radius: 7px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; }
@@ -513,6 +766,7 @@ export default function LandingPage() {
         .cta-dgl:hover { background:rgba(255,255,255,0.1); }
         @media (max-width: 780px) { .price-cards { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
 
+        /* ══ FAQ ══ */
         .faq-bg { background: #FFFFFF; }
         .faq-list { margin-top: 48px; }
         .faq-item { border-bottom: 1px solid rgba(0,0,0,0.06); }
@@ -522,6 +776,7 @@ export default function LandingPage() {
         .faq-ico.open { transform: rotate(180deg); color: #F59E0B; }
         .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
+        /* ══ CTA SECTION ══ */
         .cta-wrap { background: #080808; padding: 120px 24px; position: relative; overflow: hidden; }
         .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.09) 0%, transparent 70%); }
         .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
@@ -530,6 +785,7 @@ export default function LandingPage() {
         .cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.17); border-radius:20px; padding:4px 13px; margin-bottom:24px; }
         .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
+        /* ══ FOOTER ══ */
         .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 24px 26px; }
         .foot-in { max-width: 1120px; margin: 0 auto; }
         .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
@@ -544,6 +800,23 @@ export default function LandingPage() {
         @media (max-width: 440px) { .foot-top { grid-template-columns: 1fr; } }
 
         .centered { text-align: center; }
+
+        /* Mobile eyebrow pill */
+        @media (max-width: 800px) {
+          .mob-eyebrow-pill {
+            display: inline-flex !important;
+            align-items: center; gap: 6px;
+            background: rgba(139,92,246,0.1);
+            border: 1px solid rgba(139,92,246,0.25);
+            border-radius: 20px;
+            padding: 4px 12px;
+            margin-bottom: 16px;
+            font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(139,92,246,0.9);
+          }
+        }
+        .mob-eyebrow-pill { display: none; }
       `}</style>
 
       <div className="lp">
@@ -552,13 +825,14 @@ export default function LandingPage() {
         <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
           <Link href="/" className="n-logo">
             <div className="n-mark"><Shield size={13} color="white" /></div>
-            <span className="n-name">ModerateAI</span>
+            <span className="n-name">Moderate<span>AI</span></span>
           </Link>
           <div className="n-links">
             {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
               <a key={item} href={item === 'Documentation' ? '/documentation' : `#${item.toLowerCase().replace(/\s+/g,'-')}`} className="n-link">{item}</a>
             ))}
           </div>
+          <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
           </div>
@@ -574,7 +848,6 @@ export default function LandingPage() {
                 <a key={item} href={item === 'Documentation' ? '/documentation' : `#${item.toLowerCase().replace(/\s+/g,'-')}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
               ))}
               <div style={{ height:1, background:'rgba(255,255,255,0.05)', margin:'7px 0' }} />
-              <Link href="/login" className="mob-a">Login</Link>
               <Link href="/login" style={{ display:'block', background:'#F59E0B', color:'#080808', fontWeight:700, fontSize:14, padding:'11px 14px', borderRadius:8, textDecoration:'none', textAlign:'center', marginTop:4 }}>Start Free Trial →</Link>
             </motion.div>
           )}
@@ -584,54 +857,78 @@ export default function LandingPage() {
         <section className="hero" id="features">
           <div className="hero-grid" />
           <div className="hero-inner">
-            <div>
+
+            {/* Text block — wrapped in div for mobile class targeting */}
+            <div className="hero-left-mob">
               <motion.div initial={{ opacity:0,y:16 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.05 }}>
                 <div className="h-badge">
                   <div className="h-badge-dot" />
-                  <span className="h-badge-text">AI-Powered Moderation</span>
+                  <span className="h-badge-text">⚡ AI-Powered YouTube Moderation</span>
                 </div>
               </motion.div>
               <motion.h1 className="h1 serif" initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.7,delay:0.12,ease:[0.22,1,0.36,1] }}>
-                Protect your YouTube<br />community before{' '}
-                <span className="grad-text">toxicity spreads.</span>
+                Protect your<br />YouTube community<br />before <span className="grad-text">toxicity spreads.</span>
               </motion.h1>
               <motion.p className="h-desc" initial={{ opacity:0,y:14 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.22 }}>
-                ModerateAI scans every comment in real time — detecting spam, toxicity, and manipulation across 100+ languages — and hides harmful content before your audience ever sees it.
+                ModerateAI scans every comment in real time to detect spam, toxicity, and manipulation across 100+ languages and hides harmful content before your audience ever sees it.
               </motion.p>
               <motion.div className="h-btns" initial={{ opacity:0,y:12 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.55,delay:0.32 }}>
                 <Link href="/login" className="btn-p">Start Free Trial <ArrowRight size={14} /></Link>
-                <a href="#how-it-works" className="btn-g">See How It Works</a>
+                <a href="#how-it-works" className="btn-g"><Play size={12} /> See How It Works</a>
               </motion.div>
               <motion.div className="h-trust" initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.5,delay:0.44 }}>
-                {['No Credit Card','19-Day Free Trial','Setup in 2 minutes'].map(t => (
+                {['No Credit Card','10-Day Free Trial','Setup in 2 Minutes'].map(t => (
                   <div key={t} className="h-trust-item">
-                    <CheckCircle size={13} style={{ color:'#10B981',flexShrink:0 }} /><span>{t}</span>
+                    <CheckCircle size={12} style={{ color:'#10B981',flexShrink:0 }} /><span>{t}</span>
                   </div>
                 ))}
               </motion.div>
             </div>
+
+            {/* Dashboard preview */}
             <motion.div className="hero-right"
               initial={{ opacity:0,y:24,scale:0.97 }} animate={{ opacity:1,y:0,scale:1 }}
               transition={{ duration:0.85,delay:0.18,ease:[0.22,1,0.36,1] }}>
-              <ProductPreview />
+              {/* Mobile: show upgraded V2 preview; Desktop: show original */}
+              <div className="mob-preview-v2">
+                <MobileDashboardPreview />
+              </div>
+              <div className="desk-preview">
+                <ProductPreview />
+              </div>
             </motion.div>
           </div>
         </section>
+
+        {/* Mobile: stats below hero */}
+        <style>{`
+          .mob-preview-v2 { display: none; }
+          .desk-preview { display: block; }
+          @media (max-width: 800px) {
+            .mob-preview-v2 { display: block; }
+            .desk-preview { display: none; }
+            .mob-stats-wrap { display: block !important; padding: 16px 16px 0; }
+          }
+          .mob-stats-wrap { display: none; }
+        `}</style>
 
         {/* ── STATS ── */}
         <div className="stats">
           <div className="stats-row">
             {[
-              { display: <><Counter to={100} suffix="+" /></>, label: 'Languages' },
-              { display: '24/7', label: 'Live Protection' },
-              { display: 'Real-time', label: 'Moderation' },
-              { display: 'High', label: 'Detection Accuracy' },
-              { display: '0', label: 'Lines of Code to Setup' },
+              { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={16} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.1)' },
+              { display: '24/7', label: 'Real-time Protection', icon: <Shield size={16} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.1)' },
+              { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={16} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.1)' },
+              { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={16} color="#f87171" />, iconBg: 'rgba(239,68,68,0.1)' },
+              { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={16} color="#34d399" />, iconBg: 'rgba(16,185,129,0.1)' },
             ].map((s, i) => (
               <FadeIn key={i} delay={i * 0.06}>
                 <div className="s-cell">
-                  <span className="s-num">{s.display}</span>
-                  <span className="s-lbl">{s.label}</span>
+                  <div className="s-icon-wrap" style={{ background: s.iconBg }}>{s.icon}</div>
+                  <div className="s-text">
+                    <span className="s-num">{s.display}</span>
+                    <span className="s-lbl">{s.label}</span>
+                  </div>
                 </div>
               </FadeIn>
             ))}
@@ -643,18 +940,20 @@ export default function LandingPage() {
           <div className="con">
             <div className="how-grid">
               <FadeIn>
-                <div className="eyebrow"><Zap size={11} /> Process</div>
+                <div className="mob-eyebrow-pill"><Zap size={10} /> Our Process</div>
+                <div className="eyebrow" style={{ display: 'none' }}><Zap size={11} /> Process</div>
                 <h2 className="sh serif">
-                  From posted<br />to <span className="grad-text">protected</span><br />in under a second.
+                  From posted to <span className="grad-text">protected</span>{' '}in under a second.
                 </h2>
                 <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review.</p>
+                <a href="/login" style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:24, color:'rgba(255,255,255,0.55)', fontSize:13, fontWeight:600, textDecoration:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'9px 16px', transition:'all 0.2s' }}>Learn More <ArrowRight size={13} /></a>
               </FadeIn>
               <div className="tl">
                 <div className="tl-line" />
                 {STEPS.map((s, i) => (
                   <FadeIn key={s.label} delay={i * 0.07}>
-                    <div className="tl-row">
-                      <div className="tl-dot"><s.icon size={15} color="rgba(245,158,11,0.75)" /></div>
+                    <div className="tl-row" style={{ ['--step-bg' as string]: s.bg, ['--step-border' as string]: s.color + '44' }}>
+                      <div className="tl-dot"><s.icon size={16} color={s.color} /></div>
                       <div className="tl-body"><h3>{s.label}</h3><p>{s.detail}</p></div>
                     </div>
                   </FadeIn>
@@ -668,8 +967,8 @@ export default function LandingPage() {
         <section className="section feat-bg" id="features-detail">
           <div className="con">
             <FadeIn>
-              <div className="eyebrow"><Sparkles size={11} /> Features</div>
-              <h2 className="sh serif">Everything your channel<br />needs to stay clean.</h2>
+              <div className="mob-eyebrow-pill"><Sparkles size={10} /> Features</div>
+              <h2 className="sh serif">Everything your channel<br />needs to stay <span className="grad-text">clean.</span></h2>
             </FadeIn>
             <div className="feat-grid">
               {FEATURES.map((f, i) => (
@@ -689,7 +988,7 @@ export default function LandingPage() {
         <section className="section lang-bg">
           <div className="con centered">
             <FadeIn>
-              <div className="eyebrow" style={{ justifyContent:'center' }}><Globe size={11} /> Language Support</div>
+              <div className="mob-eyebrow-pill" style={{ justifyContent:'center' }}><Globe size={10} /> Language Support</div>
               <h2 className="sh serif">Your community speaks<br /><span className="grad-text">every language.</span><br />So does the AI.</h2>
               <p className="sub" style={{ margin:'0 auto' }}>Language is detected per comment automatically — no configuration needed.</p>
             </FadeIn>
@@ -755,9 +1054,6 @@ export default function LandingPage() {
                     <div className="p-feats">
                       {p.features.map(f => (
                         <div key={f} className="p-feat"><Check size={12} style={{ color:'#10B981',flexShrink:0 }} />{f}</div>
-                      ))}
-                      {p.missing.map(f => (
-                        <div key={f} className={`p-feat p-miss${p.hl?' hl':''}`}><X size={12} style={{ color: p.hl ? 'rgba(255,255,255,0.17)' : 'rgba(0,0,0,0.17)', flexShrink:0 }} />{f}</div>
                       ))}
                     </div>
                     <Link href="/login" className={p.primary ? 'cta-p' : p.hl ? 'cta-dgl' : 'cta-gl'}>{p.cta}</Link>
@@ -825,7 +1121,7 @@ export default function LandingPage() {
               <div className="foot-brand">
                 <Link href="/" className="n-logo" style={{ display:'inline-flex' }}>
                   <div className="n-mark"><Shield size={12} color="white" /></div>
-                  <span className="n-name">ModerateAI</span>
+                  <span className="n-name">Moderate<span>AI</span></span>
                 </Link>
                 <p>AI-powered YouTube comment moderation. Protect your community before toxicity spreads.</p>
               </div>

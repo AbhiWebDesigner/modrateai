@@ -16,6 +16,33 @@ import { useRouter } from 'next/navigation';
 
 const DEFAULT_FILTERS = ['spam', 'scam', 'hate', 'harassment', 'links', 'adult'];
 
+// SECURITY FIX 1: Allowlist for automation fields — prevents arbitrary field injection
+const ALLOWED_AUTOMATION_FIELDS = new Set([
+  'hideSpam', 'hideToxic', 'autoHide',
+  'aiReplies', 'liveChat', 'liveTimeout',
+]);
+
+// SECURITY FIX 2: Validate photoURL domain — prevents XSS via malicious image URLs
+const ALLOWED_PHOTO_DOMAINS = [
+  'googleusercontent.com',
+  'lh3.googleusercontent.com',
+  'firebasestorage.googleapis.com',
+  'avatars.githubusercontent.com',
+];
+
+function isSafePhotoUrl(url: string | null): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'https:' &&
+      ALLOWED_PHOTO_DOMAINS.some(domain => parsed.hostname.endsWith(domain))
+    );
+  } catch {
+    return false;
+  }
+}
+
 function EmptyState({ icon: Icon, message }: { icon: any; message: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 16px', gap: 8 }}>
@@ -161,16 +188,13 @@ export default function ModerationPage() {
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
 
-      // FIX: guard prevents count from exceeding 2 on subsequent snapshots
       const onRequiredSnapReady = () => {
-        if (initialSnapCount.current >= 2) return;
         initialSnapCount.current += 1;
-        if (initialSnapCount.current === 2) {
+        if (initialSnapCount.current >= 2) {
           setLoading(false);
         }
       };
 
-      // FIX: onRequiredSnapReady called unconditionally (outside snap.exists() check)
       const unsubUser = onSnapshot(doc(db, 'users', firebaseUser.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
         onRequiredSnapReady();
@@ -182,7 +206,6 @@ export default function ModerationPage() {
       });
       unsubRefs.current.push(unsubAnalytics);
 
-      // FIX: onRequiredSnapReady called unconditionally (outside snap.exists() check)
       const unsubAutomation = onSnapshot(doc(db, 'automations', firebaseUser.uid), (snap) => {
         if (snap.exists()) {
           const data = snap.data();
@@ -197,14 +220,23 @@ export default function ModerationPage() {
         onRequiredSnapReady();
       });
       unsubRefs.current.push(unsubAutomation);
+
+      // SAFETY: Force loading=false after 4s if Firestore is slow
+      const timeout = setTimeout(() => setLoading(false), 4000);
+      unsubRefs.current.push(() => clearTimeout(timeout));
     });
     return () => { unsubAuth(); unsubRefs.current.forEach(u => u()); };
   }, [router]);
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
 
+  // SECURITY FIX 1: Allowlist validation — no arbitrary field injection
   const toggleAutomation = async (field: string, value: boolean) => {
     if (!user) return;
+    if (!ALLOWED_AUTOMATION_FIELDS.has(field)) {
+      console.error('Invalid automation field blocked:', field);
+      return;
+    }
     try {
       await setDoc(doc(db, 'automations', user.uid), { [field]: value }, { merge: true });
     } catch (error) {
@@ -246,7 +278,10 @@ export default function ModerationPage() {
 
   const firstName  = user?.displayName?.split(' ')[0] || 'there';
   const initials   = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
-  const userPhoto  = user?.photoURL || (userData?.photo as string) || null;
+
+  // SECURITY FIX 2: Validate photo URL domain before rendering
+  const rawPhoto   = user?.photoURL || (userData?.photo as string) || null;
+  const userPhoto  = isSafePhotoUrl(rawPhoto) ? rawPhoto : null;
 
   const autoHideToxic   = (automationData?.hideToxic   as boolean) ?? false;
   const autoHideSpam    = (automationData?.hideSpam    as boolean) ?? false;

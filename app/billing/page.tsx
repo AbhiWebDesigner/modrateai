@@ -24,7 +24,7 @@ const PLANS = [
     name: "Free Trial ✦",
     tagline: "Test before you commit",
     price: "₹0",
-    period: "/month",
+    period: "/19 days",
     badge: null as string | null,
     trialNote: "✦ 19-day free trial · Extend for ₹69",
     color: "rgba(255,255,255,0.06)",

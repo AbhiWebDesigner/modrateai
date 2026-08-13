@@ -1,7 +1,7 @@
 'use client';
 import { Shield, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { auth, googleProvider, db } from '@/lib/firebase';
 import { doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
@@ -71,6 +71,9 @@ export default function LoginPage() {
     setError('');
 
     try {
+      // ── Ensure session persists across tab closes ──
+      await setPersistence(auth, browserLocalPersistence);
+
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const userRef = doc(db, 'users', user.uid);

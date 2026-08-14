@@ -118,8 +118,8 @@ function MobileDashboardPreview() {
       background: '#0D0D14',
       borderRadius: 20,
       overflow: 'hidden',
-      border: '1.5px solid rgba(139,92,246,0.4)',
-      boxShadow: '0 0 0 1px rgba(139,92,246,0.1), 0 0 40px rgba(139,92,246,0.2), 0 0 80px rgba(245,158,11,0.08), 0 24px 60px rgba(0,0,0,0.7)',
+      border: '1.5px solid rgba(139,92,246,0.55)',
+      boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 0 30px rgba(139,92,246,0.35), 0 0 60px rgba(139,92,246,0.2), 0 0 90px rgba(236,72,153,0.12), 0 24px 60px rgba(0,0,0,0.8)',
     }}>
       {/* Top bar */}
       <div style={{ background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -394,8 +394,8 @@ export default function LandingPage() {
         .n-link { color: rgba(255,255,255,0.42); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 10px; border-radius: 7px; transition: color 0.2s, background 0.2s; }
         .n-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
         .n-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .n-login { color: #FAFAFA; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 16px; border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; transition: all 0.25s; }
-        .n-login:hover { border-color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(255,255,255,0.15); }
+        .n-login { color: #FAFAFA; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 16px; border: 1px solid rgba(139,92,246,0.6); border-radius: 8px; transition: all 0.25s; box-shadow: 0 0 10px rgba(139,92,246,0.15); }
+        .n-login:hover { border-color: rgba(139,92,246,1); background: rgba(139,92,246,0.1); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
         .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; }
 
         /* ══ NAVBAR — Mobile ══ */

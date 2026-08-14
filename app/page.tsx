@@ -1,4 +1,3 @@
-'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
@@ -47,7 +46,7 @@ const COMMENTS = [
   { id: 1, author: 'Alex_Gaming98', text: 'This is spam content promoting...', badge: 'toxic', avatar: 'A', time: '2s ago' },
   { id: 2, author: 'CryptoMaster', text: 'Potential scam or misleading info...', badge: 'spam', avatar: 'C', time: '5s ago' },
   { id: 3, author: 'CreatorFan_123', text: 'Thanks for the great content!', badge: 'safe', avatar: 'CF', time: '8s ago' },
-  { id: 4, author: 'Rahul_K', text: 'యహ వీడియో బహుత్ అచ్ఛీ హై, ధన్యవాద్', badge: 'safe', avatar: 'R', time: '12s ago' },
+  { id: 4, author: 'Rahul_K', text: 'यह वीडियो बहुत अच्छी है, धन्यवाद', badge: 'safe', avatar: 'R', time: '12s ago' },
   { id: 5, author: 'h8r_2024', text: 'Nobody asked for your opinion lmao', badge: 'toxic', avatar: 'H', time: '15s ago' },
   { id: 6, author: 'PromoKing', text: 'Earn $500/day from home - DM me NOW', badge: 'spam', avatar: 'P', time: '18s ago' },
 ];
@@ -111,37 +110,46 @@ function LiveFeed({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/* ── PRODUCT PREVIEW (used on all screen sizes) ── */
-function ProductPreview() {
+/* ── MOBILE DASHBOARD PREVIEW ── */
+function MobileDashboardPreview() {
   return (
-    <div style={{ background: '#0A0A0A', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)' }}>
-      <div style={{ background: '#141414', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ display: 'flex', gap: 5 }}>
-          {['#FF5F57', '#FFBD2E', '#28C840'].map(c => <div key={c} style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />)}
-        </div>
-        <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Lock size={9} color="rgba(255,255,255,0.25)" />
-          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>moderateai.site/dashboard</span>
-        </div>
-        <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
-        </span>
-      </div>
-      <div style={{ background: '#0D0D0D', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 6, width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Shield size={10} color="white" />
+    <div style={{
+      background: '#0D0D14',
+      borderRadius: 20,
+      overflow: 'hidden',
+      border: '1.5px solid rgba(139,92,246,0.55)',
+      boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 0 30px rgba(139,92,246,0.35), 0 0 60px rgba(139,92,246,0.2), 0 0 90px rgba(236,72,153,0.12), 0 24px 60px rgba(0,0,0,0.8)',
+    }}>
+      {/* Top bar */}
+      <div style={{ background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 8, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield size={12} color="white" />
           </div>
-          <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 11 }}>ModerateAI</span>
+          <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13 }}>Moderate<span style={{ color: '#F59E0B' }}>AI</span></span>
         </div>
-        <div style={{ display: 'flex', gap: 10, overflowX: 'auto' }}>
-          {['Overview', 'Analytics', 'Automation', 'Alerts', 'Settings'].map((t, i) => (
-            <span key={t} style={{ color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.28)', fontSize: 9.5, fontWeight: i === 0 ? 600 : 400, whiteSpace: 'nowrap' }}>{t}</span>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Bell size={14} color="rgba(255,255,255,0.3)" />
+          <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 9px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(16,185,129,0.25)' }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
+          </span>
         </div>
       </div>
-      <div style={{ background: '#080808', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-        {[{ label: 'Comments Scanned', value: '12,847', change: '+18.6%', color: '#F59E0B', pts: '0,18 10,14 20,16 30,10 40,12 50,6 60,4' }, { label: 'Toxic Hidden', value: '1,203', change: '+24.5%', color: '#f87171', pts: '0,16 10,18 20,12 30,14 40,8 50,10 60,5' }, { label: 'AI Replied', value: '847', change: '+16.3%', color: '#60a5fa', pts: '0,18 10,15 20,17 30,11 40,13 50,7 60,4' }].map(s => (
+
+      {/* Nav tabs */}
+      <div style={{ background: '#0E0E14', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 14px', display: 'flex', gap: 0, overflowX: 'auto' }}>
+        {['Overview', 'Analytics', 'Automation', 'Alerts', 'Settings'].map((t, i) => (
+          <div key={t} style={{ padding: '9px 10px', fontSize: 10, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.25)', borderBottom: i === 0 ? '2px solid #F59E0B' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>{t}</div>
+        ))}
+      </div>
+
+      {/* Stats row */}
+      <div style={{ background: '#09090F', padding: '12px 14px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+        {[
+          { label: 'Comments Scanned', value: '12,847', change: '+18.6%', color: '#F59E0B', pts: '0,18 10,14 20,16 30,10 40,12 50,6 60,4' },
+          { label: 'Toxic Hidden', value: '1,203', change: '+24.5%', color: '#f87171', pts: '0,16 10,18 20,12 30,14 40,8 50,10 60,5' },
+          { label: 'AI Replied', value: '847', change: '+16.3%', color: '#60a5fa', pts: '0,18 10,15 20,17 30,11 40,13 50,7 60,4' },
+        ].map(s => (
           <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '9px 10px' }}>
             <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 8, marginBottom: 4, lineHeight: 1.3 }}>{s.label}</div>
             <div style={{ color: s.color, fontWeight: 800, fontSize: 14, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.value}</div>
@@ -152,8 +160,9 @@ function ProductPreview() {
           </div>
         ))}
       </div>
-      {/* Detection Accuracy Chart */}
-      <div style={{ background: '#07070D', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+
+      {/* Accuracy chart */}
+      <div style={{ background: '#07070D', padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
             <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 9, marginBottom: 3 }}>Detection Accuracy</div>
@@ -182,13 +191,65 @@ function ProductPreview() {
           </div>
         </div>
       </div>
-      {/* Live Feed */}
-      <div style={{ padding: '10px 16px 14px', background: '#06060C', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+
+      {/* Live feed */}
+      <div style={{ padding: '10px 14px 14px', background: '#06060C', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: 600 }}>Live Moderation Feed</span>
           <span style={{ color: '#8B5CF6', fontSize: 9, fontWeight: 600 }}>View All</span>
         </div>
         <LiveFeed compact />
+      </div>
+    </div>
+  );
+}
+
+/* ── DESKTOP PRODUCT PREVIEW ── */
+function ProductPreview() {
+  return (
+    <div style={{ background: '#0A0A0A', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)' }}>
+      <div style={{ background: '#141414', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 5 }}>
+          {['#FF5F57', '#FFBD2E', '#28C840'].map(c => <div key={c} style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />)}
+        </div>
+        <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Lock size={9} color="rgba(255,255,255,0.25)" />
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>moderateai.site/dashboard</span>
+        </div>
+        <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
+        </span>
+      </div>
+      <div style={{ background: '#0D0D0D', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 6, width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield size={10} color="white" />
+          </div>
+          <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 11 }}>ModerateAI</span>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {['Overview', 'Analytics', 'Settings'].map((t, i) => <span key={t} style={{ color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.28)', fontSize: 9.5, fontWeight: i === 0 ? 600 : 400 }}>{t}</span>)}
+        </div>
+      </div>
+      <div style={{ background: '#080808', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+        {[{ label: 'Scanned', value: '12,847', color: '#F59E0B' }, { label: 'Hidden', value: '1,203', color: '#f87171' }, { label: 'Replied', value: '847', color: '#60a5fa' }].map(s => (
+          <div key={s.label} style={{ background: 'rgba(255,255,255,0.025)', borderRadius: 7, padding: '8px 10px' }}>
+            <div style={{ color: s.color, fontWeight: 800, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
+            <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 9, marginTop: 2 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: '#060606', padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'flex-end', gap: 3, height: 46 }}>
+        {[18, 28, 22, 38, 30, 45, 36, 52, 40, 58, 44, 62].map((h, i) => (
+          <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 2, background: i > 9 ? 'rgba(245,158,11,0.65)' : 'rgba(255,255,255,0.07)' }} />
+        ))}
+      </div>
+      <div style={{ padding: '11px 16px', background: '#060606' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 }}>
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Live Feed</span>
+          <span style={{ color: '#F59E0B', fontSize: 9, fontWeight: 600 }}>AI Active</span>
+        </div>
+        <LiveFeed />
       </div>
     </div>
   );
@@ -265,10 +326,17 @@ const FAQS = [
 /* ══ MAIN ══ */
 export default function LandingPage() {
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [annual, setAnnual] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    // Detect real physical mobile screen regardless of desktop mode
+    setIsMobileDevice(screen.width <= 480);
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -312,53 +380,68 @@ export default function LandingPage() {
           background-clip: text; animation: lp-grad 5s ease infinite;
         }
 
-        /* ══ NAVBAR — always full desktop style ══ */
+        /* ══ NAVBAR — Desktop ══ */
         .lp-nav {
           position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
           z-index: 200; width: calc(100% - 32px); max-width: 1120px;
-          background: rgba(8,8,8,0.85); border: 1px solid rgba(255,255,255,0.09);
+          background: rgba(8,8,8,0.75); border: 1px solid rgba(255,255,255,0.07);
           border-radius: 14px; padding: 0 18px;
           backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
           display: flex; align-items: center; height: 52px;
           transition: all 0.35s ease;
         }
         .lp-nav.scrolled { height: 48px; box-shadow: 0 4px 28px rgba(0,0,0,0.55); }
+        .n-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
+        .n-mark { background: linear-gradient(135deg,#F59E0B,#7C3AED); border-radius: 8px; width: 27px; height: 27px; display: flex; align-items: center; justify-content: center; }
+        .n-name { color: #F0F0F0; font-weight: 800; font-size: 14.5px; letter-spacing: -0.025em; }
+        .n-name span { color: #F59E0B; }
+        .n-links { display: flex; align-items: center; margin: 0 auto; }
+        .n-link { color: rgba(255,255,255,0.42); font-size: 13px; font-weight: 500; text-decoration: none; padding: 6px 10px; border-radius: 7px; transition: color 0.2s, background 0.2s; }
+        .n-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+        .n-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .n-login { color: #FAFAFA; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 16px; border: 1px solid rgba(139,92,246,0.6); border-radius: 8px; transition: all 0.25s; box-shadow: 0 0 10px rgba(139,92,246,0.15); }
+        .n-login:hover { border-color: rgba(139,92,246,1); background: rgba(139,92,246,0.1); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
+        .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; }
 
-        /* On very small screens: shrink padding/font but keep full layout */
-        @media (max-width: 480px) {
+        /* ══ NAVBAR — Mobile ══ */
+        @media (max-width: 800px) {
           .lp-nav {
             top: 0; left: 0; right: 0; transform: none;
             width: 100%; max-width: 100%;
-            border-radius: 0; border-left: none; border-right: none; border-top: none;
-            padding: 0 10px; height: 50px;
+            border-radius: 0;
+            border-left: none; border-right: none; border-top: none;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0 16px; height: 56px;
+            background: rgba(6,6,10,0.96);
           }
+          .lp-nav.scrolled { height: 52px; }
+          .n-links { display: none !important; }
+          .n-right { display: none !important; }
+          .n-burger { display: flex !important; margin-left: auto; }
+          .n-mob-login { display: flex !important; }
         }
 
-        .n-logo { display: flex; align-items: center; gap: 6px; text-decoration: none; flex-shrink: 0; }
-        .n-mark { background: linear-gradient(135deg,#F59E0B,#7C3AED); border-radius: 7px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; }
-        .n-name { color: #F0F0F0; font-weight: 800; font-size: 13px; letter-spacing: -0.025em; white-space: nowrap; }
-        .n-name span { color: #F59E0B; }
-
-        .n-links { display: flex; align-items: center; margin: 0 auto; gap: 2px; }
-        .n-link { color: rgba(255,255,255,0.42); font-size: 12px; font-weight: 500; text-decoration: none; padding: 5px 8px; border-radius: 7px; transition: color 0.2s, background 0.2s; white-space: nowrap; }
-        .n-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
-
-        @media (max-width: 480px) {
-          .n-link { font-size: 10px; padding: 4px 5px; }
+        .n-mob-login {
+          display: none;
+          color: #FAFAFA; font-size: 13px; font-weight: 600;
+          text-decoration: none; padding: 7px 14px;
+          border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+          margin-left: auto; margin-right: 8px;
+          align-items: center;
         }
 
-        .n-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .n-login { color: #FAFAFA; font-size: 12px; font-weight: 600; text-decoration: none; padding: 6px 14px; border: 1px solid rgba(139,92,246,0.6); border-radius: 8px; transition: all 0.25s; box-shadow: 0 0 10px rgba(139,92,246,0.15); white-space: nowrap; }
-        .n-login:hover { border-color: rgba(139,92,246,1); background: rgba(139,92,246,0.1); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
-
-        @media (max-width: 480px) {
-          .n-login { font-size: 10px; padding: 5px 10px; }
+        .mob-menu {
+          position: fixed; top: 56px; left: 0; right: 0; z-index: 199;
+          background: rgba(6,6,10,0.98); border-bottom: 1px solid rgba(255,255,255,0.06);
+          padding: 12px 16px 16px; backdrop-filter: blur(28px);
+          display: flex; flex-direction: column; gap: 2px;
         }
+        .mob-a { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-decoration: none; padding: 11px 14px; border-radius: 9px; transition: all 0.18s; display: block; }
+        .mob-a:hover { background: rgba(255,255,255,0.04); color: #F0F0F0; }
 
-        /* ══ HERO — always side-by-side ══ */
+        /* ══ HERO — Desktop ══ */
         .hero {
-          padding: 80px 16px 56px;
-          position: relative; overflow: hidden;
+          padding: 112px 24px 72px; position: relative; overflow: hidden;
           background:
             radial-gradient(ellipse 70% 55% at 15% 20%, rgba(245,158,11,0.08) 0%, transparent 60%),
             radial-gradient(ellipse 55% 55% at 85% 80%, rgba(139,92,246,0.1) 0%, transparent 60%),
@@ -373,59 +456,142 @@ export default function LandingPage() {
         }
         .hero-inner {
           position: relative; z-index: 2; max-width: 1120px; margin: 0 auto;
-          display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+          display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
         }
-
-        /* On very small screens: tighten columns but keep side-by-side */
-        @media (max-width: 480px) {
-          .hero { padding: 62px 12px 40px; }
-          .hero-inner { gap: 16px; }
-        }
-
-        .h-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 4px 12px 4px 9px; margin-bottom: 16px; }
+        .h-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 5px 14px 5px 10px; margin-bottom: 28px; }
         .h-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; animation: lp-pulse 2s infinite; }
-        .h-badge-text { color: rgba(245,158,11,0.88); font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
-
-        .h1 { font-size: clamp(18px, 3.2vw, 58px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; color: #F0F0F0; margin-bottom: 14px; }
-        .h-desc { color: rgba(255,255,255,0.4); font-size: clamp(10px, 1.4vw, 16px); line-height: 1.65; margin-bottom: 20px; }
-        .h-btns { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-
-        .btn-p { display: inline-flex; align-items: center; gap: 6px; background: #F59E0B; color: #080808; font-weight: 700; font-size: clamp(10px, 1.2vw, 14px); padding: clamp(8px,1vw,12px) clamp(12px,1.5vw,22px); border-radius: 10px; text-decoration: none; border: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
+        .h-badge-text { color: rgba(245,158,11,0.88); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+        .h1 { font-size: clamp(34px, 4.5vw, 58px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.08; color: #F0F0F0; margin-bottom: 22px; }
+        .h-desc { color: rgba(255,255,255,0.4); font-size: 16px; line-height: 1.7; max-width: 450px; margin-bottom: 36px; }
+        .h-btns { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+        .btn-p { display: inline-flex; align-items: center; gap: 7px; background: #F59E0B; color: #080808; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 10px; text-decoration: none; border: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
         .btn-p:hover { background: #FBBF24; box-shadow: 0 0 28px rgba(245,158,11,0.35); transform: translateY(-1px); }
-        .btn-g { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); color: rgba(255,255,255,0.78); font-weight: 600; font-size: clamp(10px, 1.2vw, 14px); padding: clamp(8px,1vw,12px) clamp(12px,1.5vw,22px); border-radius: 10px; text-decoration: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
+        .btn-g { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); color: rgba(255,255,255,0.78); font-weight: 600; font-size: 14px; padding: 12px 22px; border-radius: 10px; text-decoration: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
         .btn-g:hover { background: rgba(255,255,255,0.08); }
-
-        .h-trust { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .h-trust-item { display: flex; align-items: center; gap: 4px; color: rgba(255,255,255,0.33); font-size: clamp(9px, 1vw, 12.5px); }
-
+        .h-trust { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+        .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
-        /* ══ STATS ══ */
-        .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 32px 16px; }
-        .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
-        .s-cell { display: flex; flex-direction: column; align-items: center; padding: 10px 28px; position: relative; }
-        .s-cell + .s-cell::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:1px; height:26px; background:rgba(255,255,255,0.07); }
-        .s-num { font-size: clamp(16px, 2.5vw, 28px); font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
-        .s-lbl { color: rgba(255,255,255,0.3); font-size: clamp(9px, 0.9vw, 11px); font-weight: 500; margin-top: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+        /* ══ HERO — Mobile V2 ══ */
+        @media (max-width: 800px) {
+          .hero {
+            padding: 68px 0 0;
+            background:
+              radial-gradient(ellipse 140% 55% at 50% -5%, rgba(139,92,246,0.2) 0%, transparent 55%),
+              radial-gradient(ellipse 80% 50% at 5% 70%, rgba(245,158,11,0.06) 0%, transparent 55%),
+              #06060E;
+            min-height: 100svh;
+            display: flex; flex-direction: column;
+          }
+          .hero-grid { display: none; }
+          .hero-inner {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0 !important;
+            padding: 0 !important;
+            align-items: stretch !important;
+            flex: 1;
+          }
+          .hero-left-mob { padding: 28px 20px 20px; order: 1; }
+          .hero-right {
+            animation: none !important;
+            order: 2;
+            padding: 16px 16px 32px;
+            background: radial-gradient(ellipse 100% 70% at 50% 20%, rgba(139,92,246,0.1) 0%, transparent 65%);
+          }
 
-        @media (max-width: 480px) {
-          .s-cell { padding: 8px 16px; }
+          .h-badge { margin-bottom: 16px; padding: 4px 12px 4px 9px; }
+          .h-badge-text { font-size: 11px; }
+          .h1 { font-size: 28px !important; line-height: 1.13 !important; margin-bottom: 14px !important; letter-spacing: -0.03em !important; }
+          .h-desc { font-size: 13.5px !important; line-height: 1.6 !important; margin-bottom: 20px !important; color: rgba(255,255,255,0.36) !important; max-width: 100% !important; }
+          .h-btns { flex-direction: row !important; gap: 8px !important; margin-bottom: 16px !important; }
+          .btn-p { font-size: 13px !important; padding: 11px 16px !important; border-radius: 9px !important; flex: 1; justify-content: center; }
+          .btn-g { font-size: 13px !important; padding: 11px 14px !important; border-radius: 9px !important; flex: 1; justify-content: center; gap: 5px !important; }
+          .h-trust { gap: 10px !important; }
+          .h-trust-item { font-size: 11px !important; gap: 4px !important; }
+        }
+
+        /* ══ STATS — Desktop ══ */
+        .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
+        .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
+        .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
+        .s-cell + .s-cell::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:1px; height:26px; background:rgba(255,255,255,0.07); }
+        .s-num { font-size: 28px; font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+        .s-lbl { color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500; margin-top: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+        .s-icon-wrap { display: none; }
+        .s-text { display: flex; flex-direction: column; align-items: center; }
+
+        /* ══ STATS — Mobile V2 ══ */
+        @media (max-width: 800px) {
+          .stats {
+            background: transparent;
+            border: none;
+            padding: 16px 16px 0;
+          }
+          .stats-inner-mob {
+            background: #0A0A12;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            overflow: hidden;
+          }
+          .stats-row {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            flex-wrap: unset !important;
+          }
+          .s-cell {
+            padding: 14px 14px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 11px !important;
+            position: relative;
+          }
+          .s-cell::before { display: none !important; }
+          .s-cell:nth-child(1) { border-bottom: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(2) { border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(3) {}
+          .s-cell:nth-child(4) { border-left: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(5) { display: none !important; }
+          .s-icon-wrap {
+            display: flex !important;
+            width: 34px; height: 34px; border-radius: 9px;
+            align-items: center; justify-content: center; flex-shrink: 0;
+          }
+          .s-text { align-items: flex-start !important; }
+          .s-num { font-size: 18px !important; }
+          .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.02em !important; }
         }
 
         /* ══ SECTIONS ══ */
-        .section { padding: 72px 16px; }
+        .section { padding: 96px 24px; }
         .con { max-width: 1120px; margin: 0 auto; }
         .eyebrow { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.28); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .eyebrow-dark { display: inline-flex; align-items: center; gap: 5px; color: rgba(0,0,0,0.3); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
-        .sh { font-size: clamp(20px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; }
-        .sh-dark { font-size: clamp(20px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; color: #0A0A0A; }
-        .sub { color: rgba(255,255,255,0.38); font-size: 15px; line-height: 1.65; max-width: 480px; }
-        .sub-dark { color: rgba(0,0,0,0.44); font-size: 15px; line-height: 1.65; max-width: 480px; }
+        .sh { font-size: clamp(24px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; }
+        .sh-dark { font-size: clamp(24px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; color: #0A0A0A; }
+        .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
+        .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
+
+        /* Mobile eyebrow pill */
+        .mob-pill { display: none; }
+        @media (max-width: 800px) {
+          .mob-pill {
+            display: inline-flex !important;
+            align-items: center; gap: 6px;
+            background: rgba(139,92,246,0.1);
+            border: 1px solid rgba(139,92,246,0.22);
+            border-radius: 20px; padding: 4px 12px;
+            margin-bottom: 14px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+            text-transform: uppercase; color: #a78bfa;
+          }
+          .eyebrow { display: none !important; }
+          .section { padding: 52px 20px !important; }
+        }
 
         /* ══ HOW IT WORKS ══ */
         .how-bg { background: linear-gradient(180deg, #0C0C0C 0%, #0F0F0F 100%); }
         .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
-        @media (max-width: 600px) { .how-grid { grid-template-columns: 1fr; gap: 32px; } }
         .tl { position: relative; margin-top: 48px; }
         .tl-line { position: absolute; left: 19px; top: 6px; bottom: 6px; width: 1px; background: linear-gradient(180deg, rgba(245,158,11,0.6) 0%, rgba(139,92,246,0.18) 100%); }
         .tl-row { display: flex; gap: 18px; padding-bottom: 32px; }
@@ -433,35 +599,64 @@ export default function LandingPage() {
         .tl-dot { width: 38px; height: 38px; border-radius: 10px; background: #131313; border: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; z-index: 1; transition: all 0.28s; }
         .tl-row:hover .tl-dot { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.26); }
         .tl-body { padding-top: 7px; }
-        .tl-body h3 { font-size: 14px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
-        .tl-body p { font-size: 12.5px; color: rgba(255,255,255,0.33); line-height: 1.55; }
+        .tl-body h3 { font-size: 14.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .tl-body p { font-size: 13px; color: rgba(255,255,255,0.33); line-height: 1.55; }
+
+        @media (max-width: 800px) {
+          .how-bg { background: #06060E; }
+          .how-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
+          .tl { margin-top: 24px !important; }
+          .tl-line { left: 21px !important; background: linear-gradient(180deg, rgba(139,92,246,0.5) 0%, rgba(245,158,11,0.15) 100%) !important; }
+          .tl-row { gap: 14px !important; padding-bottom: 22px !important; }
+          .tl-dot {
+            width: 42px !important; height: 42px !important; border-radius: 12px !important;
+            background: var(--sdot-bg) !important;
+            border: 1px solid var(--sdot-border) !important;
+          }
+          .tl-body h3 { font-size: 13px !important; }
+          .tl-body p { font-size: 11.5px !important; color: rgba(255,255,255,0.28) !important; }
+        }
 
         /* ══ FEATURES ══ */
         .feat-bg { background: #090909; }
-        .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 40px; }
-        @media (max-width: 500px) { .feat-grid { grid-template-columns: repeat(2,1fr); } }
-        .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 22px; transition: all 0.3s; }
+        .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
+        .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 26px; transition: all 0.3s; position: relative; overflow: hidden; }
         .f-card:hover { border-color: rgba(245,158,11,0.13); transform: translateY(-2px); box-shadow: 0 18px 50px rgba(0,0,0,0.45); }
-        .f-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-        .f-card h3 { font-size: 14px; font-weight: 700; color: #F0F0F0; margin-bottom: 6px; }
-        .f-card p { font-size: 12.5px; color: rgba(255,255,255,0.36); line-height: 1.6; }
+        .f-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+        .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
+        .f-card p { font-size: 13px; color: rgba(255,255,255,0.36); line-height: 1.6; }
+
+        @media (max-width: 800px) {
+          .feat-bg { background: #06060E; }
+          .feat-grid { grid-template-columns: repeat(3,1fr) !important; gap: 8px !important; margin-top: 20px !important; }
+          .f-card { padding: 14px 12px !important; border-radius: 12px !important; background: rgba(255,255,255,0.025) !important; border: 1px solid rgba(255,255,255,0.055) !important; }
+          .f-icon { width: 34px !important; height: 34px !important; border-radius: 9px !important; margin-bottom: 9px !important; }
+          .f-card h3 { font-size: 11.5px !important; margin-bottom: 4px !important; }
+          .f-card p { font-size: 10px !important; line-height: 1.45 !important; color: rgba(255,255,255,0.28) !important; }
+        }
 
         /* ══ LANGUAGES ══ */
         .lang-bg { background: linear-gradient(180deg, #0D0D0D 0%, #0A0A0A 100%); }
-        .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 36px; }
-        .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 6px 14px; font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
+        .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
+        .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 7px 15px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
         .l-chip:hover { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.2); color: rgba(255,255,255,0.82); }
+
+        @media (max-width: 800px) {
+          .lang-bg { background: #06060E; }
+          .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; }
+          .lang-chips { gap: 6px !important; margin-top: 20px !important; }
+        }
 
         /* ══ SECURITY ══ */
         .sec-bg { background: #FAFAFA; }
-        .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 40px; }
-        @media (max-width: 600px) { .sec-grid { grid-template-columns: repeat(2,1fr); } }
-        @media (max-width: 380px) { .sec-grid { grid-template-columns: 1fr; } }
-        .s-card { background: #F2F2F0; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 22px; transition: all 0.22s; }
+        .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
+        .s-card { background: #F2F2F0; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 24px; transition: all 0.22s; }
         .s-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.07); transform: translateY(-2px); }
         .s-ico { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
-        .s-card h3 { font-size: 13.5px; font-weight: 700; color: #0A0A0A; margin-bottom: 5px; }
-        .s-card p { font-size: 12px; color: rgba(0,0,0,0.42); line-height: 1.55; }
+        .s-card h3 { font-size: 14px; font-weight: 700; color: #0A0A0A; margin-bottom: 5px; }
+        .s-card p { font-size: 12.5px; color: rgba(0,0,0,0.42); line-height: 1.55; }
+        @media (max-width: 780px) { .sec-grid { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 460px) { .sec-grid { grid-template-columns: 1fr; } }
 
         /* ══ PRICING ══ */
         .price-bg { background: #F5F5F3; }
@@ -469,67 +664,67 @@ export default function LandingPage() {
         .pt-btn { padding: 6px 17px; border-radius: 7px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; }
         .pt-btn.on { background: #0A0A0A; color: #FAFAFA; }
         .pt-btn:not(.on) { background: transparent; color: rgba(0,0,0,0.38); }
-        .price-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 36px; }
-        @media (max-width: 600px) { .price-cards { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
-        .p-card { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 18px; padding: 26px; position: relative; transition: all 0.28s; }
+        .price-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 40px; }
+        .p-card { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 18px; padding: 28px; position: relative; transition: all 0.28s; }
         .p-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.08); transform: translateY(-2px); }
         .p-card.hl { background: #0A0A0A; border-color: rgba(245,158,11,0.32); }
         .p-badge { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #080808; font-size: 9.5px; font-weight: 700; padding: 3px 12px; border-radius: 0 0 7px 7px; white-space: nowrap; }
-        .p-name { font-size: 12px; font-weight: 600; color: rgba(0,0,0,0.36); margin-bottom: 6px; }
+        .p-name { font-size: 12.5px; font-weight: 600; color: rgba(0,0,0,0.36); margin-bottom: 6px; }
         .hl .p-name { color: rgba(255,255,255,0.36); }
-        .p-amt { font-size: 34px; font-weight: 900; color: #0A0A0A; letter-spacing: -0.04em; line-height: 1; }
+        .p-amt { font-size: 36px; font-weight: 900; color: #0A0A0A; letter-spacing: -0.04em; line-height: 1; }
         .hl .p-amt { color: #FAFAFA; }
-        .p-per { font-size: 12px; font-weight: 500; color: rgba(0,0,0,0.28); }
+        .p-per { font-size: 12.5px; font-weight: 500; color: rgba(0,0,0,0.28); }
         .hl .p-per { color: rgba(255,255,255,0.28); }
-        .p-desc { font-size: 12px; color: rgba(0,0,0,0.4); margin: 12px 0 18px; line-height: 1.5; }
+        .p-desc { font-size: 12.5px; color: rgba(0,0,0,0.4); margin: 14px 0 20px; line-height: 1.5; }
         .hl .p-desc { color: rgba(255,255,255,0.33); }
-        .p-feats { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-        .p-feat { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(0,0,0,0.58); }
+        .p-feats { display: flex; flex-direction: column; gap: 9px; margin-bottom: 22px; }
+        .p-feat { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(0,0,0,0.58); }
         .hl .p-feat { color: rgba(255,255,255,0.62); }
         .cta-p { display:block; width:100%; background:#F59E0B; color:#080808; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:none; cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
         .cta-p:hover { background:#FBBF24; box-shadow: 0 0 22px rgba(245,158,11,0.25); }
         .cta-gl { display:block; width:100%; background:rgba(0,0,0,0.05); color:#0A0A0A; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:1px solid rgba(0,0,0,0.07); cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
         .cta-dgl { display:block; width:100%; background:rgba(255,255,255,0.07); color:#FAFAFA; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
+        @media (max-width: 780px) { .price-cards { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
 
         /* ══ FAQ ══ */
         .faq-bg { background: #FFFFFF; }
-        .faq-list { margin-top: 40px; }
+        .faq-list { margin-top: 48px; }
         .faq-item { border-bottom: 1px solid rgba(0,0,0,0.06); }
-        .faq-btn { width:100%; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:18px 0; background:none; border:none; cursor:pointer; text-align:left; }
-        .faq-q { font-size: 14.5px; font-weight: 700; color: #0A0A0A; }
+        .faq-btn { width:100%; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:20px 0; background:none; border:none; cursor:pointer; text-align:left; }
+        .faq-q { font-size: 15.5px; font-weight: 700; color: #0A0A0A; }
         .faq-ico { color: rgba(0,0,0,0.27); transition: transform 0.28s, color 0.28s; flex-shrink: 0; }
         .faq-ico.open { transform: rotate(180deg); color: #F59E0B; }
-        .faq-a { font-size: 13.5px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 18px; max-width: 640px; }
+        .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
         /* ══ CTA ══ */
-        .cta-wrap { background: #080808; padding: 100px 16px; position: relative; overflow: hidden; }
+        .cta-wrap { background: #080808; padding: 120px 24px; position: relative; overflow: hidden; }
         .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.09) 0%, transparent 70%); }
         .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
-        .cta-h { font-size: clamp(26px,4.8vw,52px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.08; margin-bottom: 16px; }
-        .cta-sub { color: rgba(255,255,255,0.37); font-size: 15px; line-height: 1.65; margin-bottom: 30px; }
-        .cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.17); border-radius:20px; padding:4px 13px; margin-bottom:22px; }
+        .cta-h { font-size: clamp(28px,4.8vw,52px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.08; margin-bottom: 16px; }
+        .cta-sub { color: rgba(255,255,255,0.37); font-size: 15.5px; line-height: 1.65; margin-bottom: 32px; }
+        .cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.17); border-radius:20px; padding:4px 13px; margin-bottom:24px; }
         .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
         /* ══ FOOTER ══ */
-        .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 48px 16px 24px; }
+        .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 24px 26px; }
         .foot-in { max-width: 1120px; margin: 0 auto; }
-        .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 36px; }
-        @media (max-width: 600px) { .foot-top { grid-template-columns: 1fr 1fr; gap: 24px; } }
-        @media (max-width: 360px) { .foot-top { grid-template-columns: 1fr; } }
+        .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
         .foot-brand p { color: rgba(255,255,255,0.26); font-size: 13px; line-height: 1.65; margin-top: 12px; max-width: 230px; }
-        .foot-col h4 { color: rgba(255,255,255,0.38); font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 12px; }
+        .foot-col h4 { color: rgba(255,255,255,0.38); font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 13px; }
         .foot-a { display:block; color:rgba(255,255,255,0.33); font-size:13px; text-decoration:none; margin-bottom:8px; transition:color 0.18s; }
         .foot-a:hover { color:rgba(255,255,255,0.72); }
-        .foot-bot { border-top:1px solid rgba(255,255,255,0.04); padding-top:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+        .foot-bot { border-top:1px solid rgba(255,255,255,0.04); padding-top:22px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
         .foot-copy { color:rgba(255,255,255,0.2); font-size:12px; }
         .foot-tag { color:rgba(255,255,255,0.15); font-size:12px; }
+        @media (max-width: 780px) { .foot-top { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 440px) { .foot-top { grid-template-columns: 1fr; } }
 
         .centered { text-align: center; }
       `}</style>
 
       <div className="lp">
 
-        {/* ── NAVBAR — full desktop always ── */}
+        {/* ── NAVBAR ── */}
         <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
           <Link href="/" className="n-logo">
             <div className="n-mark"><Shield size={13} color="white" /></div>
@@ -540,18 +735,34 @@ export default function LandingPage() {
               <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="n-link">{item}</a>
             ))}
           </div>
+          <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
           </div>
+          <button className="n-burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+            {menuOpen ? <X size={19} /> : <Menu size={19} />}
+          </button>
         </nav>
 
-        {/* ── HERO — always side-by-side ── */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div className="mob-menu" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+              {['Features', 'Pricing', 'Docs', 'Security'].map(item => (
+                <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
+              ))}
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '7px 0' }} />
+              <Link href="/login" style={{ display: 'block', background: '#F59E0B', color: '#080808', fontWeight: 700, fontSize: 14, padding: '11px 14px', borderRadius: 8, textDecoration: 'none', textAlign: 'center', marginTop: 4 }}>Start Free Trial →</Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── HERO ── */}
         <section className="hero" id="features">
           <div className="hero-grid" />
           <div className="hero-inner">
 
-            {/* Left */}
-            <div>
+            {/* Left / Text */}
+            <div className="hero-left-mob">
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}>
                 <div className="h-badge">
                   <div className="h-badge-dot" />
@@ -562,26 +773,26 @@ export default function LandingPage() {
                 Protect your<br />YouTube community<br />before <span className="grad-text">toxicity spreads.</span>
               </motion.h1>
               <motion.p className="h-desc" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.22 }}>
-                ModerateAI scans every comment in real time to detect spam, toxicity, and manipulation across 100+ languages — and hides harmful content before your audience ever sees it.
+                ModerateAI scans every comment in real time to detect spam, toxicity, and manipulation across 100+ languages and hides harmful content before your audience ever sees it.
               </motion.p>
               <motion.div className="h-btns" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.32 }}>
-                <Link href="/login" className="btn-p">Start Free Trial <ArrowRight size={13} /></Link>
-                <a href="#how-it-works" className="btn-g"><Play size={11} /> See How It Works</a>
+                <Link href="/login" className="btn-p">Start Free Trial <ArrowRight size={14} /></Link>
+                <a href="#how-it-works" className="btn-g"><Play size={12} /> See How It Works</a>
               </motion.div>
               <motion.div className="h-trust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.44 }}>
-                {['No Credit Card', '19-Day Free Trial', 'Setup in 2 Minutes'].map(t => (
+                {['No Credit Card', '10-Day Free Trial', 'Setup in 2 Minutes'].map(t => (
                   <div key={t} className="h-trust-item">
-                    <CheckCircle size={11} style={{ color: '#10B981', flexShrink: 0 }} /><span>{t}</span>
+                    <CheckCircle size={12} style={{ color: '#10B981', flexShrink: 0 }} /><span>{t}</span>
                   </div>
                 ))}
               </motion.div>
             </div>
 
-            {/* Right — ProductPreview on all sizes */}
+            {/* Right / Preview — JS తో detect చేస్తున్నాం, CSS కాదు */}
             <motion.div className="hero-right"
               initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
-              <ProductPreview />
+              {isMobileDevice ? <MobileDashboardPreview /> : <ProductPreview />}
             </motion.div>
 
           </div>
@@ -589,21 +800,26 @@ export default function LandingPage() {
 
         {/* ── STATS ── */}
         <div className="stats">
-          <div className="stats-row">
-            {[
-              { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported' },
-              { display: '24/7', label: 'Real-time Protection' },
-              { display: 'Real-time', label: 'AI Moderation' },
-              { display: '98.2%', label: 'High Detection Rate' },
-              { display: '0', label: 'Lines of Code to Setup' },
-            ].map((s, i) => (
-              <FadeIn key={i} delay={i * 0.06}>
-                <div className="s-cell">
-                  <span className="s-num">{s.display}</span>
-                  <span className="s-lbl">{s.label}</span>
-                </div>
-              </FadeIn>
-            ))}
+          <div className="stats-inner-mob">
+            <div className="stats-row">
+              {[
+                { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={15} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.12)' },
+                { display: '24/7', label: 'Real-time Protection', icon: <Shield size={15} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.12)' },
+                { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={15} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.12)' },
+                { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={15} color="#f87171" />, iconBg: 'rgba(239,68,68,0.12)' },
+                { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={15} color="#34d399" />, iconBg: 'rgba(16,185,129,0.12)' },
+              ].map((s, i) => (
+                <FadeIn key={i} delay={i * 0.06}>
+                  <div className="s-cell">
+                    <div className="s-icon-wrap" style={{ background: s.iconBg }}>{s.icon}</div>
+                    <div className="s-text">
+                      <span className="s-num">{s.display}</span>
+                      <span className="s-lbl">{s.label}</span>
+                    </div>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -612,6 +828,7 @@ export default function LandingPage() {
           <div className="con">
             <div className="how-grid">
               <FadeIn>
+                <div className="mob-pill"><Zap size={10} /> Our Process</div>
                 <div className="eyebrow"><Zap size={11} /> Process</div>
                 <h2 className="sh serif">
                   From posted to <span className="grad-text">protected</span>{' '}in under a second.
@@ -623,7 +840,7 @@ export default function LandingPage() {
                 <div className="tl-line" />
                 {STEPS.map((s, i) => (
                   <FadeIn key={s.label} delay={i * 0.07}>
-                    <div className="tl-row">
+                    <div className="tl-row" style={{ ['--sdot-bg' as string]: s.bg, ['--sdot-border' as string]: s.color + '55' }}>
                       <div className="tl-dot"><s.icon size={16} color={s.color} /></div>
                       <div className="tl-body"><h3>{s.label}</h3><p>{s.detail}</p></div>
                     </div>
@@ -638,6 +855,7 @@ export default function LandingPage() {
         <section className="section feat-bg" id="features-detail">
           <div className="con">
             <FadeIn>
+              <div className="mob-pill"><Sparkles size={10} /> Features</div>
               <h2 className="sh serif">Everything your channel<br />needs to stay <span className="grad-text">clean.</span></h2>
             </FadeIn>
             <div className="feat-grid">
@@ -658,6 +876,7 @@ export default function LandingPage() {
         <section className="section lang-bg">
           <div className="con centered">
             <FadeIn>
+              <div className="mob-pill" style={{ justifyContent: 'center' }}><Globe size={10} /> Languages</div>
               <h2 className="sh serif">Your community speaks<br /><span className="grad-text">every language.</span><br />So does the AI.</h2>
               <p className="sub" style={{ margin: '0 auto' }}>Language is detected per comment automatically — no configuration needed.</p>
             </FadeIn>

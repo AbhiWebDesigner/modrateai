@@ -136,12 +136,14 @@ function MobileDashboardPreview() {
           </span>
         </div>
       </div>
+
       {/* Nav tabs */}
-      <div style={{ background: '#0E0E14', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 14px', display: 'flex', overflowX: 'auto' }}>
+      <div style={{ background: '#0E0E14', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 14px', display: 'flex', gap: 0, overflowX: 'auto' }}>
         {['Overview', 'Analytics', 'Automation', 'Alerts', 'Settings'].map((t, i) => (
           <div key={t} style={{ padding: '9px 10px', fontSize: 10, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.25)', borderBottom: i === 0 ? '2px solid #F59E0B' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>{t}</div>
         ))}
       </div>
+
       {/* Stats row */}
       <div style={{ background: '#09090F', padding: '12px 14px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
         {[
@@ -159,6 +161,7 @@ function MobileDashboardPreview() {
           </div>
         ))}
       </div>
+
       {/* Accuracy chart */}
       <div style={{ background: '#07070D', padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -189,6 +192,7 @@ function MobileDashboardPreview() {
           </div>
         </div>
       </div>
+
       {/* Live feed */}
       <div style={{ padding: '10px 14px 14px', background: '#06060C', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -292,17 +296,20 @@ const LANGS = [
 
 const PLANS = [
   {
-    name: 'Free Trial', monthly: 0, annual: 0, desc: 'Try ModerateAI free for 19 days.',
+    name: 'Free Trial', monthly: 0, annual: 0,
+    desc: 'Try ModerateAI free for 19 days.',
     features: ['19-Day Free Trial', '1 YouTube Channel', '2,000 Comments Scanned', 'AI Toxic Detection', 'AI Spam Detection', 'Review Queue', '250 AI Actions', 'Smart AI Replies (Max 3 Per Video)', 'Basic Analytics Dashboard', '10+ Languages', 'Email Support'],
     missing: [], cta: 'Start Free Trial', primary: false, hl: false, badge: null,
   },
   {
-    name: 'Pro', monthly: 349, annual: 299, desc: 'Perfect for growing creators.',
+    name: 'Pro', monthly: 349, annual: 299,
+    desc: 'Perfect for growing creators.',
     features: ['1 YouTube Channel', '25,000 Comments Scanned / Month', 'AI Toxic Detection', 'AI Spam Detection', 'Auto Hide', 'Review Queue', 'Live Chat Moderation', 'Progressive Live Chat Timeouts', '1,900 AI Actions / Month', 'Smart AI Replies (Max 3 Per Video)', 'Unlimited Automation Rules', 'Full Analytics Dashboard', '50+ Languages', 'Priority Email Support'],
     missing: [], cta: 'Start 19-Day Trial', primary: true, hl: true, badge: 'Most Popular',
   },
   {
-    name: 'Agency', monthly: 2499, annual: 2149, desc: 'Built for businesses & agencies.',
+    name: 'Agency', monthly: 2499, annual: 2149,
+    desc: 'Built for businesses & agencies.',
     features: ['2 YouTube Channels', '150,000 Comments Scanned / Month', 'AI Toxic Detection', 'AI Spam Detection', 'Auto Hide', 'Review Queue', 'Live Chat Moderation', 'Progressive Live Chat Timeouts', '15,000 AI Actions / Month', 'Smart AI Replies (Max 3 Per Video)', 'Unlimited Automation Rules', 'Advanced Analytics Dashboard', 'Telegram Alerts', '100+ Languages', 'Dedicated Priority Support'],
     missing: [], cta: 'Get Agency', primary: false, hl: false, badge: null,
   },
@@ -325,6 +332,12 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    // Detect real physical mobile screen regardless of desktop mode
+    setIsMobileDevice(screen.width <= 480);
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -345,17 +358,39 @@ export default function LandingPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap');
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        .lp { font-family: 'Inter', -apple-system, sans-serif; background: #080808; color: #F0F0F0; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+        .lp {
+          font-family: 'Inter', -apple-system, sans-serif;
+          background: #080808; color: #F0F0F0;
+          overflow-x: hidden; -webkit-font-smoothing: antialiased;
+        }
+
         @keyframes lp-pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
         @keyframes lp-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
         @keyframes lp-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         @keyframes lp-grad { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-        .serif { font-family: 'Playfair Display', Georgia, serif; }
-        .grad-text { background: linear-gradient(135deg, #F59E0B 0%, #EC4899 50%, #8B5CF6 100%); background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: lp-grad 5s ease infinite; }
 
-        /* ══ NAVBAR ══ */
-        .lp-nav { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 200; width: calc(100% - 32px); max-width: 1120px; background: rgba(8,8,8,0.75); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 0 18px; backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px); display: flex; align-items: center; height: 52px; transition: all 0.35s ease; }
+        .serif { font-family: 'Playfair Display', Georgia, serif; }
+
+        .grad-text {
+          background: linear-gradient(135deg, #F59E0B 0%, #EC4899 50%, #8B5CF6 100%);
+          background-size: 200% 200%;
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+          background-clip: text; animation: lp-grad 5s ease infinite;
+        }
+
+        /* ══ NAVBAR — Desktop ══ */
+        .lp-nav {
+          position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+          z-index: 200; width: calc(100% - 32px); max-width: 1120px;
+          background: rgba(8,8,8,0.75); border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 14px; padding: 0 18px;
+          backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+          display: flex; align-items: center; height: 52px;
+          transition: all 0.35s ease;
+        }
         .lp-nav.scrolled { height: 48px; box-shadow: 0 4px 28px rgba(0,0,0,0.55); }
         .n-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
         .n-mark { background: linear-gradient(135deg,#F59E0B,#7C3AED); border-radius: 8px; width: 27px; height: 27px; display: flex; align-items: center; justify-content: center; }
@@ -368,11 +403,18 @@ export default function LandingPage() {
         .n-login { color: #FAFAFA; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 16px; border: 1px solid rgba(139,92,246,0.6); border-radius: 8px; transition: all 0.25s; box-shadow: 0 0 10px rgba(139,92,246,0.15); }
         .n-login:hover { border-color: rgba(139,92,246,1); background: rgba(139,92,246,0.1); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
         .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; }
-        .n-mob-login { display: none; color: #FAFAFA; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 14px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; margin-right: 8px; align-items: center; }
 
-        /* KEY FIX: use 1024px so desktop-site-ON mobile gets mobile layout */
-        @media (max-width: 1024px) {
-          .lp-nav { top: 0; left: 0; right: 0; transform: none; width: 100%; max-width: 100%; border-radius: 0; border-left: none; border-right: none; border-top: none; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 16px; height: 56px; background: rgba(6,6,10,0.96); }
+        /* ══ NAVBAR — Mobile ══ */
+        @media (max-width: 800px) {
+          .lp-nav {
+            top: 0; left: 0; right: 0; transform: none;
+            width: 100%; max-width: 100%;
+            border-radius: 0;
+            border-left: none; border-right: none; border-top: none;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0 16px; height: 56px;
+            background: rgba(6,6,10,0.96);
+          }
           .lp-nav.scrolled { height: 52px; }
           .n-links { display: none !important; }
           .n-right { display: none !important; }
@@ -380,14 +422,43 @@ export default function LandingPage() {
           .n-mob-login { display: flex !important; }
         }
 
-        .mob-menu { position: fixed; top: 56px; left: 0; right: 0; z-index: 199; background: rgba(6,6,10,0.98); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 16px 16px; backdrop-filter: blur(28px); display: flex; flex-direction: column; gap: 2px; }
+        .n-mob-login {
+          display: none;
+          color: #FAFAFA; font-size: 13px; font-weight: 600;
+          text-decoration: none; padding: 7px 14px;
+          border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+          margin-left: auto; margin-right: 8px;
+          align-items: center;
+        }
+
+        .mob-menu {
+          position: fixed; top: 56px; left: 0; right: 0; z-index: 199;
+          background: rgba(6,6,10,0.98); border-bottom: 1px solid rgba(255,255,255,0.06);
+          padding: 12px 16px 16px; backdrop-filter: blur(28px);
+          display: flex; flex-direction: column; gap: 2px;
+        }
         .mob-a { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-decoration: none; padding: 11px 14px; border-radius: 9px; transition: all 0.18s; display: block; }
         .mob-a:hover { background: rgba(255,255,255,0.04); color: #F0F0F0; }
 
-        /* ══ HERO ══ */
-        .hero { padding: 112px 24px 72px; position: relative; overflow: hidden; background: radial-gradient(ellipse 70% 55% at 15% 20%, rgba(245,158,11,0.08) 0%, transparent 60%), radial-gradient(ellipse 55% 55% at 85% 80%, rgba(139,92,246,0.1) 0%, transparent 60%), #080808; }
-        .hero-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px); background-size: 52px 52px; mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%); -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%); }
-        .hero-inner { position: relative; z-index: 2; max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+        /* ══ HERO — Desktop ══ */
+        .hero {
+          padding: 112px 24px 72px; position: relative; overflow: hidden;
+          background:
+            radial-gradient(ellipse 70% 55% at 15% 20%, rgba(245,158,11,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 55% 55% at 85% 80%, rgba(139,92,246,0.1) 0%, transparent 60%),
+            #080808;
+        }
+        .hero-grid {
+          position: absolute; inset: 0; pointer-events: none;
+          background-image: linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+          background-size: 52px 52px;
+          mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
+          -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
+        }
+        .hero-inner {
+          position: relative; z-index: 2; max-width: 1120px; margin: 0 auto;
+          display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+        }
         .h-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 5px 14px 5px 10px; margin-bottom: 28px; }
         .h-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; animation: lp-pulse 2s infinite; }
         .h-badge-text { color: rgba(245,158,11,0.88); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
@@ -402,20 +473,34 @@ export default function LandingPage() {
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
-        /* Desktop: show desktop preview only */
-        .mob-preview { display: none; }
-        .desk-preview { display: block; }
-
-        /* ══ HERO Mobile V2 — 1024px breakpoint ══ */
-        @media (max-width: 1024px) {
-          .hero { padding: 68px 0 0; background: radial-gradient(ellipse 140% 55% at 50% -5%, rgba(139,92,246,0.2) 0%, transparent 55%), radial-gradient(ellipse 80% 50% at 5% 70%, rgba(245,158,11,0.06) 0%, transparent 55%), #06060E; min-height: 100svh; display: flex; flex-direction: column; }
+        /* ══ HERO — Mobile V2 ══ */
+        @media (max-width: 800px) {
+          .hero {
+            padding: 68px 0 0;
+            background:
+              radial-gradient(ellipse 140% 55% at 50% -5%, rgba(139,92,246,0.2) 0%, transparent 55%),
+              radial-gradient(ellipse 80% 50% at 5% 70%, rgba(245,158,11,0.06) 0%, transparent 55%),
+              #06060E;
+            min-height: 100svh;
+            display: flex; flex-direction: column;
+          }
           .hero-grid { display: none; }
-          .hero-inner { display: flex !important; flex-direction: column !important; gap: 0 !important; padding: 0 !important; align-items: stretch !important; flex: 1; }
+          .hero-inner {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0 !important;
+            padding: 0 !important;
+            align-items: stretch !important;
+            flex: 1;
+          }
           .hero-left-mob { padding: 28px 20px 20px; order: 1; }
-          .hero-right { animation: none !important; order: 2; padding: 16px 16px 32px; background: radial-gradient(ellipse 100% 70% at 50% 20%, rgba(139,92,246,0.1) 0%, transparent 65%); }
-          /* KEY: show mobile preview, hide desktop */
-          .mob-preview { display: block !important; }
-          .desk-preview { display: none !important; }
+          .hero-right {
+            animation: none !important;
+            order: 2;
+            padding: 16px 16px 32px;
+            background: radial-gradient(ellipse 100% 70% at 50% 20%, rgba(139,92,246,0.1) 0%, transparent 65%);
+          }
+
           .h-badge { margin-bottom: 16px; padding: 4px 12px 4px 9px; }
           .h-badge-text { font-size: 11px; }
           .h1 { font-size: 28px !important; line-height: 1.13 !important; margin-bottom: 14px !important; letter-spacing: -0.03em !important; }
@@ -427,10 +512,9 @@ export default function LandingPage() {
           .h-trust-item { font-size: 11px !important; gap: 4px !important; }
         }
 
-        /* ══ STATS Desktop ══ */
+        /* ══ STATS — Desktop ══ */
         .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
-        .stats-inner-mob { max-width: 1120px; margin: 0 auto; }
-        .stats-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
+        .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
         .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
         .s-cell + .s-cell::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:1px; height:26px; background:rgba(255,255,255,0.07); }
         .s-num { font-size: 28px; font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
@@ -438,20 +522,42 @@ export default function LandingPage() {
         .s-icon-wrap { display: none; }
         .s-text { display: flex; flex-direction: column; align-items: center; }
 
-        /* ══ STATS Mobile V2 ══ */
-        @media (max-width: 1024px) {
-          .stats { background: transparent; border: none; padding: 16px 16px 0; }
-          .stats-inner-mob { background: #0A0A12; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; }
-          .stats-row { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; flex-wrap: unset !important; }
-          .s-cell { padding: 14px 14px !important; flex-direction: row !important; align-items: center !important; gap: 11px !important; }
+        /* ══ STATS — Mobile V2 ══ */
+        @media (max-width: 800px) {
+          .stats {
+            background: transparent;
+            border: none;
+            padding: 16px 16px 0;
+          }
+          .stats-inner-mob {
+            background: #0A0A12;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            overflow: hidden;
+          }
+          .stats-row {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            flex-wrap: unset !important;
+          }
+          .s-cell {
+            padding: 14px 14px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 11px !important;
+            position: relative;
+          }
           .s-cell::before { display: none !important; }
-          .s-cell + .s-cell::before { display: none !important; }
           .s-cell:nth-child(1) { border-bottom: 1px solid rgba(255,255,255,0.05); }
           .s-cell:nth-child(2) { border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
           .s-cell:nth-child(3) {}
           .s-cell:nth-child(4) { border-left: 1px solid rgba(255,255,255,0.05); }
           .s-cell:nth-child(5) { display: none !important; }
-          .s-icon-wrap { display: flex !important; width: 34px; height: 34px; border-radius: 9px; align-items: center; justify-content: center; flex-shrink: 0; }
+          .s-icon-wrap {
+            display: flex !important;
+            width: 34px; height: 34px; border-radius: 9px;
+            align-items: center; justify-content: center; flex-shrink: 0;
+          }
           .s-text { align-items: flex-start !important; }
           .s-num { font-size: 18px !important; }
           .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.02em !important; }
@@ -466,10 +572,20 @@ export default function LandingPage() {
         .sh-dark { font-size: clamp(24px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; color: #0A0A0A; }
         .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
         .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
-        .mob-pill { display: none; }
 
-        @media (max-width: 1024px) {
-          .mob-pill { display: inline-flex !important; align-items: center; gap: 6px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.22); border-radius: 20px; padding: 4px 12px; margin-bottom: 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #a78bfa; }
+        /* Mobile eyebrow pill */
+        .mob-pill { display: none; }
+        @media (max-width: 800px) {
+          .mob-pill {
+            display: inline-flex !important;
+            align-items: center; gap: 6px;
+            background: rgba(139,92,246,0.1);
+            border: 1px solid rgba(139,92,246,0.22);
+            border-radius: 20px; padding: 4px 12px;
+            margin-bottom: 14px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+            text-transform: uppercase; color: #a78bfa;
+          }
           .eyebrow { display: none !important; }
           .section { padding: 52px 20px !important; }
         }
@@ -487,13 +603,17 @@ export default function LandingPage() {
         .tl-body h3 { font-size: 14.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
         .tl-body p { font-size: 13px; color: rgba(255,255,255,0.33); line-height: 1.55; }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 800px) {
           .how-bg { background: #06060E; }
           .how-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
           .tl { margin-top: 24px !important; }
           .tl-line { left: 21px !important; background: linear-gradient(180deg, rgba(139,92,246,0.5) 0%, rgba(245,158,11,0.15) 100%) !important; }
           .tl-row { gap: 14px !important; padding-bottom: 22px !important; }
-          .tl-dot { width: 42px !important; height: 42px !important; border-radius: 12px !important; background: var(--sdot-bg) !important; border: 1px solid var(--sdot-border) !important; }
+          .tl-dot {
+            width: 42px !important; height: 42px !important; border-radius: 12px !important;
+            background: var(--sdot-bg) !important;
+            border: 1px solid var(--sdot-border) !important;
+          }
           .tl-body h3 { font-size: 13px !important; }
           .tl-body p { font-size: 11.5px !important; color: rgba(255,255,255,0.28) !important; }
         }
@@ -507,7 +627,7 @@ export default function LandingPage() {
         .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
         .f-card p { font-size: 13px; color: rgba(255,255,255,0.36); line-height: 1.6; }
 
-        @media (max-width: 1024px) {
+        @media (max-width: 800px) {
           .feat-bg { background: #06060E; }
           .feat-grid { grid-template-columns: repeat(3,1fr) !important; gap: 8px !important; margin-top: 20px !important; }
           .f-card { padding: 14px 12px !important; border-radius: 12px !important; background: rgba(255,255,255,0.025) !important; border: 1px solid rgba(255,255,255,0.055) !important; }
@@ -521,7 +641,12 @@ export default function LandingPage() {
         .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
         .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 7px 15px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
         .l-chip:hover { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.2); color: rgba(255,255,255,0.82); }
-        @media (max-width: 1024px) { .lang-bg { background: #06060E; } .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; } .lang-chips { gap: 6px !important; margin-top: 20px !important; } }
+
+        @media (max-width: 800px) {
+          .lang-bg { background: #06060E; }
+          .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; }
+          .lang-chips { gap: 6px !important; margin-top: 20px !important; }
+        }
 
         /* ══ SECURITY ══ */
         .sec-bg { background: #FAFAFA; }
@@ -594,12 +719,13 @@ export default function LandingPage() {
         .foot-tag { color:rgba(255,255,255,0.15); font-size:12px; }
         @media (max-width: 780px) { .foot-top { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 440px) { .foot-top { grid-template-columns: 1fr; } }
+
         .centered { text-align: center; }
       `}</style>
 
       <div className="lp">
 
-        {/* NAVBAR */}
+        {/* ── NAVBAR ── */}
         <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
           <Link href="/" className="n-logo">
             <div className="n-mark"><Shield size={13} color="white" /></div>
@@ -631,10 +757,12 @@ export default function LandingPage() {
           )}
         </AnimatePresence>
 
-        {/* HERO */}
+        {/* ── HERO ── */}
         <section className="hero" id="features">
           <div className="hero-grid" />
           <div className="hero-inner">
+
+            {/* Left / Text */}
             <div className="hero-left-mob">
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}>
                 <div className="h-badge">
@@ -660,16 +788,18 @@ export default function LandingPage() {
                 ))}
               </motion.div>
             </div>
+
+            {/* Right / Preview — JS తో detect చేస్తున్నాం, CSS కాదు */}
             <motion.div className="hero-right"
               initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
-              <div className="mob-preview"><MobileDashboardPreview /></div>
-              <div className="desk-preview"><ProductPreview /></div>
+              {isMobileDevice ? <MobileDashboardPreview /> : <ProductPreview />}
             </motion.div>
+
           </div>
         </section>
 
-        {/* STATS */}
+        {/* ── STATS ── */}
         <div className="stats">
           <div className="stats-inner-mob">
             <div className="stats-row">
@@ -694,16 +824,18 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* HOW IT WORKS */}
+        {/* ── HOW IT WORKS ── */}
         <section className="section how-bg" id="how-it-works">
           <div className="con">
             <div className="how-grid">
               <FadeIn>
                 <div className="mob-pill"><Zap size={10} /> Our Process</div>
                 <div className="eyebrow"><Zap size={11} /> Process</div>
-                <h2 className="sh serif">From posted to <span className="grad-text">protected</span>{' '}in under a second.</h2>
+                <h2 className="sh serif">
+                  From posted to <span className="grad-text">protected</span>{' '}in under a second.
+                </h2>
                 <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review.</p>
-                <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 24, color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '9px 16px' }}>Learn More <ArrowRight size={13} /></a>
+                <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 24, color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '9px 16px', transition: 'all 0.2s' }}>Learn More <ArrowRight size={13} /></a>
               </FadeIn>
               <div className="tl">
                 <div className="tl-line" />
@@ -720,7 +852,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* FEATURES */}
+        {/* ── FEATURES ── */}
         <section className="section feat-bg" id="features-detail">
           <div className="con">
             <FadeIn>
@@ -741,7 +873,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* LANGUAGES */}
+        {/* ── LANGUAGES ── */}
         <section className="section lang-bg">
           <div className="con centered">
             <FadeIn>
@@ -759,7 +891,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* SECURITY */}
+        {/* ── SECURITY ── */}
         <section className="section sec-bg" id="security">
           <div className="con">
             <FadeIn>
@@ -781,7 +913,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* PRICING */}
+        {/* ── PRICING ── */}
         <section className="section price-bg" id="pricing">
           <div className="con centered">
             <FadeIn>
@@ -803,10 +935,15 @@ export default function LandingPage() {
                   <div className={`p-card${p.hl ? ' hl' : ''}`}>
                     {p.badge && <div className="p-badge">{p.badge}</div>}
                     <div className="p-name">{p.name}</div>
-                    <div className="p-amt">{p.monthly === 0 ? '₹0' : `₹${annual ? p.annual : p.monthly}`}{p.monthly > 0 && <span className="p-per">/mo</span>}</div>
+                    <div className="p-amt">
+                      {p.monthly === 0 ? '₹0' : `₹${annual ? p.annual : p.monthly}`}
+                      {p.monthly > 0 && <span className="p-per">/mo</span>}
+                    </div>
                     <div className="p-desc">{p.desc}</div>
                     <div className="p-feats">
-                      {p.features.map(f => (<div key={f} className="p-feat"><Check size={12} style={{ color: '#10B981', flexShrink: 0 }} />{f}</div>))}
+                      {p.features.map(f => (
+                        <div key={f} className="p-feat"><Check size={12} style={{ color: '#10B981', flexShrink: 0 }} />{f}</div>
+                      ))}
                     </div>
                     <Link href="/login" className={p.primary ? 'cta-p' : p.hl ? 'cta-dgl' : 'cta-gl'}>{p.cta}</Link>
                   </div>
@@ -816,7 +953,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* FAQ */}
+        {/* ── FAQ ── */}
         <section className="section faq-bg">
           <div className="con centered" style={{ maxWidth: 700 }}>
             <FadeIn>
@@ -832,7 +969,11 @@ export default function LandingPage() {
                   </button>
                   <AnimatePresence>
                     {openFaq === i && (
-                      <motion.p className="faq-a" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }}>{f.a}</motion.p>
+                      <motion.p className="faq-a"
+                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }}>
+                        {f.a}
+                      </motion.p>
                     )}
                   </AnimatePresence>
                 </div>
@@ -841,7 +982,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* CTA */}
+        {/* ── CTA ── */}
         <section className="cta-wrap">
           <div className="cta-ambient" />
           <FadeIn>
@@ -850,7 +991,9 @@ export default function LandingPage() {
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', animation: 'lp-pulse 2s infinite' }} />
                 <span style={{ color: 'rgba(245,158,11,0.88)', fontSize: 12, fontWeight: 600 }}>19-day free trial · no card needed</span>
               </div>
-              <h2 className="cta-h serif">Ready to protect<br /><span className="grad-text">your community?</span></h2>
+              <h2 className="cta-h serif">
+                Ready to protect<br /><span className="grad-text">your community?</span>
+              </h2>
               <p className="cta-sub">Join creators who stopped losing subscribers to toxic comments. Setup takes less than 2 minutes.</p>
               <div className="cta-btns">
                 <Link href="/login" className="btn-p">Start Free Trial <ArrowRight size={14} /></Link>
@@ -860,7 +1003,7 @@ export default function LandingPage() {
           </FadeIn>
         </section>
 
-        {/* FOOTER */}
+        {/* ── FOOTER ── */}
         <footer className="foot">
           <div className="foot-in">
             <div className="foot-top">

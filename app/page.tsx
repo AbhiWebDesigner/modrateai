@@ -12,19 +12,17 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
-/* ── FADE IN WRAPPER ── */
+/* ── FADE IN ── */
 function FadeIn({ children, delay = 0, className = '', style = {} }: {
   children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -40px 0px' });
   return (
-    <motion.div
-      ref={ref} className={className} style={style}
+    <motion.div ref={ref} className={className} style={style}
       initial={{ opacity: 0, y: 18 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 18 }}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
-    >
+      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}>
       {children}
     </motion.div>
   );
@@ -37,18 +35,14 @@ function Counter({ to, suffix = '', prefix = '' }: { to: number; suffix?: string
   const [val, setVal] = useState(0);
   useEffect(() => {
     if (!inView) return;
-    let v = 0;
-    const dur = 1600; const step = 16; const inc = to / (dur / step);
-    const t = setInterval(() => {
-      v += inc;
-      if (v >= to) { setVal(to); clearInterval(t); } else setVal(Math.floor(v));
-    }, step);
+    let v = 0; const dur = 1600; const step = 16; const inc = to / (dur / step);
+    const t = setInterval(() => { v += inc; if (v >= to) { setVal(to); clearInterval(t); } else setVal(Math.floor(v)); }, step);
     return () => clearInterval(t);
   }, [inView, to]);
   return <span ref={ref}>{prefix}{val.toLocaleString()}{suffix}</span>;
 }
 
-/* ── LIVE FEED ── */
+/* ── LIVE FEED DATA ── */
 const COMMENTS = [
   { id: 1, author: 'Alex_Gaming98', text: 'This is spam content promoting...', badge: 'toxic', avatar: 'A', time: '2s ago' },
   { id: 2, author: 'CryptoMaster', text: 'Potential scam or misleading info...', badge: 'spam', avatar: 'C', time: '5s ago' },
@@ -60,8 +54,8 @@ const COMMENTS = [
 
 const BADGE: Record<string, { bg: string; color: string; label: string; border: string }> = {
   toxic: { bg: 'rgba(239,68,68,0.15)', color: '#f87171', label: 'Hidden', border: 'rgba(239,68,68,0.3)' },
-  spam:  { bg: 'rgba(249,115,22,0.15)', color: '#fb923c', label: 'Flagged', border: 'rgba(249,115,22,0.3)' },
-  safe:  { bg: 'rgba(16,185,129,0.15)', color: '#34d399', label: 'Replied', border: 'rgba(16,185,129,0.3)' },
+  spam: { bg: 'rgba(249,115,22,0.15)', color: '#fb923c', label: 'Flagged', border: 'rgba(249,115,22,0.3)' },
+  safe: { bg: 'rgba(16,185,129,0.15)', color: '#34d399', label: 'Replied', border: 'rgba(16,185,129,0.3)' },
 };
 
 function LiveFeed({ compact = false }: { compact?: boolean }) {
@@ -72,15 +66,11 @@ function LiveFeed({ compact = false }: { compact?: boolean }) {
     const tick = () => {
       setScanning(true);
       setTimeout(() => {
-        const c = COMMENTS[idx.current % COMMENTS.length];
-        idx.current++;
-        setItems(prev => [c, ...prev].slice(0, compact ? 3 : 4));
-        setScanning(false);
+        const c = COMMENTS[idx.current % COMMENTS.length]; idx.current++;
+        setItems(prev => [c, ...prev].slice(0, compact ? 3 : 4)); setScanning(false);
       }, 900);
     };
-    tick();
-    const t = setInterval(tick, 3000);
-    return () => clearInterval(t);
+    tick(); const t = setInterval(tick, 3000); return () => clearInterval(t);
   }, [compact]);
 
   return (
@@ -92,7 +82,7 @@ function LiveFeed({ compact = false }: { compact?: boolean }) {
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', animation: 'lp-pulse 1s infinite' }} />
             <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: 10 }}>AI scanning…</span>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 3 }}>
-              {[0,1,2].map(i => <div key={i} style={{ width: 3, height: 3, borderRadius: '50%', background: '#F59E0B', opacity: 0.5, animation: `lp-bounce 0.8s ${i*0.18}s infinite` }} />)}
+              {[0, 1, 2].map(i => <div key={i} style={{ width: 3, height: 3, borderRadius: '50%', background: '#F59E0B', opacity: 0.5, animation: `lp-bounce 0.8s ${i * 0.18}s infinite` }} />)}
             </div>
           </motion.div>
         )}
@@ -121,98 +111,92 @@ function LiveFeed({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/* ── MOBILE DASHBOARD PREVIEW (V2) ── */
+/* ── MOBILE DASHBOARD PREVIEW ── */
 function MobileDashboardPreview() {
   return (
     <div style={{
-      background: '#0D0D10',
-      border: '1px solid rgba(139,92,246,0.3)',
-      borderRadius: 18,
+      background: '#0D0D14',
+      borderRadius: 20,
       overflow: 'hidden',
-      boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 32px 80px rgba(0,0,0,0.8), 0 0 60px rgba(139,92,246,0.12), 0 0 100px rgba(245,158,11,0.06)',
+      border: '1.5px solid rgba(139,92,246,0.4)',
+      boxShadow: '0 0 0 1px rgba(139,92,246,0.1), 0 0 40px rgba(139,92,246,0.2), 0 0 80px rgba(245,158,11,0.08), 0 24px 60px rgba(0,0,0,0.7)',
     }}>
       {/* Top bar */}
-      <div style={{ background: '#111116', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '9px 13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 7, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Shield size={11} color="white" />
+      <div style={{ background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 8, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield size={12} color="white" />
           </div>
-          <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 12 }}>Moderate<span style={{ color: '#F59E0B' }}>AI</span></span>
+          <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13 }}>Moderate<span style={{ color: '#F59E0B' }}>AI</span></span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Bell size={13} color="rgba(255,255,255,0.35)" />
-          <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 8.5, fontWeight: 700, padding: '2px 8px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(16,185,129,0.2)' }}>
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
+          <Bell size={14} color="rgba(255,255,255,0.3)" />
+          <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 9px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(16,185,129,0.25)' }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
           </span>
         </div>
       </div>
 
       {/* Nav tabs */}
-      <div style={{ background: '#0E0E12', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 13px', display: 'flex', gap: 0, overflowX: 'auto' }}>
-        {['Overview','Analytics','Automation','Alerts','Settings'].map((t, i) => (
-          <div key={t} style={{ padding: '8px 9px', fontSize: 9.5, fontWeight: i===0 ? 700 : 400, color: i===0 ? '#F59E0B' : 'rgba(255,255,255,0.28)', borderBottom: i===0 ? '1.5px solid #F59E0B' : '1.5px solid transparent', whiteSpace: 'nowrap' }}>{t}</div>
+      <div style={{ background: '#0E0E14', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 14px', display: 'flex', gap: 0, overflowX: 'auto' }}>
+        {['Overview', 'Analytics', 'Automation', 'Alerts', 'Settings'].map((t, i) => (
+          <div key={t} style={{ padding: '9px 10px', fontSize: 10, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.25)', borderBottom: i === 0 ? '2px solid #F59E0B' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>{t}</div>
         ))}
       </div>
 
       {/* Stats row */}
-      <div style={{ background: '#080810', padding: '10px 13px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7 }}>
+      <div style={{ background: '#09090F', padding: '12px 14px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
         {[
-          { label:'Comments Scanned', value:'12,847', change:'+18.6%', color:'#F59E0B', lineColor:'rgba(245,158,11,0.6)' },
-          { label:'Toxic Hidden', value:'1,203', change:'+24.5%', color:'#f87171', lineColor:'rgba(239,68,68,0.6)' },
-          { label:'AI Replied', value:'847', change:'+16.3%', color:'#60a5fa', lineColor:'rgba(96,165,250,0.6)' },
+          { label: 'Comments Scanned', value: '12,847', change: '+18.6%', color: '#F59E0B', pts: '0,18 10,14 20,16 30,10 40,12 50,6 60,4' },
+          { label: 'Toxic Hidden', value: '1,203', change: '+24.5%', color: '#f87171', pts: '0,16 10,18 20,12 30,14 40,8 50,10 60,5' },
+          { label: 'AI Replied', value: '847', change: '+16.3%', color: '#60a5fa', pts: '0,18 10,15 20,17 30,11 40,13 50,7 60,4' },
         ].map(s => (
-          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 9, padding: '8px 9px' }}>
-            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 8, marginBottom: 4, lineHeight: 1.3 }}>{s.label}</div>
-            <div style={{ color: s.color, fontWeight: 800, fontSize: 13, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.value}</div>
-            <div style={{ color: '#34d399', fontSize: 8, fontWeight: 600 }}>{s.change}</div>
-            {/* Mini sparkline */}
-            <svg width="100%" height="22" viewBox="0 0 60 22" style={{ marginTop: 5 }}>
-              <polyline
-                points="0,18 10,14 20,16 30,10 40,12 50,6 60,4"
-                fill="none" stroke={s.lineColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-              />
+          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '9px 10px' }}>
+            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 8, marginBottom: 4, lineHeight: 1.3 }}>{s.label}</div>
+            <div style={{ color: s.color, fontWeight: 800, fontSize: 14, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.value}</div>
+            <div style={{ color: '#34d399', fontSize: 8, fontWeight: 600, marginBottom: 4 }}>{s.change}</div>
+            <svg width="100%" height="20" viewBox="0 0 60 20">
+              <polyline points={s.pts} fill="none" stroke={s.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.7" />
             </svg>
           </div>
         ))}
       </div>
 
       {/* Accuracy chart */}
-      <div style={{ background: '#060610', padding: '10px 13px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+      <div style={{ background: '#07070D', padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
-            <div style={{ color: 'rgba(255,255,255,0.38)', fontSize: 8.5, marginBottom: 3 }}>Detection Accuracy</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-              <span style={{ color: '#F0F0F0', fontWeight: 900, fontSize: 17, letterSpacing: '-0.03em' }}>98.2%</span>
+            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 9, marginBottom: 3 }}>Detection Accuracy</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ color: '#F0F0F0', fontWeight: 900, fontSize: 18, letterSpacing: '-0.03em' }}>98.2%</span>
               <span style={{ color: '#34d399', fontSize: 9, fontWeight: 600 }}>+2.4%</span>
             </div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 5, padding: '3px 8px', fontSize: 8.5, color: 'rgba(255,255,255,0.3)' }}>Today ▾</div>
+          <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '3px 9px', fontSize: 9, color: 'rgba(255,255,255,0.28)' }}>Today ▾</div>
         </div>
-        {/* Chart */}
-        <div style={{ position: 'relative', height: 48 }}>
-          <svg width="100%" height="48" viewBox="0 0 300 48" preserveAspectRatio="none">
+        <div style={{ position: 'relative', height: 52 }}>
+          <svg width="100%" height="52" viewBox="0 0 300 52" preserveAspectRatio="none">
             <defs>
-              <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.35" />
+              <linearGradient id="mChartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
                 <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <path d="M0,40 C20,38 40,32 60,28 C80,24 100,30 120,22 C140,14 160,18 180,12 C200,6 220,10 240,6 C260,2 280,4 300,3" fill="none" stroke="#8B5CF6" strokeWidth="1.8" strokeLinecap="round" />
-            <path d="M0,40 C20,38 40,32 60,28 C80,24 100,30 120,22 C140,14 160,18 180,12 C200,6 220,10 240,6 C260,2 280,4 300,3 L300,48 L0,48 Z" fill="url(#chartGrad)" />
+            <path d="M0,44 C20,42 40,36 60,30 C80,24 100,32 120,24 C140,16 160,20 180,13 C200,7 220,11 240,7 C260,3 280,5 300,3" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" />
+            <path d="M0,44 C20,42 40,36 60,30 C80,24 100,32 120,24 C140,16 160,20 180,13 C200,7 220,11 240,7 C260,3 280,5 300,3 L300,52 L0,52 Z" fill="url(#mChartGrad)" />
           </svg>
-          {/* X axis labels */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-            {['00:00','04:00','08:00','12:00','16:00','20:00','24:00'].map(t => (
-              <span key={t} style={{ color: 'rgba(255,255,255,0.2)', fontSize: 7 }}>{t}</span>
+            {['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'].map(t => (
+              <span key={t} style={{ color: 'rgba(255,255,255,0.18)', fontSize: 7 }}>{t}</span>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Live Feed */}
-      <div style={{ padding: '10px 13px', background: '#06060E', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+      {/* Live feed */}
+      <div style={{ padding: '10px 14px 14px', background: '#06060C', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9.5, fontWeight: 600 }}>Live Moderation Feed</span>
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: 600 }}>Live Moderation Feed</span>
           <span style={{ color: '#8B5CF6', fontSize: 9, fontWeight: 600 }}>View All</span>
         </div>
         <LiveFeed compact />
@@ -221,13 +205,13 @@ function MobileDashboardPreview() {
   );
 }
 
-/* ── DESKTOP PRODUCT PREVIEW (unchanged) ── */
+/* ── DESKTOP PRODUCT PREVIEW ── */
 function ProductPreview() {
   return (
     <div style={{ background: '#0A0A0A', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)' }}>
       <div style={{ background: '#141414', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ display: 'flex', gap: 5 }}>
-          {['#FF5F57','#FFBD2E','#28C840'].map(c => <div key={c} style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />)}
+          {['#FF5F57', '#FFBD2E', '#28C840'].map(c => <div key={c} style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />)}
         </div>
         <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Lock size={9} color="rgba(255,255,255,0.25)" />
@@ -245,11 +229,11 @@ function ProductPreview() {
           <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 11 }}>ModerateAI</span>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          {['Overview','Analytics','Settings'].map((t, i) => <span key={t} style={{ color: i===0 ? '#F59E0B' : 'rgba(255,255,255,0.28)', fontSize: 9.5, fontWeight: i===0 ? 600 : 400 }}>{t}</span>)}
+          {['Overview', 'Analytics', 'Settings'].map((t, i) => <span key={t} style={{ color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.28)', fontSize: 9.5, fontWeight: i === 0 ? 600 : 400 }}>{t}</span>)}
         </div>
       </div>
       <div style={{ background: '#080808', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-        {[{ label:'Scanned', value:'12,847', color:'#F59E0B' }, { label:'Hidden', value:'1,203', color:'#f87171' }, { label:'Replied', value:'847', color:'#60a5fa' }].map(s => (
+        {[{ label: 'Scanned', value: '12,847', color: '#F59E0B' }, { label: 'Hidden', value: '1,203', color: '#f87171' }, { label: 'Replied', value: '847', color: '#60a5fa' }].map(s => (
           <div key={s.label} style={{ background: 'rgba(255,255,255,0.025)', borderRadius: 7, padding: '8px 10px' }}>
             <div style={{ color: s.color, fontWeight: 800, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
             <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 9, marginTop: 2 }}>{s.label}</div>
@@ -257,7 +241,7 @@ function ProductPreview() {
         ))}
       </div>
       <div style={{ background: '#060606', padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'flex-end', gap: 3, height: 46 }}>
-        {[18,28,22,38,30,45,36,52,40,58,44,62].map((h, i) => (
+        {[18, 28, 22, 38, 30, 45, 36, 52, 40, 58, 44, 62].map((h, i) => (
           <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 2, background: i > 9 ? 'rgba(245,158,11,0.65)' : 'rgba(255,255,255,0.07)' }} />
         ))}
       </div>
@@ -274,12 +258,12 @@ function ProductPreview() {
 
 /* ── DATA ── */
 const STEPS = [
-  { icon: Shield, label: 'Connect YouTube', detail: 'Secure OAuth connection with read-only access.', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
-  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment is analyzed in real time by our AI.', color: '#8B5CF6', bg: 'rgba(139,92,246,0.15)' },
-  { icon: Languages, label: 'Language auto-detected', detail: 'Detects 100+ languages and applies cultural rules.', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)' },
-  { icon: EyeOff, label: 'Harmful content hidden', detail: 'Toxic and spam comments are hidden instantly.', color: '#f87171', bg: 'rgba(239,68,68,0.15)' },
-  { icon: MessageSquare, label: 'AI replies naturally', detail: 'Genuine comments receive contextual replies.', color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
-  { icon: BarChart3, label: 'Analytics updated', detail: 'Every moderation event is logged in real time.', color: '#34d399', bg: 'rgba(16,185,129,0.15)' },
+  { icon: Shield, label: 'Connect YouTube', detail: 'Secure OAuth connection with read-only access.', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment is analyzed in real time by our AI.', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
+  { icon: Languages, label: 'Language auto-detected', detail: 'Detects 100+ languages and applies cultural rules.', color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
+  { icon: EyeOff, label: 'Harmful content hidden', detail: 'Toxic and spam comments are hidden instantly.', color: '#f87171', bg: 'rgba(239,68,68,0.12)' },
+  { icon: MessageSquare, label: 'AI replies naturally', detail: 'Genuine comments receive contextual replies.', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+  { icon: BarChart3, label: 'Analytics updated', detail: 'Every moderation event is logged in real time.', color: '#34d399', bg: 'rgba(16,185,129,0.12)' },
 ];
 
 const FEATURES = [
@@ -314,19 +298,19 @@ const PLANS = [
   {
     name: 'Free Trial', monthly: 0, annual: 0,
     desc: 'Try ModerateAI free for 19 days.',
-    features: ['19-Day Free Trial','1 YouTube Channel','2,000 Comments Scanned','AI Toxic Detection','AI Spam Detection','Review Queue','250 AI Actions','Smart AI Replies (Max 3 Per Video)','Basic Analytics Dashboard','10+ Languages','Email Support'],
+    features: ['19-Day Free Trial', '1 YouTube Channel', '2,000 Comments Scanned', 'AI Toxic Detection', 'AI Spam Detection', 'Review Queue', '250 AI Actions', 'Smart AI Replies (Max 3 Per Video)', 'Basic Analytics Dashboard', '10+ Languages', 'Email Support'],
     missing: [], cta: 'Start Free Trial', primary: false, hl: false, badge: null,
   },
   {
     name: 'Pro', monthly: 349, annual: 299,
     desc: 'Perfect for growing creators.',
-    features: ['1 YouTube Channel','25,000 Comments Scanned / Month','AI Toxic Detection','AI Spam Detection','Auto Hide','Review Queue','Live Chat Moderation','Progressive Live Chat Timeouts','1,900 AI Actions / Month','Smart AI Replies (Max 3 Per Video)','Unlimited Automation Rules','Full Analytics Dashboard','50+ Languages','Priority Email Support'],
+    features: ['1 YouTube Channel', '25,000 Comments Scanned / Month', 'AI Toxic Detection', 'AI Spam Detection', 'Auto Hide', 'Review Queue', 'Live Chat Moderation', 'Progressive Live Chat Timeouts', '1,900 AI Actions / Month', 'Smart AI Replies (Max 3 Per Video)', 'Unlimited Automation Rules', 'Full Analytics Dashboard', '50+ Languages', 'Priority Email Support'],
     missing: [], cta: 'Start 19-Day Trial', primary: true, hl: true, badge: 'Most Popular',
   },
   {
     name: 'Agency', monthly: 2499, annual: 2149,
     desc: 'Built for businesses & agencies.',
-    features: ['2 YouTube Channels','150,000 Comments Scanned / Month','AI Toxic Detection','AI Spam Detection','Auto Hide','Review Queue','Live Chat Moderation','Progressive Live Chat Timeouts','15,000 AI Actions / Month','Smart AI Replies (Max 3 Per Video)','Unlimited Automation Rules','Advanced Analytics Dashboard','Telegram Alerts','100+ Languages','Dedicated Priority Support'],
+    features: ['2 YouTube Channels', '150,000 Comments Scanned / Month', 'AI Toxic Detection', 'AI Spam Detection', 'Auto Hide', 'Review Queue', 'Live Chat Moderation', 'Progressive Live Chat Timeouts', '15,000 AI Actions / Month', 'Smart AI Replies (Max 3 Per Video)', 'Unlimited Automation Rules', 'Advanced Analytics Dashboard', 'Telegram Alerts', '100+ Languages', 'Dedicated Priority Support'],
     missing: [], cta: 'Get Agency', primary: false, hl: false, badge: null,
   },
 ];
@@ -340,7 +324,7 @@ const FAQS = [
   { q: 'Is my channel data secure?', a: 'Your data is protected using industry-standard encryption in transit and at rest. It is never sold, shared, or used to train third-party models.' },
 ];
 
-/* ══════════════════════════════════════════ MAIN ══════════════════════════════════════════ */
+/* ══ MAIN ══ */
 export default function LandingPage() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -381,7 +365,6 @@ export default function LandingPage() {
         @keyframes lp-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
         @keyframes lp-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         @keyframes lp-grad { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-        @keyframes lp-glow-pulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
 
         .serif { font-family: 'Playfair Display', Georgia, serif; }
 
@@ -402,7 +385,7 @@ export default function LandingPage() {
           display: flex; align-items: center; height: 52px;
           transition: all 0.35s ease;
         }
-        .lp-nav.scrolled { height: 48px; box-shadow: 0 4px 28px rgba(0,0,0,0.55); border-color: rgba(255,255,255,0.09); }
+        .lp-nav.scrolled { height: 48px; box-shadow: 0 4px 28px rgba(0,0,0,0.55); }
         .n-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
         .n-mark { background: linear-gradient(135deg,#F59E0B,#7C3AED); border-radius: 8px; width: 27px; height: 27px; display: flex; align-items: center; justify-content: center; }
         .n-name { color: #F0F0F0; font-weight: 800; font-size: 14.5px; letter-spacing: -0.025em; }
@@ -412,43 +395,35 @@ export default function LandingPage() {
         .n-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
         .n-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
         .n-login { color: #FAFAFA; font-size: 13px; font-weight: 600; text-decoration: none; padding: 7px 16px; border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; transition: all 0.25s; }
-        .n-login:hover { color: #FAFAFA; border-color: rgba(255,255,255,0.80); background: rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(255,255,255,0.25), 0 0 40px rgba(255,255,255,0.10); }
-        .n-cta { background: #F59E0B; color: #080808; font-size: 12.5px; font-weight: 700; padding: 7px 14px; border-radius: 8px; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
-        .n-cta:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.35); }
-        .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; margin-left: auto; }
+        .n-login:hover { border-color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(255,255,255,0.15); }
+        .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; }
 
-        /* ══ NAVBAR — Mobile (desktop site ON) ══ */
+        /* ══ NAVBAR — Mobile ══ */
         @media (max-width: 800px) {
-          .n-links, .n-login { display: none !important; }
-          .n-burger { display: flex; }
-
-          /* Mobile navbar: full width, flat, no floating pill */
           .lp-nav {
-            top: 0; left: 0; transform: none;
-            width: 100%; border-radius: 0;
+            top: 0; left: 0; right: 0; transform: none;
+            width: 100%; max-width: 100%;
+            border-radius: 0;
             border-left: none; border-right: none; border-top: none;
             border-bottom: 1px solid rgba(255,255,255,0.06);
             padding: 0 16px; height: 56px;
-            background: rgba(6,6,10,0.95);
+            background: rgba(6,6,10,0.96);
           }
           .lp-nav.scrolled { height: 52px; }
-
-          /* Show Login as text-only on right */
-          .n-mob-login {
-            display: flex !important;
-            color: #FAFAFA;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            padding: 7px 14px;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            margin-left: auto;
-            margin-right: 8px;
-          }
+          .n-links { display: none !important; }
+          .n-right { display: none !important; }
+          .n-burger { display: flex !important; margin-left: auto; }
+          .n-mob-login { display: flex !important; }
         }
 
-        .n-mob-login { display: none; }
+        .n-mob-login {
+          display: none;
+          color: #FAFAFA; font-size: 13px; font-weight: 600;
+          text-decoration: none; padding: 7px 14px;
+          border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+          margin-left: auto; margin-right: 8px;
+          align-items: center;
+        }
 
         .mob-menu {
           position: fixed; top: 56px; left: 0; right: 0; z-index: 199;
@@ -482,32 +457,32 @@ export default function LandingPage() {
         .h-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; animation: lp-pulse 2s infinite; }
         .h-badge-text { color: rgba(245,158,11,0.88); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
         .h1 { font-size: clamp(34px, 4.5vw, 58px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.08; color: #F0F0F0; margin-bottom: 22px; }
-        .h-desc { color: rgba(255,255,255,0.4); font-size: 16px; line-height: 1.7; max-width: 450px; margin-bottom: 36px; font-weight: 400; }
+        .h-desc { color: rgba(255,255,255,0.4); font-size: 16px; line-height: 1.7; max-width: 450px; margin-bottom: 36px; }
         .h-btns { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
         .btn-p { display: inline-flex; align-items: center; gap: 7px; background: #F59E0B; color: #080808; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 10px; text-decoration: none; border: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
         .btn-p:hover { background: #FBBF24; box-shadow: 0 0 28px rgba(245,158,11,0.35); transform: translateY(-1px); }
         .btn-g { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); color: rgba(255,255,255,0.78); font-weight: 600; font-size: 14px; padding: 12px 22px; border-radius: 10px; text-decoration: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
-        .btn-g:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); }
+        .btn-g:hover { background: rgba(255,255,255,0.08); }
         .h-trust { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
+        /* Desktop: show desktop preview, hide mobile */
+        .mob-preview { display: none; }
+        .desk-preview { display: block; }
+
         /* ══ HERO — Mobile V2 ══ */
         @media (max-width: 800px) {
           .hero {
-            padding: 72px 0 0;
+            padding: 68px 0 0;
             background:
-              radial-gradient(ellipse 120% 60% at 50% -10%, rgba(139,92,246,0.18) 0%, transparent 60%),
-              radial-gradient(ellipse 80% 50% at 10% 60%, rgba(245,158,11,0.07) 0%, transparent 55%),
+              radial-gradient(ellipse 140% 55% at 50% -5%, rgba(139,92,246,0.2) 0%, transparent 55%),
+              radial-gradient(ellipse 80% 50% at 5% 70%, rgba(245,158,11,0.06) 0%, transparent 55%),
               #06060E;
             min-height: 100svh;
             display: flex; flex-direction: column;
           }
-
-          /* Hide the desktop grid dots on mobile — replaced by custom bg */
           .hero-grid { display: none; }
-
-          /* Mobile hero: stack vertically, text on top, card below */
           .hero-inner {
             display: flex !important;
             flex-direction: column !important;
@@ -516,132 +491,106 @@ export default function LandingPage() {
             align-items: stretch !important;
             flex: 1;
           }
-
-          /* ── Text block ── */
-          .hero-left-mob {
-            padding: 28px 20px 24px;
-          }
-
-          .h-badge {
-            margin-bottom: 18px;
-            padding: 4px 12px 4px 9px;
-          }
-          .h-badge-text { font-size: 11px; }
-
-          .h1 {
-            font-size: 30px !important;
-            line-height: 1.12 !important;
-            margin-bottom: 14px !important;
-            letter-spacing: -0.03em !important;
-          }
-
-          .h-desc {
-            font-size: 13.5px !important;
-            line-height: 1.65 !important;
-            margin-bottom: 22px !important;
-            color: rgba(255,255,255,0.38) !important;
-            max-width: 100% !important;
-          }
-
-          /* Mobile CTA buttons: side by side */
-          .h-btns {
-            flex-direction: row !important;
-            gap: 8px !important;
-            margin-bottom: 18px !important;
-          }
-          .btn-p {
-            font-size: 13px !important;
-            padding: 11px 18px !important;
-            border-radius: 9px !important;
-            flex: 1;
-            justify-content: center;
-          }
-          .btn-g {
-            font-size: 13px !important;
-            padding: 11px 14px !important;
-            border-radius: 9px !important;
-            flex: 1;
-            justify-content: center;
-            gap: 5px !important;
-          }
-
-          /* Mobile trust row */
-          .h-trust {
-            gap: 10px !important;
-            flex-wrap: wrap !important;
-          }
-          .h-trust-item { font-size: 11px !important; gap: 4px !important; }
-
-          /* ── Dashboard card block ── */
+          .hero-left-mob { padding: 28px 20px 20px; order: 1; }
           .hero-right {
             animation: none !important;
-            padding: 20px 16px 32px;
-            /* purple/amber glow behind card */
-            background: radial-gradient(ellipse 90% 70% at 50% 30%, rgba(139,92,246,0.14) 0%, transparent 70%);
+            order: 2;
+            padding: 16px 16px 32px;
+            background: radial-gradient(ellipse 100% 70% at 50% 20%, rgba(139,92,246,0.1) 0%, transparent 65%);
           }
+
+          /* Mobile: show mobile preview, hide desktop */
+          .mob-preview { display: block !important; }
+          .desk-preview { display: none !important; }
+
+          .h-badge { margin-bottom: 16px; padding: 4px 12px 4px 9px; }
+          .h-badge-text { font-size: 11px; }
+          .h1 { font-size: 28px !important; line-height: 1.13 !important; margin-bottom: 14px !important; letter-spacing: -0.03em !important; }
+          .h-desc { font-size: 13.5px !important; line-height: 1.6 !important; margin-bottom: 20px !important; color: rgba(255,255,255,0.36) !important; max-width: 100% !important; }
+          .h-btns { flex-direction: row !important; gap: 8px !important; margin-bottom: 16px !important; }
+          .btn-p { font-size: 13px !important; padding: 11px 16px !important; border-radius: 9px !important; flex: 1; justify-content: center; }
+          .btn-g { font-size: 13px !important; padding: 11px 14px !important; border-radius: 9px !important; flex: 1; justify-content: center; gap: 5px !important; }
+          .h-trust { gap: 10px !important; }
+          .h-trust-item { font-size: 11px !important; gap: 4px !important; }
         }
 
         /* ══ STATS — Desktop ══ */
         .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
-        .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; }
+        .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
         .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
         .s-cell + .s-cell::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:1px; height:26px; background:rgba(255,255,255,0.07); }
         .s-num { font-size: 28px; font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
         .s-lbl { color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500; margin-top: 5px; letter-spacing: 0.05em; text-transform: uppercase; }
+        .s-icon-wrap { display: none; }
+        .s-text { display: flex; flex-direction: column; align-items: center; }
 
         /* ══ STATS — Mobile V2 ══ */
         @media (max-width: 800px) {
           .stats {
-            background: #08080F;
-            border: 1px solid rgba(255,255,255,0.05);
+            background: transparent;
+            border: none;
+            padding: 16px 16px 0;
+          }
+          .stats-inner-mob {
+            background: #0A0A12;
+            border: 1px solid rgba(255,255,255,0.06);
             border-radius: 16px;
-            margin: 0 16px;
-            padding: 0;
+            overflow: hidden;
           }
           .stats-row {
             display: grid !important;
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 0 !important;
+            flex-wrap: unset !important;
           }
           .s-cell {
-            padding: 16px 12px !important;
+            padding: 14px 14px !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 12px !important;
+            gap: 11px !important;
+            position: relative;
           }
-          .s-cell + .s-cell::before { display: none !important; }
-          /* inner borders via box-shadow */
+          .s-cell::before { display: none !important; }
           .s-cell:nth-child(1) { border-bottom: 1px solid rgba(255,255,255,0.05); }
           .s-cell:nth-child(2) { border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
           .s-cell:nth-child(3) {}
           .s-cell:nth-child(4) { border-left: 1px solid rgba(255,255,255,0.05); }
-          /* hide 5th cell (0 lines of code) on mobile */
           .s-cell:nth-child(5) { display: none !important; }
-
           .s-icon-wrap {
             display: flex !important;
-            width: 36px; height: 36px; border-radius: 10px;
-            align-items: center; justify-content: center;
-            flex-shrink: 0;
+            width: 34px; height: 34px; border-radius: 9px;
+            align-items: center; justify-content: center; flex-shrink: 0;
           }
-          .s-text { display: flex; flex-direction: column; align-items: flex-start; }
-          .s-num { font-size: 20px !important; }
-          .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.03em !important; }
+          .s-text { align-items: flex-start !important; }
+          .s-num { font-size: 18px !important; }
+          .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.02em !important; }
         }
-
-        /* Desktop: hide s-icon-wrap */
-        .s-icon-wrap { display: none; }
 
         /* ══ SECTIONS ══ */
         .section { padding: 96px 24px; }
-        .section-sm { padding: 80px 24px; }
         .con { max-width: 1120px; margin: 0 auto; }
         .eyebrow { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.28); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .eyebrow-dark { display: inline-flex; align-items: center; gap: 5px; color: rgba(0,0,0,0.3); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .sh { font-size: clamp(24px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; }
         .sh-dark { font-size: clamp(24px,3.4vw,42px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; color: #0A0A0A; }
-        .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; font-weight: 400; }
-        .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; font-weight: 400; }
+        .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
+        .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
+
+        /* Mobile eyebrow pill */
+        .mob-pill { display: none; }
+        @media (max-width: 800px) {
+          .mob-pill {
+            display: inline-flex !important;
+            align-items: center; gap: 6px;
+            background: rgba(139,92,246,0.1);
+            border: 1px solid rgba(139,92,246,0.22);
+            border-radius: 20px; padding: 4px 12px;
+            margin-bottom: 14px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+            text-transform: uppercase; color: #a78bfa;
+          }
+          .eyebrow { display: none !important; }
+          .section { padding: 52px 20px !important; }
+        }
 
         /* ══ HOW IT WORKS ══ */
         .how-bg { background: linear-gradient(180deg, #0C0C0C 0%, #0F0F0F 100%); }
@@ -656,58 +605,37 @@ export default function LandingPage() {
         .tl-body h3 { font-size: 14.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
         .tl-body p { font-size: 13px; color: rgba(255,255,255,0.33); line-height: 1.55; }
 
-        /* ══ HOW IT WORKS — Mobile V2 ══ */
         @media (max-width: 800px) {
           .how-bg { background: #06060E; }
           .how-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
-          .section { padding: 56px 20px !important; }
-
-          /* Mobile timeline: icon left + colored dot, bigger icons */
-          .tl { margin-top: 28px !important; }
+          .tl { margin-top: 24px !important; }
           .tl-line { left: 21px !important; background: linear-gradient(180deg, rgba(139,92,246,0.5) 0%, rgba(245,158,11,0.15) 100%) !important; }
-          .tl-row { gap: 14px !important; padding-bottom: 24px !important; }
+          .tl-row { gap: 14px !important; padding-bottom: 22px !important; }
           .tl-dot {
-            width: 42px !important; height: 42px !important;
-            border-radius: 12px !important;
-            background: var(--step-bg, rgba(139,92,246,0.1)) !important;
-            border: 1px solid var(--step-border, rgba(139,92,246,0.25)) !important;
+            width: 42px !important; height: 42px !important; border-radius: 12px !important;
+            background: var(--sdot-bg) !important;
+            border: 1px solid var(--sdot-border) !important;
           }
-          .tl-body h3 { font-size: 13.5px !important; }
-          .tl-body p { font-size: 12px !important; color: rgba(255,255,255,0.28) !important; }
+          .tl-body h3 { font-size: 13px !important; }
+          .tl-body p { font-size: 11.5px !important; color: rgba(255,255,255,0.28) !important; }
         }
 
         /* ══ FEATURES ══ */
         .feat-bg { background: #090909; }
         .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
-        .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 26px; transition: all 0.3s cubic-bezier(0.22,1,0.36,1); position: relative; overflow: hidden; }
-        .f-card::after { content:''; position:absolute; inset:0; border-radius:16px; background: radial-gradient(ellipse 70% 70% at 0% 0%, rgba(245,158,11,0.045) 0%, transparent 70%); opacity:0; transition:opacity 0.3s; }
+        .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 26px; transition: all 0.3s; position: relative; overflow: hidden; }
         .f-card:hover { border-color: rgba(245,158,11,0.13); transform: translateY(-2px); box-shadow: 0 18px 50px rgba(0,0,0,0.45); }
-        .f-card:hover::after { opacity: 1; }
         .f-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-        .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; letter-spacing: -0.02em; }
+        .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
         .f-card p { font-size: 13px; color: rgba(255,255,255,0.36); line-height: 1.6; }
 
-        /* ══ FEATURES — Mobile V2 ══ */
         @media (max-width: 800px) {
           .feat-bg { background: #06060E; }
-          .feat-grid {
-            grid-template-columns: repeat(3,1fr) !important;
-            gap: 10px !important;
-            margin-top: 24px !important;
-          }
-          .f-card {
-            padding: 16px 14px !important;
-            border-radius: 14px !important;
-            background: rgba(255,255,255,0.03) !important;
-            border: 1px solid rgba(255,255,255,0.06) !important;
-          }
-          .f-icon {
-            width: 36px !important; height: 36px !important;
-            border-radius: 10px !important;
-            margin-bottom: 10px !important;
-          }
-          .f-card h3 { font-size: 12px !important; margin-bottom: 5px !important; }
-          .f-card p { font-size: 10.5px !important; line-height: 1.5 !important; color: rgba(255,255,255,0.3) !important; }
+          .feat-grid { grid-template-columns: repeat(3,1fr) !important; gap: 8px !important; margin-top: 20px !important; }
+          .f-card { padding: 14px 12px !important; border-radius: 12px !important; background: rgba(255,255,255,0.025) !important; border: 1px solid rgba(255,255,255,0.055) !important; }
+          .f-icon { width: 34px !important; height: 34px !important; border-radius: 9px !important; margin-bottom: 9px !important; }
+          .f-card h3 { font-size: 11.5px !important; margin-bottom: 4px !important; }
+          .f-card p { font-size: 10px !important; line-height: 1.45 !important; color: rgba(255,255,255,0.28) !important; }
         }
 
         /* ══ LANGUAGES ══ */
@@ -719,7 +647,7 @@ export default function LandingPage() {
         @media (max-width: 800px) {
           .lang-bg { background: #06060E; }
           .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; }
-          .lang-chips { gap: 6px !important; margin-top: 24px !important; }
+          .lang-chips { gap: 6px !important; margin-top: 20px !important; }
         }
 
         /* ══ SECURITY ══ */
@@ -743,11 +671,10 @@ export default function LandingPage() {
         .p-card { background: #FFFFFF; border: 1px solid rgba(0,0,0,0.07); border-radius: 18px; padding: 28px; position: relative; transition: all 0.28s; }
         .p-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.08); transform: translateY(-2px); }
         .p-card.hl { background: #0A0A0A; border-color: rgba(245,158,11,0.32); }
-        .p-card.hl:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 40px rgba(245,158,11,0.09); }
-        .p-badge { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #080808; font-size: 9.5px; font-weight: 700; padding: 3px 12px; border-radius: 0 0 7px 7px; letter-spacing: 0.05em; white-space: nowrap; }
+        .p-badge { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #080808; font-size: 9.5px; font-weight: 700; padding: 3px 12px; border-radius: 0 0 7px 7px; white-space: nowrap; }
         .p-name { font-size: 12.5px; font-weight: 600; color: rgba(0,0,0,0.36); margin-bottom: 6px; }
         .hl .p-name { color: rgba(255,255,255,0.36); }
-        .p-amt { font-size: 36px; font-weight: 900; color: #0A0A0A; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+        .p-amt { font-size: 36px; font-weight: 900; color: #0A0A0A; letter-spacing: -0.04em; line-height: 1; }
         .hl .p-amt { color: #FAFAFA; }
         .p-per { font-size: 12.5px; font-weight: 500; color: rgba(0,0,0,0.28); }
         .hl .p-per { color: rgba(255,255,255,0.28); }
@@ -756,14 +683,10 @@ export default function LandingPage() {
         .p-feats { display: flex; flex-direction: column; gap: 9px; margin-bottom: 22px; }
         .p-feat { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(0,0,0,0.58); }
         .hl .p-feat { color: rgba(255,255,255,0.62); }
-        .p-miss { color: rgba(0,0,0,0.2) !important; }
-        .hl .p-miss { color: rgba(255,255,255,0.17) !important; }
         .cta-p { display:block; width:100%; background:#F59E0B; color:#080808; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:none; cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
         .cta-p:hover { background:#FBBF24; box-shadow: 0 0 22px rgba(245,158,11,0.25); }
         .cta-gl { display:block; width:100%; background:rgba(0,0,0,0.05); color:#0A0A0A; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:1px solid rgba(0,0,0,0.07); cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
-        .cta-gl:hover { background:rgba(0,0,0,0.08); }
         .cta-dgl { display:block; width:100%; background:rgba(255,255,255,0.07); color:#FAFAFA; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
-        .cta-dgl:hover { background:rgba(255,255,255,0.1); }
         @media (max-width: 780px) { .price-cards { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
 
         /* ══ FAQ ══ */
@@ -771,17 +694,17 @@ export default function LandingPage() {
         .faq-list { margin-top: 48px; }
         .faq-item { border-bottom: 1px solid rgba(0,0,0,0.06); }
         .faq-btn { width:100%; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:20px 0; background:none; border:none; cursor:pointer; text-align:left; }
-        .faq-q { font-size: 15.5px; font-weight: 700; color: #0A0A0A; letter-spacing: -0.02em; }
+        .faq-q { font-size: 15.5px; font-weight: 700; color: #0A0A0A; }
         .faq-ico { color: rgba(0,0,0,0.27); transition: transform 0.28s, color 0.28s; flex-shrink: 0; }
         .faq-ico.open { transform: rotate(180deg); color: #F59E0B; }
         .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
-        /* ══ CTA SECTION ══ */
+        /* ══ CTA ══ */
         .cta-wrap { background: #080808; padding: 120px 24px; position: relative; overflow: hidden; }
         .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.09) 0%, transparent 70%); }
         .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
         .cta-h { font-size: clamp(28px,4.8vw,52px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.08; margin-bottom: 16px; }
-        .cta-sub { color: rgba(255,255,255,0.37); font-size: 15.5px; line-height: 1.65; margin-bottom: 32px; font-weight: 400; }
+        .cta-sub { color: rgba(255,255,255,0.37); font-size: 15.5px; line-height: 1.65; margin-bottom: 32px; }
         .cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.17); border-radius:20px; padding:4px 13px; margin-bottom:24px; }
         .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
@@ -800,23 +723,6 @@ export default function LandingPage() {
         @media (max-width: 440px) { .foot-top { grid-template-columns: 1fr; } }
 
         .centered { text-align: center; }
-
-        /* Mobile eyebrow pill */
-        @media (max-width: 800px) {
-          .mob-eyebrow-pill {
-            display: inline-flex !important;
-            align-items: center; gap: 6px;
-            background: rgba(139,92,246,0.1);
-            border: 1px solid rgba(139,92,246,0.25);
-            border-radius: 20px;
-            padding: 4px 12px;
-            margin-bottom: 16px;
-            font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: rgba(139,92,246,0.9);
-          }
-        }
-        .mob-eyebrow-pill { display: none; }
       `}</style>
 
       <div className="lp">
@@ -828,10 +734,11 @@ export default function LandingPage() {
             <span className="n-name">Moderate<span>AI</span></span>
           </Link>
           <div className="n-links">
-            {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
-              <a key={item} href={item === 'Documentation' ? '/documentation' : `#${item.toLowerCase().replace(/\s+/g,'-')}`} className="n-link">{item}</a>
+            {['Features', 'Pricing', 'Docs', 'Security'].map(item => (
+              <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="n-link">{item}</a>
             ))}
           </div>
+          {/* Mobile: Login button visible before burger */}
           <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
@@ -843,12 +750,12 @@ export default function LandingPage() {
 
         <AnimatePresence>
           {menuOpen && (
-            <motion.div className="mob-menu" initial={{ opacity:0,y:-8 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0,y:-8 }} transition={{ duration:0.18 }}>
-              {['Features','How It Works','Pricing','Security','Documentation'].map(item => (
-                <a key={item} href={item === 'Documentation' ? '/documentation' : `#${item.toLowerCase().replace(/\s+/g,'-')}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
+            <motion.div className="mob-menu" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+              {['Features', 'Pricing', 'Docs', 'Security'].map(item => (
+                <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
               ))}
-              <div style={{ height:1, background:'rgba(255,255,255,0.05)', margin:'7px 0' }} />
-              <Link href="/login" style={{ display:'block', background:'#F59E0B', color:'#080808', fontWeight:700, fontSize:14, padding:'11px 14px', borderRadius:8, textDecoration:'none', textAlign:'center', marginTop:4 }}>Start Free Trial →</Link>
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '7px 0' }} />
+              <Link href="/login" style={{ display: 'block', background: '#F59E0B', color: '#080808', fontWeight: 700, fontSize: 14, padding: '11px 14px', borderRadius: 8, textDecoration: 'none', textAlign: 'center', marginTop: 4 }}>Start Free Trial →</Link>
             </motion.div>
           )}
         </AnimatePresence>
@@ -858,80 +765,66 @@ export default function LandingPage() {
           <div className="hero-grid" />
           <div className="hero-inner">
 
-            {/* Text block — wrapped in div for mobile class targeting */}
+            {/* Left / Text */}
             <div className="hero-left-mob">
-              <motion.div initial={{ opacity:0,y:16 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.05 }}>
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}>
                 <div className="h-badge">
                   <div className="h-badge-dot" />
                   <span className="h-badge-text">⚡ AI-Powered YouTube Moderation</span>
                 </div>
               </motion.div>
-              <motion.h1 className="h1 serif" initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.7,delay:0.12,ease:[0.22,1,0.36,1] }}>
+              <motion.h1 className="h1 serif" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}>
                 Protect your<br />YouTube community<br />before <span className="grad-text">toxicity spreads.</span>
               </motion.h1>
-              <motion.p className="h-desc" initial={{ opacity:0,y:14 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.6,delay:0.22 }}>
+              <motion.p className="h-desc" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.22 }}>
                 ModerateAI scans every comment in real time to detect spam, toxicity, and manipulation across 100+ languages and hides harmful content before your audience ever sees it.
               </motion.p>
-              <motion.div className="h-btns" initial={{ opacity:0,y:12 }} animate={{ opacity:1,y:0 }} transition={{ duration:0.55,delay:0.32 }}>
+              <motion.div className="h-btns" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, delay: 0.32 }}>
                 <Link href="/login" className="btn-p">Start Free Trial <ArrowRight size={14} /></Link>
                 <a href="#how-it-works" className="btn-g"><Play size={12} /> See How It Works</a>
               </motion.div>
-              <motion.div className="h-trust" initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.5,delay:0.44 }}>
-                {['No Credit Card','10-Day Free Trial','Setup in 2 Minutes'].map(t => (
+              <motion.div className="h-trust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.44 }}>
+                {['No Credit Card', '10-Day Free Trial', 'Setup in 2 Minutes'].map(t => (
                   <div key={t} className="h-trust-item">
-                    <CheckCircle size={12} style={{ color:'#10B981',flexShrink:0 }} /><span>{t}</span>
+                    <CheckCircle size={12} style={{ color: '#10B981', flexShrink: 0 }} /><span>{t}</span>
                   </div>
                 ))}
               </motion.div>
             </div>
 
-            {/* Dashboard preview */}
+            {/* Right / Preview */}
             <motion.div className="hero-right"
-              initial={{ opacity:0,y:24,scale:0.97 }} animate={{ opacity:1,y:0,scale:1 }}
-              transition={{ duration:0.85,delay:0.18,ease:[0.22,1,0.36,1] }}>
-              {/* Mobile: show upgraded V2 preview; Desktop: show original */}
-              <div className="mob-preview-v2">
-                <MobileDashboardPreview />
-              </div>
-              <div className="desk-preview">
-                <ProductPreview />
-              </div>
+              initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
+              <div className="mob-preview"><MobileDashboardPreview /></div>
+              <div className="desk-preview"><ProductPreview /></div>
             </motion.div>
+
           </div>
         </section>
 
-        {/* Mobile: stats below hero */}
-        <style>{`
-          .mob-preview-v2 { display: none; }
-          .desk-preview { display: block; }
-          @media (max-width: 800px) {
-            .mob-preview-v2 { display: block; }
-            .desk-preview { display: none; }
-            .mob-stats-wrap { display: block !important; padding: 16px 16px 0; }
-          }
-          .mob-stats-wrap { display: none; }
-        `}</style>
-
         {/* ── STATS ── */}
         <div className="stats">
-          <div className="stats-row">
-            {[
-              { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={16} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.1)' },
-              { display: '24/7', label: 'Real-time Protection', icon: <Shield size={16} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.1)' },
-              { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={16} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.1)' },
-              { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={16} color="#f87171" />, iconBg: 'rgba(239,68,68,0.1)' },
-              { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={16} color="#34d399" />, iconBg: 'rgba(16,185,129,0.1)' },
-            ].map((s, i) => (
-              <FadeIn key={i} delay={i * 0.06}>
-                <div className="s-cell">
-                  <div className="s-icon-wrap" style={{ background: s.iconBg }}>{s.icon}</div>
-                  <div className="s-text">
-                    <span className="s-num">{s.display}</span>
-                    <span className="s-lbl">{s.label}</span>
+          <div className="stats-inner-mob">
+            <div className="stats-row">
+              {[
+                { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={15} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.12)' },
+                { display: '24/7', label: 'Real-time Protection', icon: <Shield size={15} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.12)' },
+                { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={15} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.12)' },
+                { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={15} color="#f87171" />, iconBg: 'rgba(239,68,68,0.12)' },
+                { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={15} color="#34d399" />, iconBg: 'rgba(16,185,129,0.12)' },
+              ].map((s, i) => (
+                <FadeIn key={i} delay={i * 0.06}>
+                  <div className="s-cell">
+                    <div className="s-icon-wrap" style={{ background: s.iconBg }}>{s.icon}</div>
+                    <div className="s-text">
+                      <span className="s-num">{s.display}</span>
+                      <span className="s-lbl">{s.label}</span>
+                    </div>
                   </div>
-                </div>
-              </FadeIn>
-            ))}
+                </FadeIn>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -940,19 +833,19 @@ export default function LandingPage() {
           <div className="con">
             <div className="how-grid">
               <FadeIn>
-                <div className="mob-eyebrow-pill"><Zap size={10} /> Our Process</div>
-                <div className="eyebrow" style={{ display: 'none' }}><Zap size={11} /> Process</div>
+                <div className="mob-pill"><Zap size={10} /> Our Process</div>
+                <div className="eyebrow"><Zap size={11} /> Process</div>
                 <h2 className="sh serif">
                   From posted to <span className="grad-text">protected</span>{' '}in under a second.
                 </h2>
                 <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review.</p>
-                <a href="/login" style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:24, color:'rgba(255,255,255,0.55)', fontSize:13, fontWeight:600, textDecoration:'none', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'9px 16px', transition:'all 0.2s' }}>Learn More <ArrowRight size={13} /></a>
+                <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 24, color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '9px 16px', transition: 'all 0.2s' }}>Learn More <ArrowRight size={13} /></a>
               </FadeIn>
               <div className="tl">
                 <div className="tl-line" />
                 {STEPS.map((s, i) => (
                   <FadeIn key={s.label} delay={i * 0.07}>
-                    <div className="tl-row" style={{ ['--step-bg' as string]: s.bg, ['--step-border' as string]: s.color + '44' }}>
+                    <div className="tl-row" style={{ ['--sdot-bg' as string]: s.bg, ['--sdot-border' as string]: s.color + '55' }}>
                       <div className="tl-dot"><s.icon size={16} color={s.color} /></div>
                       <div className="tl-body"><h3>{s.label}</h3><p>{s.detail}</p></div>
                     </div>
@@ -967,7 +860,7 @@ export default function LandingPage() {
         <section className="section feat-bg" id="features-detail">
           <div className="con">
             <FadeIn>
-              <div className="mob-eyebrow-pill"><Sparkles size={10} /> Features</div>
+              <div className="mob-pill"><Sparkles size={10} /> Features</div>
               <h2 className="sh serif">Everything your channel<br />needs to stay <span className="grad-text">clean.</span></h2>
             </FadeIn>
             <div className="feat-grid">
@@ -988,14 +881,14 @@ export default function LandingPage() {
         <section className="section lang-bg">
           <div className="con centered">
             <FadeIn>
-              <div className="mob-eyebrow-pill" style={{ justifyContent:'center' }}><Globe size={10} /> Language Support</div>
+              <div className="mob-pill" style={{ justifyContent: 'center' }}><Globe size={10} /> Languages</div>
               <h2 className="sh serif">Your community speaks<br /><span className="grad-text">every language.</span><br />So does the AI.</h2>
-              <p className="sub" style={{ margin:'0 auto' }}>Language is detected per comment automatically — no configuration needed.</p>
+              <p className="sub" style={{ margin: '0 auto' }}>Language is detected per comment automatically — no configuration needed.</p>
             </FadeIn>
             <FadeIn delay={0.1}>
-              <div className="lang-chips" style={{ justifyContent:'center' }}>
+              <div className="lang-chips" style={{ justifyContent: 'center' }}>
                 {LANGS.map(l => (
-                  <div key={l.name} className="l-chip"><span style={{ fontSize:14 }}>{l.flag}</span>{l.name}</div>
+                  <div key={l.name} className="l-chip"><span style={{ fontSize: 14 }}>{l.flag}</span>{l.name}</div>
                 ))}
               </div>
             </FadeIn>
@@ -1028,14 +921,14 @@ export default function LandingPage() {
         <section className="section price-bg" id="pricing">
           <div className="con centered">
             <FadeIn>
-              <div className="eyebrow-dark" style={{ justifyContent:'center' }}><Zap size={11} /> Pricing</div>
+              <div className="eyebrow-dark" style={{ justifyContent: 'center' }}><Zap size={11} /> Pricing</div>
               <h2 className="sh-dark">Transparent pricing.<br />No surprises.</h2>
-              <p className="sub-dark" style={{ margin:'0 auto' }}>Start free. Upgrade when you're ready. Cancel anytime.</p>
-              <div style={{ display:'flex', justifyContent:'center' }}>
+              <p className="sub-dark" style={{ margin: '0 auto' }}>Start free. Upgrade when you're ready. Cancel anytime.</p>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <div className="p-toggle">
-                  <button className={`pt-btn${!annual?' on':''}`} onClick={() => setAnnual(false)}>Monthly</button>
-                  <button className={`pt-btn${annual?' on':''}`} onClick={() => setAnnual(true)}>
-                    Annual <span style={{ background:'#F59E0B', color:'#080808', fontSize:9, fontWeight:700, padding:'1px 5px', borderRadius:3, marginLeft:4 }}>−14%</span>
+                  <button className={`pt-btn${!annual ? ' on' : ''}`} onClick={() => setAnnual(false)}>Monthly</button>
+                  <button className={`pt-btn${annual ? ' on' : ''}`} onClick={() => setAnnual(true)}>
+                    Annual <span style={{ background: '#F59E0B', color: '#080808', fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 3, marginLeft: 4 }}>−14%</span>
                   </button>
                 </div>
               </div>
@@ -1043,7 +936,7 @@ export default function LandingPage() {
             <div className="price-cards">
               {PLANS.map((p, i) => (
                 <FadeIn key={p.name} delay={i * 0.09}>
-                  <div className={`p-card${p.hl?' hl':''}`}>
+                  <div className={`p-card${p.hl ? ' hl' : ''}`}>
                     {p.badge && <div className="p-badge">{p.badge}</div>}
                     <div className="p-name">{p.name}</div>
                     <div className="p-amt">
@@ -1053,7 +946,7 @@ export default function LandingPage() {
                     <div className="p-desc">{p.desc}</div>
                     <div className="p-feats">
                       {p.features.map(f => (
-                        <div key={f} className="p-feat"><Check size={12} style={{ color:'#10B981',flexShrink:0 }} />{f}</div>
+                        <div key={f} className="p-feat"><Check size={12} style={{ color: '#10B981', flexShrink: 0 }} />{f}</div>
                       ))}
                     </div>
                     <Link href="/login" className={p.primary ? 'cta-p' : p.hl ? 'cta-dgl' : 'cta-gl'}>{p.cta}</Link>
@@ -1068,21 +961,21 @@ export default function LandingPage() {
         <section className="section faq-bg">
           <div className="con centered" style={{ maxWidth: 700 }}>
             <FadeIn>
-              <div className="eyebrow-dark" style={{ justifyContent:'center' }}>FAQ</div>
+              <div className="eyebrow-dark" style={{ justifyContent: 'center' }}>FAQ</div>
               <h2 className="sh-dark">Common questions</h2>
             </FadeIn>
-            <div className="faq-list" style={{ textAlign:'left' }}>
+            <div className="faq-list" style={{ textAlign: 'left' }}>
               {FAQS.map((f, i) => (
                 <div key={i} className="faq-item">
-                  <button className="faq-btn" onClick={() => setOpenFaq(openFaq===i?null:i)}>
+                  <button className="faq-btn" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                     <span className="faq-q">{f.q}</span>
-                    <ChevronDown size={16} className={`faq-ico${openFaq===i?' open':''}`} />
+                    <ChevronDown size={16} className={`faq-ico${openFaq === i ? ' open' : ''}`} />
                   </button>
                   <AnimatePresence>
-                    {openFaq===i && (
+                    {openFaq === i && (
                       <motion.p className="faq-a"
-                        initial={{ opacity:0,height:0 }} animate={{ opacity:1,height:'auto' }}
-                        exit={{ opacity:0,height:0 }} transition={{ duration:0.25 }}>
+                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }}>
                         {f.a}
                       </motion.p>
                     )}
@@ -1099,8 +992,8 @@ export default function LandingPage() {
           <FadeIn>
             <div className="cta-inner">
               <div className="cta-pill">
-                <div style={{ width:5,height:5,borderRadius:'50%',background:'#F59E0B',animation:'lp-pulse 2s infinite' }} />
-                <span style={{ color:'rgba(245,158,11,0.88)',fontSize:12,fontWeight:600 }}>19-day free trial · no card needed</span>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', animation: 'lp-pulse 2s infinite' }} />
+                <span style={{ color: 'rgba(245,158,11,0.88)', fontSize: 12, fontWeight: 600 }}>19-day free trial · no card needed</span>
               </div>
               <h2 className="cta-h serif">
                 Ready to protect<br /><span className="grad-text">your community?</span>
@@ -1119,7 +1012,7 @@ export default function LandingPage() {
           <div className="foot-in">
             <div className="foot-top">
               <div className="foot-brand">
-                <Link href="/" className="n-logo" style={{ display:'inline-flex' }}>
+                <Link href="/" className="n-logo" style={{ display: 'inline-flex' }}>
                   <div className="n-mark"><Shield size={12} color="white" /></div>
                   <span className="n-name">Moderate<span>AI</span></span>
                 </Link>
@@ -1127,9 +1020,8 @@ export default function LandingPage() {
               </div>
               <div className="foot-col">
                 <h4>Product</h4>
-                {['Features','Pricing','Security'].map(t => <a key={t} href={`#${t.toLowerCase()}`} className="foot-a">{t}</a>)}
+                {['Features', 'Pricing', 'Security'].map(t => <a key={t} href={`#${t.toLowerCase()}`} className="foot-a">{t}</a>)}
                 <Link href="/documentation" className="foot-a">Documentation</Link>
-                <Link href="/status" className="foot-a">Status</Link>
               </div>
               <div className="foot-col">
                 <h4>Support</h4>

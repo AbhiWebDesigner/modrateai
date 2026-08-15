@@ -47,7 +47,7 @@ const COMMENTS = [
   { id: 1, author: 'Alex_Gaming98', text: 'This is spam content promoting...', badge: 'toxic', avatar: 'A', time: '2s ago' },
   { id: 2, author: 'CryptoMaster', text: 'Potential scam or misleading info...', badge: 'spam', avatar: 'C', time: '5s ago' },
   { id: 3, author: 'CreatorFan_123', text: 'Thanks for the great content!', badge: 'safe', avatar: 'CF', time: '8s ago' },
-  { id: 4, author: 'Rahul_K', text: 'यह वीडियो बहुत अच्छी है, धन्यवाद', badge: 'safe', avatar: 'R', time: '12s ago' },
+  { id: 4, author: 'Rahul_K', text: 'యహ వీడియో బహుత అచ్ఛీ హై, ధన్యవాద', badge: 'safe', avatar: 'R', time: '12s ago' },
   { id: 5, author: 'h8r_2024', text: 'Nobody asked for your opinion lmao', badge: 'toxic', avatar: 'H', time: '15s ago' },
   { id: 6, author: 'PromoKing', text: 'Earn $500/day from home - DM me NOW', badge: 'spam', avatar: 'P', time: '18s ago' },
 ];
@@ -406,28 +406,29 @@ export default function LandingPage() {
             border-radius: 0;
             border-left: none; border-right: none; border-top: none;
             border-bottom: 1px solid rgba(255,255,255,0.06);
-            padding: 0 16px; height: 56px;
-            background: rgba(6,6,10,0.96);
+            padding: 0 16px; height: 60px;
+            background: rgba(6,6,10,0.98);
           }
-          .lp-nav.scrolled { height: 52px; }
+          .lp-nav.scrolled { height: 56px; }
           .n-links { display: none !important; }
           .n-right { display: none !important; }
-          .n-burger { display: flex !important; margin-left: auto; }
+          .n-burger { display: flex !important; margin-left: 8px; }
           .n-mob-login { display: flex !important; }
         }
 
         .n-mob-login {
           display: none;
           color: #FAFAFA; font-size: 13px; font-weight: 600;
-          text-decoration: none; padding: 7px 14px;
-          border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
-          margin-left: auto; margin-right: 8px;
+          text-decoration: none; padding: 7px 16px;
+          border: 1px solid rgba(255,255,255,0.25); border-radius: 8px;
+          margin-left: auto;
           align-items: center;
+          white-space: nowrap;
         }
 
         .mob-menu {
-          position: fixed; top: 56px; left: 0; right: 0; z-index: 199;
-          background: rgba(6,6,10,0.98); border-bottom: 1px solid rgba(255,255,255,0.06);
+          position: fixed; top: 60px; left: 0; right: 0; z-index: 199;
+          background: rgba(6,6,10,0.99); border-bottom: 1px solid rgba(255,255,255,0.06);
           padding: 12px 16px 16px; backdrop-filter: blur(28px);
           display: flex; flex-direction: column; gap: 2px;
         }
@@ -474,44 +475,106 @@ export default function LandingPage() {
         /* ══ HERO — Mobile V2 ══ */
         @media (max-width: 800px) {
           .hero {
-            padding: 68px 0 0;
+            padding: 72px 0 0;
             background:
-              radial-gradient(ellipse 140% 55% at 50% -5%, rgba(139,92,246,0.2) 0%, transparent 55%),
-              radial-gradient(ellipse 80% 50% at 5% 70%, rgba(245,158,11,0.06) 0%, transparent 55%),
+              radial-gradient(ellipse 120% 40% at 50% 0%, rgba(139,92,246,0.18) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 40% at 0% 80%, rgba(245,158,11,0.05) 0%, transparent 55%),
               #06060E;
             min-height: 100svh;
             display: flex; flex-direction: column;
           }
           .hero-grid { display: none; }
+
+          /* Hero inner: LEFT text, RIGHT mockup — side by side like reference */
           .hero-inner {
-            display: flex !important;
-            flex-direction: column !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
             gap: 0 !important;
             padding: 0 !important;
-            align-items: stretch !important;
+            align-items: start !important;
             flex: 1;
+            max-width: 100% !important;
           }
-          .hero-left-mob { padding: 28px 20px 20px; order: 1; }
+
+          /* Left text column */
+          .hero-left-mob {
+            padding: 24px 16px 24px;
+            order: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+          }
+
+          /* Right mockup column */
           .hero-right {
             animation: none !important;
             order: 2;
-            padding: 16px 16px 32px;
-            background: radial-gradient(ellipse 100% 70% at 50% 20%, rgba(139,92,246,0.1) 0%, transparent 65%);
+            padding: 16px 12px 16px 6px;
+            position: relative;
           }
 
           /* Mobile: show mobile preview, hide desktop */
           .mob-preview { display: block !important; }
           .desk-preview { display: none !important; }
 
-          .h-badge { margin-bottom: 16px; padding: 4px 12px 4px 9px; }
-          .h-badge-text { font-size: 11px; }
-          .h1 { font-size: 28px !important; line-height: 1.13 !important; margin-bottom: 14px !important; letter-spacing: -0.03em !important; }
-          .h-desc { font-size: 13.5px !important; line-height: 1.6 !important; margin-bottom: 20px !important; color: rgba(255,255,255,0.36) !important; max-width: 100% !important; }
-          .h-btns { flex-direction: row !important; gap: 8px !important; margin-bottom: 16px !important; }
-          .btn-p { font-size: 13px !important; padding: 11px 16px !important; border-radius: 9px !important; flex: 1; justify-content: center; }
-          .btn-g { font-size: 13px !important; padding: 11px 14px !important; border-radius: 9px !important; flex: 1; justify-content: center; gap: 5px !important; }
-          .h-trust { gap: 10px !important; }
-          .h-trust-item { font-size: 11px !important; gap: 4px !important; }
+          .h-badge {
+            margin-bottom: 12px;
+            padding: 4px 10px 4px 8px;
+            border-radius: 16px;
+            background: rgba(20,20,30,0.9);
+            border: 1px solid rgba(245,158,11,0.25);
+          }
+          .h-badge-text { font-size: 9.5px; letter-spacing: 0.01em; }
+          .h-badge-dot { width: 4px; height: 4px; }
+
+          .h1 {
+            font-size: 20px !important;
+            line-height: 1.18 !important;
+            margin-bottom: 10px !important;
+            letter-spacing: -0.025em !important;
+          }
+
+          .h-desc {
+            font-size: 11px !important;
+            line-height: 1.55 !important;
+            margin-bottom: 14px !important;
+            color: rgba(255,255,255,0.34) !important;
+            max-width: 100% !important;
+          }
+
+          .h-btns {
+            flex-direction: column !important;
+            gap: 7px !important;
+            margin-bottom: 12px !important;
+          }
+
+          .btn-p {
+            font-size: 11px !important;
+            padding: 9px 12px !important;
+            border-radius: 8px !important;
+            width: 100%;
+            justify-content: center;
+            background: linear-gradient(135deg, #F59E0B, #EC4899) !important;
+            color: #fff !important;
+          }
+
+          .btn-g {
+            font-size: 11px !important;
+            padding: 9px 12px !important;
+            border-radius: 8px !important;
+            width: 100%;
+            justify-content: center;
+            gap: 5px !important;
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+          }
+
+          .h-trust {
+            flex-direction: column !important;
+            gap: 5px !important;
+            align-items: flex-start !important;
+          }
+          .h-trust-item { font-size: 9.5px !important; gap: 4px !important; }
         }
 
         /* ══ STATS — Desktop ══ */
@@ -529,24 +592,26 @@ export default function LandingPage() {
           .stats {
             background: transparent;
             border: none;
-            padding: 16px 16px 0;
+            padding: 20px 16px 0;
           }
           .stats-inner-mob {
-            background: #0A0A12;
-            border: 1px solid rgba(255,255,255,0.06);
+            background: #0A0A14;
+            border: 1px solid rgba(255,255,255,0.07);
             border-radius: 16px;
             overflow: hidden;
+            padding: 4px 0;
           }
           .stats-row {
             display: grid !important;
             grid-template-columns: repeat(2, 1fr) !important;
             flex-wrap: unset !important;
+            gap: 0 !important;
           }
           .s-cell {
-            padding: 14px 14px !important;
+            padding: 16px 14px !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 11px !important;
+            gap: 12px !important;
             position: relative;
           }
           .s-cell::before { display: none !important; }
@@ -557,12 +622,12 @@ export default function LandingPage() {
           .s-cell:nth-child(5) { display: none !important; }
           .s-icon-wrap {
             display: flex !important;
-            width: 34px; height: 34px; border-radius: 9px;
+            width: 38px; height: 38px; border-radius: 10px;
             align-items: center; justify-content: center; flex-shrink: 0;
           }
           .s-text { align-items: flex-start !important; }
-          .s-num { font-size: 18px !important; }
-          .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.02em !important; }
+          .s-num { font-size: 17px !important; font-weight: 800 !important; }
+          .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.01em !important; text-transform: none !important; color: rgba(255,255,255,0.35) !important; }
         }
 
         /* ══ SECTIONS ══ */
@@ -575,7 +640,7 @@ export default function LandingPage() {
         .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
         .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
 
-        /* Mobile eyebrow pill */
+        /* Mobile pill eyebrow */
         .mob-pill { display: none; }
         @media (max-width: 800px) {
           .mob-pill {
@@ -584,12 +649,12 @@ export default function LandingPage() {
             background: rgba(139,92,246,0.1);
             border: 1px solid rgba(139,92,246,0.22);
             border-radius: 20px; padding: 4px 12px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
             text-transform: uppercase; color: #a78bfa;
           }
           .eyebrow { display: none !important; }
-          .section { padding: 52px 20px !important; }
+          .section { padding: 48px 20px !important; }
         }
 
         /* ══ HOW IT WORKS ══ */
@@ -605,19 +670,33 @@ export default function LandingPage() {
         .tl-body h3 { font-size: 14.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
         .tl-body p { font-size: 13px; color: rgba(255,255,255,0.33); line-height: 1.55; }
 
+        /* ══ HOW IT WORKS — Mobile ══ */
         @media (max-width: 800px) {
           .how-bg { background: #06060E; }
-          .how-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
-          .tl { margin-top: 24px !important; }
-          .tl-line { left: 21px !important; background: linear-gradient(180deg, rgba(139,92,246,0.5) 0%, rgba(245,158,11,0.15) 100%) !important; }
-          .tl-row { gap: 14px !important; padding-bottom: 22px !important; }
+          /* Keep side-by-side on mobile like reference */
+          .how-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 16px !important;
+            align-items: start !important;
+          }
+          .tl { margin-top: 16px !important; }
+          .tl-line {
+            left: 20px !important;
+            background: linear-gradient(180deg, rgba(139,92,246,0.6) 0%, rgba(245,158,11,0.15) 100%) !important;
+          }
+          .tl-row { gap: 10px !important; padding-bottom: 16px !important; }
           .tl-dot {
-            width: 42px !important; height: 42px !important; border-radius: 12px !important;
+            width: 38px !important; height: 38px !important; border-radius: 10px !important;
             background: var(--sdot-bg) !important;
             border: 1px solid var(--sdot-border) !important;
+            flex-shrink: 0 !important;
           }
-          .tl-body h3 { font-size: 13px !important; }
-          .tl-body p { font-size: 11.5px !important; color: rgba(255,255,255,0.28) !important; }
+          .tl-body { padding-top: 8px !important; }
+          .tl-body h3 { font-size: 11px !important; margin-bottom: 3px !important; }
+          .tl-body p { font-size: 9.5px !important; color: rgba(255,255,255,0.28) !important; line-height: 1.45 !important; }
+          .how-grid > div:first-child .sh { font-size: 20px !important; }
+          .how-grid > div:first-child .sub { font-size: 11px !important; }
+          .how-grid > div:first-child a { font-size: 11px !important; padding: 7px 12px !important; }
         }
 
         /* ══ FEATURES ══ */
@@ -629,13 +708,26 @@ export default function LandingPage() {
         .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
         .f-card p { font-size: 13px; color: rgba(255,255,255,0.36); line-height: 1.6; }
 
+        /* ══ FEATURES — Mobile ══ */
         @media (max-width: 800px) {
           .feat-bg { background: #06060E; }
-          .feat-grid { grid-template-columns: repeat(3,1fr) !important; gap: 8px !important; margin-top: 20px !important; }
-          .f-card { padding: 14px 12px !important; border-radius: 12px !important; background: rgba(255,255,255,0.025) !important; border: 1px solid rgba(255,255,255,0.055) !important; }
-          .f-icon { width: 34px !important; height: 34px !important; border-radius: 9px !important; margin-bottom: 9px !important; }
-          .f-card h3 { font-size: 11.5px !important; margin-bottom: 4px !important; }
-          .f-card p { font-size: 10px !important; line-height: 1.45 !important; color: rgba(255,255,255,0.28) !important; }
+          .feat-grid {
+            grid-template-columns: repeat(3,1fr) !important;
+            gap: 7px !important;
+            margin-top: 16px !important;
+          }
+          .f-card {
+            padding: 12px 10px !important;
+            border-radius: 12px !important;
+            background: rgba(255,255,255,0.025) !important;
+            border: 1px solid rgba(255,255,255,0.055) !important;
+          }
+          .f-icon {
+            width: 32px !important; height: 32px !important;
+            border-radius: 8px !important; margin-bottom: 8px !important;
+          }
+          .f-card h3 { font-size: 10.5px !important; margin-bottom: 3px !important; line-height: 1.3 !important; }
+          .f-card p { font-size: 9px !important; line-height: 1.4 !important; color: rgba(255,255,255,0.28) !important; }
         }
 
         /* ══ LANGUAGES ══ */
@@ -646,8 +738,8 @@ export default function LandingPage() {
 
         @media (max-width: 800px) {
           .lang-bg { background: #06060E; }
-          .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; }
-          .lang-chips { gap: 6px !important; margin-top: 20px !important; }
+          .l-chip { font-size: 11px !important; padding: 5px 10px !important; }
+          .lang-chips { gap: 6px !important; margin-top: 16px !important; }
         }
 
         /* ══ SECURITY ══ */
@@ -755,7 +847,7 @@ export default function LandingPage() {
                 <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="mob-a" onClick={() => setMenuOpen(false)}>{item}</a>
               ))}
               <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '7px 0' }} />
-              <Link href="/login" style={{ display: 'block', background: '#F59E0B', color: '#080808', fontWeight: 700, fontSize: 14, padding: '11px 14px', borderRadius: 8, textDecoration: 'none', textAlign: 'center', marginTop: 4 }}>Start Free Trial →</Link>
+              <Link href="/login" style={{ display: 'block', background: 'linear-gradient(135deg,#F59E0B,#EC4899)', color: '#fff', fontWeight: 700, fontSize: 14, padding: '11px 14px', borderRadius: 8, textDecoration: 'none', textAlign: 'center', marginTop: 4 }}>Start Free Trial →</Link>
             </motion.div>
           )}
         </AnimatePresence>
@@ -808,11 +900,11 @@ export default function LandingPage() {
           <div className="stats-inner-mob">
             <div className="stats-row">
               {[
-                { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={15} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.12)' },
-                { display: '24/7', label: 'Real-time Protection', icon: <Shield size={15} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.12)' },
-                { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={15} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.12)' },
-                { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={15} color="#f87171" />, iconBg: 'rgba(239,68,68,0.12)' },
-                { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={15} color="#34d399" />, iconBg: 'rgba(16,185,129,0.12)' },
+                { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={16} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.12)' },
+                { display: '24/7', label: 'Real-time Protection', icon: <Shield size={16} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.12)' },
+                { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={16} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.12)' },
+                { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={16} color="#f87171" />, iconBg: 'rgba(239,68,68,0.12)' },
+                { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={16} color="#34d399" />, iconBg: 'rgba(16,185,129,0.12)' },
               ].map((s, i) => (
                 <FadeIn key={i} delay={i * 0.06}>
                   <div className="s-cell">

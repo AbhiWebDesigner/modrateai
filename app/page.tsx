@@ -475,13 +475,13 @@ export default function LandingPage() {
         /* ══ HERO — Mobile V2 ══ */
         @media (max-width: 800px) {
           .hero {
-            padding: 72px 0 0;
+            padding: 72px 0 24px;
             background:
               radial-gradient(ellipse 120% 40% at 50% 0%, rgba(139,92,246,0.18) 0%, transparent 60%),
               radial-gradient(ellipse 60% 40% at 0% 80%, rgba(245,158,11,0.05) 0%, transparent 55%),
               #06060E;
-            min-height: 100svh;
-            display: flex; flex-direction: column;
+            min-height: unset;
+            display: block;
           }
           .hero-grid { display: none; }
 
@@ -492,7 +492,6 @@ export default function LandingPage() {
             gap: 0 !important;
             padding: 0 !important;
             align-items: start !important;
-            flex: 1;
             max-width: 100% !important;
           }
 
@@ -592,14 +591,13 @@ export default function LandingPage() {
           .stats {
             background: transparent;
             border: none;
-            padding: 20px 16px 0;
+            padding: 20px 16px 24px;
           }
           .stats-inner-mob {
             background: #0A0A14;
             border: 1px solid rgba(255,255,255,0.07);
             border-radius: 16px;
             overflow: hidden;
-            padding: 4px 0;
           }
           .stats-row {
             display: grid !important;

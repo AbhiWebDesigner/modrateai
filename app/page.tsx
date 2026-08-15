@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
@@ -331,12 +332,6 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [isMobileDevice, setIsMobileDevice] = useState(false);
-
-  useEffect(() => {
-    // Detect real physical mobile screen regardless of desktop mode
-    setIsMobileDevice(screen.width <= 480);
-  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -472,6 +467,10 @@ export default function LandingPage() {
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
+        /* Desktop: show desktop preview, hide mobile */
+        .mob-preview { display: none; }
+        .desk-preview { display: block; }
+
         /* ══ HERO — Mobile V2 ══ */
         @media (max-width: 800px) {
           .hero {
@@ -499,6 +498,10 @@ export default function LandingPage() {
             padding: 16px 16px 32px;
             background: radial-gradient(ellipse 100% 70% at 50% 20%, rgba(139,92,246,0.1) 0%, transparent 65%);
           }
+
+          /* Mobile: show mobile preview, hide desktop */
+          .mob-preview { display: block !important; }
+          .desk-preview { display: none !important; }
 
           .h-badge { margin-bottom: 16px; padding: 4px 12px 4px 9px; }
           .h-badge-text { font-size: 11px; }
@@ -735,6 +738,7 @@ export default function LandingPage() {
               <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="n-link">{item}</a>
             ))}
           </div>
+          {/* Mobile: Login button visible before burger */}
           <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
@@ -788,11 +792,12 @@ export default function LandingPage() {
               </motion.div>
             </div>
 
-            {/* Right / Preview — JS తో detect చేస్తున్నాం, CSS కాదు */}
+            {/* Right / Preview */}
             <motion.div className="hero-right"
               initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
-              {isMobileDevice ? <MobileDashboardPreview /> : <ProductPreview />}
+              <div className="mob-preview"><MobileDashboardPreview /></div>
+              <div className="desk-preview"><ProductPreview /></div>
             </motion.div>
 
           </div>

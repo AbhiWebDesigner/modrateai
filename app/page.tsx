@@ -508,8 +508,10 @@ export default function LandingPage() {
           .hero-right {
             animation: none !important;
             order: 2;
-            padding: 16px 12px 16px 6px;
+            padding: 12px 10px 12px 4px;
             position: relative;
+            overflow: hidden;
+            max-height: 480px;
           }
 
           /* Mobile: show mobile preview, hide desktop */
@@ -886,7 +888,11 @@ export default function LandingPage() {
             <motion.div className="hero-right"
               initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
-              <div className="mob-preview"><MobileDashboardPreview /></div>
+              <div className="mob-preview" style={{ fontSize: 0 }}>
+                <div style={{ transform: 'scale(0.72)', transformOrigin: 'top left', width: '139%' }}>
+                  <MobileDashboardPreview />
+                </div>
+              </div>
               <div className="desk-preview"><ProductPreview /></div>
             </motion.div>
 

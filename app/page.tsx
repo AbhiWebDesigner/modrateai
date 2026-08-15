@@ -116,46 +116,46 @@ function MobileDashboardPreview() {
   return (
     <div style={{
       background: '#0D0D14',
-      borderRadius: 20,
+      borderRadius: 16,
       overflow: 'hidden',
-      border: '1.5px solid rgba(139,92,246,0.55)',
-      boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 0 30px rgba(139,92,246,0.35), 0 0 60px rgba(139,92,246,0.2), 0 0 90px rgba(236,72,153,0.12), 0 24px 60px rgba(0,0,0,0.8)',
+      border: '1.5px solid rgba(139,92,246,0.6)',
+      boxShadow: '0 0 0 1px rgba(139,92,246,0.2), 0 0 40px rgba(139,92,246,0.5), 0 0 80px rgba(139,92,246,0.3), 0 0 120px rgba(236,72,153,0.2)',
     }}>
       {/* Top bar */}
-      <div style={{ background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 8, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Shield size={12} color="white" />
+      <div style={{ background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 7, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Shield size={11} color="white" />
           </div>
-          <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13 }}>Moderate<span style={{ color: '#F59E0B' }}>AI</span></span>
+          <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 12 }}>Moderate<span style={{ color: '#F59E0B' }}>AI</span></span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Bell size={14} color="rgba(255,255,255,0.3)" />
-          <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 9px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(16,185,129,0.25)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Bell size={13} color="rgba(255,255,255,0.3)" />
+          <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(16,185,129,0.25)' }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
           </span>
         </div>
       </div>
 
       {/* Nav tabs */}
-      <div style={{ background: '#0E0E14', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 14px', display: 'flex', gap: 0, overflowX: 'auto' }}>
+      <div style={{ background: '#0E0E14', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 8px', display: 'flex', gap: 0, overflowX: 'auto' }}>
         {['Overview', 'Analytics', 'Automation', 'Alerts', 'Settings'].map((t, i) => (
-          <div key={t} style={{ padding: '9px 10px', fontSize: 10, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.25)', borderBottom: i === 0 ? '2px solid #F59E0B' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>{t}</div>
+          <div key={t} style={{ padding: '8px 8px', fontSize: 9, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.25)', borderBottom: i === 0 ? '2px solid #F59E0B' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>{t}</div>
         ))}
       </div>
 
       {/* Stats row */}
-      <div style={{ background: '#09090F', padding: '12px 14px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+      <div style={{ background: '#09090F', padding: '10px 12px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
         {[
           { label: 'Comments Scanned', value: '12,847', change: '+18.6%', color: '#F59E0B', pts: '0,18 10,14 20,16 30,10 40,12 50,6 60,4' },
           { label: 'Toxic Hidden', value: '1,203', change: '+24.5%', color: '#f87171', pts: '0,16 10,18 20,12 30,14 40,8 50,10 60,5' },
           { label: 'AI Replied', value: '847', change: '+16.3%', color: '#60a5fa', pts: '0,18 10,15 20,17 30,11 40,13 50,7 60,4' },
         ].map(s => (
-          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '9px 10px' }}>
-            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 8, marginBottom: 4, lineHeight: 1.3 }}>{s.label}</div>
-            <div style={{ color: s.color, fontWeight: 800, fontSize: 14, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.value}</div>
-            <div style={{ color: '#34d399', fontSize: 8, fontWeight: 600, marginBottom: 4 }}>{s.change}</div>
-            <svg width="100%" height="20" viewBox="0 0 60 20">
+          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 9, padding: '8px 8px' }}>
+            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 7.5, marginBottom: 3, lineHeight: 1.3 }}>{s.label}</div>
+            <div style={{ color: s.color, fontWeight: 800, fontSize: 13, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.value}</div>
+            <div style={{ color: '#34d399', fontSize: 7.5, fontWeight: 600, marginBottom: 4 }}>{s.change}</div>
+            <svg width="100%" height="18" viewBox="0 0 60 20">
               <polyline points={s.pts} fill="none" stroke={s.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.7" />
             </svg>
           </div>
@@ -163,41 +163,41 @@ function MobileDashboardPreview() {
       </div>
 
       {/* Accuracy chart */}
-      <div style={{ background: '#07070D', padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      <div style={{ background: '#07070D', padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <div>
-            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 9, marginBottom: 3 }}>Detection Accuracy</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ color: '#F0F0F0', fontWeight: 900, fontSize: 18, letterSpacing: '-0.03em' }}>98.2%</span>
-              <span style={{ color: '#34d399', fontSize: 9, fontWeight: 600 }}>+2.4%</span>
+            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 8, marginBottom: 2 }}>Detection Accuracy</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+              <span style={{ color: '#F0F0F0', fontWeight: 900, fontSize: 16, letterSpacing: '-0.03em' }}>98.2%</span>
+              <span style={{ color: '#34d399', fontSize: 8, fontWeight: 600 }}>+2.4%</span>
             </div>
           </div>
-          <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '3px 9px', fontSize: 9, color: 'rgba(255,255,255,0.28)' }}>Today ▾</div>
+          <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 5, padding: '2px 8px', fontSize: 8, color: 'rgba(255,255,255,0.28)' }}>Today ▾</div>
         </div>
-        <div style={{ position: 'relative', height: 52 }}>
-          <svg width="100%" height="52" viewBox="0 0 300 52" preserveAspectRatio="none">
+        <div style={{ position: 'relative', height: 48 }}>
+          <svg width="100%" height="48" viewBox="0 0 300 48" preserveAspectRatio="none">
             <defs>
               <linearGradient id="mChartGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
+                <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.45" />
                 <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <path d="M0,44 C20,42 40,36 60,30 C80,24 100,32 120,24 C140,16 160,20 180,13 C200,7 220,11 240,7 C260,3 280,5 300,3" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" />
-            <path d="M0,44 C20,42 40,36 60,30 C80,24 100,32 120,24 C140,16 160,20 180,13 C200,7 220,11 240,7 C260,3 280,5 300,3 L300,52 L0,52 Z" fill="url(#mChartGrad)" />
+            <path d="M0,40 C20,38 40,32 60,26 C80,20 100,28 120,20 C140,12 160,16 180,9 C200,3 220,7 240,4 C260,1 280,3 300,1" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" />
+            <path d="M0,40 C20,38 40,32 60,26 C80,20 100,28 120,20 C140,12 160,16 180,9 C200,3 220,7 240,4 C260,1 280,3 300,1 L300,48 L0,48 Z" fill="url(#mChartGrad)" />
           </svg>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
             {['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'].map(t => (
-              <span key={t} style={{ color: 'rgba(255,255,255,0.18)', fontSize: 7 }}>{t}</span>
+              <span key={t} style={{ color: 'rgba(255,255,255,0.18)', fontSize: 6.5 }}>{t}</span>
             ))}
           </div>
         </div>
       </div>
 
       {/* Live feed */}
-      <div style={{ padding: '10px 14px 14px', background: '#06060C', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: 600 }}>Live Moderation Feed</span>
-          <span style={{ color: '#8B5CF6', fontSize: 9, fontWeight: 600 }}>View All</span>
+      <div style={{ padding: '8px 12px 12px', background: '#06060C', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, fontWeight: 600 }}>Live Moderation Feed</span>
+          <span style={{ color: '#8B5CF6', fontSize: 8, fontWeight: 600 }}>View All</span>
         </div>
         <LiveFeed compact />
       </div>
@@ -406,10 +406,10 @@ export default function LandingPage() {
             border-radius: 0;
             border-left: none; border-right: none; border-top: none;
             border-bottom: 1px solid rgba(255,255,255,0.06);
-            padding: 0 16px; height: 60px;
-            background: rgba(6,6,10,0.98);
+            padding: 0 16px; height: 56px;
+            background: rgba(6,6,14,0.98);
           }
-          .lp-nav.scrolled { height: 56px; }
+          .lp-nav.scrolled { height: 52px; }
           .n-links { display: none !important; }
           .n-right { display: none !important; }
           .n-burger { display: flex !important; margin-left: 8px; }
@@ -418,24 +418,26 @@ export default function LandingPage() {
 
         .n-mob-login {
           display: none;
-          color: #FAFAFA; font-size: 13px; font-weight: 600;
-          text-decoration: none; padding: 7px 16px;
-          border: 1px solid rgba(255,255,255,0.25); border-radius: 8px;
+          color: #FAFAFA; font-size: 12px; font-weight: 600;
+          text-decoration: none; padding: 6px 14px;
+          border: 1px solid rgba(139,92,246,0.55); border-radius: 8px;
           margin-left: auto;
           align-items: center;
           white-space: nowrap;
         }
 
         .mob-menu {
-          position: fixed; top: 60px; left: 0; right: 0; z-index: 199;
-          background: rgba(6,6,10,0.99); border-bottom: 1px solid rgba(255,255,255,0.06);
+          position: fixed; top: 56px; left: 0; right: 0; z-index: 199;
+          background: rgba(6,6,14,0.99); border-bottom: 1px solid rgba(255,255,255,0.06);
           padding: 12px 16px 16px; backdrop-filter: blur(28px);
           display: flex; flex-direction: column; gap: 2px;
         }
         .mob-a { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-decoration: none; padding: 11px 14px; border-radius: 9px; transition: all 0.18s; display: block; }
         .mob-a:hover { background: rgba(255,255,255,0.04); color: #F0F0F0; }
 
-        /* ══ HERO — Desktop ══ */
+        /* ══════════════════════════════════════
+           DESKTOP HERO (>800px) — UNCHANGED
+        ══════════════════════════════════════ */
         .hero {
           padding: 112px 24px 72px; position: relative; overflow: hidden;
           background:
@@ -468,117 +470,139 @@ export default function LandingPage() {
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
-        /* Desktop: show desktop preview, hide mobile */
+        /* Desktop: show desktop preview */
         .mob-preview { display: none; }
         .desk-preview { display: block; }
 
-        /* ══ HERO — Mobile V2 ══ */
+        /* ══════════════════════════════════════
+           MOBILE HERO — NEW DESIGN (≤800px)
+        ══════════════════════════════════════ */
         @media (max-width: 800px) {
           .hero {
-            padding: 72px 0 24px;
-            background:
-              radial-gradient(ellipse 120% 40% at 50% 0%, rgba(139,92,246,0.18) 0%, transparent 60%),
-              radial-gradient(ellipse 60% 40% at 0% 80%, rgba(245,158,11,0.05) 0%, transparent 55%),
-              #06060E;
+            padding: 56px 0 0;
+            background: #06060E;
             min-height: unset;
-            display: block;
+            overflow: hidden;
           }
           .hero-grid { display: none; }
 
-          /* Hero inner: LEFT text, RIGHT mockup — side by side like reference */
+          /* Purple ambient glow — behind mockup */
+          .hero::before {
+            content: '';
+            position: absolute;
+            top: -10%;
+            right: -20%;
+            width: 75vw;
+            height: 75vw;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139,92,246,0.28) 0%, rgba(236,72,153,0.12) 40%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+          }
+
           .hero-inner {
             display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
+            grid-template-columns: 45% 55% !important;
             gap: 0 !important;
             padding: 0 !important;
-            align-items: start !important;
+            align-items: flex-start !important;
             max-width: 100% !important;
+            position: relative;
+            z-index: 2;
           }
 
           /* Left text column */
           .hero-left-mob {
-            padding: 24px 16px 24px;
-            order: 1;
+            padding: 20px 0 28px 16px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            order: 1;
           }
 
-          /* Right mockup column */
+          /* Right mockup column — bleeds to edge */
           .hero-right {
             animation: none !important;
             order: 2;
-            padding: 12px 10px 12px 4px;
+            padding: 12px 0 0 8px;
+            overflow: visible;
             position: relative;
-            overflow: hidden;
-            max-height: 480px;
+            z-index: 3;
           }
 
-          /* Mobile: show mobile preview, hide desktop */
+          /* Mobile: show mobile preview */
           .mob-preview { display: block !important; }
           .desk-preview { display: none !important; }
 
+          /* Badge */
           .h-badge {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             padding: 4px 10px 4px 8px;
-            border-radius: 16px;
-            background: rgba(20,20,30,0.9);
-            border: 1px solid rgba(245,158,11,0.25);
+            border-radius: 20px;
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.22);
+            width: fit-content;
           }
-          .h-badge-text { font-size: 9.5px; letter-spacing: 0.01em; }
+          .h-badge-text { font-size: 9px; letter-spacing: 0.01em; }
           .h-badge-dot { width: 4px; height: 4px; }
 
+          /* Headline */
           .h1 {
-            font-size: 20px !important;
-            line-height: 1.18 !important;
-            margin-bottom: 10px !important;
-            letter-spacing: -0.025em !important;
+            font-size: 22px !important;
+            line-height: 1.15 !important;
+            margin-bottom: 12px !important;
+            letter-spacing: -0.03em !important;
+            color: #F0F0F0 !important;
           }
 
+          /* Description */
           .h-desc {
             font-size: 11px !important;
-            line-height: 1.55 !important;
-            margin-bottom: 14px !important;
-            color: rgba(255,255,255,0.34) !important;
+            line-height: 1.6 !important;
+            margin-bottom: 18px !important;
+            color: rgba(255,255,255,0.38) !important;
             max-width: 100% !important;
           }
 
+          /* Buttons */
           .h-btns {
             flex-direction: column !important;
-            gap: 7px !important;
-            margin-bottom: 12px !important;
+            gap: 8px !important;
+            margin-bottom: 14px !important;
+            align-items: stretch !important;
           }
-
           .btn-p {
-            font-size: 11px !important;
-            padding: 9px 12px !important;
-            border-radius: 8px !important;
-            width: 100%;
-            justify-content: center;
-            background: linear-gradient(135deg, #F59E0B, #EC4899) !important;
+            font-size: 12px !important;
+            padding: 10px 14px !important;
+            border-radius: 9px !important;
+            justify-content: center !important;
+            background: linear-gradient(135deg, #F59E0B 0%, #EC4899 100%) !important;
             color: #fff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 20px rgba(245,158,11,0.25) !important;
           }
-
           .btn-g {
             font-size: 11px !important;
-            padding: 9px 12px !important;
-            border-radius: 8px !important;
-            width: 100%;
-            justify-content: center;
-            gap: 5px !important;
+            padding: 9px 14px !important;
+            border-radius: 9px !important;
+            justify-content: center !important;
             background: rgba(255,255,255,0.04) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            color: rgba(255,255,255,0.65) !important;
           }
 
+          /* Trust row */
           .h-trust {
             flex-direction: column !important;
-            gap: 5px !important;
+            gap: 6px !important;
             align-items: flex-start !important;
           }
-          .h-trust-item { font-size: 9.5px !important; gap: 4px !important; }
+          .h-trust-item { font-size: 9.5px !important; gap: 4px !important; color: rgba(255,255,255,0.3) !important; }
         }
 
-        /* ══ STATS — Desktop ══ */
+        /* ══════════════════════════════════════
+           DESKTOP STATS — UNCHANGED
+        ══════════════════════════════════════ */
         .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
         .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
         .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
@@ -588,16 +612,18 @@ export default function LandingPage() {
         .s-icon-wrap { display: none; }
         .s-text { display: flex; flex-direction: column; align-items: center; }
 
-        /* ══ STATS — Mobile V2 ══ */
+        /* ══════════════════════════════════════
+           MOBILE STATS — NEW: card grid below hero
+        ══════════════════════════════════════ */
         @media (max-width: 800px) {
           .stats {
-            background: transparent;
+            background: #06060E;
             border: none;
-            padding: 20px 16px 24px;
+            padding: 0 14px 24px;
           }
           .stats-inner-mob {
-            background: #0A0A14;
-            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(139,92,246,0.18);
             border-radius: 16px;
             overflow: hidden;
           }
@@ -608,10 +634,10 @@ export default function LandingPage() {
             gap: 0 !important;
           }
           .s-cell {
-            padding: 16px 14px !important;
+            padding: 14px 12px !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 12px !important;
+            gap: 10px !important;
             position: relative;
           }
           .s-cell::before { display: none !important; }
@@ -622,15 +648,17 @@ export default function LandingPage() {
           .s-cell:nth-child(5) { display: none !important; }
           .s-icon-wrap {
             display: flex !important;
-            width: 38px; height: 38px; border-radius: 10px;
+            width: 36px; height: 36px; border-radius: 10px;
             align-items: center; justify-content: center; flex-shrink: 0;
           }
           .s-text { align-items: flex-start !important; }
-          .s-num { font-size: 17px !important; font-weight: 800 !important; }
-          .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.01em !important; text-transform: none !important; color: rgba(255,255,255,0.35) !important; }
+          .s-num { font-size: 16px !important; font-weight: 800 !important; }
+          .s-lbl { font-size: 9.5px !important; margin-top: 2px !important; letter-spacing: 0 !important; text-transform: none !important; color: rgba(255,255,255,0.32) !important; }
         }
 
-        /* ══ SECTIONS ══ */
+        /* ══════════════════════════════════════
+           SECTIONS (Desktop — unchanged)
+        ══════════════════════════════════════ */
         .section { padding: 96px 24px; }
         .con { max-width: 1120px; margin: 0 auto; }
         .eyebrow { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.28); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
@@ -640,7 +668,7 @@ export default function LandingPage() {
         .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
         .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
 
-        /* Mobile pill eyebrow */
+        /* Mobile pill label */
         .mob-pill { display: none; }
         @media (max-width: 800px) {
           .mob-pill {
@@ -654,10 +682,12 @@ export default function LandingPage() {
             text-transform: uppercase; color: #a78bfa;
           }
           .eyebrow { display: none !important; }
-          .section { padding: 48px 20px !important; }
+          .section { padding: 44px 16px !important; }
         }
 
-        /* ══ HOW IT WORKS ══ */
+        /* ══════════════════════════════════════
+           HOW IT WORKS
+        ══════════════════════════════════════ */
         .how-bg { background: linear-gradient(180deg, #0C0C0C 0%, #0F0F0F 100%); }
         .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
         .tl { position: relative; margin-top: 48px; }
@@ -670,10 +700,8 @@ export default function LandingPage() {
         .tl-body h3 { font-size: 14.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
         .tl-body p { font-size: 13px; color: rgba(255,255,255,0.33); line-height: 1.55; }
 
-        /* ══ HOW IT WORKS — Mobile ══ */
         @media (max-width: 800px) {
           .how-bg { background: #06060E; }
-          /* Keep side-by-side on mobile like reference */
           .how-grid {
             grid-template-columns: 1fr 1fr !important;
             gap: 16px !important;
@@ -681,25 +709,27 @@ export default function LandingPage() {
           }
           .tl { margin-top: 16px !important; }
           .tl-line {
-            left: 20px !important;
-            background: linear-gradient(180deg, rgba(139,92,246,0.6) 0%, rgba(245,158,11,0.15) 100%) !important;
+            left: 19px !important;
+            background: linear-gradient(180deg, rgba(139,92,246,0.7) 0%, rgba(245,158,11,0.15) 100%) !important;
           }
           .tl-row { gap: 10px !important; padding-bottom: 16px !important; }
           .tl-dot {
-            width: 38px !important; height: 38px !important; border-radius: 10px !important;
+            width: 36px !important; height: 36px !important; border-radius: 10px !important;
             background: var(--sdot-bg) !important;
             border: 1px solid var(--sdot-border) !important;
             flex-shrink: 0 !important;
           }
-          .tl-body { padding-top: 8px !important; }
-          .tl-body h3 { font-size: 11px !important; margin-bottom: 3px !important; }
-          .tl-body p { font-size: 9.5px !important; color: rgba(255,255,255,0.28) !important; line-height: 1.45 !important; }
-          .how-grid > div:first-child .sh { font-size: 20px !important; }
-          .how-grid > div:first-child .sub { font-size: 11px !important; }
+          .tl-body { padding-top: 7px !important; }
+          .tl-body h3 { font-size: 11.5px !important; margin-bottom: 3px !important; font-weight: 700 !important; }
+          .tl-body p { font-size: 9.5px !important; color: rgba(255,255,255,0.3) !important; line-height: 1.45 !important; }
+          .how-grid > div:first-child .sh { font-size: 20px !important; line-height: 1.2 !important; }
+          .how-grid > div:first-child .sub { font-size: 11px !important; line-height: 1.55 !important; }
           .how-grid > div:first-child a { font-size: 11px !important; padding: 7px 12px !important; }
         }
 
-        /* ══ FEATURES ══ */
+        /* ══════════════════════════════════════
+           FEATURES
+        ══════════════════════════════════════ */
         .feat-bg { background: #090909; }
         .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
         .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 26px; transition: all 0.3s; position: relative; overflow: hidden; }
@@ -708,7 +738,6 @@ export default function LandingPage() {
         .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; }
         .f-card p { font-size: 13px; color: rgba(255,255,255,0.36); line-height: 1.6; }
 
-        /* ══ FEATURES — Mobile ══ */
         @media (max-width: 800px) {
           .feat-bg { background: #06060E; }
           .feat-grid {
@@ -723,14 +752,16 @@ export default function LandingPage() {
             border: 1px solid rgba(255,255,255,0.055) !important;
           }
           .f-icon {
-            width: 32px !important; height: 32px !important;
-            border-radius: 8px !important; margin-bottom: 8px !important;
+            width: 30px !important; height: 30px !important;
+            border-radius: 8px !important; margin-bottom: 7px !important;
           }
-          .f-card h3 { font-size: 10.5px !important; margin-bottom: 3px !important; line-height: 1.3 !important; }
-          .f-card p { font-size: 9px !important; line-height: 1.4 !important; color: rgba(255,255,255,0.28) !important; }
+          .f-card h3 { font-size: 10px !important; margin-bottom: 3px !important; line-height: 1.3 !important; }
+          .f-card p { font-size: 8.5px !important; line-height: 1.4 !important; color: rgba(255,255,255,0.28) !important; }
         }
 
-        /* ══ LANGUAGES ══ */
+        /* ══════════════════════════════════════
+           LANGUAGES
+        ══════════════════════════════════════ */
         .lang-bg { background: linear-gradient(180deg, #0D0D0D 0%, #0A0A0A 100%); }
         .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
         .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 7px 15px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
@@ -742,7 +773,9 @@ export default function LandingPage() {
           .lang-chips { gap: 6px !important; margin-top: 16px !important; }
         }
 
-        /* ══ SECURITY ══ */
+        /* ══════════════════════════════════════
+           SECURITY
+        ══════════════════════════════════════ */
         .sec-bg { background: #FAFAFA; }
         .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
         .s-card { background: #F2F2F0; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 24px; transition: all 0.22s; }
@@ -753,7 +786,9 @@ export default function LandingPage() {
         @media (max-width: 780px) { .sec-grid { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 460px) { .sec-grid { grid-template-columns: 1fr; } }
 
-        /* ══ PRICING ══ */
+        /* ══════════════════════════════════════
+           PRICING
+        ══════════════════════════════════════ */
         .price-bg { background: #F5F5F3; }
         .p-toggle { display: inline-flex; background: rgba(0,0,0,0.06); border-radius: 9px; padding: 3px; margin: 24px auto 0; }
         .pt-btn { padding: 6px 17px; border-radius: 7px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; }
@@ -781,7 +816,9 @@ export default function LandingPage() {
         .cta-dgl { display:block; width:100%; background:rgba(255,255,255,0.07); color:#FAFAFA; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
         @media (max-width: 780px) { .price-cards { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
 
-        /* ══ FAQ ══ */
+        /* ══════════════════════════════════════
+           FAQ
+        ══════════════════════════════════════ */
         .faq-bg { background: #FFFFFF; }
         .faq-list { margin-top: 48px; }
         .faq-item { border-bottom: 1px solid rgba(0,0,0,0.06); }
@@ -791,7 +828,9 @@ export default function LandingPage() {
         .faq-ico.open { transform: rotate(180deg); color: #F59E0B; }
         .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
-        /* ══ CTA ══ */
+        /* ══════════════════════════════════════
+           CTA
+        ══════════════════════════════════════ */
         .cta-wrap { background: #080808; padding: 120px 24px; position: relative; overflow: hidden; }
         .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.09) 0%, transparent 70%); }
         .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
@@ -800,7 +839,9 @@ export default function LandingPage() {
         .cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.17); border-radius:20px; padding:4px 13px; margin-bottom:24px; }
         .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
-        /* ══ FOOTER ══ */
+        /* ══════════════════════════════════════
+           FOOTER
+        ══════════════════════════════════════ */
         .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 24px 26px; }
         .foot-in { max-width: 1120px; margin: 0 auto; }
         .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
@@ -830,7 +871,6 @@ export default function LandingPage() {
               <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="n-link">{item}</a>
             ))}
           </div>
-          {/* Mobile: Login button visible before burger */}
           <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
@@ -878,7 +918,7 @@ export default function LandingPage() {
               <motion.div className="h-trust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.44 }}>
                 {['No Credit Card', '10-Day Free Trial', 'Setup in 2 Minutes'].map(t => (
                   <div key={t} className="h-trust-item">
-                    <CheckCircle size={12} style={{ color: '#10B981', flexShrink: 0 }} /><span>{t}</span>
+                    <CheckCircle size={11} style={{ color: '#10B981', flexShrink: 0 }} /><span>{t}</span>
                   </div>
                 ))}
               </motion.div>
@@ -888,11 +928,13 @@ export default function LandingPage() {
             <motion.div className="hero-right"
               initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
-              <div className="mob-preview" style={{ fontSize: 0 }}>
-                <div style={{ transform: 'scale(0.72)', transformOrigin: 'top left', width: '139%' }}>
+              {/* Mobile: scaled dashboard with glow */}
+              <div className="mob-preview">
+                <div style={{ transform: 'scale(0.78)', transformOrigin: 'top left', width: '128%' }}>
                   <MobileDashboardPreview />
                 </div>
               </div>
+              {/* Desktop: original product preview */}
               <div className="desk-preview"><ProductPreview /></div>
             </motion.div>
 
@@ -904,11 +946,11 @@ export default function LandingPage() {
           <div className="stats-inner-mob">
             <div className="stats-row">
               {[
-                { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={16} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.12)' },
-                { display: '24/7', label: 'Real-time Protection', icon: <Shield size={16} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.12)' },
-                { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={16} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.12)' },
-                { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={16} color="#f87171" />, iconBg: 'rgba(239,68,68,0.12)' },
-                { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={16} color="#34d399" />, iconBg: 'rgba(16,185,129,0.12)' },
+                { display: <><Counter to={100} suffix="+" /></>, label: 'Languages Supported', icon: <Globe size={15} color="#8B5CF6" />, iconBg: 'rgba(139,92,246,0.12)' },
+                { display: '24/7', label: 'Real-time Protection', icon: <Shield size={15} color="#F59E0B" />, iconBg: 'rgba(245,158,11,0.12)' },
+                { display: 'Real-time', label: 'AI Moderation', icon: <Zap size={15} color="#fb923c" />, iconBg: 'rgba(251,146,60,0.12)' },
+                { display: '98.2%', label: 'High Detection Rate', icon: <TrendingUp size={15} color="#f87171" />, iconBg: 'rgba(239,68,68,0.12)' },
+                { display: '0', label: 'Lines of Code to Setup', icon: <Cpu size={15} color="#34d399" />, iconBg: 'rgba(16,185,129,0.12)' },
               ].map((s, i) => (
                 <FadeIn key={i} delay={i * 0.06}>
                   <div className="s-cell">

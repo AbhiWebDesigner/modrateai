@@ -4,7 +4,7 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { Bell, Search, Lock, Zap, BarChart2, TrendingUp, Globe, ShieldCheck, WifiOff, Youtube } from 'lucide-react';
+import { Bell, Search, Lock, Zap, BarChart2, TrendingUp, Globe, ShieldCheck, WifiOff, PlayCircle } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -209,14 +209,14 @@ function YoutubeNotConnected() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 340, textAlign: 'center', padding: '40px 24px' }}>
       <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-        <Youtube size={28} color="#f87171" />
+        <PlayCircle size={28} color="#f87171" />
       </div>
       <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 18, marginBottom: 10 }}>YouTube Channel Not Connected</h2>
       <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, lineHeight: 1.6, maxWidth: 360, marginBottom: 28 }}>
         Connect your YouTube channel to start tracking comments, spam detection, and moderation analytics in real time.
       </p>
       <a href="/settings" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #F59E0B, #d97706)', color: '#07030F', fontWeight: 700, fontSize: 13, padding: '10px 22px', borderRadius: 10, textDecoration: 'none' }}>
-        <Youtube size={15} color="#07030F" />
+        <PlayCircle size={15} color="#07030F" />
         Connect YouTube Channel
       </a>
     </div>

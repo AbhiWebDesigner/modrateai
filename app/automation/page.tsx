@@ -7,7 +7,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import {
   collection, doc, addDoc, deleteDoc, updateDoc,
   onSnapshot, increment, query, orderBy, serverTimestamp,
-  setDoc,
+  setDoc, getDoc,
 } from "firebase/firestore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -205,22 +205,65 @@ function formatDuration(iso: string): string {
 }
 
 function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  } catch {
+    return "";
+  }
 }
 
-async function ensureParentDoc(uid: string) {
+// ─── FIXED: ensureParentDoc no longer resets existing counters ────────────────
+// Only initialises the document with zero counters if it does not yet exist.
+// Subsequent calls are safe: existing counter values are preserved.
+async function ensureParentDoc(uid: string): Promise<void> {
   const parentRef = doc(db, "automations", uid);
-  await setDoc(parentRef, { totalRules: 0, activeRules: 0, totalRepliesSent: 0, moderationMode: "auto", notifications: true, schedule: { enabled: false } }, { merge: true });
+  const snap = await getDoc(parentRef);
+  if (!snap.exists()) {
+    await setDoc(parentRef, {
+      totalRules: 0,
+      activeRules: 0,
+      totalRepliesSent: 0,
+      moderationMode: "auto",
+      notifications: true,
+      schedule: { enabled: false },
+    });
+  } else {
+    // Document already exists — only set non-counter metadata fields that may be missing.
+    await setDoc(parentRef, {
+      moderationMode: snap.data()?.moderationMode ?? "auto",
+      notifications: snap.data()?.notifications ?? true,
+      schedule: snap.data()?.schedule ?? { enabled: false },
+    }, { merge: true });
+  }
 }
 
-// ── FIXED: now calls the API route instead of reading youtube_tokens directly ──
+// ─── YouTube connection check (Firestore-based, mirrors settings/page.tsx) ────
+async function checkYouTubeConnected(uid: string): Promise<boolean> {
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    if (!snap.exists()) return false;
+    const d = snap.data();
+    return (
+      d?.youtube_connected === true ||
+      d?.youtubeConnected === true ||
+      d?.youtube?.connected === true ||
+      (typeof d?.youtube?.channelId === 'string' && d.youtube.channelId.trim() !== '')
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function fetchYouTubeVideos(uid: string): Promise<YouTubeVideo[]> {
   try {
-    const res = await fetch(`/api/youtube/videos?uid=${uid}`);
+    const res = await fetch(`/api/youtube/videos?uid=${encodeURIComponent(uid)}`);
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.videos ?? [];
+    const data = await res.json() as Record<string, unknown>;
+    const videos = data?.videos;
+    if (!Array.isArray(videos)) return [];
+    return videos as YouTubeVideo[];
   } catch {
     return [];
   }
@@ -430,6 +473,45 @@ function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstructio
   );
 }
 
+// ─── YouTube Not Connected Banner ─────────────────────────────────────────────
+
+function YouTubeNotConnectedBanner() {
+  return (
+    <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.22)", borderRadius: 20, padding: "32px 24px", textAlign: "center", animation: "fadeIn 0.3s ease", marginBottom: 20 }}>
+      <div style={{ width: 64, height: 64, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.22)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 16px" }}>
+        <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3" fill="rgba(245,158,11,0.3)" stroke="rgba(245,158,11,0.7)" strokeWidth="1.5"/><polygon points="10,9 10,15 15,12" fill="#F59E0B"/></svg>
+      </div>
+      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#FAFAFA", marginBottom: 8 }}>YouTube Channel Not Connected</h3>
+      <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, lineHeight: 1.55, marginBottom: 20, maxWidth: 320, margin: "0 auto 20px" }}>
+        Automation rules require a connected YouTube channel to execute. Connect your channel to enable live automation.
+      </p>
+      <Link href="/settings" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "11px 22px", fontSize: 13, fontWeight: 700, color: "white", textDecoration: "none", boxShadow: "0 4px 20px rgba(245,158,11,0.25)" }}>
+        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M15 3H9v18h6V3z"/><path d="M21 7H3"/><path d="M21 17H3"/></svg>
+        Connect YouTube Channel
+      </Link>
+    </div>
+  );
+}
+
+// ─── Offline status badge ─────────────────────────────────────────────────────
+
+function AutomationStatusBadge({ connected }: { connected: boolean }) {
+  if (connected) {
+    return (
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.28)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: "#22c55e" }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "sidebarPulse 1.6s ease-in-out infinite" }} />
+        Live
+      </span>
+    );
+  }
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.40)" }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.30)", display: "inline-block" }} />
+      Offline
+    </span>
+  );
+}
+
 // ─── Mobile Preview Bottom Sheet ──────────────────────────────────────────────
 
 function MobilePreviewSheet({ open, onClose, selectedVideo, keywords, replies, replyMode, aiInstruction, replyDelay, ruleName, ruleActive }: {
@@ -495,6 +577,10 @@ export default function AutomationPage() {
   const [user,        setUser]        = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // ── YouTube connection state ──────────────────────────────────────────────
+  const [youtubeConnected,        setYoutubeConnected]        = useState(false);
+  const [youtubeConnectionLoading, setYoutubeConnectionLoading] = useState(true);
+
   const [rules,        setRules]        = useState<Rule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(true);
   const [saving,       setSaving]       = useState(false);
@@ -526,6 +612,7 @@ export default function AutomationPage() {
   const [moreOpen,          setMoreOpen]          = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
+  // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) { router.push("/login"); return; }
@@ -535,17 +622,61 @@ export default function AutomationPage() {
     return () => unsub();
   }, [router]);
 
+  // ── YouTube connection check ──────────────────────────────────────────────
+  // Uses the existing API route pattern; no new auth system created.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    setYoutubeConnectionLoading(true);
+    checkYouTubeConnected(user.uid).then((connected) => {
+      if (!cancelled) {
+        setYoutubeConnected(connected);
+        setYoutubeConnectionLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // ── Rules listener ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     const rulesRef = collection(db, "automations", user.uid, "rules");
     const q        = query(rulesRef, orderBy("createdAt", "desc"));
     const unsub    = onSnapshot(q, (snap) => {
-      setRules(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Rule, "id">) })));
+      const loaded: Rule[] = snap.docs.map(d => {
+        const data = d.data() as Partial<Omit<Rule, "id">>;
+        // Safely coerce every field; never crash on malformed data.
+        return {
+          id:                 d.id,
+          name:               typeof data.name === "string"              ? data.name              : "",
+          video:              (data.video && typeof data.video === "object") ? data.video as YouTubeVideo : {} as YouTubeVideo,
+          keywords:           Array.isArray(data.keywords)               ? data.keywords          : [],
+          replyMode:          data.replyMode === "ai"                    ? "ai"                   : "random",
+          replies:            Array.isArray(data.replies)                ? data.replies           : [],
+          aiInstruction:      typeof data.aiInstruction === "string"     ? data.aiInstruction     : "",
+          publicReply:        typeof data.publicReply === "boolean"      ? data.publicReply       : true,
+          replyDelay:         typeof data.replyDelay === "number"        ? data.replyDelay        : 20,
+          active:             typeof data.active === "boolean"           ? data.active            : false,
+          maxRepliesPerUser:  typeof data.maxRepliesPerUser === "number" ? data.maxRepliesPerUser : 3,
+          cooldownMinutes:    typeof data.cooldownMinutes === "number"   ? data.cooldownMinutes   : 60,
+          workingHoursStart:  typeof data.workingHoursStart === "number" ? data.workingHoursStart : 9,
+          workingHoursEnd:    typeof data.workingHoursEnd === "number"   ? data.workingHoursEnd   : 21,
+          enableWeekends:     typeof data.enableWeekends === "boolean"   ? data.enableWeekends    : true,
+          minCommentLength:   typeof data.minCommentLength === "number"  ? data.minCommentLength  : 0,
+          ignoreLinks:        typeof data.ignoreLinks === "boolean"      ? data.ignoreLinks       : true,
+          ignoreEmojisOnly:   typeof data.ignoreEmojisOnly === "boolean" ? data.ignoreEmojisOnly  : false,
+          ignoreBots:         typeof data.ignoreBots === "boolean"       ? data.ignoreBots        : true,
+          languageFilter:     typeof data.languageFilter === "string"    ? data.languageFilter    : "any",
+          createdAt:          data.createdAt,
+        };
+      });
+      setRules(loaded);
       setRulesLoading(false);
     });
     return () => unsub();
   }, [user]);
 
+  // ── Videos (lazy, on selector open) ──────────────────────────────────────
   useEffect(() => {
     if (!showVideoSelector || !user || videos.length > 0) return;
     setVideosLoading(true);
@@ -604,8 +735,12 @@ export default function AutomationPage() {
         publicReply: true, replyDelay, active: ruleActive, createdAt: serverTimestamp(),
         ...advanced,
       });
+      // Increment counters without touching other fields.
       const parentRef = doc(db, "automations", user.uid);
-      await setDoc(parentRef, { totalRules: increment(1), activeRules: increment(ruleActive ? 1 : 0) }, { merge: true });
+      await setDoc(parentRef, {
+        totalRules:  increment(1),
+        activeRules: increment(ruleActive ? 1 : 0),
+      }, { merge: true });
       resetBuilder();
     } catch (err) {
       console.error("Failed to save rule:", err);
@@ -619,9 +754,12 @@ export default function AutomationPage() {
     setDeleting(ruleId);
     try {
       await deleteDoc(doc(db, "automations", user.uid, "rules", ruleId));
-      await ensureParentDoc(user.uid);
+      // Decrement counters; never reset them.
       const parentRef = doc(db, "automations", user.uid);
-      await setDoc(parentRef, { totalRules: increment(-1), activeRules: increment(wasActive ? -1 : 0) }, { merge: true });
+      await setDoc(parentRef, {
+        totalRules:  increment(-1),
+        activeRules: increment(wasActive ? -1 : 0),
+      }, { merge: true });
     } catch (err) {
       console.error("Failed to delete rule:", err);
     } finally {
@@ -634,9 +772,11 @@ export default function AutomationPage() {
     const newActive = !rule.active;
     try {
       await updateDoc(doc(db, "automations", user.uid, "rules", rule.id), { active: newActive });
-      await ensureParentDoc(user.uid);
+      // Adjust activeRules counter only — do not touch totalRules or YouTube state.
       const parentRef = doc(db, "automations", user.uid);
-      await setDoc(parentRef, { activeRules: increment(newActive ? 1 : -1) }, { merge: true });
+      await setDoc(parentRef, {
+        activeRules: increment(newActive ? 1 : -1),
+      }, { merge: true });
     } catch {
       console.error("Failed to toggle rule");
     }
@@ -650,6 +790,10 @@ export default function AutomationPage() {
       </div>
     );
   }
+
+  // Global system status reflects the YouTube connection.
+// Individual rule.active determines whether that rule is enabled.
+const systemLive = youtubeConnected;
 
   return (
     <>
@@ -668,6 +812,7 @@ export default function AutomationPage() {
           .mobile-preview-fab { display: none !important; }
           .sticky-mobile-cta  { display: none !important; }
         }
+        @keyframes sidebarPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
         .template-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .template-scroll::-webkit-scrollbar { display: none; }
         @media (min-width: 1024px) { .template-scroll { flex-wrap: wrap; overflow-x: visible; } }
@@ -713,17 +858,42 @@ export default function AutomationPage() {
 
         {!showBuilder ? (
           <>
+            {/* ── Header with system status ── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
               <div>
-                <h1 style={{ fontSize: 20, fontWeight: 800, color: "#FAFAFA", marginBottom: 3 }}>Automation Rules</h1>
-                <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>Rules run in order — higher rules have higher priority</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                  <h1 style={{ fontSize: 20, fontWeight: 800, color: "#FAFAFA" }}>Automation Rules</h1>
+                  {/* Show system status — NOT individual rule status */}
+                  {!youtubeConnectionLoading && <AutomationStatusBadge connected={systemLive} />}
+                </div>
+                <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
+                  {youtubeConnected
+                    ? "Rules run in order — higher rules have higher priority"
+                    : "Connect your YouTube channel to enable automation"}
+                </p>
               </div>
-              <button onClick={() => setShowBuilder(true)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(245,158,11,0.25)", whiteSpace: "nowrap" }}>
+              <button
+                onClick={() => {
+                  if (!youtubeConnected) {
+                    // Route to settings to connect YouTube instead of opening builder
+                    router.push("/settings");
+                    return;
+                  }
+                  setShowBuilder(true);
+                }}
+                style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(245,158,11,0.25)", whiteSpace: "nowrap" }}
+              >
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                Create Rule
+                {youtubeConnected ? "Create Rule" : "Connect YouTube"}
               </button>
             </div>
 
+            {/* ── YouTube not connected banner ── */}
+            {!youtubeConnectionLoading && !youtubeConnected && (
+              <YouTubeNotConnectedBanner />
+            )}
+
+            {/* ── Rules list ── */}
             {rulesLoading ? (
               <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
                 <div style={{ width: 32, height: 32, border: "2px solid #F59E0B", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -732,36 +902,64 @@ export default function AutomationPage() {
               <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 24, padding: "56px 20px", textAlign: "center", animation: "fadeIn 0.3s ease" }}>
                 <div style={{ width: 72, height: 72, background: "rgba(245,158,11,0.10)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 16px" }}>⚡</div>
                 <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>No automation rules yet</h2>
-                <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 24, maxWidth: 300, margin: "0 auto 24px", lineHeight: 1.5 }}>Create your first rule to automatically reply to YouTube comments when keywords are matched.</p>
-                <button onClick={() => setShowBuilder(true)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px 28px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", boxShadow: "0 4px 24px rgba(245,158,11,0.30)" }}>
-                  ⚡ Create Your First Rule
-                </button>
+                <p style={{ color: "rgba(255,255,255,0.40)", fontSize: 13, marginBottom: 24, maxWidth: 300, margin: "0 auto 24px", lineHeight: 1.5 }}>
+                  {youtubeConnected
+                    ? "Create your first rule to automatically reply to YouTube comments when keywords are matched."
+                    : "Connect your YouTube channel first, then create automation rules."}
+                </p>
+                {youtubeConnected ? (
+                  <button onClick={() => setShowBuilder(true)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px 28px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", boxShadow: "0 4px 24px rgba(245,158,11,0.30)" }}>
+                    ⚡ Create Your First Rule
+                  </button>
+                ) : (
+                  <Link href="/settings" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px 28px", fontSize: 14, fontWeight: 700, color: "white", textDecoration: "none", boxShadow: "0 4px 24px rgba(245,158,11,0.30)" }}>
+                    Connect YouTube Channel
+                  </Link>
+                )}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {rules.map(rule => (
-                  <div key={rule.id} className="rule-card" style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, transition: "all 0.2s" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
-                      <div style={{ background: "rgba(245,158,11,0.12)", borderRadius: 10, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>⚡</div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.name}</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.video?.title?.slice(0, 36)}{(rule.video?.title?.length ?? 0) > 36 ? "…" : ""} · {rule.keywords?.length ?? 0} kw</div>
+                {rules.map(rule => {
+                  // A rule is "eligible" only when YouTube is connected AND rule is active.
+                  // We show the user's own rule.active toggle truthfully — we do NOT hide or
+                  // modify it. We add a subtle "not connected" note when YouTube is offline.
+                  const eligible = youtubeConnected && rule.active;
+                  return (
+                    <div key={rule.id} className="rule-card" style={{ background: "rgba(255,255,255,0.035)", border: `1px solid ${eligible ? "rgba(34,197,94,0.14)" : "rgba(255,255,255,0.07)"}`, borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, transition: "all 0.2s" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
+                        <div style={{ background: eligible ? "rgba(34,197,94,0.10)" : "rgba(245,158,11,0.12)", borderRadius: 10, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>⚡</div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.name}</div>
+                          <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {(rule.video?.title ?? "").slice(0, 36)}{(rule.video?.title?.length ?? 0) > 36 ? "…" : ""} · {rule.keywords?.length ?? 0} kw
+                            {/* Clear label when YouTube is disconnected but rule is on */}
+                            {!youtubeConnected && rule.active && (
+                              <span style={{ color: "rgba(255,200,80,0.60)", marginLeft: 6, fontSize: 10 }}>· no channel</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                        {/* Toggle reflects the user's own rule.active — not YouTube state */}
+                        <button
+                          onClick={() => toggleRule(rule)}
+                          style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
+                          title={rule.active ? "Rule is enabled" : "Rule is disabled"}
+                        >
+                          {rule.active ? "● On" : "○ Off"}
+                        </button>
+                        <button onClick={() => deleteRule(rule.id, rule.active)} disabled={deleting === rule.id} style={{ color: "rgba(255,100,100,0.55)", background: "none", border: "none", cursor: "pointer", fontSize: 16, opacity: deleting === rule.id ? 0.4 : 1, padding: "4px" }}>
+                          {deleting === rule.id ? "⏳" : "🗑️"}
+                        </button>
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                      <button onClick={() => toggleRule(rule)} style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
-                        {rule.active ? "● On" : "○ Off"}
-                      </button>
-                      <button onClick={() => deleteRule(rule.id, rule.active)} disabled={deleting === rule.id} style={{ color: "rgba(255,100,100,0.55)", background: "none", border: "none", cursor: "pointer", fontSize: 16, opacity: deleting === rule.id ? 0.4 : 1, padding: "4px" }}>
-                        {deleting === rule.id ? "⏳" : "🗑️"}
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
         ) : (
+          // ── Rule builder — only reachable when YouTube IS connected ──
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
 

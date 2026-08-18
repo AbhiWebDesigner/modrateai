@@ -522,8 +522,9 @@ export default function AnalyticsPage() {
 
         // YouTube connection — support multiple field shapes
         const ytConnected =
-          d?.youtubeConnected === true ||
-          d?.youtube?.connected === true ||
+           d?.youtube_connected === true ||
+           d?.youtubeConnected === true ||
+           d?.youtube?.connected === true ||
           (typeof d?.youtube?.channelId === 'string' && d.youtube.channelId.trim() !== '');
         setYoutubeConnected(ytConnected);
       },

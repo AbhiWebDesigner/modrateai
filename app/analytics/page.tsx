@@ -5,7 +5,7 @@ import {
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 import {
-  Bell, Lock, Zap, BarChart2, TrendingUp, Globe,
+  Lock, Zap, BarChart2, TrendingUp, Globe,
   ShieldCheck, WifiOff, PlayCircle,
 } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
@@ -717,10 +717,6 @@ export default function AnalyticsPage() {
               </div>
             </button>
 
-            <button style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 10, width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
-              <Bell size={16} color="rgba(255,255,255,0.6)" />
-              <span style={{ position: 'absolute', top: 8, right: 8, width: 6, height: 6, background: '#F59E0B', borderRadius: '50%' }} />
-            </button>
           </div>
         </header>
 

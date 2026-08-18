@@ -521,9 +521,6 @@ export default function ModerationPage() {
               <Shield size={9} strokeWidth={2} /> Protection Active
             </div>
             <div style={{ flex: 1 }} />
-            <button className="r-icon-btn">
-              <Bell size={12} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
-            </button>
             <button className="r-icon-btn"><Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} /></button>
             <button className="r-avatar-btn" onClick={() => router.push('/settings')}>
               {userPhoto
@@ -749,10 +746,6 @@ export default function ModerationPage() {
             </button>
             <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
           </div>
-          <Link href="/alerts" className="r-bnav-item">
-            <span className="r-bnav-icon"><Bell size={19} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 9 }}>Alerts</span>
-          </Link>
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
             <span className="r-bnav-icon"><MoreHorizontal size={19} strokeWidth={1.7} /></span>
             <span style={{ fontSize: 9 }}>More</span>

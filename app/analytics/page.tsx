@@ -4,36 +4,27 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { Bell, Search } from 'lucide-react';
-import Link from 'next/link';
+import { Bell, Search, Lock, Zap, BarChart2, TrendingUp, Globe, ShieldCheck } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { DashboardSidebar, DashboardBottomNav } from '@/app/components/DashboardLayout';
 
-interface DailyPoint {
-  day: string;
-  scanned: number;
-  hidden: number;
-  replies: number;
-}
-
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface DailyPoint { day: string; scanned: number; hidden: number; replies: number; }
 interface AnalyticsData {
-  totalScanned: number;
-  totalHidden: number;
-  totalReplies: number;
-  protectionRate: number;
-  hiddenThisMonth: number;
-  hiddenLastMonth: number;
-  repliesSent: number;
-  avgResponseTime: number;
-  falsePositiveRate: number;
+  totalScanned: number; totalHidden: number; totalReplies: number; protectionRate: number;
+  hiddenThisMonth: number; hiddenLastMonth: number; repliesSent: number;
+  avgResponseTime: number; falsePositiveRate: number;
   weeklyData: DailyPoint[];
   languageData: { name: string; value: number; color: string }[];
   spamTrend: { day: string; spam: number }[];
 }
 
+type Plan = 'free' | 'pro' | 'agency';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const LANG_COLORS = ['#f59e0b', '#8b5cf6', '#06b6d4', '#10b981', '#ef4444', '#6b7280'];
 
@@ -53,6 +44,7 @@ const DEFAULT_ANALYTICS: AnalyticsData = {
   spamTrend: DAYS.map((day) => ({ day, spam: 0 })),
 };
 
+// ─── Shared Tooltip ───────────────────────────────────────────────────────────
 const ChartTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
@@ -65,14 +57,351 @@ const ChartTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+// ─── Agency Locked UI ─────────────────────────────────────────────────────────
+function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: User | null; plan: Plan }) {
+  // Static preview data — purely decorative, not real
+  const previewArea = DAYS.map((day, i) => ({ day, scanned: [120,180,95,220,160,300,240][i], hidden: [12,18,8,22,14,28,20][i], replies: [30,45,20,55,40,70,60][i] }));
+  const previewBars = DAYS.map((day, i) => ({ day, spam: [40,65,30,80,55,100,75][i] }));
+  const previewLang = [
+    { name: 'English', value: 42, color: '#f59e0b' },
+    { name: 'Hinglish', value: 21, color: '#8b5cf6' },
+    { name: 'Telugu',   value: 14, color: '#06b6d4' },
+    { name: 'Tamil',    value: 10, color: '#10b981' },
+    { name: 'Hindi',    value: 8,  color: '#ef4444' },
+    { name: 'Other',    value: 5,  color: '#6b7280' },
+  ];
+
+  const agencyFeatures = [
+    { icon: <BarChart2 size={18} color="#f59e0b" />, label: 'Multi-Account Analytics' },
+    { icon: <TrendingUp size={18} color="#8b5cf6" />, label: 'Cross-Profile Trends' },
+    { icon: <Globe size={18} color="#06b6d4" />, label: 'Client-Level Reporting' },
+    { icon: <ShieldCheck size={18} color="#10b981" />, label: 'Advanced Threat Intel' },
+  ];
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* Preview charts — blurred & dimmed */}
+      <div style={{ filter: 'blur(3px) brightness(0.35)', pointerEvents: 'none', userSelect: 'none', opacity: 0.7 }}>
+        {/* Area Chart */}
+        <div className="glass-card" style={{ padding: 24, marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+            <div>
+              <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Multi-Account Comment Streams</h2>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Aggregated across all client profiles</p>
+            </div>
+            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 4 }}>
+              {['Daily', 'Weekly', 'Monthly'].map((r) => (
+                <button key={r} className="range-btn" style={{ background: r === 'Weekly' ? 'rgba(255,255,255,0.12)' : 'transparent', color: r === 'Weekly' ? '#FAFAFA' : 'rgba(255,255,255,0.4)' }}>{r}</button>
+              ))}
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={previewArea} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+              <defs>
+                <linearGradient id="pScannedGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="pHiddenGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="day" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Area type="monotone" dataKey="scanned" stroke="#F59E0B" strokeWidth={2} fill="url(#pScannedGrad)" dot={false} />
+              <Area type="monotone" dataKey="hidden"  stroke="#ef4444" strokeWidth={1.5} fill="url(#pHiddenGrad)" dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Lang + Spam */}
+        <div className="charts-grid" style={{ display: 'grid', gap: 16, marginBottom: 20 }}>
+          <div className="glass-card" style={{ padding: 24 }}>
+            <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Language Detection</h2>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2, marginBottom: 20 }}>Breakdown across all scanned comments</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <PieChart width={150} height={150}>
+                <Pie data={previewLang} cx={70} cy={70} innerRadius={44} outerRadius={68} paddingAngle={2} dataKey="value" strokeWidth={0}>
+                  {previewLang.map((_, i) => <Cell key={i} fill={previewLang[i].color} />)}
+                </Pie>
+              </PieChart>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {previewLang.map((lang) => (
+                  <div key={lang.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: lang.color, display: 'inline-block' }} />
+                      <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{lang.name}</span>
+                    </div>
+                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600 }}>{lang.value}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="glass-card" style={{ padding: 24 }}>
+            <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Cross-Profile Spam Trend</h2>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2, marginBottom: 20 }}>Aggregated daily spam across clients</p>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={previewBars} margin={{ top: 4, right: 4, bottom: 0, left: -20 }} barCategoryGap="30%">
+                <XAxis dataKey="day" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Bar dataKey="spam" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Stat cards */}
+        <div className="stats-grid" style={{ display: 'grid', gap: 16 }}>
+          {[
+            { label: 'Total Hidden This Month', value: '—', sub: '— vs last month' },
+            { label: 'AI Replies Sent',          value: '—', sub: '— avg response time' },
+            { label: 'False Positive Rate',      value: '—', sub: '—' },
+          ].map((c) => (
+            <div key={c.label} className="glass-card" style={{ padding: 20 }}>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>{c.label}</p>
+              <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{c.value}</p>
+              <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>{c.sub}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Lock overlay */}
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
+        <div style={{ background: 'rgba(7,3,15,0.85)', backdropFilter: 'blur(24px)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 24, padding: '40px 36px', maxWidth: 460, width: '90%', textAlign: 'center', boxShadow: '0 0 60px rgba(245,158,11,0.08)' }}>
+          {/* Lock icon */}
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(124,58,237,0.18))', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <Lock size={28} color="#F59E0B" />
+          </div>
+
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 20, padding: '4px 14px', marginBottom: 16 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Coming Soon</span>
+          </div>
+
+          <h2 style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 22, marginBottom: 10 }}>Advanced Analytics</h2>
+          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
+            Advanced Analytics is an upcoming feature exclusive to the Agency plan. Multi-account reporting, cross-profile trend analysis, and client-level dashboards are on the way.
+          </p>
+
+          {/* Feature chips */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
+            {agencyFeatures.map((f) => (
+              <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '10px 14px' }}>
+                {f.icon}
+                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: 600 }}>{f.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
+            We'll notify you as soon as Advanced Analytics goes live.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Basic Analytics (Free Trial) ─────────────────────────────────────────────
+function BasicAnalytics({ data }: { data: AnalyticsData }) {
+  const hiddenDelta = data.hiddenThisMonth - data.hiddenLastMonth;
+  return (
+    <>
+      {/* Area Chart — scanned only, no replies */}
+      <div className="glass-card" style={{ padding: 24, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Comments Scanned</h2>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Weekly scanned vs hidden</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 10, padding: '4px 12px' }}>
+            <Zap size={12} color="#F59E0B" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B' }}>Basic Analytics</span>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={data.weeklyData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+            <defs>
+              <linearGradient id="scannedGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.35} />
+                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="hiddenGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="day" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<ChartTooltip />} />
+            <Area type="monotone" dataKey="scanned" name="Scanned" stroke="#F59E0B" strokeWidth={2} fill="url(#scannedGrad)" dot={false} />
+            <Area type="monotone" dataKey="hidden"  name="Hidden"  stroke="#ef4444" strokeWidth={1.5} fill="url(#hiddenGrad)" dot={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Basic stat cards */}
+      <div className="stats-grid" style={{ display: 'grid', gap: 16, marginBottom: 20 }}>
+        <div className="glass-card" style={{ padding: 20 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Total Scanned</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.totalScanned.toLocaleString()}</p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>All time</p>
+        </div>
+        <div className="glass-card" style={{ padding: 20 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Hidden This Month</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.hiddenThisMonth.toLocaleString()}</p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: hiddenDelta >= 0 ? '#4ade80' : '#f87171' }}>
+            {hiddenDelta >= 0 ? '+' : ''}{hiddenDelta} vs last month
+          </p>
+        </div>
+        <div className="glass-card" style={{ padding: 20 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Protection Rate</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.protectionRate}%</p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>Active</p>
+        </div>
+      </div>
+
+      {/* Upgrade nudge */}
+      <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(124,58,237,0.08))', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 16, padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <Zap size={16} color="#F59E0B" />
+            <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: 14 }}>Unlock Full Analytics</span>
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13 }}>
+            Upgrade to Pro for AI reply stats, language detection, spam trends, and false positive tracking.
+          </p>
+        </div>
+        <a href="/billing" style={{ display: 'inline-block', background: 'linear-gradient(135deg, #F59E0B, #d97706)', color: '#07030F', fontWeight: 700, fontSize: 13, padding: '10px 22px', borderRadius: 10, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          Upgrade to Pro
+        </a>
+      </div>
+    </>
+  );
+}
+
+// ─── Full Analytics (Pro) ─────────────────────────────────────────────────────
+function FullAnalytics({ data }: { data: AnalyticsData }) {
+  const [range, setRange] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
+  const hiddenDelta = data.hiddenThisMonth - data.hiddenLastMonth;
+
+  return (
+    <>
+      {/* Area Chart */}
+      <div className="glass-card" style={{ padding: 24, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Comments Scanned</h2>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Hidden vs. auto-replied trend</p>
+          </div>
+          <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 4 }}>
+            {(['Daily', 'Weekly', 'Monthly'] as const).map((r) => (
+              <button key={r} onClick={() => setRange(r)} className="range-btn" style={{ background: range === r ? 'rgba(255,255,255,0.12)' : 'transparent', color: range === r ? '#FAFAFA' : 'rgba(255,255,255,0.4)' }}>
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={data.weeklyData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+            <defs>
+              <linearGradient id="scannedGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.35} />
+                <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="hiddenGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="day" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<ChartTooltip />} />
+            <Area type="monotone" dataKey="scanned" name="Scanned" stroke="#F59E0B" strokeWidth={2} fill="url(#scannedGrad)" dot={false} />
+            <Area type="monotone" dataKey="hidden"  name="Hidden"  stroke="#ef4444" strokeWidth={1.5} fill="url(#hiddenGrad)" dot={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Language + Spam */}
+      <div className="charts-grid" style={{ display: 'grid', gap: 16, marginBottom: 20 }}>
+        <div className="glass-card" style={{ padding: 24 }}>
+          <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Language Detection</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2, marginBottom: 20 }}>Breakdown across all scanned comments</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <PieChart width={150} height={150}>
+              <Pie data={data.languageData} cx={70} cy={70} innerRadius={44} outerRadius={68} paddingAngle={2} dataKey="value" strokeWidth={0}>
+                {data.languageData.map((_, i) => <Cell key={i} fill={data.languageData[i].color} />)}
+              </Pie>
+            </PieChart>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {data.languageData.map((lang) => (
+                <div key={lang.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: lang.color, display: 'inline-block', flexShrink: 0 }} />
+                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{lang.name}</span>
+                  </div>
+                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600 }}>{lang.value}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-card" style={{ padding: 24 }}>
+          <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Spam Trend</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2, marginBottom: 20 }}>Daily spam detected & auto-hidden</p>
+          <ResponsiveContainer width="100%" height={160}>
+            <BarChart data={data.spamTrend} margin={{ top: 4, right: 4, bottom: 0, left: -20 }} barCategoryGap="30%">
+              <XAxis dataKey="day" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTooltip />} />
+              <Bar dataKey="spam" name="Spam" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Stat cards */}
+      <div className="stats-grid" style={{ display: 'grid', gap: 16 }}>
+        <div className="glass-card" style={{ padding: 20 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Total Hidden This Month</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.hiddenThisMonth.toLocaleString()}</p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: hiddenDelta >= 0 ? '#4ade80' : '#f87171' }}>
+            {hiddenDelta >= 0 ? '+' : ''}{hiddenDelta} vs last month
+          </p>
+        </div>
+        <div className="glass-card" style={{ padding: 20 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>AI Replies Sent</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.repliesSent.toLocaleString()}</p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>
+            {data.avgResponseTime > 0 ? `Avg ${data.avgResponseTime}s response time` : 'No replies yet'}
+          </p>
+        </div>
+        <div className="glass-card" style={{ padding: 20 }}>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>False Positive Rate</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.falsePositiveRate.toFixed(1)}%</p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>
+            {data.falsePositiveRate === 0 ? 'No data yet' : data.falsePositiveRate < 1 ? 'Best in class' : 'Needs review'}
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Main Export ──────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<AnalyticsData>(DEFAULT_ANALYTICS);
-  const [range, setRange] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
-  const [search, setSearch] = useState('');
+  const [plan, setPlan]       = useState<Plan>('free');
+  const [data, setData]       = useState<AnalyticsData>(DEFAULT_ANALYTICS);
+  const [search, setSearch]   = useState('');
 
+  // Auth
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) { router.push('/login'); return; }
@@ -82,6 +411,24 @@ export default function AnalyticsPage() {
     return () => unsub();
   }, [router]);
 
+  // Subscription — read from Firestore users/{uid}
+  useEffect(() => {
+    if (!user) return;
+    const ref = doc(db, 'users', user.uid);
+    const unsub = onSnapshot(ref, (snap) => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+      // Support both 'plan' and 'subscription.plan' field shapes
+      const raw: string = d?.plan ?? d?.subscription?.plan ?? 'free';
+      const normalized = raw.toLowerCase();
+      if (normalized === 'pro')    setPlan('pro');
+      else if (normalized === 'agency') setPlan('agency');
+      else setPlan('free');
+    });
+    return () => unsub();
+  }, [user]);
+
+  // Analytics data
   useEffect(() => {
     if (!user) return;
     const ref = doc(db, 'analytics', user.uid);
@@ -124,9 +471,15 @@ export default function AnalyticsPage() {
     </div>
   );
 
-  const hiddenDelta = data.hiddenThisMonth - data.hiddenLastMonth;
-  const firstName   = user?.displayName?.split(' ')[0] || 'User';
-  const plan        = 'free';
+  const firstName = user?.displayName?.split(' ')[0] || 'User';
+
+  // Header badge per plan
+  const planBadge: Record<Plan, { label: string; bg: string; color: string }> = {
+    free:   { label: 'Basic Analytics',    bg: 'rgba(245,158,11,0.12)',  color: '#F59E0B' },
+    pro:    { label: 'Full Analytics',     bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa' },
+    agency: { label: 'Advanced Analytics', bg: 'rgba(6,182,212,0.12)',   color: '#22d3ee' },
+  };
+  const badge = planBadge[plan];
 
   return (
     <>
@@ -158,14 +511,14 @@ export default function AnalyticsPage() {
         .charts-grid     { grid-template-columns: 1fr; }
         .stats-grid      { grid-template-columns: 1fr; }
 
-        .glass-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
-        .range-btn  { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
+        .glass-card  { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
+        .range-btn   { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
         .search-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 8px 16px 8px 36px; color: #FAFAFA; font-size: 14px; outline: none; width: 200px; transition: all 0.2s; }
         .search-input:focus { border-color: rgba(245,158,11,0.4); }
         .search-input::placeholder { color: rgba(255,255,255,0.3); }
       `}</style>
 
-      {/* Orange glow background */}
+      {/* Background glow */}
       <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: 'radial-gradient(ellipse 55% 50% at 5% 15%, rgba(245,158,11,0.10) 0%, transparent 60%), radial-gradient(ellipse 60% 55% at 5% 95%, rgba(109,40,217,0.18) 0%, transparent 62%), #07030F', pointerEvents: 'none' }} />
 
       <div className="desktop-sidebar"><DashboardSidebar /></div>
@@ -176,21 +529,33 @@ export default function AnalyticsPage() {
         {/* HEADER */}
         <header className="header-padding" style={{ background: 'rgba(7,3,15,0.80)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <h1 style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 18 }}>Analytics</h1>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.15)', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: '#4ade80' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-                Live
+              {/* Plan tier badge */}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: badge.bg, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, color: badge.color, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {badge.label}
               </span>
+              {plan !== 'agency' && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.15)', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: '#4ade80' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+                  Live
+                </span>
+              )}
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Deep insights into your moderation footprint</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
+              {plan === 'free'   && 'Basic moderation insights for your account'}
+              {plan === 'pro'    && 'Deep insights into your moderation footprint'}
+              {plan === 'agency' && 'Advanced Analytics — coming soon for Agency'}
+            </p>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div className="desktop-only" style={{ position: 'relative' }}>
-              <Search size={14} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-              <input className="search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search comments, users..." />
-            </div>
+            {plan === 'pro' && (
+              <div className="desktop-only" style={{ position: 'relative' }}>
+                <Search size={14} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+                <input className="search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search comments, users..." />
+              </div>
+            )}
 
             <button className="desktop-only" onClick={() => router.push('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
@@ -203,7 +568,7 @@ export default function AnalyticsPage() {
                 )}
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>{firstName}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, lineHeight: 1.2 }}>{plan} plan</div>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, lineHeight: 1.2, textTransform: 'capitalize' }}>{plan} plan</div>
                 </div>
               </div>
             </button>
@@ -217,107 +582,11 @@ export default function AnalyticsPage() {
 
         {/* CONTENT */}
         <div className="content-padding" style={{ flex: 1 }}>
-
-          {/* Area Chart */}
-          <div className="glass-card" style={{ padding: 24, marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Comments Scanned</h2>
-                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Hidden vs. auto-replied trend</p>
-              </div>
-              <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 4 }}>
-                {(['Daily', 'Weekly', 'Monthly'] as const).map((r) => (
-                  <button key={r} onClick={() => setRange(r)} className="range-btn" style={{ background: range === r ? 'rgba(255,255,255,0.12)' : 'transparent', color: range === r ? '#FAFAFA' : 'rgba(255,255,255,0.4)' }}>
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={data.weeklyData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
-                <defs>
-                  <linearGradient id="scannedGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="hiddenGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="day" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTooltip />} />
-                <Area type="monotone" dataKey="scanned" name="Scanned" stroke="#F59E0B" strokeWidth={2} fill="url(#scannedGrad)" dot={false} />
-                <Area type="monotone" dataKey="hidden"  name="Hidden"  stroke="#ef4444" strokeWidth={1.5} fill="url(#hiddenGrad)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Language + Spam */}
-          <div className="charts-grid" style={{ display: 'grid', gap: 16, marginBottom: 20 }}>
-            <div className="glass-card" style={{ padding: 24 }}>
-              <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Language Detection</h2>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2, marginBottom: 20 }}>Breakdown across all scanned comments</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <PieChart width={150} height={150}>
-                  <Pie data={data.languageData} cx={70} cy={70} innerRadius={44} outerRadius={68} paddingAngle={2} dataKey="value" strokeWidth={0}>
-                    {data.languageData.map((_, i) => <Cell key={i} fill={data.languageData[i].color} />)}
-                  </Pie>
-                </PieChart>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {data.languageData.map((lang) => (
-                    <div key={lang.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: lang.color, display: 'inline-block', flexShrink: 0 }} />
-                        <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>{lang.name}</span>
-                      </div>
-                      <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600 }}>{lang.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="glass-card" style={{ padding: 24 }}>
-              <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Spam Trend</h2>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2, marginBottom: 20 }}>Daily spam detected & auto-hidden</p>
-              <ResponsiveContainer width="100%" height={160}>
-                <BarChart data={data.spamTrend} margin={{ top: 4, right: 4, bottom: 0, left: -20 }} barCategoryGap="30%">
-                  <XAxis dataKey="day" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Bar dataKey="spam" name="Spam" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Stat cards */}
-          <div className="stats-grid" style={{ display: 'grid', gap: 16 }}>
-            <div className="glass-card" style={{ padding: 20 }}>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Total Hidden This Month</p>
-              <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.hiddenThisMonth.toLocaleString()}</p>
-              <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: hiddenDelta >= 0 ? '#4ade80' : '#f87171' }}>
-                {hiddenDelta >= 0 ? '+' : ''}{hiddenDelta} vs last month
-              </p>
-            </div>
-            <div className="glass-card" style={{ padding: 20 }}>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>AI Replies Sent</p>
-              <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.repliesSent.toLocaleString()}</p>
-              <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>
-                {data.avgResponseTime > 0 ? `Avg ${data.avgResponseTime}s response time` : 'No replies yet'}
-              </p>
-            </div>
-            <div className="glass-card" style={{ padding: 20 }}>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>False Positive Rate</p>
-              <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.falsePositiveRate.toFixed(1)}%</p>
-              <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>
-                {data.falsePositiveRate === 0 ? 'No data yet' : data.falsePositiveRate < 1 ? 'Best in class' : 'Needs review'}
-              </p>
-            </div>
-          </div>
+          {plan === 'free'   && <BasicAnalytics data={data} />}
+          {plan === 'pro'    && <FullAnalytics   data={data} />}
+          {plan === 'agency' && <AgencyLockedUI  firstName={firstName} user={user} plan={plan} />}
         </div>
+
       </div>
     </>
   );

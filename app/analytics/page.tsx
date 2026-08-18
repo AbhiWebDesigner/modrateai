@@ -4,7 +4,7 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import { Bell, Search, Lock, Zap, BarChart2, TrendingUp, Globe, ShieldCheck } from 'lucide-react';
+import { Bell, Search, Lock, Zap, BarChart2, TrendingUp, Globe, ShieldCheck, WifiOff, Youtube } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -204,9 +204,31 @@ function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: Us
   );
 }
 
+// ─── YouTube Not Connected empty state ────────────────────────────────────────
+function YoutubeNotConnected() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 340, textAlign: 'center', padding: '40px 24px' }}>
+      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <Youtube size={28} color="#f87171" />
+      </div>
+      <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 18, marginBottom: 10 }}>YouTube Channel Not Connected</h2>
+      <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, lineHeight: 1.6, maxWidth: 360, marginBottom: 28 }}>
+        Connect your YouTube channel to start tracking comments, spam detection, and moderation analytics in real time.
+      </p>
+      <a href="/settings" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #F59E0B, #d97706)', color: '#07030F', fontWeight: 700, fontSize: 13, padding: '10px 22px', borderRadius: 10, textDecoration: 'none' }}>
+        <Youtube size={15} color="#07030F" />
+        Connect YouTube Channel
+      </a>
+    </div>
+  );
+}
+
 // ─── Basic Analytics (Free Trial) ─────────────────────────────────────────────
-function BasicAnalytics({ data }: { data: AnalyticsData }) {
+function BasicAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtubeConnected: boolean }) {
   const hiddenDelta = data.hiddenThisMonth - data.hiddenLastMonth;
+
+  if (!youtubeConnected) return <YoutubeNotConnected />;
+
   return (
     <>
       {/* Area Chart — scanned only, no replies */}
@@ -283,9 +305,11 @@ function BasicAnalytics({ data }: { data: AnalyticsData }) {
 }
 
 // ─── Full Analytics (Pro) ─────────────────────────────────────────────────────
-function FullAnalytics({ data }: { data: AnalyticsData }) {
+function FullAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtubeConnected: boolean }) {
   const [range, setRange] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
   const hiddenDelta = data.hiddenThisMonth - data.hiddenLastMonth;
+
+  if (!youtubeConnected) return <YoutubeNotConnected />;
 
   return (
     <>
@@ -397,9 +421,10 @@ export default function AnalyticsPage() {
   const router = useRouter();
   const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [plan, setPlan]       = useState<Plan>('free');
-  const [data, setData]       = useState<AnalyticsData>(DEFAULT_ANALYTICS);
-  const [search, setSearch]   = useState('');
+  const [plan, setPlan]             = useState<Plan>('free');
+  const [youtubeConnected, setYoutubeConnected] = useState<boolean>(false);
+  const [data, setData]             = useState<AnalyticsData>(DEFAULT_ANALYTICS);
+  const [search, setSearch]         = useState('');
 
   // Auth
   useEffect(() => {
@@ -421,9 +446,17 @@ export default function AnalyticsPage() {
       // Support both 'plan' and 'subscription.plan' field shapes
       const raw: string = d?.plan ?? d?.subscription?.plan ?? 'free';
       const normalized = raw.toLowerCase();
-      if (normalized === 'pro')    setPlan('pro');
+      if (normalized === 'pro')         setPlan('pro');
       else if (normalized === 'agency') setPlan('agency');
-      else setPlan('free');
+      else                              setPlan('free');
+
+      // Detect YouTube connection — support multiple common field shapes:
+      // { youtubeConnected: true } | { youtube: { channelId: '...' } } | { youtube: { connected: true } }
+      const ytConnected: boolean =
+        !!d?.youtubeConnected ||
+        !!d?.youtube?.connected ||
+        !!(d?.youtube?.channelId && d.youtube.channelId !== '');
+      setYoutubeConnected(ytConnected);
     });
     return () => unsub();
   }, [user]);
@@ -536,16 +569,24 @@ export default function AnalyticsPage() {
                 {badge.label}
               </span>
               {plan !== 'agency' && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.15)', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: '#4ade80' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-                  Live
-                </span>
+                youtubeConnected ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.15)', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: '#4ade80' }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+                    Live
+                  </span>
+                ) : (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(239,68,68,0.12)', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: '#f87171' }}>
+                    <WifiOff size={11} color="#f87171" />
+                    Not Connected
+                  </span>
+                )
               )}
             </div>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
-              {plan === 'free'   && 'Basic moderation insights for your account'}
-              {plan === 'pro'    && 'Deep insights into your moderation footprint'}
               {plan === 'agency' && 'Advanced Analytics — coming soon for Agency'}
+              {plan !== 'agency' && youtubeConnected  && plan === 'free' && 'Basic moderation insights for your account'}
+              {plan !== 'agency' && youtubeConnected  && plan === 'pro'  && 'Deep insights into your moderation footprint'}
+              {plan !== 'agency' && !youtubeConnected && 'Connect your YouTube channel to start seeing analytics'}
             </p>
           </div>
 
@@ -582,8 +623,8 @@ export default function AnalyticsPage() {
 
         {/* CONTENT */}
         <div className="content-padding" style={{ flex: 1 }}>
-          {plan === 'free'   && <BasicAnalytics data={data} />}
-          {plan === 'pro'    && <FullAnalytics   data={data} />}
+          {plan === 'free'   && <BasicAnalytics data={data} youtubeConnected={youtubeConnected} />}
+          {plan === 'pro'    && <FullAnalytics   data={data} youtubeConnected={youtubeConnected} />}
           {plan === 'agency' && <AgencyLockedUI  firstName={firstName} user={user} plan={plan} />}
         </div>
 

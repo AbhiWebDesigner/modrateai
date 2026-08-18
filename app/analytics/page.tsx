@@ -1,10 +1,13 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
-import { Bell, Search, Lock, Zap, BarChart2, TrendingUp, Globe, ShieldCheck, WifiOff, PlayCircle } from 'lucide-react';
+import {
+  Bell, Lock, Zap, BarChart2, TrendingUp, Globe,
+  ShieldCheck, WifiOff, PlayCircle,
+} from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -12,11 +15,22 @@ import { useRouter } from 'next/navigation';
 import { DashboardSidebar, DashboardBottomNav } from '@/app/components/DashboardLayout';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface DailyPoint { day: string; scanned: number; hidden: number; replies: number; }
+interface DailyPoint {
+  day: string;
+  scanned: number;
+  hidden: number;
+  replies: number;
+}
+
 interface AnalyticsData {
-  totalScanned: number; totalHidden: number; totalReplies: number; protectionRate: number;
-  hiddenThisMonth: number; hiddenLastMonth: number; repliesSent: number;
-  avgResponseTime: number; falsePositiveRate: number;
+  totalScanned: number;
+  totalHidden: number;
+  totalReplies: number;
+  hiddenThisMonth: number;
+  hiddenLastMonth: number;
+  repliesSent: number;
+  avgResponseTime: number;
+  falsePositiveRate: number;
   weeklyData: DailyPoint[];
   languageData: { name: string; value: number; color: string }[];
   spamTrend: { day: string; spam: number }[];
@@ -29,9 +43,14 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const LANG_COLORS = ['#f59e0b', '#8b5cf6', '#06b6d4', '#10b981', '#ef4444', '#6b7280'];
 
 const DEFAULT_ANALYTICS: AnalyticsData = {
-  totalScanned: 0, totalHidden: 0, totalReplies: 0, protectionRate: 99,
-  hiddenThisMonth: 0, hiddenLastMonth: 0, repliesSent: 0,
-  avgResponseTime: 0, falsePositiveRate: 0,
+  totalScanned: 0,
+  totalHidden: 0,
+  totalReplies: 0,
+  hiddenThisMonth: 0,
+  hiddenLastMonth: 0,
+  repliesSent: 0,
+  avgResponseTime: 0,
+  falsePositiveRate: 0,
   weeklyData: DAYS.map((day) => ({ day, scanned: 0, hidden: 0, replies: 0 })),
   languageData: [
     { name: 'English',  value: 0, color: '#f59e0b' },
@@ -44,33 +63,88 @@ const DEFAULT_ANALYTICS: AnalyticsData = {
   spamTrend: DAYS.map((day) => ({ day, spam: 0 })),
 };
 
+// ─── Safe numeric coercion ────────────────────────────────────────────────────
+function safeNum(val: unknown, fallback = 0): number {
+  if (typeof val !== 'number' || !isFinite(val) || isNaN(val)) return fallback;
+  return val;
+}
+
+// Returns display string for protection rate; never shows fake 99 / NaN / Infinity
+function safeProtectionRate(totalScanned: number, totalHidden: number): string {
+  if (totalScanned <= 0) return '—';
+  const rate = ((totalScanned - totalHidden) / totalScanned) * 100;
+  if (!isFinite(rate) || isNaN(rate)) return '—';
+  return `${Math.min(100, Math.max(0, Math.round(rate)))}%`;
+}
+
+// ─── Tooltip types ────────────────────────────────────────────────────────────
+interface TooltipPayloadItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface ChartTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
 // ─── Shared Tooltip ───────────────────────────────────────────────────────────
-const ChartTooltip = ({ active, payload, label }: any) => {
+const ChartTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{ background: '#1e1e32', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 14px', fontSize: 12 }}>
       <p style={{ color: '#9ca3af', marginBottom: 4 }}>{label}</p>
-      {payload.map((p: any) => (
+      {payload.map((p) => (
         <p key={p.name} style={{ color: p.color, fontWeight: 600 }}>{p.name}: {p.value}</p>
       ))}
     </div>
   );
 };
 
+// ─── YouTube Not Connected empty state ────────────────────────────────────────
+function YoutubeNotConnected() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 340, textAlign: 'center', padding: '40px 24px' }}>
+      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <PlayCircle size={28} color="#f87171" />
+      </div>
+      <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 18, marginBottom: 10 }}>YouTube Channel Not Connected</h2>
+      <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, lineHeight: 1.6, maxWidth: 360, marginBottom: 28 }}>
+        Connect your YouTube channel to start tracking comments, spam detection, and moderation analytics in real time.
+      </p>
+      <a
+        href="/settings"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #F59E0B, #d97706)', color: '#07030F', fontWeight: 700, fontSize: 13, padding: '10px 22px', borderRadius: 10, textDecoration: 'none' }}
+      >
+        <PlayCircle size={15} color="#07030F" />
+        Connect YouTube Channel
+      </a>
+    </div>
+  );
+}
+
 // ─── Agency Locked UI ─────────────────────────────────────────────────────────
-function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: User | null; plan: Plan }) {
-  // Static preview data — purely decorative, not real
-  const previewArea = DAYS.map((day, i) => ({ day, scanned: [120,180,95,220,160,300,240][i], hidden: [12,18,8,22,14,28,20][i], replies: [30,45,20,55,40,70,60][i] }));
-  const previewBars = DAYS.map((day, i) => ({ day, spam: [40,65,30,80,55,100,75][i] }));
+function AgencyLockedUI() {
+  // Static decorative preview data — NOT real analytics
+  const previewArea = DAYS.map((day, i) => ({
+    day,
+    scanned: ([120, 180, 95, 220, 160, 300, 240] as const)[i],
+    hidden:  ([12,  18,  8,  22,  14,  28,  20]  as const)[i],
+  }));
+  const previewBars = DAYS.map((day, i) => ({
+    day,
+    spam: ([40, 65, 30, 80, 55, 100, 75] as const)[i],
+  }));
   const previewLang = [
-    { name: 'English', value: 42, color: '#f59e0b' },
+    { name: 'English',  value: 42, color: '#f59e0b' },
     { name: 'Hinglish', value: 21, color: '#8b5cf6' },
     { name: 'Telugu',   value: 14, color: '#06b6d4' },
     { name: 'Tamil',    value: 10, color: '#10b981' },
     { name: 'Hindi',    value: 8,  color: '#ef4444' },
     { name: 'Other',    value: 5,  color: '#6b7280' },
   ];
-
   const agencyFeatures = [
     { icon: <BarChart2 size={18} color="#f59e0b" />, label: 'Multi-Account Analytics' },
     { icon: <TrendingUp size={18} color="#8b5cf6" />, label: 'Cross-Profile Trends' },
@@ -80,30 +154,24 @@ function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: Us
 
   return (
     <div style={{ position: 'relative' }}>
-      {/* Preview charts — blurred & dimmed */}
+      {/* Decorative preview — blurred, dimmed, non-interactive */}
       <div style={{ filter: 'blur(3px) brightness(0.35)', pointerEvents: 'none', userSelect: 'none', opacity: 0.7 }}>
-        {/* Area Chart */}
         <div className="glass-card" style={{ padding: 24, marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
             <div>
               <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Multi-Account Comment Streams</h2>
               <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Aggregated across all client profiles</p>
             </div>
-            <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 4 }}>
-              {['Daily', 'Weekly', 'Monthly'].map((r) => (
-                <button key={r} className="range-btn" style={{ background: r === 'Weekly' ? 'rgba(255,255,255,0.12)' : 'transparent', color: r === 'Weekly' ? '#FAFAFA' : 'rgba(255,255,255,0.4)' }}>{r}</button>
-              ))}
-            </div>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={previewArea} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
               <defs>
                 <linearGradient id="pScannedGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.35} />
+                  <stop offset="5%"  stopColor="#F59E0B" stopOpacity={0.35} />
                   <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="pHiddenGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                  <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.2} />
                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                 </linearGradient>
               </defs>
@@ -115,7 +183,6 @@ function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: Us
           </ResponsiveContainer>
         </div>
 
-        {/* Lang + Spam */}
         <div className="charts-grid" style={{ display: 'grid', gap: 16, marginBottom: 20 }}>
           <div className="glass-card" style={{ padding: 24 }}>
             <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Language Detection</h2>
@@ -123,7 +190,7 @@ function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: Us
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
               <PieChart width={150} height={150}>
                 <Pie data={previewLang} cx={70} cy={70} innerRadius={44} outerRadius={68} paddingAngle={2} dataKey="value" strokeWidth={0}>
-                  {previewLang.map((_, i) => <Cell key={i} fill={previewLang[i].color} />)}
+                  {previewLang.map((entry, i) => <Cell key={entry.name} fill={previewLang[i].color} />)}
                 </Pie>
               </PieChart>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -152,17 +219,12 @@ function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: Us
           </div>
         </div>
 
-        {/* Stat cards */}
         <div className="stats-grid" style={{ display: 'grid', gap: 16 }}>
-          {[
-            { label: 'Total Hidden This Month', value: '—', sub: '— vs last month' },
-            { label: 'AI Replies Sent',          value: '—', sub: '— avg response time' },
-            { label: 'False Positive Rate',      value: '—', sub: '—' },
-          ].map((c) => (
-            <div key={c.label} className="glass-card" style={{ padding: 20 }}>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>{c.label}</p>
-              <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{c.value}</p>
-              <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>{c.sub}</p>
+          {(['Total Hidden This Month', 'AI Replies Sent', 'False Positive Rate'] as const).map((label) => (
+            <div key={label} className="glass-card" style={{ padding: 20 }}>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>{label}</p>
+              <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>—</p>
+              <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>—</p>
             </div>
           ))}
         </div>
@@ -171,21 +233,16 @@ function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: Us
       {/* Lock overlay */}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 20 }}>
         <div style={{ background: 'rgba(7,3,15,0.85)', backdropFilter: 'blur(24px)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 24, padding: '40px 36px', maxWidth: 460, width: '90%', textAlign: 'center', boxShadow: '0 0 60px rgba(245,158,11,0.08)' }}>
-          {/* Lock icon */}
           <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(124,58,237,0.18))', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
             <Lock size={28} color="#F59E0B" />
           </div>
-
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 20, padding: '4px 14px', marginBottom: 16 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Coming Soon</span>
           </div>
-
           <h2 style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 22, marginBottom: 10 }}>Advanced Analytics</h2>
           <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
             Advanced Analytics is an upcoming feature exclusive to the Agency plan. Multi-account reporting, cross-profile trend analysis, and client-level dashboards are on the way.
           </p>
-
-          {/* Feature chips */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
             {agencyFeatures.map((f) => (
               <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '10px 14px' }}>
@@ -194,7 +251,6 @@ function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: Us
               </div>
             ))}
           </div>
-
           <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
             We'll notify you as soon as Advanced Analytics goes live.
           </p>
@@ -204,34 +260,17 @@ function AgencyLockedUI({ firstName, user, plan }: { firstName: string; user: Us
   );
 }
 
-// ─── YouTube Not Connected empty state ────────────────────────────────────────
-function YoutubeNotConnected() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 340, textAlign: 'center', padding: '40px 24px' }}>
-      <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-        <PlayCircle size={28} color="#f87171" />
-      </div>
-      <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 18, marginBottom: 10 }}>YouTube Channel Not Connected</h2>
-      <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, lineHeight: 1.6, maxWidth: 360, marginBottom: 28 }}>
-        Connect your YouTube channel to start tracking comments, spam detection, and moderation analytics in real time.
-      </p>
-      <a href="/settings" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'linear-gradient(135deg, #F59E0B, #d97706)', color: '#07030F', fontWeight: 700, fontSize: 13, padding: '10px 22px', borderRadius: 10, textDecoration: 'none' }}>
-        <PlayCircle size={15} color="#07030F" />
-        Connect YouTube Channel
-      </a>
-    </div>
-  );
-}
-
 // ─── Basic Analytics (Free Trial) ─────────────────────────────────────────────
 function BasicAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtubeConnected: boolean }) {
-  const hiddenDelta = data.hiddenThisMonth - data.hiddenLastMonth;
-
   if (!youtubeConnected) return <YoutubeNotConnected />;
+
+  const hiddenDelta = data.hiddenThisMonth - data.hiddenLastMonth;
+  const protectionDisplay = safeProtectionRate(data.totalScanned, data.totalHidden);
+  const hasData = data.totalScanned > 0;
 
   return (
     <>
-      {/* Area Chart — scanned only, no replies */}
+      {/* Area Chart */}
       <div className="glass-card" style={{ padding: 24, marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -264,24 +303,32 @@ function BasicAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtu
         </ResponsiveContainer>
       </div>
 
-      {/* Basic stat cards */}
+      {/* Stat cards */}
       <div className="stats-grid" style={{ display: 'grid', gap: 16, marginBottom: 20 }}>
         <div className="glass-card" style={{ padding: 20 }}>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Total Scanned</p>
-          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.totalScanned.toLocaleString()}</p>
-          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>All time</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>
+            {hasData ? data.totalScanned.toLocaleString() : '—'}
+          </p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>
+            {hasData ? 'All time' : 'No data yet'}
+          </p>
         </div>
         <div className="glass-card" style={{ padding: 20 }}>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Hidden This Month</p>
-          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.hiddenThisMonth.toLocaleString()}</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>
+            {hasData ? data.hiddenThisMonth.toLocaleString() : '—'}
+          </p>
           <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: hiddenDelta >= 0 ? '#4ade80' : '#f87171' }}>
-            {hiddenDelta >= 0 ? '+' : ''}{hiddenDelta} vs last month
+            {hasData ? `${hiddenDelta >= 0 ? '+' : ''}${hiddenDelta} vs last month` : 'No data yet'}
           </p>
         </div>
         <div className="glass-card" style={{ padding: 20 }}>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Protection Rate</p>
-          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.protectionRate}%</p>
-          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>Active</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{protectionDisplay}</p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: hasData ? '#4ade80' : 'rgba(255,255,255,0.35)' }}>
+            {hasData ? 'Active' : 'No data yet'}
+          </p>
         </div>
       </div>
 
@@ -306,26 +353,26 @@ function BasicAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtu
 
 // ─── Full Analytics (Pro) ─────────────────────────────────────────────────────
 function FullAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtubeConnected: boolean }) {
-  const [range, setRange] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
-  const hiddenDelta = data.hiddenThisMonth - data.hiddenLastMonth;
-
   if (!youtubeConnected) return <YoutubeNotConnected />;
+
+  const hiddenDelta       = data.hiddenThisMonth - data.hiddenLastMonth;
+  const protectionDisplay = safeProtectionRate(data.totalScanned, data.totalHidden);
+  const hasData           = data.totalScanned > 0;
+  const fprSafe           = safeNum(data.falsePositiveRate, 0);
+  const avgTimeSafe       = safeNum(data.avgResponseTime, 0);
 
   return (
     <>
-      {/* Area Chart */}
+      {/* Area Chart — always shows weekly data; label is honest */}
       <div className="glass-card" style={{ padding: 24, marginBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 15 }}>Comments Scanned</h2>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Hidden vs. auto-replied trend</p>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>Hidden vs. auto-replied — weekly view</p>
           </div>
-          <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 4 }}>
-            {(['Daily', 'Weekly', 'Monthly'] as const).map((r) => (
-              <button key={r} onClick={() => setRange(r)} className="range-btn" style={{ background: range === r ? 'rgba(255,255,255,0.12)' : 'transparent', color: range === r ? '#FAFAFA' : 'rgba(255,255,255,0.4)' }}>
-                {r}
-              </button>
-            ))}
+          {/* Static label — range selector removed because only weekly data exists */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 10, padding: '6px 14px' }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>Weekly</span>
           </div>
         </div>
         <ResponsiveContainer width="100%" height={200}>
@@ -357,7 +404,9 @@ function FullAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtub
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <PieChart width={150} height={150}>
               <Pie data={data.languageData} cx={70} cy={70} innerRadius={44} outerRadius={68} paddingAngle={2} dataKey="value" strokeWidth={0}>
-                {data.languageData.map((_, i) => <Cell key={i} fill={data.languageData[i].color} />)}
+                {data.languageData.map((entry, i) => (
+                  <Cell key={entry.name} fill={data.languageData[i].color} />
+                ))}
               </Pie>
             </PieChart>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -392,23 +441,29 @@ function FullAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtub
       <div className="stats-grid" style={{ display: 'grid', gap: 16 }}>
         <div className="glass-card" style={{ padding: 20 }}>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Total Hidden This Month</p>
-          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.hiddenThisMonth.toLocaleString()}</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>
+            {hasData ? data.hiddenThisMonth.toLocaleString() : '—'}
+          </p>
           <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: hiddenDelta >= 0 ? '#4ade80' : '#f87171' }}>
-            {hiddenDelta >= 0 ? '+' : ''}{hiddenDelta} vs last month
+            {hasData ? `${hiddenDelta >= 0 ? '+' : ''}${hiddenDelta} vs last month` : 'No data yet'}
           </p>
         </div>
         <div className="glass-card" style={{ padding: 20 }}>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>AI Replies Sent</p>
-          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.repliesSent.toLocaleString()}</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>
+            {hasData ? data.repliesSent.toLocaleString() : '—'}
+          </p>
           <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>
-            {data.avgResponseTime > 0 ? `Avg ${data.avgResponseTime}s response time` : 'No replies yet'}
+            {avgTimeSafe > 0 ? `Avg ${avgTimeSafe}s response time` : 'No replies yet'}
           </p>
         </div>
         <div className="glass-card" style={{ padding: 20 }}>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>False Positive Rate</p>
-          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{data.falsePositiveRate.toFixed(1)}%</p>
-          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: '#4ade80' }}>
-            {data.falsePositiveRate === 0 ? 'No data yet' : data.falsePositiveRate < 1 ? 'Best in class' : 'Needs review'}
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginBottom: 8 }}>Protection Rate</p>
+          <p style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 32 }}>{protectionDisplay}</p>
+          <p style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: hasData ? '#4ade80' : 'rgba(255,255,255,0.35)' }}>
+            {hasData
+              ? (fprSafe === 0 ? 'No false positives' : fprSafe < 1 ? 'Best in class' : 'Needs review')
+              : 'No data yet'}
           </p>
         </div>
       </div>
@@ -418,17 +473,25 @@ function FullAnalytics({ data, youtubeConnected }: { data: AnalyticsData; youtub
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-  const router = useRouter();
-  const [user, setUser]       = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [plan, setPlan]             = useState<Plan>('free');
+  const router  = useRouter();
+  const mounted = useRef(true);
+
+  const [user,             setUser]             = useState<User | null>(null);
+  const [loading,          setLoading]          = useState(true);
+  const [plan,             setPlan]             = useState<Plan>('free');
   const [youtubeConnected, setYoutubeConnected] = useState<boolean>(false);
-  const [data, setData]             = useState<AnalyticsData>(DEFAULT_ANALYTICS);
-  const [search, setSearch]         = useState('');
+  const [data,             setData]             = useState<AnalyticsData>(DEFAULT_ANALYTICS);
+
+  // Track mount state to prevent state updates after unmount
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   // Auth
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
+      if (!mounted.current) return;
       if (!u) { router.push('/login'); return; }
       setUser(u);
       setLoading(false);
@@ -436,64 +499,108 @@ export default function AnalyticsPage() {
     return () => unsub();
   }, [router]);
 
-  // Subscription — read from Firestore users/{uid}
+  // User doc — plan + YouTube connection state
   useEffect(() => {
     if (!user) return;
-    const ref = doc(db, 'users', user.uid);
-    const unsub = onSnapshot(ref, (snap) => {
-      if (!snap.exists()) return;
-      const d = snap.data();
-      // Support both 'plan' and 'subscription.plan' field shapes
-      const raw: string = d?.plan ?? d?.subscription?.plan ?? 'free';
-      const normalized = raw.toLowerCase();
-      if (normalized === 'pro')         setPlan('pro');
-      else if (normalized === 'agency') setPlan('agency');
-      else                              setPlan('free');
+    const ref  = doc(db, 'users', user.uid);
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        if (!mounted.current) return;
+        if (!snap.exists()) return;
+        const d = snap.data();
 
-      // Detect YouTube connection — support multiple common field shapes:
-      // { youtubeConnected: true } | { youtube: { channelId: '...' } } | { youtube: { connected: true } }
-      const ytConnected: boolean =
-        !!d?.youtubeConnected ||
-        !!d?.youtube?.connected ||
-        !!(d?.youtube?.channelId && d.youtube.channelId !== '');
-      setYoutubeConnected(ytConnected);
-    });
+        // Plan — support 'plan' or 'subscription.plan' field shapes
+        const rawPlan =
+          typeof d?.plan === 'string' ? d.plan :
+          typeof d?.subscription?.plan === 'string' ? d.subscription.plan :
+          'free';
+        const normalizedPlan = rawPlan.toLowerCase().trim();
+        if      (normalizedPlan === 'pro')    setPlan('pro');
+        else if (normalizedPlan === 'agency') setPlan('agency');
+        else                                  setPlan('free');
+
+        // YouTube connection — support multiple field shapes
+        const ytConnected =
+          d?.youtubeConnected === true ||
+          d?.youtube?.connected === true ||
+          (typeof d?.youtube?.channelId === 'string' && d.youtube.channelId.trim() !== '');
+        setYoutubeConnected(ytConnected);
+      },
+      () => {
+        // Firestore error — keep defaults, do not expose error details
+        if (!mounted.current) return;
+      },
+    );
     return () => unsub();
   }, [user]);
 
   // Analytics data
   useEffect(() => {
     if (!user) return;
-    const ref = doc(db, 'analytics', user.uid);
-    const unsub = onSnapshot(ref, (snap) => {
-      if (!snap.exists()) return;
-      const d = snap.data();
-      const weeklyData: DailyPoint[] = DAYS.map((day, i) => ({
-        day,
-        scanned: d.weekly?.scanned?.[i] ?? 0,
-        hidden:  d.weekly?.hidden?.[i]  ?? 0,
-        replies: d.weekly?.replies?.[i] ?? 0,
-      }));
-      const spamTrend = DAYS.map((day, i) => ({ day, spam: d.weekly?.spam?.[i] ?? 0 }));
-      const langRaw: Record<string, number> = d.languages ?? {};
-      const total = Object.values(langRaw).reduce((a, b) => a + b, 0) || 1;
-      const langNames = ['English', 'Hinglish', 'Telugu', 'Tamil', 'Hindi', 'Other'];
-      const langKeys  = ['english', 'hinglish', 'telugu', 'tamil', 'hindi', 'other'];
-      const languageData = langNames.map((name, i) => ({
-        name, value: Math.round(((langRaw[langKeys[i]] ?? 0) / total) * 100), color: LANG_COLORS[i],
-      }));
-      const hidden  = d.totalHidden  ?? 0;
-      const scanned = d.totalScanned ?? 1;
-      setData({
-        totalScanned: d.totalScanned ?? 0, totalHidden: hidden,
-        totalReplies: d.totalReplies ?? 0,
-        protectionRate: Math.min(99, Math.round((1 - hidden / scanned) * 100)),
-        hiddenThisMonth: d.hiddenThisMonth ?? 0, hiddenLastMonth: d.hiddenLastMonth ?? 0,
-        repliesSent: d.repliesSent ?? 0, avgResponseTime: d.avgResponseTime ?? 0,
-        falsePositiveRate: d.falsePositiveRate ?? 0,
-        weeklyData, languageData, spamTrend,
-      });
-    });
+    const ref   = doc(db, 'analytics', user.uid);
+    const unsub = onSnapshot(
+      ref,
+      (snap) => {
+        if (!mounted.current) return;
+        if (!snap.exists()) return;
+        const d = snap.data();
+
+        // Weekly chart data — safely coerce each value
+        const weeklyData: DailyPoint[] = DAYS.map((day, i) => ({
+          day,
+          scanned: safeNum(d.weekly?.scanned?.[i]),
+          hidden:  safeNum(d.weekly?.hidden?.[i]),
+          replies: safeNum(d.weekly?.replies?.[i]),
+        }));
+
+        const spamTrend = DAYS.map((day, i) => ({
+          day,
+          spam: safeNum(d.weekly?.spam?.[i]),
+        }));
+
+        // Language breakdown — safely coerce each value
+        const langRaw: Record<string, unknown> =
+          (d.languages !== null && typeof d.languages === 'object' && !Array.isArray(d.languages))
+            ? (d.languages as Record<string, unknown>)
+            : {};
+        const langKeys  = ['english', 'hinglish', 'telugu', 'tamil', 'hindi', 'other'];
+        const langNames = ['English', 'Hinglish', 'Telugu', 'Tamil', 'Hindi', 'Other'];
+        const rawCounts = langKeys.map((k) => safeNum(langRaw[k] as unknown));
+        const langTotal = rawCounts.reduce((a, b) => a + b, 0);
+        const languageData = langNames.map((name, i) => ({
+          name,
+          value: langTotal > 0 ? Math.round((rawCounts[i] / langTotal) * 100) : 0,
+          color: LANG_COLORS[i],
+        }));
+
+        const totalScanned   = safeNum(d.totalScanned);
+        const totalHidden    = safeNum(d.totalHidden);
+        const hiddenThisMonth = safeNum(d.hiddenThisMonth);
+        const hiddenLastMonth = safeNum(d.hiddenLastMonth);
+        const repliesSent    = safeNum(d.repliesSent);
+        const avgResponseTime = safeNum(d.avgResponseTime);
+        const falsePositiveRate = Math.max(0, Math.min(100, safeNum(d.falsePositiveRate)));
+
+        setData({
+          totalScanned,
+          totalHidden,
+          totalReplies:   safeNum(d.totalReplies),
+          hiddenThisMonth,
+          hiddenLastMonth,
+          repliesSent,
+          avgResponseTime,
+          falsePositiveRate,
+          weeklyData,
+          languageData,
+          spamTrend,
+        });
+      },
+      () => {
+        // Firestore error — keep defaults, do not crash or expose error details
+        if (!mounted.current) return;
+      },
+    );
     return () => unsub();
   }, [user]);
 
@@ -504,9 +611,10 @@ export default function AnalyticsPage() {
     </div>
   );
 
-  const firstName = user?.displayName?.split(' ')[0] || 'User';
+  const firstName = (typeof user?.displayName === 'string' && user.displayName.trim())
+    ? user.displayName.trim().split(' ')[0]
+    : 'User';
 
-  // Header badge per plan
   const planBadge: Record<Plan, { label: string; bg: string; color: string }> = {
     free:   { label: 'Basic Analytics',    bg: 'rgba(245,158,11,0.12)',  color: '#F59E0B' },
     pro:    { label: 'Full Analytics',     bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa' },
@@ -544,11 +652,8 @@ export default function AnalyticsPage() {
         .charts-grid     { grid-template-columns: 1fr; }
         .stats-grid      { grid-template-columns: 1fr; }
 
-        .glass-card  { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
-        .range-btn   { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
-        .search-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 8px 16px 8px 36px; color: #FAFAFA; font-size: 14px; outline: none; width: 200px; transition: all 0.2s; }
-        .search-input:focus { border-color: rgba(245,158,11,0.4); }
-        .search-input::placeholder { color: rgba(255,255,255,0.3); }
+        .glass-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
+        .range-btn  { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; }
       `}</style>
 
       {/* Background glow */}
@@ -564,10 +669,13 @@ export default function AnalyticsPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <h1 style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 18 }}>Analytics</h1>
+
               {/* Plan tier badge */}
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: badge.bg, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, color: badge.color, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {badge.label}
               </span>
+
+              {/* Connection status — only for free/pro */}
               {plan !== 'agency' && (
                 youtubeConnected ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.15)', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: '#4ade80' }}>
@@ -582,22 +690,16 @@ export default function AnalyticsPage() {
                 )
               )}
             </div>
+
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>
-              {plan === 'agency' && 'Advanced Analytics — coming soon for Agency'}
-              {plan !== 'agency' && youtubeConnected  && plan === 'free' && 'Basic moderation insights for your account'}
-              {plan !== 'agency' && youtubeConnected  && plan === 'pro'  && 'Deep insights into your moderation footprint'}
-              {plan !== 'agency' && !youtubeConnected && 'Connect your YouTube channel to start seeing analytics'}
+              {plan === 'agency'                        && 'Advanced Analytics — coming soon for Agency'}
+              {plan !== 'agency' &&  youtubeConnected  && plan === 'free' && 'Basic moderation insights for your account'}
+              {plan !== 'agency' &&  youtubeConnected  && plan === 'pro'  && 'Deep insights into your moderation footprint'}
+              {plan !== 'agency' && !youtubeConnected  && 'Connect your YouTube channel to start seeing analytics'}
             </p>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {plan === 'pro' && (
-              <div className="desktop-only" style={{ position: 'relative' }}>
-                <Search size={14} color="rgba(255,255,255,0.3)" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-                <input className="search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search comments, users..." />
-              </div>
-            )}
-
             <button className="desktop-only" onClick={() => router.push('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
                 {user?.photoURL ? (
@@ -625,7 +727,7 @@ export default function AnalyticsPage() {
         <div className="content-padding" style={{ flex: 1 }}>
           {plan === 'free'   && <BasicAnalytics data={data} youtubeConnected={youtubeConnected} />}
           {plan === 'pro'    && <FullAnalytics   data={data} youtubeConnected={youtubeConnected} />}
-          {plan === 'agency' && <AgencyLockedUI  firstName={firstName} user={user} plan={plan} />}
+          {plan === 'agency' && <AgencyLockedUI />}
         </div>
 
       </div>

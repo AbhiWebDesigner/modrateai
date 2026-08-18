@@ -487,7 +487,7 @@ export default function BillingPage() {
                     </div>
                   ))}
 
-                  {/* Locked features — rendered with lock icon + Coming Soon pill */}
+                  {/* Locked features — lock icon + feature text only */}
                   {(plan as typeof PLANS[number] & { lockedFeatures: readonly string[] }).lockedFeatures.map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
                       <svg
@@ -500,32 +500,8 @@ export default function BillingPage() {
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                       </svg>
-                      <span style={{
-                        color: "rgba(255,255,255,0.35)",
-                        fontSize: 13,
-                        lineHeight: 1.4,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 7,
-                        flexWrap: "wrap",
-                      }}>
+                      <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 13, lineHeight: 1.4 }}>
                         {f}
-                        <span style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 3,
-                          background: "rgba(124,58,237,0.18)",
-                          border: "1px solid rgba(124,58,237,0.35)",
-                          borderRadius: 6,
-                          padding: "1px 7px",
-                          fontSize: 10,
-                          fontWeight: 700,
-                          color: "rgba(167,139,250,0.90)",
-                          letterSpacing: "0.03em",
-                          whiteSpace: "nowrap",
-                        }}>
-                          🔒 Coming Soon
-                        </span>
                       </span>
                     </div>
                   ))}

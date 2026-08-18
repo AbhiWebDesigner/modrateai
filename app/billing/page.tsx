@@ -46,6 +46,7 @@ const PLANS = [
       "Email support",
       "Extend trial: ₹69 for 30 more days",
     ],
+    lockedFeatures: [] as string[],
   },
   {
     id: "pro" as PlanId,
@@ -76,6 +77,7 @@ const PLANS = [
       "50+ languages",
       "Priority email support",
     ],
+    lockedFeatures: [] as string[],
   },
   {
     id: "agency" as PlanId,
@@ -87,9 +89,11 @@ const PLANS = [
     trialNote: null as string | null,
     color: "rgba(124,58,237,0.07)",
     borderColor: "rgba(124,58,237,0.30)",
-    btnStyle: { background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "white" } as React.CSSProperties,
-    btnLabel: "Get Agency →",
-    features: [
+    btnStyle: { background: "rgba(124,58,237,0.20)", color: "rgba(255,255,255,0.35)" } as React.CSSProperties,
+    btnLabel: "🔒 Not Available Yet",
+    // ALL Agency features are locked — plan is not purchasable yet
+    features: [] as string[],
+    lockedFeatures: [
       "2 YouTube channels",
       "150,000 comments scanned / month",
       "AI toxic detection",
@@ -200,7 +204,6 @@ function RazorpayModal({ plan, onClose }: { plan: ModalPlan; onClose: () => void
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                 <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>{plan.name.replace(" ✦", "")}</span>
                 <span style={{ fontWeight: 700, fontSize: 15, color: "#FAFAFA" }}>{plan.price}{plan.period === "/one-time" ? " (one-time)" : "/mo"}</span>
-
               </div>
               <div style={{ height: 1, background: "rgba(255,255,255,0.06)", marginBottom: 10 }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -293,10 +296,8 @@ export default function BillingPage() {
           setCurrentPlan(plan);
           setTrialActive(data.trial_active ?? false);
 
-          // ── Check trial expiry ──────────────────────────────────────────
           if (plan === "free") {
             let trialEndsAt: Date | null = null;
-
             if (data.trial_ends_at) {
               if (typeof data.trial_ends_at === "object" && "toDate" in data.trial_ends_at) {
                 trialEndsAt = data.trial_ends_at.toDate();
@@ -304,7 +305,6 @@ export default function BillingPage() {
                 trialEndsAt = new Date(data.trial_ends_at);
               }
             }
-
             if (trialEndsAt && trialEndsAt < new Date()) {
               setTrialExpired(true);
             }
@@ -384,7 +384,7 @@ export default function BillingPage() {
           )}
         </div>
 
-        {/* ── Trial Expired Banner ─────────────────────────────────────────── */}
+        {/* ── Trial Expired Banner ── */}
         {!loadingUser && trialExpired && (
           <div style={{
             background: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(124,58,237,0.08) 100%)",
@@ -404,12 +404,8 @@ export default function BillingPage() {
                 🎁
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: 15, color: "#FAFAFA", marginBottom: 3 }}>
-                  Your free trial has expired
-                </div>
-                <div style={{ color: "rgba(255,255,255,0.50)", fontSize: 13 }}>
-                  Extend for 30 more days + 250 AI actions — one-time offer
-                </div>
+                <div style={{ fontWeight: 800, fontSize: 15, color: "#FAFAFA", marginBottom: 3 }}>Your free trial has expired</div>
+                <div style={{ color: "rgba(255,255,255,0.50)", fontSize: 13 }}>Extend for 30 more days + 250 AI actions — one-time offer</div>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
@@ -417,21 +413,7 @@ export default function BillingPage() {
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 2 }}>One-time offer</div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: "#FAFAFA" }}>₹69</div>
               </div>
-              <button
-                className="extend-btn"
-                onClick={openExtendModal}
-                style={{
-                  background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "12px 22px",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "white",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                }}
-              >
+              <button className="extend-btn" onClick={openExtendModal} style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", borderRadius: 12, padding: "12px 22px", fontSize: 14, fontWeight: 700, color: "white", cursor: "pointer", whiteSpace: "nowrap" }}>
                 Extend Trial →
               </button>
             </div>
@@ -443,7 +425,8 @@ export default function BillingPage() {
           {PLANS.map(plan => {
             const isCurrentPlan = plan.id === currentPlan;
             const isFree = plan.id === "free";
-            const isDisabled = isFree || (isCurrentPlan && !trialExpired);
+            const isAgency = plan.id === "agency";
+            const isDisabled = isFree || isAgency || (isCurrentPlan && !trialExpired);
 
             return (
               <div key={plan.id} style={{
@@ -451,18 +434,23 @@ export default function BillingPage() {
                 border: `1.5px solid ${isCurrentPlan ? (trialExpired ? "rgba(239,68,68,0.40)" : "rgba(245,158,11,0.50)") : plan.borderColor}`,
                 borderRadius: 20, padding: "24px 22px",
                 position: "relative",
+                opacity: isAgency ? 0.75 : 1,
                 boxShadow: plan.id === "pro"
                   ? "0 0 40px rgba(245,158,11,0.12), 0 0 80px rgba(245,158,11,0.06)"
-                  : plan.id === "agency"
-                  ? "0 0 40px rgba(124,58,237,0.08)"
                   : "none",
               }}>
-                {plan.badge && (
+                {/* Agency: Coming Soon badge */}
+                {isAgency && (
+                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "rgba(124,58,237,0.85)", border: "1px solid rgba(167,139,250,0.40)", borderRadius: 20, padding: "4px 14px", fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.90)", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 5 }}>
+                    🔒 Coming Soon
+                  </div>
+                )}
+                {!isAgency && plan.badge && (
                   <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg,#F59E0B,#EA580C)", borderRadius: 20, padding: "4px 14px", fontSize: 10, fontWeight: 800, color: "white", whiteSpace: "nowrap" }}>
                     ✦ {plan.badge}
                   </div>
                 )}
-                {isCurrentPlan && (
+                {isCurrentPlan && !isAgency && (
                   <div style={{ position: "absolute", top: 16, right: 16, background: trialExpired ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)", border: `1px solid ${trialExpired ? "rgba(239,68,68,0.30)" : "rgba(245,158,11,0.30)"}`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 700, color: trialExpired ? "#ef4444" : "#F59E0B" }}>
                     {trialExpired ? "Expired" : "Current"}
                   </div>
@@ -484,51 +472,78 @@ export default function BillingPage() {
 
                 {/* ── Extend Trial button inside Free Trial card ── */}
                 {isFree && trialExpired && (
-                  <button
-                    className="extend-btn"
-                    onClick={openExtendModal}
-                    style={{
-                      background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
-                      border: "none",
-                      borderRadius: 10,
-                      padding: "8px 14px",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "white",
-                      cursor: "pointer",
-                      marginBottom: 16,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      width: "100%",
-                      justifyContent: "center",
-                    }}
-                  >
+                  <button className="extend-btn" onClick={openExtendModal} style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, color: "white", cursor: "pointer", marginBottom: 16, display: "flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center" }}>
                     🎁 Extend Trial for ₹69 — 30 more days
                   </button>
                 )}
 
+                {/* Features list — active features first, then locked */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 24 }}>
-                  {plan.features.map(f => (
+                  {/* Active (unlocked) features */}
+                  {(plan.features as readonly string[]).map(f => (
                     <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
                       <span style={{ color: "#F59E0B", fontSize: 13, marginTop: 1, flexShrink: 0 }}>✓</span>
                       <span style={{ color: "rgba(255,255,255,0.70)", fontSize: 13, lineHeight: 1.4 }}>{f}</span>
                     </div>
                   ))}
+
+                  {/* Locked features — rendered with lock icon + Coming Soon pill */}
+                  {(plan as typeof PLANS[number] & { lockedFeatures: readonly string[] }).lockedFeatures.map(f => (
+                    <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                      <svg
+                        width="13" height="13"
+                        viewBox="0 0 24 24" fill="none"
+                        stroke="rgba(124,58,237,0.70)" strokeWidth="2.2"
+                        strokeLinecap="round" strokeLinejoin="round"
+                        style={{ marginTop: 2, flexShrink: 0 }}
+                      >
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                      <span style={{
+                        color: "rgba(255,255,255,0.35)",
+                        fontSize: 13,
+                        lineHeight: 1.4,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 7,
+                        flexWrap: "wrap",
+                      }}>
+                        {f}
+                        <span style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 3,
+                          background: "rgba(124,58,237,0.18)",
+                          border: "1px solid rgba(124,58,237,0.35)",
+                          borderRadius: 6,
+                          padding: "1px 7px",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "rgba(167,139,250,0.90)",
+                          letterSpacing: "0.03em",
+                          whiteSpace: "nowrap",
+                        }}>
+                          🔒 Coming Soon
+                        </span>
+                      </span>
+                    </div>
+                  ))}
                 </div>
 
                 <button
-                  onClick={() => openModal(plan)}
+                  onClick={isAgency ? undefined : () => openModal(plan)}
                   disabled={isDisabled}
                   style={{
                     ...plan.btnStyle,
                     width: "100%", padding: "12px", borderRadius: 12,
-                    fontSize: 14, fontWeight: 700, border: "none",
-                    cursor: isDisabled ? "default" : "pointer",
-                    opacity: isDisabled ? 0.6 : 1,
+                    fontSize: 14, fontWeight: 700,
+                    border: isAgency ? "1px solid rgba(124,58,237,0.25)" : "none",
+                    cursor: "default",
+                    opacity: isAgency ? 1 : (isDisabled ? 0.6 : 1),
                   }}
                 >
-                  {isCurrentPlan && !trialExpired ? "Current Plan" : plan.btnLabel}
+                  {isAgency ? "🔒 Not Available Yet" : (isCurrentPlan && !trialExpired ? "Current Plan" : plan.btnLabel)}
                 </button>
               </div>
             );

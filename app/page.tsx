@@ -113,6 +113,15 @@ function LiveFeed({ compact = false }: { compact?: boolean }) {
 
 /* ── DASHBOARD PREVIEW (used everywhere) ── */
 function DashboardPreview() {
+  const SIDEBAR_ICONS = [
+    { icon: BarChart3, color: '#F59E0B', active: true },
+    { icon: TrendingUp, color: 'rgba(255,255,255,0.25)', active: false },
+    { icon: MessageSquare, color: 'rgba(255,255,255,0.25)', active: false },
+    { icon: Shield, color: 'rgba(255,255,255,0.25)', active: false },
+    { icon: Filter, color: 'rgba(255,255,255,0.25)', active: false },
+    { icon: Bell, color: 'rgba(255,255,255,0.25)', active: false },
+  ];
+
   return (
     <div style={{
       background: '#0D0D14',
@@ -120,9 +129,11 @@ function DashboardPreview() {
       overflow: 'hidden',
       border: '1.5px solid rgba(139,92,246,0.55)',
       boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 0 30px rgba(139,92,246,0.35), 0 0 60px rgba(139,92,246,0.2), 0 0 90px rgba(236,72,153,0.12), 0 24px 60px rgba(0,0,0,0.8)',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
       {/* Top bar */}
-      <div style={{ background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 8, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Shield size={12} color="white" />
@@ -137,69 +148,91 @@ function DashboardPreview() {
         </div>
       </div>
 
-      {/* Nav tabs */}
-      <div style={{ background: '#0E0E14', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 14px', display: 'flex', gap: 0, overflowX: 'auto' }}>
-        {['Overview', 'Analytics', 'Automation', 'Alerts', 'Settings'].map((t, i) => (
-          <div key={t} style={{ padding: '9px 10px', fontSize: 10, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.25)', borderBottom: i === 0 ? '2px solid #F59E0B' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>{t}</div>
-        ))}
-      </div>
+      {/* Body: sidebar + main */}
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
 
-      {/* Stats row */}
-      <div style={{ background: '#09090F', padding: '12px 14px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-        {[
-          { label: 'Comments Scanned', value: '12,847', change: '+18.6%', color: '#F59E0B', pts: '0,18 10,14 20,16 30,10 40,12 50,6 60,4' },
-          { label: 'Toxic Hidden', value: '1,203', change: '+24.5%', color: '#f87171', pts: '0,16 10,18 20,12 30,14 40,8 50,10 60,5' },
-          { label: 'AI Replied', value: '847', change: '+16.3%', color: '#60a5fa', pts: '0,18 10,15 20,17 30,11 40,13 50,7 60,4' },
-        ].map(s => (
-          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '9px 10px' }}>
-            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 8, marginBottom: 4, lineHeight: 1.3 }}>{s.label}</div>
-            <div style={{ color: s.color, fontWeight: 800, fontSize: 14, fontVariantNumeric: 'tabular-nums', marginBottom: 2 }}>{s.value}</div>
-            <div style={{ color: '#34d399', fontSize: 8, fontWeight: 600, marginBottom: 4 }}>{s.change}</div>
-            <svg width="100%" height="20" viewBox="0 0 60 20">
-              <polyline points={s.pts} fill="none" stroke={s.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.7" />
-            </svg>
-          </div>
-        ))}
-      </div>
-
-      {/* Accuracy chart */}
-      <div style={{ background: '#07070D', padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div>
-            <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 9, marginBottom: 3 }}>Detection Accuracy</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ color: '#F0F0F0', fontWeight: 900, fontSize: 18, letterSpacing: '-0.03em' }}>98.2%</span>
-              <span style={{ color: '#34d399', fontSize: 9, fontWeight: 600 }}>+2.4%</span>
+        {/* Sidebar */}
+        <div style={{ width: 36, background: '#0A0A12', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', gap: 6, flexShrink: 0 }}>
+          {SIDEBAR_ICONS.map((s, i) => (
+            <div key={i} style={{
+              width: 26, height: 26, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: s.active ? 'rgba(245,158,11,0.12)' : 'transparent',
+              border: s.active ? '1px solid rgba(245,158,11,0.25)' : '1px solid transparent',
+            }}>
+              <s.icon size={13} color={s.active ? '#F59E0B' : 'rgba(255,255,255,0.22)'} />
             </div>
-          </div>
-          <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '3px 9px', fontSize: 9, color: 'rgba(255,255,255,0.28)' }}>Today ▾</div>
+          ))}
         </div>
-        <div style={{ position: 'relative', height: 52 }}>
-          <svg width="100%" height="52" viewBox="0 0 300 52" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="mChartGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M0,44 C20,42 40,36 60,30 C80,24 100,32 120,24 C140,16 160,20 180,13 C200,7 220,11 240,7 C260,3 280,5 300,3" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" />
-            <path d="M0,44 C20,42 40,36 60,30 C80,24 100,32 120,24 C140,16 160,20 180,13 C200,7 220,11 240,7 C260,3 280,5 300,3 L300,52 L0,52 Z" fill="url(#mChartGrad)" />
-          </svg>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-            {['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'].map(t => (
-              <span key={t} style={{ color: 'rgba(255,255,255,0.18)', fontSize: 7 }}>{t}</span>
+
+        {/* Main content */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+
+          {/* Nav tabs */}
+          <div style={{ background: '#0E0E14', borderBottom: '1px solid rgba(255,255,255,0.04)', padding: '0 10px', display: 'flex', gap: 0, overflowX: 'auto', flexShrink: 0 }}>
+            {['Overview', 'Analytics', 'Automation', 'Alerts', 'Settings'].map((t, i) => (
+              <div key={t} style={{ padding: '9px 8px', fontSize: 9.5, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.25)', borderBottom: i === 0 ? '2px solid #F59E0B' : '2px solid transparent', whiteSpace: 'nowrap', flexShrink: 0 }}>{t}</div>
             ))}
           </div>
-        </div>
-      </div>
 
-      {/* Live feed */}
-      <div style={{ padding: '10px 14px 14px', background: '#06060C', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: 600 }}>Live Moderation Feed</span>
-          <span style={{ color: '#8B5CF6', fontSize: 9, fontWeight: 600 }}>View All</span>
+          {/* Stats row */}
+          <div style={{ background: '#09090F', padding: '10px 10px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
+            {[
+              { label: 'Comments Scanned', value: '12,847', change: '+18.6%', color: '#F59E0B', pts: '0,18 10,14 20,16 30,10 40,12 50,6 60,4' },
+              { label: 'Toxic Hidden', value: '1,203', change: '+24.5%', color: '#f87171', pts: '0,16 10,18 20,12 30,14 40,8 50,10 60,5' },
+              { label: 'AI Replied', value: '847', change: '+16.3%', color: '#60a5fa', pts: '0,18 10,15 20,17 30,11 40,13 50,7 60,4' },
+            ].map(s => (
+              <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 9, padding: '8px 8px' }}>
+                <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 7.5, marginBottom: 3, lineHeight: 1.3 }}>{s.label}</div>
+                <div style={{ color: s.color, fontWeight: 800, fontSize: 13, fontVariantNumeric: 'tabular-nums', marginBottom: 1 }}>{s.value}</div>
+                <div style={{ color: '#34d399', fontSize: 7.5, fontWeight: 600, marginBottom: 3 }}>{s.change}</div>
+                <svg width="100%" height="18" viewBox="0 0 60 20">
+                  <polyline points={s.pts} fill="none" stroke={s.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeOpacity="0.7" />
+                </svg>
+              </div>
+            ))}
+          </div>
+
+          {/* Accuracy chart */}
+          <div style={{ background: '#07070D', padding: '10px 10px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div>
+                <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: 8, marginBottom: 2 }}>Detection Accuracy</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+                  <span style={{ color: '#F0F0F0', fontWeight: 900, fontSize: 16, letterSpacing: '-0.03em' }}>98.2%</span>
+                  <span style={{ color: '#34d399', fontSize: 8, fontWeight: 600 }}>+2.4%</span>
+                </div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 5, padding: '2px 7px', fontSize: 8, color: 'rgba(255,255,255,0.28)' }}>Today ▾</div>
+            </div>
+            <div style={{ position: 'relative', height: 46 }}>
+              <svg width="100%" height="46" viewBox="0 0 300 46" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="mChartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d="M0,38 C20,36 40,30 60,24 C80,18 100,26 120,18 C140,10 160,14 180,7 C200,1 220,5 240,2 C260,0 280,1 300,0" fill="none" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" />
+                <path d="M0,38 C20,36 40,30 60,24 C80,18 100,26 120,18 C140,10 160,14 180,7 C200,1 220,5 240,2 C260,0 280,1 300,0 L300,46 L0,46 Z" fill="url(#mChartGrad)" />
+              </svg>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                {['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'].map(t => (
+                  <span key={t} style={{ color: 'rgba(255,255,255,0.16)', fontSize: 6.5 }}>{t}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Live feed */}
+          <div style={{ padding: '8px 10px 12px', background: '#06060C', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5, fontWeight: 600 }}>Live Moderation Feed</span>
+              <span style={{ color: '#8B5CF6', fontSize: 8.5, fontWeight: 600 }}>View All</span>
+            </div>
+            <LiveFeed compact />
+          </div>
+
         </div>
-        <LiveFeed compact />
       </div>
     </div>
   );
@@ -676,6 +709,7 @@ export default function LandingPage() {
               <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="n-link">{item}</a>
             ))}
           </div>
+          <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
           </div>

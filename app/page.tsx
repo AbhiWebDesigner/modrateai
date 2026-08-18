@@ -111,8 +111,8 @@ function LiveFeed({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/* ── MOBILE DASHBOARD PREVIEW ── */
-function MobileDashboardPreview() {
+/* ── DASHBOARD PREVIEW (used everywhere) ── */
+function DashboardPreview() {
   return (
     <div style={{
       background: '#0D0D14',
@@ -200,57 +200,6 @@ function MobileDashboardPreview() {
           <span style={{ color: '#8B5CF6', fontSize: 9, fontWeight: 600 }}>View All</span>
         </div>
         <LiveFeed compact />
-      </div>
-    </div>
-  );
-}
-
-/* ── DESKTOP PRODUCT PREVIEW ── */
-function ProductPreview() {
-  return (
-    <div style={{ background: '#0A0A0A', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)' }}>
-      <div style={{ background: '#141414', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ display: 'flex', gap: 5 }}>
-          {['#FF5F57', '#FFBD2E', '#28C840'].map(c => <div key={c} style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />)}
-        </div>
-        <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 5, padding: '4px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Lock size={9} color="rgba(255,255,255,0.25)" />
-          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>moderateai.site/dashboard</span>
-        </div>
-        <span style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#10B981', display: 'inline-block', animation: 'lp-pulse 2s infinite' }} /> Live
-        </span>
-      </div>
-      <div style={{ background: '#0D0D0D', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 6, width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Shield size={10} color="white" />
-          </div>
-          <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 11 }}>ModerateAI</span>
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          {['Overview', 'Analytics', 'Settings'].map((t, i) => <span key={t} style={{ color: i === 0 ? '#F59E0B' : 'rgba(255,255,255,0.28)', fontSize: 9.5, fontWeight: i === 0 ? 600 : 400 }}>{t}</span>)}
-        </div>
-      </div>
-      <div style={{ background: '#080808', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-        {[{ label: 'Scanned', value: '12,847', color: '#F59E0B' }, { label: 'Hidden', value: '1,203', color: '#f87171' }, { label: 'Replied', value: '847', color: '#60a5fa' }].map(s => (
-          <div key={s.label} style={{ background: 'rgba(255,255,255,0.025)', borderRadius: 7, padding: '8px 10px' }}>
-            <div style={{ color: s.color, fontWeight: 800, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
-            <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 9, marginTop: 2 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ background: '#060606', padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'flex-end', gap: 3, height: 46 }}>
-        {[18, 28, 22, 38, 30, 45, 36, 52, 40, 58, 44, 62].map((h, i) => (
-          <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 2, background: i > 9 ? 'rgba(245,158,11,0.65)' : 'rgba(255,255,255,0.07)' }} />
-        ))}
-      </div>
-      <div style={{ padding: '11px 16px', background: '#060606' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 9 }}>
-          <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Live Feed</span>
-          <span style={{ color: '#F59E0B', fontSize: 9, fontWeight: 600 }}>AI Active</span>
-        </div>
-        <LiveFeed />
       </div>
     </div>
   );
@@ -467,11 +416,7 @@ export default function LandingPage() {
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
-        /* Desktop: show desktop preview, hide mobile */
-        .mob-preview { display: none; }
-        .desk-preview { display: block; }
-
-        /* ══ HERO — Mobile V2 ══ */
+        /* ══ HERO — Mobile ══ */
         @media (max-width: 800px) {
           .hero {
             padding: 68px 0 0;
@@ -498,11 +443,6 @@ export default function LandingPage() {
             padding: 16px 16px 32px;
             background: radial-gradient(ellipse 100% 70% at 50% 20%, rgba(139,92,246,0.1) 0%, transparent 65%);
           }
-
-          /* Mobile: show mobile preview, hide desktop */
-          .mob-preview { display: block !important; }
-          .desk-preview { display: none !important; }
-
           .h-badge { margin-bottom: 16px; padding: 4px 12px 4px 9px; }
           .h-badge-text { font-size: 11px; }
           .h1 { font-size: 28px !important; line-height: 1.13 !important; margin-bottom: 14px !important; letter-spacing: -0.03em !important; }
@@ -514,7 +454,7 @@ export default function LandingPage() {
           .h-trust-item { font-size: 11px !important; gap: 4px !important; }
         }
 
-        /* ══ STATS — Desktop ══ */
+        /* ══ STATS ══ */
         .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
         .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
         .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
@@ -524,7 +464,6 @@ export default function LandingPage() {
         .s-icon-wrap { display: none; }
         .s-text { display: flex; flex-direction: column; align-items: center; }
 
-        /* ══ STATS — Mobile V2 ══ */
         @media (max-width: 800px) {
           .stats {
             background: transparent;
@@ -575,7 +514,6 @@ export default function LandingPage() {
         .sub { color: rgba(255,255,255,0.38); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
         .sub-dark { color: rgba(0,0,0,0.44); font-size: 15.5px; line-height: 1.65; max-width: 480px; }
 
-        /* Mobile eyebrow pill */
         .mob-pill { display: none; }
         @media (max-width: 800px) {
           .mob-pill {
@@ -738,7 +676,6 @@ export default function LandingPage() {
               <a key={item} href={item === 'Docs' ? '/documentation' : `#${item.toLowerCase()}`} className="n-link">{item}</a>
             ))}
           </div>
-          {/* Mobile: Login button visible before burger */}
           <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
@@ -792,12 +729,11 @@ export default function LandingPage() {
               </motion.div>
             </div>
 
-            {/* Right / Preview */}
+            {/* Right / Preview — same on both mobile & desktop */}
             <motion.div className="hero-right"
               initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
-              <div className="mob-preview"><MobileDashboardPreview /></div>
-              <div className="desk-preview"><ProductPreview /></div>
+              <DashboardPreview />
             </motion.div>
 
           </div>

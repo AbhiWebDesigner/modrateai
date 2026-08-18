@@ -198,9 +198,6 @@ function formatDate(iso: string): string {
   }
 }
 
-// ─── FIXED: ensureParentDoc no longer resets existing counters ────────────────
-// Only initialises the document with zero counters if it does not yet exist.
-// Subsequent calls are safe: existing counter values are preserved.
 async function ensureParentDoc(uid: string): Promise<void> {
   const parentRef = doc(db, "automations", uid);
   const snap = await getDoc(parentRef);
@@ -214,7 +211,6 @@ async function ensureParentDoc(uid: string): Promise<void> {
       schedule: { enabled: false },
     });
   } else {
-    // Document already exists — only set non-counter metadata fields that may be missing.
     await setDoc(parentRef, {
       moderationMode: snap.data()?.moderationMode ?? "auto",
       notifications: snap.data()?.notifications ?? true,
@@ -223,7 +219,6 @@ async function ensureParentDoc(uid: string): Promise<void> {
   }
 }
 
-// ─── YouTube connection check (Firestore-based, mirrors settings/page.tsx) ────
 async function checkYouTubeConnected(uid: string): Promise<boolean> {
   try {
     const snap = await getDoc(doc(db, 'users', uid));
@@ -372,8 +367,9 @@ function VideoCard({ video, selected, onClick }: { video: YouTubeVideo; selected
   );
 }
 
-function RuleSummary({ ruleName, selectedVideo, keywords, replyMode, replyDelay, ruleActive }: {
-  ruleName: string; selectedVideo: YouTubeVideo | null; keywords: string[]; replyMode: "random" | "ai"; replyDelay: number; ruleActive: boolean;
+// ─── Updated RuleSummary — reflects actual validation state ──────────────────
+function RuleSummary({ ruleName, selectedVideo, keywords, replyMode, replyDelay, ruleActive, allValid }: {
+  ruleName: string; selectedVideo: YouTubeVideo | null; keywords: string[]; replyMode: "random" | "ai"; replyDelay: number; ruleActive: boolean; allValid: boolean;
 }) {
   return (
     <div style={{ background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.14)", borderRadius: 16, padding: "16px 18px", marginBottom: 16 }}>
@@ -385,20 +381,32 @@ function RuleSummary({ ruleName, selectedVideo, keywords, replyMode, replyDelay,
           { label: "Keywords", value: keywords.length > 0 ? `${keywords.length} keyword${keywords.length > 1 ? "s" : ""}` : "None" },
           { label: "Mode",     value: replyMode === "ai" ? "🤖 AI Generated" : "🎲 Random Template" },
           { label: "Delay",    value: `${replyDelay}s` },
-          { label: "Status",   value: ruleActive ? "● Active" : "○ Inactive", color: ruleActive ? "#22c55e" : "rgba(255,255,255,0.35)" },
         ].map(row => (
           <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{row.label}</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: row.color ?? "rgba(255,255,255,0.80)" }}>{row.value}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.80)" }}>{row.value}</span>
           </div>
         ))}
+        {/* Status row — only shows Active when ALL steps are valid */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>Status</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: allValid && ruleActive ? "#22c55e" : "rgba(245,158,11,0.80)" }}>
+            {allValid && ruleActive ? "● Active" : allValid && !ruleActive ? "○ Inactive" : "⚠ Incomplete"}
+          </span>
+        </div>
       </div>
+      {!allValid && (
+        <div style={{ marginTop: 12, padding: "8px 10px", background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: 8, fontSize: 11, color: "rgba(245,158,11,0.80)", lineHeight: 1.4 }}>
+          ⚠️ Complete required settings before going live
+        </div>
+      )}
     </div>
   );
 }
 
-function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstruction, replyDelay }: {
-  selectedVideo: YouTubeVideo | null; keywords: string[]; replies: string[]; replyMode: "random" | "ai"; aiInstruction: string; replyDelay: number;
+// ─── Updated LivePreview — "ready to go live" only when allValid ─────────────
+function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstruction, replyDelay, allValid }: {
+  selectedVideo: YouTubeVideo | null; keywords: string[]; replies: string[]; replyMode: "random" | "ai"; aiInstruction: string; replyDelay: number; allValid: boolean;
 }) {
   const exampleComment = keywords.length > 0 ? `Hey, I wanted to "${keywords[0]}" your product!` : "Loved this video, keep it up!";
   const matchedKeyword = keywords.length > 0 ? keywords[0] : null;
@@ -449,10 +457,18 @@ function LivePreview({ selectedVideo, keywords, replies, replyMode, aiInstructio
           )}
         </div>
       </div>
-      <div style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.18)", borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
-        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.60)", fontWeight: 500 }}>Rule is ready to go live</span>
-      </div>
+      {/* Go live status banner — only green when allValid */}
+      {allValid ? (
+        <div style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.18)", borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.60)", fontWeight: 500 }}>Rule is ready to go live</span>
+        </div>
+      ) : (
+        <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B", flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: "rgba(245,158,11,0.70)", fontWeight: 500 }}>Complete all steps to go live</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -477,8 +493,6 @@ function YouTubeNotConnectedBanner() {
   );
 }
 
-// ─── Offline status badge ─────────────────────────────────────────────────────
-
 function AutomationStatusBadge({ connected }: { connected: boolean }) {
   if (connected) {
     return (
@@ -496,11 +510,9 @@ function AutomationStatusBadge({ connected }: { connected: boolean }) {
   );
 }
 
-// ─── Mobile Preview Bottom Sheet ──────────────────────────────────────────────
-
-function MobilePreviewSheet({ open, onClose, selectedVideo, keywords, replies, replyMode, aiInstruction, replyDelay, ruleName, ruleActive }: {
+function MobilePreviewSheet({ open, onClose, selectedVideo, keywords, replies, replyMode, aiInstruction, replyDelay, ruleName, ruleActive, allValid }: {
   open: boolean; onClose: () => void;
-  selectedVideo: YouTubeVideo | null; keywords: string[]; replies: string[]; replyMode: "random" | "ai"; aiInstruction: string; replyDelay: number; ruleName: string; ruleActive: boolean;
+  selectedVideo: YouTubeVideo | null; keywords: string[]; replies: string[]; replyMode: "random" | "ai"; aiInstruction: string; replyDelay: number; ruleName: string; ruleActive: boolean; allValid: boolean;
 }) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef<number | null>(null);
@@ -544,8 +556,8 @@ function MobilePreviewSheet({ open, onClose, selectedVideo, keywords, replies, r
           </div>
         </div>
         <div style={{ overflowY: "auto", flex: 1, padding: "0 16px 32px", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
-          <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} />
-          <LivePreview selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} />
+          <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} allValid={allValid} />
+          <LivePreview selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} allValid={allValid} />
         </div>
       </div>
     </>
@@ -561,7 +573,6 @@ export default function AutomationPage() {
   const [user,        setUser]        = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // ── YouTube connection state ──────────────────────────────────────────────
   const [youtubeConnected,        setYoutubeConnected]        = useState(false);
   const [youtubeConnectionLoading, setYoutubeConnectionLoading] = useState(true);
 
@@ -572,6 +583,8 @@ export default function AutomationPage() {
 
   const [showBuilder,  setShowBuilder]  = useState(false);
   const [currentStep,  setCurrentStep]  = useState(0);
+  // Track which steps the user has visited (to show ⚠️ vs grey for unvisited)
+  const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([0]));
 
   const [videos,            setVideos]            = useState<YouTubeVideo[]>([]);
   const [videosLoading,     setVideosLoading]     = useState(false);
@@ -682,12 +695,41 @@ export default function AutomationPage() {
     return videos.filter(v => v.title.toLowerCase().includes(q) || v.id.toLowerCase().includes(q));
   }, [videos, videoSearch]);
 
+  // ── Single source of truth for step completion ────────────────────────────
+  const getStepValidity = useCallback(() => {
+    // Step 1: name non-empty AND video selected
+    const step1 = ruleName.trim().length > 0 && selectedVideo !== null;
+
+    // Step 2: aiDetection OR at least 1 keyword (empty list is valid when AI Intent Detection is on)
+    const step2 = aiDetection || keywords.length > 0;
+
+    // Step 3: random → at least 1 non-empty reply; ai → non-empty instruction
+    const step3 =
+      replyMode === "random"
+        ? replies.some(r => r.trim().length > 0)
+        : aiInstruction.trim().length > 0;
+
+    // Step 4: working hours end must be after start
+    const step4 = advanced.workingHoursEnd > advanced.workingHoursStart;
+
+    return { step1, step2, step3, step4, allValid: step1 && step2 && step3 && step4 };
+  }, [ruleName, selectedVideo, aiDetection, keywords, replyMode, replies, aiInstruction, advanced]);
+
+  const stepValidity = getStepValidity();
+  const stepValidArray = [stepValidity.step1, stepValidity.step2, stepValidity.step3, stepValidity.step4];
+
   const resetBuilder = () => {
     setCurrentStep(0); setRuleName(""); setSelectedVideo(null); setKeywords([]);
     setKeywordInput(""); setAiDetection(false); setReplyMode("random");
     setReplies(["", "", ""]); setAiInstruction(""); setReplyDelay(20);
     setRuleActive(true); setAdvanced(DEFAULT_ADVANCED); setShowBuilder(false);
     setSuggestions([]); setMobilePreviewOpen(false);
+    setVisitedSteps(new Set([0]));
+  };
+
+  const navigateToStep = (i: number) => {
+    setCurrentStep(i);
+    setVisitedSteps(prev => new Set([...prev, i]));
   };
 
   const addKeyword = (kw?: string) => {
@@ -706,7 +748,7 @@ export default function AutomationPage() {
   };
 
   const goLive = async () => {
-    if (!ruleName || !selectedVideo || !user) return;
+    if (!stepValidity.allValid || !user) return;
     setSaving(true);
     try {
       await ensureParentDoc(user.uid);
@@ -770,6 +812,22 @@ export default function AutomationPage() {
   }
 
   const systemLive = youtubeConnected;
+
+  // ── Stepper step icon renderer ─────────────────────────────────────────────
+  // Current → orange number; valid → green ✓; visited+invalid → ⚠️; unvisited → grey number
+  const getStepIcon = (i: number) => {
+    if (i === currentStep) return { bg: "#F59E0B", color: "#07030F", content: String(i + 1) };
+    if (stepValidArray[i]) return { bg: "#22c55e", color: "white", content: "✓" };
+    if (visitedSteps.has(i)) return { bg: "rgba(245,158,11,0.18)", color: "#F59E0B", content: "⚠" };
+    return { bg: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.4)", content: String(i + 1) };
+  };
+
+  const getStepTextColor = (i: number) => {
+    if (i === currentStep) return "#F59E0B";
+    if (stepValidArray[i]) return "#22c55e";
+    if (visitedSteps.has(i)) return "rgba(245,158,11,0.80)";
+    return "rgba(255,255,255,0.30)";
+  };
 
   return (
     <>
@@ -938,25 +996,30 @@ export default function AutomationPage() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                   <span className="preview-panel" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", borderRadius: 20, padding: "4px 10px", fontSize: 11, display: "none" }}>● Live</span>
-                  <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} className="preview-panel"
-                    style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "9px 18px", fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "none", alignItems: "center", gap: 6 }}>
+                  <button onClick={goLive} disabled={saving || !stepValidity.allValid} className="preview-panel"
+                    style={{ background: saving ? "rgba(245,158,11,0.4)" : stepValidity.allValid ? "linear-gradient(135deg, #F59E0B, #EA580C)" : "rgba(255,255,255,0.08)", borderRadius: 12, padding: "9px 18px", fontSize: 13, fontWeight: 700, color: stepValidity.allValid ? "white" : "rgba(255,255,255,0.30)", border: "none", cursor: saving || !stepValidity.allValid ? "not-allowed" : "pointer", display: "none", alignItems: "center", gap: 6 }}>
                     {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live"}
                   </button>
                 </div>
               </div>
 
+              {/* ── Stepper — uses getStepIcon for correct state ── */}
               <div className="step-scroll" style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 20, paddingBottom: 4 }}>
-                {STEPS.map((step, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                    <button onClick={() => setCurrentStep(i)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 10, fontSize: 12, cursor: "pointer", border: "none", background: i === currentStep ? "rgba(245,158,11,0.12)" : "transparent", color: i === currentStep ? "#F59E0B" : i < currentStep ? "#22c55e" : "rgba(255,255,255,0.30)", fontWeight: i === currentStep ? 600 : 400, outline: i === currentStep ? "1px solid rgba(245,158,11,0.30)" : "none", whiteSpace: "nowrap" }}>
-                      <span style={{ background: i === currentStep ? "#F59E0B" : i < currentStep ? "#22c55e" : "rgba(255,255,255,0.10)", color: i < currentStep ? "white" : i === currentStep ? "#07030F" : "rgba(255,255,255,0.4)", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, flexShrink: 0 }}>
-                        {i < currentStep ? "✓" : i + 1}
-                      </span>
-                      {step}
-                    </button>
-                    {i < STEPS.length - 1 && <span style={{ color: "rgba(255,255,255,0.12)", fontSize: 11 }}>—</span>}
-                  </div>
-                ))}
+                {STEPS.map((step, i) => {
+                  const icon = getStepIcon(i);
+                  const textColor = getStepTextColor(i);
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                      <button onClick={() => navigateToStep(i)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 10, fontSize: 12, cursor: "pointer", border: "none", background: i === currentStep ? "rgba(245,158,11,0.12)" : "transparent", color: textColor, fontWeight: i === currentStep ? 600 : 400, outline: i === currentStep ? "1px solid rgba(245,158,11,0.30)" : "none", whiteSpace: "nowrap" }}>
+                        <span style={{ background: icon.bg, color: icon.color, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, flexShrink: 0 }}>
+                          {icon.content}
+                        </span>
+                        {step}
+                      </button>
+                      {i < STEPS.length - 1 && <span style={{ color: "rgba(255,255,255,0.12)", fontSize: 11 }}>—</span>}
+                    </div>
+                  );
+                })}
               </div>
 
               <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 20, padding: "20px 16px", animation: "fadeIn 0.18s ease" }}>
@@ -993,7 +1056,7 @@ export default function AutomationPage() {
                         </div>
                       ))}
                     </div>
-                    <button onClick={() => setCurrentStep(1)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", width: "100%" }}>
+                    <button onClick={() => navigateToStep(1)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, padding: "13px", fontSize: 14, fontWeight: 700, color: "white", border: "none", cursor: "pointer", width: "100%" }}>
                       Next — Set Keywords →
                     </button>
                   </div>
@@ -1043,11 +1106,12 @@ export default function AutomationPage() {
                           <button onClick={() => setKeywords(keywords.filter(k => k !== kw))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.40)", cursor: "pointer", fontSize: 15, lineHeight: 1, padding: 0 }}>×</button>
                         </span>
                       ))}
-                      {keywords.length === 0 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>No keywords added yet</span>}
+                      {keywords.length === 0 && !aiDetection && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 13 }}>No keywords added yet</span>}
+                      {keywords.length === 0 && aiDetection && <span style={{ color: "rgba(245,158,11,0.60)", fontSize: 13 }}>✓ AI Intent Detection active — no keywords required</span>}
                     </div>
                     <div style={{ display: "flex", gap: 10 }}>
-                      <button onClick={() => setCurrentStep(0)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
-                      <button onClick={() => setCurrentStep(2)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next →</button>
+                      <button onClick={() => navigateToStep(0)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
+                      <button onClick={() => navigateToStep(2)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next →</button>
                     </div>
                   </div>
                 )}
@@ -1080,8 +1144,8 @@ export default function AutomationPage() {
                       </div>
                     )}
                     <div style={{ display: "flex", gap: 10 }}>
-                      <button onClick={() => setCurrentStep(1)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
-                      <button onClick={() => setCurrentStep(3)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next →</button>
+                      <button onClick={() => navigateToStep(1)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
+                      <button onClick={() => navigateToStep(3)} style={{ background: "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: "pointer" }}>Next →</button>
                     </div>
                   </div>
                 )}
@@ -1131,7 +1195,7 @@ export default function AutomationPage() {
                         </div>
                       </div>
 
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${advanced.workingHoursEnd <= advanced.workingHoursStart ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.07)"}`, borderRadius: 12, padding: "13px 14px" }}>
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>Working Hours</div>
                         <div className="working-hours-row">
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1147,6 +1211,9 @@ export default function AutomationPage() {
                             </select>
                           </div>
                         </div>
+                        {advanced.workingHoursEnd <= advanced.workingHoursStart && (
+                          <div style={{ marginTop: 8, fontSize: 11, color: "rgba(239,68,68,0.80)" }}>⚠️ End time must be after start time</div>
+                        )}
                       </div>
 
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
@@ -1178,9 +1245,9 @@ export default function AutomationPage() {
                     </div>
 
                     <div style={{ display: "flex", gap: 10 }}>
-                      <button onClick={() => setCurrentStep(2)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
-                      <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo} className="preview-panel"
-                        style={{ background: saving ? "rgba(245,158,11,0.4)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: "white", border: "none", cursor: saving ? "not-allowed" : "pointer", display: "none", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                      <button onClick={() => navigateToStep(2)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 600, color: "white", cursor: "pointer" }}>← Back</button>
+                      <button onClick={goLive} disabled={saving || !stepValidity.allValid} className="preview-panel"
+                        style={{ background: saving ? "rgba(245,158,11,0.4)" : stepValidity.allValid ? "linear-gradient(135deg, #F59E0B, #EA580C)" : "rgba(255,255,255,0.08)", borderRadius: 12, flex: 1, padding: 13, fontSize: 13, fontWeight: 700, color: stepValidity.allValid ? "white" : "rgba(255,255,255,0.30)", border: "none", cursor: saving || !stepValidity.allValid ? "not-allowed" : "pointer", display: "none", alignItems: "center", justifyContent: "center", gap: 6 }}>
                         {saving ? (<><div style={{ width: 14, height: 14, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} /> Saving…</>) : "🚀 Go Live!"}
                       </button>
                     </div>
@@ -1190,8 +1257,8 @@ export default function AutomationPage() {
             </div>
 
             <div style={{ width: 280, flexShrink: 0, display: "none", position: "sticky", top: 24 }} className="preview-panel">
-              <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} />
-              <LivePreview selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} />
+              <RuleSummary ruleName={ruleName} selectedVideo={selectedVideo} keywords={keywords} replyMode={replyMode} replyDelay={replyDelay} ruleActive={ruleActive} allValid={stepValidity.allValid} />
+              <LivePreview selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} allValid={stepValidity.allValid} />
             </div>
           </div>
         )}
@@ -1208,18 +1275,19 @@ export default function AutomationPage() {
       {showBuilder && (
         <div className="sticky-mobile-cta"
           style={{ position: "fixed", bottom: 60, left: 0, right: 0, zIndex: 46, background: "linear-gradient(180deg, transparent 0%, rgba(7,3,15,0.95) 35%, rgba(7,3,15,1) 100%)", padding: "12px 16px 10px", display: "flex", gap: 10 }}>
-          <button onClick={goLive} disabled={saving || !ruleName || !selectedVideo}
-            style={{ background: saving || !ruleName || !selectedVideo ? "rgba(255,255,255,0.07)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 14, flex: 1, padding: "14px", fontSize: 14, fontWeight: 700, color: saving || !ruleName || !selectedVideo ? "rgba(255,255,255,0.30)" : "white", border: "none", cursor: saving || !ruleName || !selectedVideo ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: (!saving && ruleName && selectedVideo) ? "0 4px 20px rgba(245,158,11,0.30)" : "none", transition: "all 0.2s" }}>
+          <button onClick={goLive} disabled={saving || !stepValidity.allValid}
+            style={{ background: saving || !stepValidity.allValid ? "rgba(255,255,255,0.07)" : "linear-gradient(135deg, #F59E0B, #EA580C)", borderRadius: 14, flex: 1, padding: "14px", fontSize: 14, fontWeight: 700, color: saving || !stepValidity.allValid ? "rgba(255,255,255,0.30)" : "white", border: "none", cursor: saving || !stepValidity.allValid ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: (!saving && stepValidity.allValid) ? "0 4px 20px rgba(245,158,11,0.30)" : "none", transition: "all 0.2s" }}>
             {saving ? (
               <><div style={{ width: 16, height: 16, border: "2px solid white", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />Saving…</>
             ) : (
-              <><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>{!ruleName ? "Enter rule name to save" : !selectedVideo ? "Select a video to save" : "Save Automation"}</>
+              <><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              {!stepValidity.allValid ? "Complete all steps to save" : "Save Automation"}</>
             )}
           </button>
         </div>
       )}
 
-      <MobilePreviewSheet open={mobilePreviewOpen} onClose={() => setMobilePreviewOpen(false)} selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} ruleName={ruleName} ruleActive={ruleActive} />
+      <MobilePreviewSheet open={mobilePreviewOpen} onClose={() => setMobilePreviewOpen(false)} selectedVideo={selectedVideo} keywords={keywords} replies={replies} replyMode={replyMode} aiInstruction={aiInstruction} replyDelay={replyDelay} ruleName={ruleName} ruleActive={ruleActive} allValid={stepValidity.allValid} />
 
       {showVideoSelector && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "0" }}>

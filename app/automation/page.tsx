@@ -43,7 +43,6 @@ type Rule = {
   ignoreLinks: boolean;
   ignoreEmojisOnly: boolean;
   ignoreBots: boolean;
-  languageFilter: string;
   createdAt?: unknown;
 };
 
@@ -57,7 +56,6 @@ type AdvancedSettings = {
   ignoreLinks: boolean;
   ignoreEmojisOnly: boolean;
   ignoreBots: boolean;
-  languageFilter: string;
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -158,19 +156,6 @@ const KEYWORD_SUGGESTIONS: Record<string, string[]> = {
   win: ["giveaway", "contest", "prize", "winner", "gift", "free"],
 };
 
-const LANGUAGES = [
-  { code: "any", label: "Any Language" },
-  { code: "en",  label: "English" },
-  { code: "te",  label: "Telugu" },
-  { code: "hi",  label: "Hindi" },
-  { code: "ta",  label: "Tamil" },
-  { code: "es",  label: "Spanish" },
-  { code: "fr",  label: "French" },
-  { code: "de",  label: "German" },
-  { code: "pt",  label: "Portuguese" },
-  { code: "ar",  label: "Arabic" },
-];
-
 const DEFAULT_ADVANCED: AdvancedSettings = {
   maxRepliesPerUser: 3,
   cooldownMinutes: 60,
@@ -181,7 +166,6 @@ const DEFAULT_ADVANCED: AdvancedSettings = {
   ignoreLinks: true,
   ignoreEmojisOnly: false,
   ignoreBots: true,
-  languageFilter: "any",
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -623,7 +607,6 @@ export default function AutomationPage() {
   }, [router]);
 
   // ── YouTube connection check ──────────────────────────────────────────────
-  // Uses the existing API route pattern; no new auth system created.
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -645,7 +628,6 @@ export default function AutomationPage() {
     const unsub    = onSnapshot(q, (snap) => {
       const loaded: Rule[] = snap.docs.map(d => {
         const data = d.data() as Partial<Omit<Rule, "id">>;
-        // Safely coerce every field; never crash on malformed data.
         return {
           id:                 d.id,
           name:               typeof data.name === "string"              ? data.name              : "",
@@ -666,7 +648,6 @@ export default function AutomationPage() {
           ignoreLinks:        typeof data.ignoreLinks === "boolean"      ? data.ignoreLinks       : true,
           ignoreEmojisOnly:   typeof data.ignoreEmojisOnly === "boolean" ? data.ignoreEmojisOnly  : false,
           ignoreBots:         typeof data.ignoreBots === "boolean"       ? data.ignoreBots        : true,
-          languageFilter:     typeof data.languageFilter === "string"    ? data.languageFilter    : "any",
           createdAt:          data.createdAt,
         };
       });
@@ -735,7 +716,6 @@ export default function AutomationPage() {
         publicReply: true, replyDelay, active: ruleActive, createdAt: serverTimestamp(),
         ...advanced,
       });
-      // Increment counters without touching other fields.
       const parentRef = doc(db, "automations", user.uid);
       await setDoc(parentRef, {
         totalRules:  increment(1),
@@ -754,7 +734,6 @@ export default function AutomationPage() {
     setDeleting(ruleId);
     try {
       await deleteDoc(doc(db, "automations", user.uid, "rules", ruleId));
-      // Decrement counters; never reset them.
       const parentRef = doc(db, "automations", user.uid);
       await setDoc(parentRef, {
         totalRules:  increment(-1),
@@ -772,7 +751,6 @@ export default function AutomationPage() {
     const newActive = !rule.active;
     try {
       await updateDoc(doc(db, "automations", user.uid, "rules", rule.id), { active: newActive });
-      // Adjust activeRules counter only — do not touch totalRules or YouTube state.
       const parentRef = doc(db, "automations", user.uid);
       await setDoc(parentRef, {
         activeRules: increment(newActive ? 1 : -1),
@@ -791,9 +769,7 @@ export default function AutomationPage() {
     );
   }
 
-  // Global system status reflects the YouTube connection.
-// Individual rule.active determines whether that rule is enabled.
-const systemLive = youtubeConnected;
+  const systemLive = youtubeConnected;
 
   return (
     <>
@@ -858,12 +834,10 @@ const systemLive = youtubeConnected;
 
         {!showBuilder ? (
           <>
-            {/* ── Header with system status ── */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, gap: 12, flexWrap: "wrap" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                   <h1 style={{ fontSize: 20, fontWeight: 800, color: "#FAFAFA" }}>Automation Rules</h1>
-                  {/* Show system status — NOT individual rule status */}
                   {!youtubeConnectionLoading && <AutomationStatusBadge connected={systemLive} />}
                 </div>
                 <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
@@ -875,7 +849,6 @@ const systemLive = youtubeConnected;
               <button
                 onClick={() => {
                   if (!youtubeConnected) {
-                    // Route to settings to connect YouTube instead of opening builder
                     router.push("/settings");
                     return;
                   }
@@ -888,12 +861,10 @@ const systemLive = youtubeConnected;
               </button>
             </div>
 
-            {/* ── YouTube not connected banner ── */}
             {!youtubeConnectionLoading && !youtubeConnected && (
               <YouTubeNotConnectedBanner />
             )}
 
-            {/* ── Rules list ── */}
             {rulesLoading ? (
               <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
                 <div style={{ width: 32, height: 32, border: "2px solid #F59E0B", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -920,9 +891,6 @@ const systemLive = youtubeConnected;
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {rules.map(rule => {
-                  // A rule is "eligible" only when YouTube is connected AND rule is active.
-                  // We show the user's own rule.active toggle truthfully — we do NOT hide or
-                  // modify it. We add a subtle "not connected" note when YouTube is offline.
                   const eligible = youtubeConnected && rule.active;
                   return (
                     <div key={rule.id} className="rule-card" style={{ background: "rgba(255,255,255,0.035)", border: `1px solid ${eligible ? "rgba(34,197,94,0.14)" : "rgba(255,255,255,0.07)"}`, borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, transition: "all 0.2s" }}>
@@ -932,7 +900,6 @@ const systemLive = youtubeConnected;
                           <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.name}</div>
                           <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {(rule.video?.title ?? "").slice(0, 36)}{(rule.video?.title?.length ?? 0) > 36 ? "…" : ""} · {rule.keywords?.length ?? 0} kw
-                            {/* Clear label when YouTube is disconnected but rule is on */}
                             {!youtubeConnected && rule.active && (
                               <span style={{ color: "rgba(255,200,80,0.60)", marginLeft: 6, fontSize: 10 }}>· no channel</span>
                             )}
@@ -940,7 +907,6 @@ const systemLive = youtubeConnected;
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                        {/* Toggle reflects the user's own rule.active — not YouTube state */}
                         <button
                           onClick={() => toggleRule(rule)}
                           style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
@@ -959,7 +925,6 @@ const systemLive = youtubeConnected;
             )}
           </>
         ) : (
-          // ── Rule builder — only reachable when YouTube IS connected ──
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
             <div style={{ flex: 1, minWidth: 0 }}>
 
@@ -1192,14 +1157,6 @@ const systemLive = youtubeConnected;
                             <button key={n} onClick={() => setAdvanced(a => ({ ...a, minCommentLength: n }))} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.minCommentLength === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.minCommentLength === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.minCommentLength === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n === 0 ? "Any" : `${n}+`}</button>
                           ))}
                         </div>
-                      </div>
-
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Language Filter</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Only reply to comments in this language</div>
-                        <select value={advanced.languageFilter} onChange={e => setAdvanced(a => ({ ...a, languageFilter: e.target.value }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "9px 12px", fontSize: 13, cursor: "pointer", width: "100%" }}>
-                          {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-                        </select>
                       </div>
 
                       {[

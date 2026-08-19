@@ -419,10 +419,7 @@ export default function LandingPage() {
         /* ══ HERO — Desktop ══ */
         .hero {
           padding: 112px 24px 72px; position: relative; overflow: hidden;
-          background:
-            radial-gradient(ellipse 70% 55% at 15% 20%, rgba(245,158,11,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 55% 55% at 85% 80%, rgba(139,92,246,0.1) 0%, transparent 60%),
-            #080808;
+          background: #06060E;
         }
         .hero-grid {
           position: absolute; inset: 0; pointer-events: none;
@@ -430,6 +427,12 @@ export default function LandingPage() {
           background-size: 52px 52px;
           mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
           -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
+        }
+        .hero-orb {
+          position: absolute; right: 2%; top: 50%; transform: translateY(-50%);
+          width: 520px; height: 520px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(139,92,246,0.32) 0%, rgba(236,72,153,0.18) 38%, transparent 68%);
+          pointer-events: none; z-index: 1; filter: blur(8px);
         }
         .hero-inner {
           position: relative; z-index: 2; max-width: 1120px; margin: 0 auto;
@@ -453,12 +456,13 @@ export default function LandingPage() {
         @media (max-width: 800px) {
           .hero {
             padding: 68px 0 0;
-            background:
-              radial-gradient(ellipse 140% 55% at 50% -5%, rgba(139,92,246,0.2) 0%, transparent 55%),
-              radial-gradient(ellipse 80% 50% at 5% 70%, rgba(245,158,11,0.06) 0%, transparent 55%),
-              #06060E;
+            background: #06060E;
             min-height: 100svh;
             display: flex; flex-direction: column;
+          }
+          .hero-orb {
+            width: 340px; height: 340px;
+            right: -15%; top: 38%;
           }
           .hero-grid { display: none; }
           .hero-inner {
@@ -474,7 +478,7 @@ export default function LandingPage() {
             animation: none !important;
             order: 2;
             padding: 16px 16px 32px;
-            background: radial-gradient(ellipse 100% 70% at 50% 20%, rgba(139,92,246,0.1) 0%, transparent 65%);
+            background: transparent;
           }
           .h-badge { margin-bottom: 16px; padding: 4px 12px 4px 9px; }
           .h-badge-text { font-size: 11px; }
@@ -733,6 +737,7 @@ export default function LandingPage() {
         {/* ── HERO ── */}
         <section className="hero" id="features">
           <div className="hero-grid" />
+          <div className="hero-orb" />
           <div className="hero-inner">
 
             {/* Left / Text */}

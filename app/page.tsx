@@ -127,8 +127,8 @@ function DashboardPreview() {
       background: '#0D0D14',
       borderRadius: 20,
       overflow: 'hidden',
-      border: '1.5px solid rgba(139,92,246,0.55)',
-      boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 0 30px rgba(139,92,246,0.35), 0 0 60px rgba(139,92,246,0.2), 0 0 90px rgba(236,72,153,0.12), 0 24px 60px rgba(0,0,0,0.8)',
+      border: '1.5px solid rgba(180,100,255,0.75)',
+      boxShadow: '0 0 0 1px rgba(139,92,246,0.3), 0 0 20px rgba(139,92,246,0.5), 0 0 50px rgba(139,92,246,0.28), 0 0 80px rgba(236,72,153,0.18), 0 24px 60px rgba(0,0,0,0.9)',
       display: 'flex',
       flexDirection: 'column',
     }}>
@@ -429,10 +429,17 @@ export default function LandingPage() {
           -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
         }
         .hero-orb {
-          position: absolute; right: 2%; top: 50%; transform: translateY(-50%);
-          width: 520px; height: 520px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(139,92,246,0.32) 0%, rgba(236,72,153,0.18) 38%, transparent 68%);
-          pointer-events: none; z-index: 1; filter: blur(8px);
+          position: absolute; right: 3%; top: 50%; transform: translateY(-50%);
+          width: 480px; height: 480px; border-radius: 50%;
+          background: transparent;
+          border: 2.5px solid transparent;
+          background-clip: padding-box;
+          box-shadow:
+            0 0 0 2px rgba(139,92,246,0.55),
+            0 0 60px 20px rgba(139,92,246,0.28),
+            0 0 120px 40px rgba(236,72,153,0.18),
+            inset 0 0 80px 10px rgba(139,92,246,0.12);
+          pointer-events: none; z-index: 1;
         }
         .hero-inner {
           position: relative; z-index: 2; max-width: 1120px; margin: 0 auto;
@@ -461,8 +468,13 @@ export default function LandingPage() {
             display: flex; flex-direction: column;
           }
           .hero-orb {
-            width: 340px; height: 340px;
-            right: -15%; top: 38%;
+            width: 300px; height: 300px;
+            right: -8%; top: 42%;
+            box-shadow:
+              0 0 0 2px rgba(139,92,246,0.5),
+              0 0 40px 14px rgba(139,92,246,0.22),
+              0 0 80px 24px rgba(236,72,153,0.14),
+              inset 0 0 50px 6px rgba(139,92,246,0.1);
           }
           .hero-grid { display: none; }
           .hero-inner {

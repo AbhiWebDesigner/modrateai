@@ -135,7 +135,7 @@ function DashboardPreview() {
       {/* Top bar */}
       <div style={{ background: '#111118', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', borderRadius: 8, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'linear-gradient(135deg,#F59E0B,#EC4899,#7C3AED)', borderRadius: 8, width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Shield size={12} color="white" />
           </div>
           <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13 }}>Moderate<span style={{ color: '#F59E0B' }}>AI</span></span>
@@ -233,12 +233,12 @@ function DashboardPreview() {
 
 /* ── DATA ── */
 const STEPS = [
-  { icon: Shield, label: 'Connect YouTube', detail: 'Secure OAuth connection with read-only access.', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment is analyzed in real time by our AI.', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)' },
-  { icon: Languages, label: 'Language auto-detected', detail: 'Detects 100+ languages and applies cultural rules.', color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-  { icon: EyeOff, label: 'Harmful content hidden', detail: 'Toxic and spam comments are hidden instantly.', color: '#f87171', bg: 'rgba(239,68,68,0.12)' },
-  { icon: MessageSquare, label: 'AI replies naturally', detail: 'Genuine comments receive contextual replies.', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  { icon: BarChart3, label: 'Analytics updated', detail: 'Every moderation event is logged in real time.', color: '#34d399', bg: 'rgba(16,185,129,0.12)' },
+  { icon: Shield, label: 'Connect YouTube', detail: 'Secure OAuth connection with read-only access.', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.2)' },
+  { icon: Cpu, label: 'AI monitors every comment', detail: 'Each comment is analyzed in real time by our AI.', color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)', border: 'rgba(139,92,246,0.2)' },
+  { icon: Languages, label: 'Language auto-detected', detail: 'Detects 100+ languages and applies cultural rules.', color: '#F59E0B', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.2)' },
+  { icon: EyeOff, label: 'Harmful content hidden', detail: 'Toxic and spam comments are hidden instantly.', color: '#f87171', bg: 'rgba(239,68,68,0.12)', border: 'rgba(239,68,68,0.2)' },
+  { icon: MessageSquare, label: 'AI replies naturally', detail: 'Genuine comments receive contextual replies.', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', border: 'rgba(96,165,250,0.2)' },
+  { icon: BarChart3, label: 'Analytics updated', detail: 'Every moderation event is logged in real time.', color: '#34d399', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.2)' },
 ];
 
 const FEATURES = [
@@ -342,7 +342,6 @@ export default function LandingPage() {
         @keyframes lp-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
         @keyframes lp-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         @keyframes lp-grad { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-        @keyframes lp-shimmer { 0%{opacity:0.5} 50%{opacity:1} 100%{opacity:0.5} }
 
         .serif { font-family: 'Playfair Display', Georgia, serif; }
 
@@ -353,12 +352,27 @@ export default function LandingPage() {
           background-clip: text; animation: lp-grad 5s ease infinite;
         }
 
+        /* ══ PAGE-LEVEL AMBIENT GLOW ══
+           Sits behind everything — hero, process, features all share this atmosphere */
+        .page-ambient {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          height: 100vh;
+          pointer-events: none;
+          z-index: 0;
+          background:
+            radial-gradient(ellipse 75% 55% at 75% 42%, rgba(109,40,217,0.18) 0%, transparent 62%),
+            radial-gradient(ellipse 55% 50% at 72% 38%, rgba(139,92,246,0.13) 0%, transparent 58%),
+            radial-gradient(ellipse 40% 45% at 76% 52%, rgba(236,72,153,0.09) 0%, transparent 55%),
+            radial-gradient(ellipse 100% 40% at 50% 0%, rgba(139,92,246,0.04) 0%, transparent 70%);
+        }
+
         /* ══ NAVBAR ══ */
         .lp-nav {
           position: fixed; top: 0; left: 0; right: 0;
           z-index: 200;
-          background: rgba(6,6,16,0.82);
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          background: rgba(6,6,16,0.7);
+          border-bottom: 1px solid rgba(255,255,255,0.055);
           padding: 0 48px;
           backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
           display: flex; align-items: center; height: 60px;
@@ -366,28 +380,29 @@ export default function LandingPage() {
         }
         .lp-nav.scrolled {
           height: 54px;
-          background: rgba(6,6,16,0.95);
-          box-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.5);
+          background: rgba(6,6,16,0.94);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 8px 32px rgba(0,0,0,0.5);
         }
-        .n-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
+        .n-logo { display: flex; align-items: center; gap: 9px; text-decoration: none; flex-shrink: 0; }
         .n-mark {
-          background: linear-gradient(135deg,#F59E0B,#7C3AED);
-          border-radius: 8px; width: 27px; height: 27px;
+          background: linear-gradient(135deg,#F59E0B,#EC4899,#7C3AED);
+          border-radius: 9px; width: 28px; height: 28px;
           display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 0 12px rgba(139,92,246,0.3);
         }
         .n-name { color: #F0F0F0; font-weight: 800; font-size: 14.5px; letter-spacing: -0.025em; }
         .n-name span { color: #F59E0B; }
         .n-links { display: flex; align-items: center; margin: 0 auto; }
         .n-link {
           color: rgba(255,255,255,0.42); font-size: 13px; font-weight: 500;
-          text-decoration: none; padding: 6px 11px; border-radius: 7px;
+          text-decoration: none; padding: 6px 12px; border-radius: 7px;
           transition: color 0.2s, background 0.2s;
         }
         .n-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
         .n-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
         .n-login {
-          color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600;
-          text-decoration: none; padding: 7px 14px;
+          color: rgba(255,255,255,0.72); font-size: 13px; font-weight: 600;
+          text-decoration: none; padding: 7px 15px;
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 8px; transition: all 0.25s;
         }
@@ -396,17 +411,14 @@ export default function LandingPage() {
           color: #080808; font-size: 13px; font-weight: 700;
           text-decoration: none; padding: 7px 16px;
           background: #F59E0B; border-radius: 8px;
-          transition: all 0.22s;
-          white-space: nowrap;
+          transition: all 0.22s; white-space: nowrap;
+          display: inline-flex; align-items: center; gap: 5px;
         }
         .n-cta:hover { background: #FBBF24; box-shadow: 0 0 20px rgba(245,158,11,0.3); }
         .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; }
 
         @media (max-width: 800px) {
-          .lp-nav {
-            padding: 0 16px; height: 56px;
-            background: rgba(6,6,16,0.97);
-          }
+          .lp-nav { padding: 0 16px; height: 56px; background: rgba(6,6,16,0.97); }
           .lp-nav.scrolled { height: 52px; }
           .n-links { display: none !important; }
           .n-right { display: none !important; }
@@ -434,28 +446,20 @@ export default function LandingPage() {
 
         /* ══ HERO ══ */
         .hero {
-          padding: 128px 56px 72px;
-          position: relative; overflow: hidden;
-          background: #060610;
+          padding: 130px 56px 80px;
+          position: relative;
+          background: transparent;
           min-height: 100vh;
-          display: flex; flex-direction: column;
-        }
-
-        /* Global ambient purple glow — bleeds into full page background */
-        .hero-ambient {
-          position: absolute; inset: 0; pointer-events: none; z-index: 0;
-          background:
-            radial-gradient(ellipse 72% 80% at 72% 52%, rgba(109,40,217,0.22) 0%, transparent 60%),
-            radial-gradient(ellipse 50% 60% at 70% 50%, rgba(139,92,246,0.16) 0%, transparent 55%),
-            radial-gradient(ellipse 45% 55% at 74% 55%, rgba(236,72,153,0.1) 0%, transparent 58%),
-            radial-gradient(ellipse 90% 50% at 55% 30%, rgba(139,92,246,0.05) 0%, transparent 70%);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
         }
 
         .hero-grid {
           position: absolute; inset: 0; pointer-events: none; z-index: 0;
           background-image:
-            linear-gradient(rgba(255,255,255,0.013) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.013) 1px, transparent 1px);
+            linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
           background-size: 60px 60px;
           mask-image: radial-gradient(ellipse 90% 80% at 50% 38%, black 5%, transparent 80%);
           -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 38%, black 5%, transparent 80%);
@@ -463,9 +467,11 @@ export default function LandingPage() {
 
         .hero-inner {
           position: relative; z-index: 2;
-          max-width: 1400px; margin: 0 auto; width: 100%;
-          display: grid; grid-template-columns: 42% 58%; gap: 56px; align-items: center;
-          flex: 1;
+          max-width: 1380px; margin: 0 auto; width: 100%;
+          display: grid;
+          grid-template-columns: 42% 58%;
+          gap: 64px;
+          align-items: center;
         }
 
         .h-badge {
@@ -475,41 +481,37 @@ export default function LandingPage() {
         }
         .h-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: #F59E0B; animation: lp-pulse 2s infinite; }
         .h-badge-text { color: rgba(245,158,11,0.88); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
-        .h1 { font-size: clamp(36px, 4.6vw, 60px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.07; color: #F0F0F0; margin-bottom: 22px; }
-        .h-desc { color: rgba(255,255,255,0.42); font-size: 16px; line-height: 1.72; max-width: 440px; margin-bottom: 36px; }
+
+        .h1 {
+          font-size: clamp(34px, 4.2vw, 56px);
+          font-weight: 800; letter-spacing: -0.035em; line-height: 1.08;
+          color: #F0F0F0; margin-bottom: 22px;
+        }
+        .h-desc {
+          color: rgba(255,255,255,0.42); font-size: 16px; line-height: 1.72;
+          max-width: 440px; margin-bottom: 36px;
+        }
         .h-btns { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+
         .btn-p { display: inline-flex; align-items: center; gap: 7px; background: #F59E0B; color: #080808; font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 10px; text-decoration: none; border: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
         .btn-p:hover { background: #FBBF24; box-shadow: 0 0 32px rgba(245,158,11,0.38); transform: translateY(-1px); }
         .btn-g { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); color: rgba(255,255,255,0.78); font-weight: 600; font-size: 14px; padding: 12px 22px; border-radius: 10px; text-decoration: none; cursor: pointer; transition: all 0.22s; white-space: nowrap; }
         .btn-g:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); }
+
         .h-trust { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
-        .hero-right { animation: lp-float 7s ease-in-out infinite; }
+
+        .hero-right { animation: lp-float 7s ease-in-out infinite; position: relative; z-index: 2; }
 
         @media (max-width: 800px) {
-          .hero {
-            padding: 72px 0 0;
-            min-height: 100svh;
-          }
-          .hero-ambient {
-            background:
-              radial-gradient(ellipse 80% 40% at 80% 38%, rgba(109,40,217,0.16) 0%, transparent 65%),
-              radial-gradient(ellipse 60% 30% at 75% 45%, rgba(236,72,153,0.08) 0%, transparent 60%);
-          }
+          .hero { padding: 72px 0 0; min-height: 100svh; justify-content: flex-start; }
           .hero-grid { display: none; }
           .hero-inner {
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 0 !important;
-            padding: 0 !important;
-            align-items: stretch !important;
+            display: flex !important; flex-direction: column !important;
+            gap: 0 !important; padding: 0 !important; align-items: stretch !important;
           }
           .hero-left-mob { padding: 28px 20px 20px; order: 1; }
-          .hero-right {
-            animation: none !important;
-            order: 2;
-            padding: 16px 16px 32px;
-          }
+          .hero-right { animation: none !important; order: 2; padding: 16px 16px 32px; }
           .h-badge { margin-bottom: 16px; padding: 4px 12px 4px 9px; }
           .h-badge-text { font-size: 11px; }
           .h1 { font-size: 28px !important; line-height: 1.13 !important; margin-bottom: 14px !important; letter-spacing: -0.03em !important; }
@@ -521,27 +523,22 @@ export default function LandingPage() {
           .h-trust-item { font-size: 11px !important; gap: 4px !important; }
         }
 
-        /* ══ STATS ══ */
+        /* ══ STATS STRIP ══ */
         .stats-wrap {
-          background: #060610;
-          padding: 40px 56px 72px;
+          position: relative; z-index: 2;
+          background: transparent;
+          padding: 0 56px 72px;
         }
-        @media (max-width: 800px) {
-          .stats-wrap { padding: 16px 16px 0 !important; }
-        }
-
-        /* Desktop stats strip */
         .stats-strip {
-          max-width: 1400px; margin: 0 auto;
-          background: rgba(255,255,255,0.025);
-          border: 1px solid rgba(139,92,246,0.2);
+          max-width: 1380px; margin: 0 auto;
+          background: rgba(13,13,26,0.7);
+          border: 1px solid rgba(139,92,246,0.22);
           border-radius: 18px;
           display: flex; align-items: stretch;
-          box-shadow: 0 0 0 1px rgba(139,92,246,0.08), 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+          box-shadow: 0 0 0 1px rgba(139,92,246,0.07), 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
           overflow: hidden;
-          backdrop-filter: blur(12px);
+          backdrop-filter: blur(16px);
         }
-
         .s-cell {
           flex: 1; display: flex; align-items: center; gap: 16px;
           padding: 28px 32px; position: relative;
@@ -558,23 +555,13 @@ export default function LandingPage() {
         .s-num { font-size: 26px; font-weight: 900; color: #F0F0F0; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
         .s-lbl { color: rgba(255,255,255,0.32); font-size: 11.5px; font-weight: 500; margin-top: 5px; }
 
-        /* Mobile stats */
         @media (max-width: 800px) {
-          .stats-wrap { padding: 16px 16px 0; background: #060610; }
+          .stats-wrap { padding: 16px 16px 0; }
           .stats-strip {
-            flex-direction: column !important;
-            border-radius: 16px;
-            border-color: rgba(255,255,255,0.07);
-            display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            box-shadow: none;
+            display: grid !important; grid-template-columns: repeat(2, 1fr) !important;
+            border-radius: 16px; border-color: rgba(255,255,255,0.07); box-shadow: none;
           }
-          .s-cell {
-            padding: 16px 16px !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            gap: 12px !important;
-          }
+          .s-cell { padding: 16px !important; flex-direction: row !important; align-items: center !important; gap: 12px !important; }
           .s-cell::before { display: none !important; }
           .s-cell:nth-child(1) { border-bottom: 1px solid rgba(255,255,255,0.05); }
           .s-cell:nth-child(2) { border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
@@ -585,9 +572,8 @@ export default function LandingPage() {
         }
 
         /* ══ SECTIONS ══ */
-        .section { padding: 96px 56px; }
-        .con { max-width: 1400px; margin: 0 auto; padding: 0 56px; }
-        @media (max-width: 800px) { .con { padding: 0 !important; } }
+        .section { padding: 96px 56px; position: relative; z-index: 2; }
+        .con { max-width: 1380px; margin: 0 auto; }
         .eyebrow { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.28); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .eyebrow-dark { display: inline-flex; align-items: center; gap: 5px; color: rgba(0,0,0,0.3); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .sh { font-size: clamp(26px,3.4vw,44px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; }
@@ -611,79 +597,119 @@ export default function LandingPage() {
           .section { padding: 52px 20px !important; }
         }
 
-        /* ══ HOW IT WORKS ══ */
-        .how-bg { background: #08081A; }
+        /* ══ OUR PROCESS — TWO COLUMN LAYOUT ══ */
+        .process-bg { background: rgba(8,8,20,0.6); }
 
-        /* Desktop: left intro col + right 6-card horizontal row stacked in 2 rows of 3 */
-        .how-layout {
+        .process-layout {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 80px;
+          align-items: start;
+        }
+
+        .process-left { position: sticky; top: 100px; }
+
+        .process-eyebrow {
+          display: inline-flex; align-items: center; gap: 6px;
+          color: rgba(139,92,246,0.8); font-size: 11px; font-weight: 700;
+          letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px;
+        }
+
+        .process-learn-link {
+          display: inline-flex; align-items: center; gap: 6px;
+          margin-top: 28px; color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 600;
+          text-decoration: none; border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 8px; padding: 9px 16px; transition: all 0.2s;
+        }
+        .process-learn-link:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+
+        /* Right: vertical timeline */
+        .process-timeline {
           display: flex;
           flex-direction: column;
-          gap: 48px;
+          gap: 0;
+          padding: 8px 0;
         }
 
-        /* Top: heading left, no split — full width intro */
-        .how-intro { max-width: 540px; }
-
-        /* Six cards: ONE full-width horizontal row */
-        .how-cards-row {
-          display: grid;
-          grid-template-columns: repeat(6, 1fr);
-          gap: 14px;
-        }
-
-        .how-card {
-          background: rgba(255,255,255,0.026);
-          border: 1px solid rgba(255,255,255,0.06);
-          border-radius: 14px;
-          padding: 22px 18px;
-          transition: all 0.28s;
+        .timeline-step {
+          display: flex;
+          gap: 20px;
           position: relative;
-          overflow: hidden;
-        }
-        .how-card::before {
-          content: '';
-          position: absolute; top: 0; left: 0; right: 0; height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
-        }
-        .how-card:hover {
-          border-color: rgba(139,92,246,0.2);
-          background: rgba(139,92,246,0.04);
-          transform: translateY(-3px);
-          box-shadow: 0 16px 40px rgba(0,0,0,0.45);
         }
 
-        .how-card-num {
-          font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
-          color: rgba(255,255,255,0.18); margin-bottom: 14px;
-          font-variant-numeric: tabular-nums;
+        /* Connector column */
+        .timeline-connector {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex-shrink: 0;
+          width: 40px;
         }
-        .how-card-icon {
-          width: 36px; height: 36px; border-radius: 10px;
+
+        .timeline-icon {
+          width: 40px; height: 40px; border-radius: 10px;
           display: flex; align-items: center; justify-content: center;
-          margin-bottom: 14px;
+          flex-shrink: 0; position: relative; z-index: 1;
+          border: 1px solid;
+          transition: all 0.2s;
         }
-        .how-card h3 { font-size: 12.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; line-height: 1.3; }
-        .how-card p { font-size: 11px; color: rgba(255,255,255,0.3); line-height: 1.55; }
 
-        /* Mobile */
+        .timeline-line {
+          width: 1px;
+          flex: 1;
+          min-height: 20px;
+          background: linear-gradient(to bottom, rgba(139,92,246,0.25) 0%, rgba(139,92,246,0.08) 100%);
+          margin-top: 6px;
+          margin-bottom: 6px;
+        }
+
+        .timeline-step:last-child .timeline-line {
+          display: none;
+        }
+
+        /* Step content */
+        .timeline-content {
+          padding-bottom: 28px;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .timeline-step:last-child .timeline-content {
+          padding-bottom: 0;
+        }
+
+        .timeline-title {
+          font-size: 14.5px;
+          font-weight: 700;
+          color: #F0F0F0;
+          margin-bottom: 5px;
+          line-height: 1.3;
+          padding-top: 9px;
+        }
+
+        .timeline-desc {
+          font-size: 13px;
+          color: rgba(255,255,255,0.35);
+          line-height: 1.6;
+        }
+
         @media (max-width: 800px) {
-          .how-bg { background: #06060E; }
-          .how-layout { gap: 0; }
-          .how-intro { max-width: 100%; }
-          .how-cards-row {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 8px !important; margin-top: 24px !important;
+          .process-bg { background: transparent; }
+          .process-layout {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
           }
-          .how-card { padding: 14px 12px !important; }
-          .how-card-num { margin-bottom: 8px !important; }
-          .how-card-icon { width: 32px !important; height: 32px !important; border-radius: 8px !important; margin-bottom: 8px !important; }
-          .how-card h3 { font-size: 12px !important; }
-          .how-card p { font-size: 10.5px !important; }
+          .process-left { position: static !important; }
+          .timeline-title { font-size: 13.5px !important; }
+          .timeline-desc { font-size: 12px !important; }
+          .timeline-icon { width: 34px !important; height: 34px !important; border-radius: 8px !important; }
+          .timeline-connector { width: 34px !important; }
+          .timeline-content { padding-bottom: 22px !important; }
         }
 
         /* ══ FEATURES ══ */
-        .feat-bg { background: #070712; }
-        .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 48px; }
+        .feat-bg { background: rgba(7,7,18,0.5); }
+        .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 48px; }
         .f-card {
           background: rgba(255,255,255,0.025);
           border: 1px solid rgba(255,255,255,0.055);
@@ -701,11 +727,10 @@ export default function LandingPage() {
           background: rgba(255,255,255,0.035);
         }
         .f-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
-        .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 8px; }
-        .f-card p { font-size: 13px; color: rgba(255,255,255,0.38); line-height: 1.62; }
+        .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 10px; }
+        .f-card p { font-size: 13.5px; color: rgba(255,255,255,0.38); line-height: 1.62; }
 
         @media (max-width: 800px) {
-          .feat-bg { background: #06060E; }
           .feat-grid { grid-template-columns: repeat(2,1fr) !important; gap: 8px !important; margin-top: 20px !important; }
           .f-card { padding: 16px 14px !important; border-radius: 12px !important; }
           .f-icon { width: 34px !important; height: 34px !important; border-radius: 9px !important; margin-bottom: 10px !important; }
@@ -714,13 +739,12 @@ export default function LandingPage() {
         }
 
         /* ══ LANGUAGES ══ */
-        .lang-bg { background: #08081A; }
+        .lang-bg { background: rgba(8,8,26,0.6); }
         .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
         .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 7px 15px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
         .l-chip:hover { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.2); color: rgba(255,255,255,0.82); }
 
         @media (max-width: 800px) {
-          .lang-bg { background: #06060E; }
           .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; }
           .lang-chips { gap: 6px !important; margin-top: 20px !important; }
         }
@@ -775,7 +799,7 @@ export default function LandingPage() {
         .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
         /* ══ CTA ══ */
-        .cta-wrap { background: #060610; padding: 120px 56px; position: relative; overflow: hidden; }
+        .cta-wrap { background: #060610; padding: 120px 56px; position: relative; overflow: hidden; z-index: 2; }
         .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.1) 0%, transparent 70%); }
         .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
         .cta-h { font-size: clamp(28px,4.8vw,52px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.08; margin-bottom: 16px; }
@@ -784,8 +808,8 @@ export default function LandingPage() {
         .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
         /* ══ FOOTER ══ */
-        .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 56px 26px; }
-        .foot-in { max-width: 1400px; margin: 0 auto; }
+        .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 56px 26px; position: relative; z-index: 2; }
+        .foot-in { max-width: 1380px; margin: 0 auto; }
         @media (max-width: 800px) { .foot { padding: 40px 20px 20px !important; } }
         .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
         .foot-brand p { color: rgba(255,255,255,0.26); font-size: 13px; line-height: 1.65; margin-top: 12px; max-width: 230px; }
@@ -803,6 +827,9 @@ export default function LandingPage() {
 
       <div className="lp">
 
+        {/* ── PAGE-LEVEL AMBIENT PURPLE GLOW ── */}
+        <div className="page-ambient" />
+
         {/* ── NAVBAR ── */}
         <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
           <Link href="/" className="n-logo">
@@ -817,7 +844,7 @@ export default function LandingPage() {
           <Link href="/login" className="n-mob-login">Login</Link>
           <div className="n-right">
             <Link href="/login" className="n-login">Login</Link>
-            <Link href="/login" className="n-cta">Start Free Trial →</Link>
+            <Link href="/login" className="n-cta">Start Free Trial <ArrowRight size={12} /></Link>
           </div>
           <button className="n-burger" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
             {menuOpen ? <X size={19} /> : <Menu size={19} />}
@@ -838,7 +865,6 @@ export default function LandingPage() {
 
         {/* ── HERO ── */}
         <section className="hero" id="features">
-          <div className="hero-ambient" />
           <div className="hero-grid" />
           <div className="hero-inner">
 
@@ -851,7 +877,8 @@ export default function LandingPage() {
                 </div>
               </motion.div>
               <motion.h1 className="h1 serif" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}>
-                Protect your<br />YouTube community<br />before <span className="grad-text">toxicity spreads.</span>
+                Protect your<br />YouTube community<br />before{' '}
+                <span className="grad-text">toxicity spreads.</span>
               </motion.h1>
               <motion.p className="h-desc" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.22 }}>
                 ModerateAI scans every comment in real time to detect spam, toxicity, and manipulation across 100+ languages and hides harmful content before your audience ever sees it.
@@ -869,7 +896,7 @@ export default function LandingPage() {
               </motion.div>
             </div>
 
-            {/* Right */}
+            {/* Right — Dashboard */}
             <motion.div className="hero-right"
               initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
@@ -879,7 +906,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── STATS STRIP ── */}
+        {/* ── STATS STRIP — breathing space then one horizontal strip ── */}
         <div className="stats-wrap">
           <FadeIn>
             <div className="stats-strip">
@@ -901,38 +928,72 @@ export default function LandingPage() {
           </FadeIn>
         </div>
 
-        {/* ── HOW IT WORKS ── */}
-        <section className="section how-bg" id="how-it-works">
+        {/* ── OUR PROCESS — two-column with vertical timeline ── */}
+        <section className="section process-bg" id="how-it-works">
           <div className="con">
-            <div className="how-layout">
-              {/* Intro */}
+            <div className="process-layout">
+
+              {/* LEFT — intro */}
               <FadeIn>
-                <div className="how-intro">
+                <div className="process-left">
                   <div className="mob-pill"><Zap size={10} /> Our Process</div>
-                  <div className="eyebrow"><Zap size={11} /> Our Process</div>
+                  <div className="process-eyebrow">
+                    <Zap size={11} /> PROCESS
+                  </div>
                   <h2 className="sh serif">
-                    From posted to <span className="grad-text">protected</span>{' '}in under a second.
+                    From posted to{' '}
+                    <span className="grad-text">protected</span>{' '}
+                    in under a second.
                   </h2>
-                  <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review required.</p>
-                  <Link href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 24, color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '9px 16px', transition: 'all 0.2s' }}>Get Started <ArrowRight size={13} /></Link>
+                  <p className="sub">
+                    Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review.
+                  </p>
+                  <Link href="/login" className="process-learn-link">
+                    Learn More <ArrowRight size={13} />
+                  </Link>
                 </div>
               </FadeIn>
 
-              {/* 6 cards — ONE horizontal row on desktop */}
-              <div className="how-cards-row">
-                {STEPS.map((s, i) => (
-                  <FadeIn key={s.label} delay={i * 0.07}>
-                    <div className="how-card">
-                      <div className="how-card-num">0{i + 1}</div>
-                      <div className="how-card-icon" style={{ background: s.bg }}>
-                        <s.icon size={16} color={s.color} />
+              {/* RIGHT — vertical timeline */}
+              <FadeIn delay={0.1}>
+                <div className="process-timeline">
+                  {STEPS.map((step, i) => (
+                    <div key={step.label} className="timeline-step">
+                      {/* Icon + connector line */}
+                      <div className="timeline-connector">
+                        <motion.div
+                          className="timeline-icon"
+                          style={{
+                            background: step.bg,
+                            borderColor: step.border,
+                            boxShadow: `0 0 12px ${step.bg}`,
+                          }}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.4, delay: i * 0.07 }}
+                        >
+                          <step.icon size={17} color={step.color} />
+                        </motion.div>
+                        {i < STEPS.length - 1 && <div className="timeline-line" />}
                       </div>
-                      <h3>{s.label}</h3>
-                      <p>{s.detail}</p>
+
+                      {/* Content */}
+                      <motion.div
+                        className="timeline-content"
+                        initial={{ opacity: 0, x: 10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: i * 0.07 + 0.05 }}
+                      >
+                        <div className="timeline-title">{step.label}</div>
+                        <div className="timeline-desc">{step.detail}</div>
+                      </motion.div>
                     </div>
-                  </FadeIn>
-                ))}
-              </div>
+                  ))}
+                </div>
+              </FadeIn>
+
             </div>
           </div>
         </section>

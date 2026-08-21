@@ -355,19 +355,19 @@ export default function LandingPage() {
 
         /* ══ NAVBAR ══ */
         .lp-nav {
-          position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-          z-index: 200; width: calc(100% - 32px); max-width: 1120px;
-          background: rgba(6,6,16,0.8);
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 14px; padding: 0 20px;
-          backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
-          display: flex; align-items: center; height: 52px;
-          transition: all 0.35s ease;
+          position: fixed; top: 0; left: 0; right: 0;
+          z-index: 200;
+          background: rgba(6,6,16,0.82);
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          padding: 0 48px;
+          backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+          display: flex; align-items: center; height: 60px;
+          transition: all 0.3s ease;
         }
         .lp-nav.scrolled {
-          height: 48px;
-          box-shadow: 0 4px 28px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.08);
-          border-color: rgba(255,255,255,0.06);
+          height: 54px;
+          background: rgba(6,6,16,0.95);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.5);
         }
         .n-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
         .n-mark {
@@ -404,11 +404,6 @@ export default function LandingPage() {
 
         @media (max-width: 800px) {
           .lp-nav {
-            top: 0; left: 0; right: 0; transform: none;
-            width: 100%; max-width: 100%;
-            border-radius: 0;
-            border-left: none; border-right: none; border-top: none;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
             padding: 0 16px; height: 56px;
             background: rgba(6,6,16,0.97);
           }
@@ -439,36 +434,38 @@ export default function LandingPage() {
 
         /* ══ HERO ══ */
         .hero {
-          padding: 120px 24px 0;
+          padding: 128px 56px 72px;
           position: relative; overflow: hidden;
           background: #060610;
           min-height: 100vh;
           display: flex; flex-direction: column;
         }
 
-        /* Global ambient purple glow */
+        /* Global ambient purple glow — bleeds into full page background */
         .hero-ambient {
           position: absolute; inset: 0; pointer-events: none; z-index: 0;
           background:
-            radial-gradient(ellipse 55% 60% at 68% 48%, rgba(139,92,246,0.18) 0%, transparent 65%),
-            radial-gradient(ellipse 40% 50% at 72% 52%, rgba(236,72,153,0.1) 0%, transparent 60%),
-            radial-gradient(ellipse 70% 40% at 50% 20%, rgba(139,92,246,0.06) 0%, transparent 70%);
+            radial-gradient(ellipse 72% 80% at 72% 52%, rgba(109,40,217,0.22) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 60% at 70% 50%, rgba(139,92,246,0.16) 0%, transparent 55%),
+            radial-gradient(ellipse 45% 55% at 74% 55%, rgba(236,72,153,0.1) 0%, transparent 58%),
+            radial-gradient(ellipse 90% 50% at 55% 30%, rgba(139,92,246,0.05) 0%, transparent 70%);
         }
 
         .hero-grid {
           position: absolute; inset: 0; pointer-events: none; z-index: 0;
           background-image:
-            linear-gradient(rgba(255,255,255,0.014) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.014) 1px, transparent 1px);
-          background-size: 56px 56px;
-          mask-image: radial-gradient(ellipse 85% 75% at 50% 38%, black 5%, transparent 78%);
-          -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 38%, black 5%, transparent 78%);
+            linear-gradient(rgba(255,255,255,0.013) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.013) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse 90% 80% at 50% 38%, black 5%, transparent 80%);
+          -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 38%, black 5%, transparent 80%);
         }
 
         .hero-inner {
-          position: relative; z-index: 2; max-width: 1120px; margin: 0 auto; width: 100%;
-          display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center;
-          flex: 1; padding-bottom: 0;
+          position: relative; z-index: 2;
+          max-width: 1400px; margin: 0 auto; width: 100%;
+          display: grid; grid-template-columns: 42% 58%; gap: 56px; align-items: center;
+          flex: 1;
         }
 
         .h-badge {
@@ -491,12 +488,12 @@ export default function LandingPage() {
 
         @media (max-width: 800px) {
           .hero {
-            padding: 68px 0 0;
+            padding: 72px 0 0;
             min-height: 100svh;
           }
           .hero-ambient {
             background:
-              radial-gradient(ellipse 80% 40% at 80% 38%, rgba(139,92,246,0.14) 0%, transparent 65%),
+              radial-gradient(ellipse 80% 40% at 80% 38%, rgba(109,40,217,0.16) 0%, transparent 65%),
               radial-gradient(ellipse 60% 30% at 75% 45%, rgba(236,72,153,0.08) 0%, transparent 60%);
           }
           .hero-grid { display: none; }
@@ -527,12 +524,15 @@ export default function LandingPage() {
         /* ══ STATS ══ */
         .stats-wrap {
           background: #060610;
-          padding: 40px 24px 64px;
+          padding: 40px 56px 72px;
+        }
+        @media (max-width: 800px) {
+          .stats-wrap { padding: 16px 16px 0 !important; }
         }
 
         /* Desktop stats strip */
         .stats-strip {
-          max-width: 1120px; margin: 0 auto;
+          max-width: 1400px; margin: 0 auto;
           background: rgba(255,255,255,0.025);
           border: 1px solid rgba(139,92,246,0.2);
           border-radius: 18px;
@@ -585,8 +585,9 @@ export default function LandingPage() {
         }
 
         /* ══ SECTIONS ══ */
-        .section { padding: 96px 24px; }
-        .con { max-width: 1120px; margin: 0 auto; }
+        .section { padding: 96px 56px; }
+        .con { max-width: 1400px; margin: 0 auto; padding: 0 56px; }
+        @media (max-width: 800px) { .con { padding: 0 !important; } }
         .eyebrow { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.28); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .eyebrow-dark { display: inline-flex; align-items: center; gap: 5px; color: rgba(0,0,0,0.3); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .sh { font-size: clamp(26px,3.4vw,44px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.1; margin-bottom: 16px; }
@@ -610,28 +611,31 @@ export default function LandingPage() {
           .section { padding: 52px 20px !important; }
         }
 
-        /* ══ HOW IT WORKS — DESKTOP 6 CARDS ══ */
+        /* ══ HOW IT WORKS ══ */
         .how-bg { background: #08081A; }
 
+        /* Desktop: left intro col + right 6-card horizontal row stacked in 2 rows of 3 */
         .how-layout {
-          display: grid;
-          grid-template-columns: 320px 1fr;
-          gap: 64px;
-          align-items: start;
+          display: flex;
+          flex-direction: column;
+          gap: 48px;
         }
 
+        /* Top: heading left, no split — full width intro */
+        .how-intro { max-width: 540px; }
+
+        /* Six cards: ONE full-width horizontal row */
         .how-cards-row {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 12px;
-          margin-top: 8px;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 14px;
         }
 
         .how-card {
           background: rgba(255,255,255,0.026);
           border: 1px solid rgba(255,255,255,0.06);
           border-radius: 14px;
-          padding: 20px 18px;
+          padding: 22px 18px;
           transition: all 0.28s;
           position: relative;
           overflow: hidden;
@@ -639,49 +643,42 @@ export default function LandingPage() {
         .how-card::before {
           content: '';
           position: absolute; top: 0; left: 0; right: 0; height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
         }
         .how-card:hover {
-          border-color: rgba(139,92,246,0.18);
+          border-color: rgba(139,92,246,0.2);
           background: rgba(139,92,246,0.04);
-          transform: translateY(-2px);
-          box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+          transform: translateY(-3px);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.45);
         }
 
         .how-card-num {
           font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
-          color: rgba(255,255,255,0.2); margin-bottom: 12px;
+          color: rgba(255,255,255,0.18); margin-bottom: 14px;
           font-variant-numeric: tabular-nums;
         }
         .how-card-icon {
           width: 36px; height: 36px; border-radius: 10px;
           display: flex; align-items: center; justify-content: center;
-          margin-bottom: 12px;
+          margin-bottom: 14px;
         }
-        .how-card h3 { font-size: 13px; font-weight: 700; color: #F0F0F0; margin-bottom: 6px; line-height: 1.3; }
-        .how-card p { font-size: 11.5px; color: rgba(255,255,255,0.32); line-height: 1.55; }
+        .how-card h3 { font-size: 12.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 7px; line-height: 1.3; }
+        .how-card p { font-size: 11px; color: rgba(255,255,255,0.3); line-height: 1.55; }
 
-        /* Mobile how-it-works: vertical */
+        /* Mobile */
         @media (max-width: 800px) {
           .how-bg { background: #06060E; }
-          .how-layout { grid-template-columns: 1fr !important; gap: 0 !important; }
-          .how-cards-row { grid-template-columns: 1fr !important; gap: 8px !important; margin-top: 24px !important; }
-          .how-card { padding: 16px 14px !important; }
-          .how-card-num { margin-bottom: 8px !important; }
-          .how-card-icon { width: 34px !important; height: 34px !important; border-radius: 9px !important; margin-bottom: 8px !important; }
-          .how-card h3 { font-size: 13px !important; }
-          .how-card p { font-size: 11px !important; }
-        }
-
-        /* Mobile: show step cards in a 2-col grid */
-        @media (max-width: 800px) {
+          .how-layout { gap: 0; }
+          .how-intro { max-width: 100%; }
           .how-cards-row {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 8px !important;
+            gap: 8px !important; margin-top: 24px !important;
           }
-          .how-card:last-child {
-            grid-column: span 1;
-          }
+          .how-card { padding: 14px 12px !important; }
+          .how-card-num { margin-bottom: 8px !important; }
+          .how-card-icon { width: 32px !important; height: 32px !important; border-radius: 8px !important; margin-bottom: 8px !important; }
+          .how-card h3 { font-size: 12px !important; }
+          .how-card p { font-size: 10.5px !important; }
         }
 
         /* ══ FEATURES ══ */
@@ -778,7 +775,7 @@ export default function LandingPage() {
         .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
         /* ══ CTA ══ */
-        .cta-wrap { background: #060610; padding: 120px 24px; position: relative; overflow: hidden; }
+        .cta-wrap { background: #060610; padding: 120px 56px; position: relative; overflow: hidden; }
         .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.1) 0%, transparent 70%); }
         .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
         .cta-h { font-size: clamp(28px,4.8vw,52px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.08; margin-bottom: 16px; }
@@ -787,8 +784,9 @@ export default function LandingPage() {
         .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
         /* ══ FOOTER ══ */
-        .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 24px 26px; }
-        .foot-in { max-width: 1120px; margin: 0 auto; }
+        .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 56px 26px; }
+        .foot-in { max-width: 1400px; margin: 0 auto; }
+        @media (max-width: 800px) { .foot { padding: 40px 20px 20px !important; } }
         .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
         .foot-brand p { color: rgba(255,255,255,0.26); font-size: 13px; line-height: 1.65; margin-top: 12px; max-width: 230px; }
         .foot-col h4 { color: rgba(255,255,255,0.38); font-size: 10px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 13px; }
@@ -907,18 +905,20 @@ export default function LandingPage() {
         <section className="section how-bg" id="how-it-works">
           <div className="con">
             <div className="how-layout">
-              {/* Left column */}
+              {/* Intro */}
               <FadeIn>
-                <div className="mob-pill"><Zap size={10} /> Our Process</div>
-                <div className="eyebrow"><Zap size={11} /> Our Process</div>
-                <h2 className="sh serif">
-                  From posted to <span className="grad-text">protected</span>{' '}in under a second.
-                </h2>
-                <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review required.</p>
-                <Link href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 28, color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '9px 16px', transition: 'all 0.2s' }}>Get Started <ArrowRight size={13} /></Link>
+                <div className="how-intro">
+                  <div className="mob-pill"><Zap size={10} /> Our Process</div>
+                  <div className="eyebrow"><Zap size={11} /> Our Process</div>
+                  <h2 className="sh serif">
+                    From posted to <span className="grad-text">protected</span>{' '}in under a second.
+                  </h2>
+                  <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review required.</p>
+                  <Link href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 24, color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '9px 16px', transition: 'all 0.2s' }}>Get Started <ArrowRight size={13} /></Link>
+                </div>
               </FadeIn>
 
-              {/* Right: 6-card grid */}
+              {/* 6 cards — ONE horizontal row on desktop */}
               <div className="how-cards-row">
                 {STEPS.map((s, i) => (
                   <FadeIn key={s.label} delay={i * 0.07}>

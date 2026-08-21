@@ -127,8 +127,8 @@ function DashboardPreview() {
       background: '#0D0D14',
       borderRadius: 20,
       overflow: 'hidden',
-      border: '1px solid rgba(139,92,246,0.25)',
-      boxShadow: '0 0 12px rgba(139,92,246,0.12), 0 0 30px rgba(139,92,246,0.07), 0 24px 60px rgba(0,0,0,0.8)',
+      border: '1.5px solid rgba(139,92,246,0.55)',
+      boxShadow: '0 0 0 1px rgba(139,92,246,0.15), 0 0 30px rgba(139,92,246,0.35), 0 0 60px rgba(139,92,246,0.2), 0 0 90px rgba(236,72,153,0.12), 0 24px 60px rgba(0,0,0,0.8)',
       display: 'flex',
       flexDirection: 'column',
     }}>
@@ -357,6 +357,7 @@ export default function LandingPage() {
           background-clip: text; animation: lp-grad 5s ease infinite;
         }
 
+        /* ══ NAVBAR — Desktop ══ */
         .lp-nav {
           position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
           z-index: 200; width: calc(100% - 32px); max-width: 1120px;
@@ -379,6 +380,7 @@ export default function LandingPage() {
         .n-login:hover { border-color: rgba(139,92,246,1); background: rgba(139,92,246,0.1); box-shadow: 0 0 20px rgba(139,92,246,0.3); }
         .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; }
 
+        /* ══ NAVBAR — Mobile ══ */
         @media (max-width: 800px) {
           .lp-nav {
             top: 0; left: 0; right: 0; transform: none;
@@ -414,6 +416,7 @@ export default function LandingPage() {
         .mob-a { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-decoration: none; padding: 11px 14px; border-radius: 9px; transition: all 0.18s; display: block; }
         .mob-a:hover { background: rgba(255,255,255,0.04); color: #F0F0F0; }
 
+        /* ══ HERO — Desktop ══ */
         .hero {
           padding: 112px 24px 72px; position: relative; overflow: hidden;
           background: #06060E;
@@ -426,15 +429,10 @@ export default function LandingPage() {
           -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 10%, transparent 80%);
         }
         .hero-orb {
-          position: absolute; right: 3%; top: 50%; transform: translateY(-50%);
-          width: 480px; height: 480px; border-radius: 50%;
-          background: transparent;
-          box-shadow:
-            0 0 0 2px rgba(139,92,246,0.55),
-            0 0 60px 20px rgba(139,92,246,0.28),
-            0 0 120px 40px rgba(236,72,153,0.18),
-            inset 0 0 80px 10px rgba(139,92,246,0.12);
-          pointer-events: none; z-index: 1;
+          position: absolute; right: 2%; top: 50%; transform: translateY(-50%);
+          width: 520px; height: 520px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(139,92,246,0.32) 0%, rgba(236,72,153,0.18) 38%, transparent 68%);
+          pointer-events: none; z-index: 1; filter: blur(8px);
         }
         .hero-inner {
           position: relative; z-index: 2; max-width: 1120px; margin: 0 auto;
@@ -454,6 +452,7 @@ export default function LandingPage() {
         .h-trust-item { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.33); font-size: 12.5px; }
         .hero-right { animation: lp-float 7s ease-in-out infinite; }
 
+        /* ══ HERO — Mobile ══ */
         @media (max-width: 800px) {
           .hero {
             padding: 68px 0 0;
@@ -462,13 +461,8 @@ export default function LandingPage() {
             display: flex; flex-direction: column;
           }
           .hero-orb {
-            width: 300px; height: 300px;
-            right: -8%; top: 42%;
-            box-shadow:
-              0 0 0 2px rgba(139,92,246,0.5),
-              0 0 40px 14px rgba(139,92,246,0.22),
-              0 0 80px 24px rgba(236,72,153,0.14),
-              inset 0 0 50px 6px rgba(139,92,246,0.1);
+            width: 340px; height: 340px;
+            right: -15%; top: 38%;
           }
           .hero-grid { display: none; }
           .hero-inner {
@@ -497,6 +491,7 @@ export default function LandingPage() {
           .h-trust-item { font-size: 11px !important; gap: 4px !important; }
         }
 
+        /* ══ STATS ══ */
         .stats { background: #0E0E0E; border-top: 1px solid rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.04); padding: 40px 24px; }
         .stats-row { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; }
         .s-cell { display: flex; flex-direction: column; align-items: center; padding: 12px 44px; position: relative; }
@@ -507,21 +502,46 @@ export default function LandingPage() {
         .s-text { display: flex; flex-direction: column; align-items: center; }
 
         @media (max-width: 800px) {
-          .stats { background: transparent; border: none; padding: 16px 16px 0; }
-          .stats-inner-mob { background: #0A0A12; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; }
-          .stats-row { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; flex-wrap: unset !important; }
-          .s-cell { padding: 14px 14px !important; flex-direction: row !important; align-items: center !important; gap: 11px !important; position: relative; }
+          .stats {
+            background: transparent;
+            border: none;
+            padding: 16px 16px 0;
+          }
+          .stats-inner-mob {
+            background: #0A0A12;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            overflow: hidden;
+          }
+          .stats-row {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            flex-wrap: unset !important;
+          }
+          .s-cell {
+            padding: 14px 14px !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 11px !important;
+            position: relative;
+          }
           .s-cell::before { display: none !important; }
           .s-cell:nth-child(1) { border-bottom: 1px solid rgba(255,255,255,0.05); }
           .s-cell:nth-child(2) { border-bottom: 1px solid rgba(255,255,255,0.05); border-left: 1px solid rgba(255,255,255,0.05); }
+          .s-cell:nth-child(3) {}
           .s-cell:nth-child(4) { border-left: 1px solid rgba(255,255,255,0.05); }
           .s-cell:nth-child(5) { display: none !important; }
-          .s-icon-wrap { display: flex !important; width: 34px; height: 34px; border-radius: 9px; align-items: center; justify-content: center; flex-shrink: 0; }
+          .s-icon-wrap {
+            display: flex !important;
+            width: 34px; height: 34px; border-radius: 9px;
+            align-items: center; justify-content: center; flex-shrink: 0;
+          }
           .s-text { align-items: flex-start !important; }
           .s-num { font-size: 18px !important; }
           .s-lbl { font-size: 10px !important; margin-top: 2px !important; letter-spacing: 0.02em !important; }
         }
 
+        /* ══ SECTIONS ══ */
         .section { padding: 96px 24px; }
         .con { max-width: 1120px; margin: 0 auto; }
         .eyebrow { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.28); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
@@ -533,11 +553,21 @@ export default function LandingPage() {
 
         .mob-pill { display: none; }
         @media (max-width: 800px) {
-          .mob-pill { display: inline-flex !important; align-items: center; gap: 6px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.22); border-radius: 20px; padding: 4px 12px; margin-bottom: 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #a78bfa; }
+          .mob-pill {
+            display: inline-flex !important;
+            align-items: center; gap: 6px;
+            background: rgba(139,92,246,0.1);
+            border: 1px solid rgba(139,92,246,0.22);
+            border-radius: 20px; padding: 4px 12px;
+            margin-bottom: 14px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+            text-transform: uppercase; color: #a78bfa;
+          }
           .eyebrow { display: none !important; }
           .section { padding: 52px 20px !important; }
         }
 
+        /* ══ HOW IT WORKS ══ */
         .how-bg { background: linear-gradient(180deg, #0C0C0C 0%, #0F0F0F 100%); }
         .how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
         .tl { position: relative; margin-top: 48px; }
@@ -556,11 +586,16 @@ export default function LandingPage() {
           .tl { margin-top: 24px !important; }
           .tl-line { left: 21px !important; background: linear-gradient(180deg, rgba(139,92,246,0.5) 0%, rgba(245,158,11,0.15) 100%) !important; }
           .tl-row { gap: 14px !important; padding-bottom: 22px !important; }
-          .tl-dot { width: 42px !important; height: 42px !important; border-radius: 12px !important; background: var(--sdot-bg) !important; border: 1px solid var(--sdot-border) !important; }
+          .tl-dot {
+            width: 42px !important; height: 42px !important; border-radius: 12px !important;
+            background: var(--sdot-bg) !important;
+            border: 1px solid var(--sdot-border) !important;
+          }
           .tl-body h3 { font-size: 13px !important; }
           .tl-body p { font-size: 11.5px !important; color: rgba(255,255,255,0.28) !important; }
         }
 
+        /* ══ FEATURES ══ */
         .feat-bg { background: #090909; }
         .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
         .f-card { background: #101010; border: 1px solid rgba(255,255,255,0.055); border-radius: 16px; padding: 26px; transition: all 0.3s; position: relative; overflow: hidden; }
@@ -578,6 +613,7 @@ export default function LandingPage() {
           .f-card p { font-size: 10px !important; line-height: 1.45 !important; color: rgba(255,255,255,0.28) !important; }
         }
 
+        /* ══ LANGUAGES ══ */
         .lang-bg { background: linear-gradient(180deg, #0D0D0D 0%, #0A0A0A 100%); }
         .lang-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 40px; }
         .l-chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.033); border: 1px solid rgba(255,255,255,0.063); border-radius: 26px; padding: 7px 15px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.48); transition: all 0.22s; }
@@ -589,6 +625,7 @@ export default function LandingPage() {
           .lang-chips { gap: 6px !important; margin-top: 20px !important; }
         }
 
+        /* ══ SECURITY ══ */
         .sec-bg { background: #FAFAFA; }
         .sec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 48px; }
         .s-card { background: #F2F2F0; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 24px; transition: all 0.22s; }
@@ -599,6 +636,7 @@ export default function LandingPage() {
         @media (max-width: 780px) { .sec-grid { grid-template-columns: repeat(2,1fr); } }
         @media (max-width: 460px) { .sec-grid { grid-template-columns: 1fr; } }
 
+        /* ══ PRICING ══ */
         .price-bg { background: #F5F5F3; }
         .p-toggle { display: inline-flex; background: rgba(0,0,0,0.06); border-radius: 9px; padding: 3px; margin: 24px auto 0; }
         .pt-btn { padding: 6px 17px; border-radius: 7px; font-size: 12.5px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; }
@@ -626,6 +664,7 @@ export default function LandingPage() {
         .cta-dgl { display:block; width:100%; background:rgba(255,255,255,0.07); color:#FAFAFA; font-weight:700; font-size:13px; padding:11px; border-radius:9px; border:1px solid rgba(255,255,255,0.1); cursor:pointer; text-align:center; text-decoration:none; transition:all 0.2s; }
         @media (max-width: 780px) { .price-cards { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; } }
 
+        /* ══ FAQ ══ */
         .faq-bg { background: #FFFFFF; }
         .faq-list { margin-top: 48px; }
         .faq-item { border-bottom: 1px solid rgba(0,0,0,0.06); }
@@ -635,6 +674,7 @@ export default function LandingPage() {
         .faq-ico.open { transform: rotate(180deg); color: #F59E0B; }
         .faq-a { font-size: 14px; color: rgba(0,0,0,0.48); line-height: 1.7; padding-bottom: 20px; max-width: 640px; }
 
+        /* ══ CTA ══ */
         .cta-wrap { background: #080808; padding: 120px 24px; position: relative; overflow: hidden; }
         .cta-ambient { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 65% 65% at 50% 50%, rgba(139,92,246,0.09) 0%, transparent 70%); }
         .cta-inner { position: relative; z-index: 1; text-align: center; max-width: 620px; margin: 0 auto; }
@@ -643,6 +683,7 @@ export default function LandingPage() {
         .cta-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.17); border-radius:20px; padding:4px 13px; margin-bottom:24px; }
         .cta-btns { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
 
+        /* ══ FOOTER ══ */
         .foot { background: #000; border-top: 1px solid rgba(255,255,255,0.04); padding: 52px 24px 26px; }
         .foot-in { max-width: 1120px; margin: 0 auto; }
         .foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
@@ -661,6 +702,7 @@ export default function LandingPage() {
 
       <div className="lp">
 
+        {/* ── NAVBAR ── */}
         <nav className={`lp-nav${scrolled ? ' scrolled' : ''}`}>
           <Link href="/" className="n-logo">
             <div className="n-mark"><Shield size={13} color="white" /></div>
@@ -692,10 +734,13 @@ export default function LandingPage() {
           )}
         </AnimatePresence>
 
+        {/* ── HERO ── */}
         <section className="hero" id="features">
           <div className="hero-grid" />
           <div className="hero-orb" />
           <div className="hero-inner">
+
+            {/* Left / Text */}
             <div className="hero-left-mob">
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}>
                 <div className="h-badge">
@@ -721,14 +766,18 @@ export default function LandingPage() {
                 ))}
               </motion.div>
             </div>
+
+            {/* Right / Preview — same on both mobile & desktop */}
             <motion.div className="hero-right"
               initial={{ opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.85, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
               <DashboardPreview />
             </motion.div>
+
           </div>
         </section>
 
+        {/* ── STATS ── */}
         <div className="stats">
           <div className="stats-inner-mob">
             <div className="stats-row">
@@ -753,13 +802,16 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* ── HOW IT WORKS ── */}
         <section className="section how-bg" id="how-it-works">
           <div className="con">
             <div className="how-grid">
               <FadeIn>
                 <div className="mob-pill"><Zap size={10} /> Our Process</div>
                 <div className="eyebrow"><Zap size={11} /> Process</div>
-                <h2 className="sh serif">From posted to <span className="grad-text">protected</span>{' '}in under a second.</h2>
+                <h2 className="sh serif">
+                  From posted to <span className="grad-text">protected</span>{' '}in under a second.
+                </h2>
                 <p className="sub">Six stages of AI analysis happen invisibly — before any viewer sees a harmful comment. No manual review.</p>
                 <a href="/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 24, color: 'rgba(255,255,255,0.55)', fontSize: 13, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '9px 16px', transition: 'all 0.2s' }}>Learn More <ArrowRight size={13} /></a>
               </FadeIn>
@@ -778,6 +830,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── FEATURES ── */}
         <section className="section feat-bg" id="features-detail">
           <div className="con">
             <FadeIn>
@@ -798,6 +851,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── LANGUAGES ── */}
         <section className="section lang-bg">
           <div className="con centered">
             <FadeIn>
@@ -815,6 +869,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── SECURITY ── */}
         <section className="section sec-bg" id="security">
           <div className="con">
             <FadeIn>
@@ -836,6 +891,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── PRICING ── */}
         <section className="section price-bg" id="pricing">
           <div className="con centered">
             <FadeIn>
@@ -875,6 +931,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── FAQ ── */}
         <section className="section faq-bg">
           <div className="con centered" style={{ maxWidth: 700 }}>
             <FadeIn>
@@ -903,6 +960,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── CTA ── */}
         <section className="cta-wrap">
           <div className="cta-ambient" />
           <FadeIn>
@@ -911,7 +969,9 @@ export default function LandingPage() {
                 <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', animation: 'lp-pulse 2s infinite' }} />
                 <span style={{ color: 'rgba(245,158,11,0.88)', fontSize: 12, fontWeight: 600 }}>19-day free trial · no card needed</span>
               </div>
-              <h2 className="cta-h serif">Ready to protect<br /><span className="grad-text">your community?</span></h2>
+              <h2 className="cta-h serif">
+                Ready to protect<br /><span className="grad-text">your community?</span>
+              </h2>
               <p className="cta-sub">Join creators who stopped losing subscribers to toxic comments. Setup takes less than 2 minutes.</p>
               <div className="cta-btns">
                 <Link href="/login" className="btn-p">Start Free Trial <ArrowRight size={14} /></Link>
@@ -921,6 +981,7 @@ export default function LandingPage() {
           </FadeIn>
         </section>
 
+        {/* ── FOOTER ── */}
         <footer className="foot">
           <div className="foot-in">
             <div className="foot-top">

@@ -270,6 +270,7 @@ export default function ModerationPage() {
   );
 
   const plan          = (userData?.plan as string) || 'free';
+  const youtubeConnected = (userData?.youtube_connected as boolean) === true || (userData?.youtubeConnected as boolean) === true || (typeof userData?.youtube?.channelId === 'string' && userData.youtube.channelId.trim() !== '');
   const commentsUsed  = (userData?.comments_used as number) || 0;
   const commentsLimit = userData?.comments_limit ?? (plan === 'agency' ? 150000 : plan === 'pro' ? 25000 : 2000);
   const usagePct      = commentsLimit > 0 ? Math.min(100, (commentsUsed / commentsLimit) * 100) : 0;
@@ -513,14 +514,18 @@ export default function ModerationPage() {
               <Search size={11} color="rgba(255,255,255,0.16)" style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               <input className="r-search" placeholder="Search comments, users, keywords…" />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
-              <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
-              AI Online
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
-              <Shield size={9} strokeWidth={2} /> Protection Active
-            </div>
-            <div style={{ flex: 1 }} />
+        {youtubeConnected && (
+         <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.13)', fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap' }}>
+     <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+     AI Online
+   </div>
+    )}
+       {youtubeConnected && ( 
+  <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 18, background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.14)', fontSize: 10.5, fontWeight: 600, color: '#a78bfa', whiteSpace: 'nowrap' }}>
+    <Shield size={9} strokeWidth={2} /> Protection Active
+  </div>
+      )}
+          <div style={{ flex: 1 }} />
             <button className="r-icon-btn"><Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} /></button>
             <button className="r-avatar-btn" onClick={() => router.push('/settings')}>
               {userPhoto
@@ -549,6 +554,21 @@ export default function ModerationPage() {
 
           {/* CONTENT */}
           <div className="r-content">
+{!youtubeConnected && (
+  <div style={{ background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(248,113,113,0.18)', borderRadius: 14, padding: '24px 20px', marginBottom: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center' }}>
+    <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(248,113,113,0.09)', border: '1px solid rgba(248,113,113,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Shield size={22} color="#f87171" strokeWidth={1.8} />
+    </div>
+    <h2 style={{ color: '#FAFAFA', fontSize: 15, fontWeight: 800 }}>Connect your YouTube channel</h2>
+    <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, lineHeight: 1.6, maxWidth: 340 }}>
+      Connect your YouTube channel to enable AI moderation, spam detection, and real-time protection.
+    </p>
+    <button onClick={() => { window.location.href = `/api/auth/youtube?uid=${user?.uid}`; }}
+      style={{ background: 'linear-gradient(135deg,#7C3AED,#6D28D9)', color: '#fff', fontWeight: 700, fontSize: 13, padding: '10px 24px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>
+      Connect YouTube
+    </button>
+  </div>
+)}
 
             {/* PAGE HEADER */}
             <div style={{ marginBottom: 18 }}>

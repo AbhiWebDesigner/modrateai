@@ -960,9 +960,9 @@ export default function Dashboard() {
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12 }}>Notifications</span>
                       <span style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.22)', borderRadius: 6, padding: '2px 7px', fontSize: 9, fontWeight: 800, color: '#a78bfa'}}>{notifCount} NEW</span>
                     </div>
-                     <div style={{ padding: '8px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 11.5, textAlign: 'center' }}>
-                 Open notifications to see all updates.
-               </div>
+              <div style={{ padding: '16px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 11.5, textAlign: 'center' }}>
+                {notifCount > 0 ? `${notifCount} unread notifications` : 'No new notifications'}
+              </div>
                    <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                     <Link href="/notifications" onClick={() => setNotifOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#a78bfa', fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>
                       View All Notifications <ChevronRight size={11} />

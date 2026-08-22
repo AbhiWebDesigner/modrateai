@@ -946,7 +946,7 @@ export default function Dashboard() {
             </button>
 
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
+              <button className="r-icon-btn" onClick={() => router.push('/notifications')}>
                 <Bell size={12} color={notifOpen ? '#a78bfa' : 'rgba(255,255,255,0.4)'} strokeWidth={1.8} />
                 {notifCount > 0 && (
   <span style={{ position: 'absolute', top: 6, right: 6, width: 13, height: 13, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7.5, color: 'white', fontWeight: 800 }}>{notifCount}</span>
@@ -1005,7 +1005,7 @@ export default function Dashboard() {
               <CreditCard size={9} />{aiCredits.toLocaleString()} <ChevronRight size={8} />
             </button>
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <button className="r-icon-btn" style={{ width: 28, height: 28 }} onClick={() => setNotifOpen(v => !v)}>
+              <button className="r-icon-btn" style={{ width: 28, height: 28 }} onClick={() => router.push('/notifications')}>
                 <Bell size={11} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
                 <span style={{ position: 'absolute', top: 4, right: 4, width: 11, height: 11, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'white', fontWeight: 800 }}>3</span>
               </button>

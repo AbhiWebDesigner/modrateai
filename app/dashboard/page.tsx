@@ -966,6 +966,11 @@ export default function Dashboard() {
                         <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 9.5, flexShrink: 0 }}>{n.time}</span>
                       </div>
                     ))}
+                   <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <Link href="/notifications" onClick={() => setNotifOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#a78bfa', fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>
+                      View All Notifications <ChevronRight size={11} />
+                    </Link>
+                  </div>
                   </div>
                 </>
               )}

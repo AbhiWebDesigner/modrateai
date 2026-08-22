@@ -950,22 +950,9 @@ export default function Dashboard() {
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12 }}>Notifications</span>
                       <span style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.22)', borderRadius: 6, padding: '2px 7px', fontSize: 9, fontWeight: 800, color: '#a78bfa' }}>3 NEW</span>
                     </div>
-                    {[
-                      { icon: Shield, color: '#34d399', title: 'Moderation active', sub: 'AI moderator protecting your channel', time: 'Now' },
-                      { icon: Bell,   color: '#60a5fa', title: 'System operational', sub: 'All services running normally', time: '2m' },
-                      { icon: Zap,    color: '#a78bfa', title: 'Upgrade available', sub: 'Unlock unlimited scans with Pro', time: '1h' },
-                    ].map((n, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 9, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: `${n.color}12`, border: `1px solid ${n.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <n.icon size={12} color={n.color} strokeWidth={1.8} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ color: 'rgba(255,255,255,0.82)', fontSize: 11.5, fontWeight: 600, marginBottom: 1 }}>{n.title}</div>
-                          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10.5 }}>{n.sub}</div>
-                        </div>
-                        <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 9.5, flexShrink: 0 }}>{n.time}</span>
-                      </div>
-                    ))}
+                     <div style={{ padding: '8px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 11.5, textAlign: 'center' }}>
+                 Open notifications to see all updates.
+               </div>
                    <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                     <Link href="/notifications" onClick={() => setNotifOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#a78bfa', fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>
                       View All Notifications <ChevronRight size={11} />

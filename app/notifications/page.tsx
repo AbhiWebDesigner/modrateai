@@ -145,23 +145,23 @@ export default function NotificationsPage() {
   const [category,   setCategory]   = useState<NotifCategory>('all');
   const [moreOpen,   setMoreOpen]   = useState(false);
 
-  useEffect(() => {
-    const unsubAuth = onAuthStateChanged(auth, async (u) => {
+    useEffect(() => {
+    let unsubUser: (() => void) | null = null;
+    let unsubNotifs: (() => void) | null = null;
+
+    const unsubAuth = onAuthStateChanged(auth, (u) => {
       if (!u) { router.push('/login'); return; }
       setUser(u);
 
-      // User doc
-      const unsubUser = onSnapshot(doc(db, 'users', u.uid), (snap) => {
+      unsubUser = onSnapshot(doc(db, 'users', u.uid), (snap) => {
         if (snap.exists()) setUserData(snap.data());
       });
 
-      // Notifications collection
       const notifsRef = collection(db, 'users', u.uid, 'notifications');
       const q = query(notifsRef, orderBy('createdAt', 'desc'));
 
-      const unsubNotifs = onSnapshot(q, async (snap) => {
+      unsubNotifs = onSnapshot(q, async (snap) => {
         if (snap.empty) {
-          // Seed defaults for new user
           await seedDefaultNotifs(u.uid);
           return;
         }
@@ -183,12 +183,15 @@ export default function NotificationsPage() {
         setNotifs(docs);
         setLoading(false);
       });
-
-      return () => { unsubUser(); unsubNotifs(); };
     });
-    return () => unsubAuth();
-  }, [router]);
 
+    return () => {
+      unsubAuth();
+      unsubUser?.();
+      unsubNotifs?.();
+    };
+  }, [router]);
+  
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
 
   const markRead = async (id: string) => {

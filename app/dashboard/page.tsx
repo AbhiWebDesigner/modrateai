@@ -398,6 +398,7 @@ export default function Dashboard() {
   const [loadState, setLoadState]     = useState<LoadState>('auth');
   const [moreOpen, setMoreOpen]       = useState(false);
   const [notifOpen, setNotifOpen]     = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
   const [chartRange, setChartRange]   = useState<'week' | 'month'>('week');
   const unsubRefs = useRef<Array<() => void>>([]);
 
@@ -437,7 +438,14 @@ export default function Dashboard() {
       const unsubEvents = onSnapshot(eventsQ, (snap) => {
         setLiveEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
-      unsubRefs.current.push(unsubEvents);
+      unsubRefs.current.push(unsubEvents); 
+     const notifsRef = collection(db, 'users', firebaseUser.uid, 'notifications');
+     const notifsQ = query(notifsRef);
+      const unsubNotifCount = onSnapshot(notifsQ, (snap) => {
+        const unread = snap.docs.filter(d => d.data().read === false).length;
+        setNotifCount(unread);
+      });
+      unsubRefs.current.push(unsubNotifCount);
     });
 
     return () => { unsubAuth(); unsubRefs.current.forEach(u => u()); };
@@ -940,7 +948,9 @@ export default function Dashboard() {
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
                 <Bell size={12} color={notifOpen ? '#a78bfa' : 'rgba(255,255,255,0.4)'} strokeWidth={1.8} />
-                <span style={{ position: 'absolute', top: 6, right: 6, width: 13, height: 13, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7.5, color: 'white', fontWeight: 800 }}>3</span>
+                {notifCount > 0 && (
+  <span style={{ position: 'absolute', top: 6, right: 6, width: 13, height: 13, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7.5, color: 'white', fontWeight: 800 }}>{notifCount}</span>
+)}
               </button>
               {notifOpen && (
                 <>
@@ -948,7 +958,7 @@ export default function Dashboard() {
                   <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 60, width: 290, background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 13, boxShadow: '0 8px 36px rgba(0,0,0,0.55)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.16s ease', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12 }}>Notifications</span>
-                      <span style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.22)', borderRadius: 6, padding: '2px 7px', fontSize: 9, fontWeight: 800, color: '#a78bfa' }}>3 NEW</span>
+                      <span style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.22)', borderRadius: 6, padding: '2px 7px', fontSize: 9, fontWeight: 800, color: '#a78bfa'}}>{notifCount} NEW</span>
                     </div>
                      <div style={{ padding: '8px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 11.5, textAlign: 'center' }}>
                  Open notifications to see all updates.

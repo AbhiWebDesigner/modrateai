@@ -563,7 +563,7 @@ export default function ModerationPage() {
     <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, lineHeight: 1.6, maxWidth: 340 }}>
       Connect your YouTube channel to enable AI moderation, spam detection, and real-time protection.
     </p>
-    <button onClick={() => { window.location.href = `/api/auth/youtube?uid=${user?.uid}`; }}
+    <button onClick={() => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user?.uid}`; }}
       style={{ background: 'linear-gradient(135deg,#7C3AED,#6D28D9)', color: '#fff', fontWeight: 700, fontSize: 13, padding: '10px 24px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>
       Connect YouTube
     </button>

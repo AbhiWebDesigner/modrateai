@@ -114,7 +114,7 @@ export default function SettingsPage() {
     setDisconnecting(false);
   };
 
-  const handleConnectYouTube = () => { window.location.href = `/api/auth/youtube?uid=${user?.uid}`; };
+  const handleConnectYouTube = () => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user?.uid}`; };
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
 
   if (loading) return (

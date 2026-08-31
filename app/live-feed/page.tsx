@@ -582,6 +582,13 @@ export default function LiveFeedPage() {
     if (!user) return;
     setLocalActions(prev => ({ ...prev, [id]: decision }));
     try {
+      const actionMap: Record<AiDecision, string> = { hidden: 'hide', approved: 'approve', replied: 'approve', flagged: 'approve' };
+      const token = await user.getIdToken();
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/comments/moderate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ commentId: id, action: actionMap[decision] ?? 'approve' }),
+      });
       await setDoc(doc(db, 'users', user.uid, 'comments', id), { aiDecision: decision }, { merge: true });
       setLocalActions(prev => { const next = { ...prev }; delete next[id]; return next; });
     } catch (err) {
@@ -597,6 +604,12 @@ export default function LiveFeedPage() {
     if (!user) return;
     setComments(prev => prev.filter(c => c.id !== id));
     try {
+      const token = await user.getIdToken();
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/comments/moderate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ commentId: id, action: 'delete' }),
+      });
       await setDoc(doc(db, 'users', user.uid, 'comments', id), { deleted: true }, { merge: true });
       setLocalActions(prev => { const next = { ...prev }; delete next[id]; return next; });
     } catch (err) {

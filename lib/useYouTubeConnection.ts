@@ -17,5 +17,5 @@ export function getYouTubeConnected(userData: DocumentData | null): boolean {
  */
 export function connectYouTube(uid: string | undefined): void {
   if (!uid) return;
-  window.location.href = `/api/auth/youtube?uid=${uid}`;
+  window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${uid}`;
 }

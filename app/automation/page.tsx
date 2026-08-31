@@ -235,9 +235,12 @@ async function checkYouTubeConnected(uid: string): Promise<boolean> {
   }
 }
 
-async function fetchYouTubeVideos(uid: string): Promise<YouTubeVideo[]> {
+async function fetchYouTubeVideos(firebaseUser: import("firebase/auth").User): Promise<YouTubeVideo[]> {
   try {
-    const res = await fetch(`/api/youtube/videos?uid=${encodeURIComponent(uid)}`);
+    const token = await firebaseUser.getIdToken();
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/youtube/videos`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     if (!res.ok) return [];
     const data = await res.json() as Record<string, unknown>;
     const videos = data?.videos;
@@ -674,7 +677,7 @@ export default function AutomationPage() {
   useEffect(() => {
     if (!showVideoSelector || !user || videos.length > 0) return;
     setVideosLoading(true);
-    fetchYouTubeVideos(user.uid).then(vids => {
+    fetchYouTubeVideos(user).then(vids => {
       setVideos(vids);
       setVideosLoading(false);
     });

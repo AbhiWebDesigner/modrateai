@@ -306,7 +306,7 @@ const DemoScreenshots: Record<string, React.FC> = {
           </div>
           <div style={{ background: "#e8f0fe", border: "1px solid #1a73e8", borderRadius: 4, padding: 5, marginBottom: 4 }}>
             <div style={{ fontSize: 7, color: "#5f6368", marginBottom: 1 }}>Authorised redirect URI</div>
-            <div style={{ fontSize: 7, color: "#1a73e8", fontFamily: "monospace" }}>https://moderateai.site/api/auth/youtube/callback</div>
+            <div style={{ fontSize: 7, color: "#1a73e8", fontFamily: "monospace" }}>https://api.moderateai.site/api/auth/youtube/callback</div>
           </div>
           <button style={{ background: "#1a73e8", color: "#fff", border: "none", borderRadius: 4, padding: "3px 10px", fontSize: 8, fontWeight: 600 }}>Create</button>
         </div>
@@ -558,7 +558,6 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
   const trialDaysLeft = expiryTimestamp
     ? Math.max(0, Math.ceil((expiryTimestamp.seconds * 1000 - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0;
-  const daysUntilReset = trialDaysLeft;
   const successRate = userData.moderation_accuracy ?? 99.9;
   const avgResponseMs = userData.avg_response_ms ?? 0;
   const avgResponseSec = avgResponseMs > 0 ? (avgResponseMs / 1000).toFixed(1) + "s" : "—";
@@ -569,7 +568,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
 
   const handleReconnect = async () => {
     setReconnecting(true);
-    try { window.location.href = `/api/auth/youtube?uid=${user.uid}`; }
+    try { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user.uid}`; }
     catch { showToast("Reconnect failed. Try again.", "error"); setReconnecting(false); }
   };
 
@@ -577,7 +576,10 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
     setTestState("checking");
     try {
       if (!userData.youtube_connected) { setTestState("failed"); showToast("No YouTube channel connected.", "error"); return; }
-      const res = await fetch(`/api/auth/youtube/refresh-stats?uid=${user.uid}`);
+      const token = await user.getIdToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube/refresh-stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) {
         await updateDoc(doc(db, "users", user.uid), { youtube_stats_refreshed_at: new Date().toISOString() });
         setTestState("success"); showToast("Connection verified!", "success");
@@ -590,7 +592,10 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
     if (!userData.youtube_connected) { showToast("Connect a YouTube channel first.", "error"); return; }
     setRefreshing(true);
     try {
-      const res = await fetch(`/api/auth/youtube/refresh-stats?uid=${user.uid}`);
+      const token = await user.getIdToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube/refresh-stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) showToast("Stats refreshed.", "success");
       else showToast("Failed to refresh.", "error");
     } catch { showToast("Failed to refresh.", "error"); }
@@ -598,8 +603,32 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .shared-hero { padding: 16px !important; }
+          .shared-hero-title { font-size: 16px !important; }
+          .shared-hero-badges { display: none !important; }
+          .cloud-box-hide { display: none !important; }
+          .connected-banner { flex-direction: column !important; gap: 12px !important; }
+          .connected-banner-btn { width: 100% !important; }
+          .usage-overview-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+          .health-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+          .health-scroll::-webkit-scrollbar { display: none !important; }
+          .health-inner { min-width: 480px !important; }
+          .chart-section { flex-direction: column !important; }
+          .chart-stats { flex-direction: row !important; gap: 20px !important; margin-top: 12px !important; }
+          .status-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+          .activity-grid { grid-template-columns: 1fr !important; }
+          .upgrade-section { flex-direction: column !important; }
+          .upgrade-plans { flex-direction: column !important; gap: 8px !important; }
+          .action-btns-mobile { flex-direction: column !important; }
+          .shared-stats-grid { display: none !important; }
+        }
+      `}</style>
+
+      {/* Hero Banner */}
+      <div className="shared-hero" style={{
         background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,70,229,0.12) 60%, rgba(15,10,40,0.6) 100%)",
         border: "1.5px solid rgba(124,58,237,0.4)",
         borderRadius: 20,
@@ -610,16 +639,16 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", position: "relative" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div className="hero-shield" style={{ width: 60, height: 60, borderRadius: 16, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 32px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
+            <div style={{ width: 60, height: 60, borderRadius: 16, background: "linear-gradient(135deg,#7C3AED,#4F46E5)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 32px rgba(124,58,237,0.45)", flexShrink: 0 }}>
               <Shield size={28} color="white" />
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <span className="hero-title" style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.3px" }}>ModerateAI Shared API</span>
-                <span style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20, boxShadow: "0 2px 8px rgba(124,58,237,0.4)" }}>Recommended</span>
+                <span className="shared-hero-title" style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.3px" }}>ModerateAI Shared API</span>
+                <span style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 12px", borderRadius: 20 }}>Recommended</span>
               </div>
               <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 4 }}>We handle everything for you. No setup required.</div>
-              <div className="hero-badges" style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+              <div className="shared-hero-badges" style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 {[{ icon: <Shield size={11} />, label: "Secure" },{ icon: <CheckCircle size={11} />, label: "Reliable" },{ icon: <Zap size={11} />, label: "Always On" },{ icon: <Star size={11} />, label: "Optimized" }].map(b => (
                   <span key={b.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 20, padding: "4px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>
                     <span style={{ color: "#22C55E" }}>{b.icon}</span> {b.label}
@@ -634,228 +663,274 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
       </div>
 
+      {/* Connected & Active Banner */}
+      <div className="connected-banner" style={{
+        background: "rgba(34,197,94,0.08)",
+        border: "1.5px solid rgba(34,197,94,0.3)",
+        borderRadius: 16,
+        padding: "16px 20px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 16,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}>
+            <Link2 size={20} color="#22C55E" />
+            <span style={{ position: "absolute", bottom: -2, right: -2, width: 10, height: 10, borderRadius: "50%", background: "#22C55E", border: "2px solid #0a0a0f" }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: "#FAFAFA" }}>Connected & Active</div>
+            <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, marginTop: 2 }}>Your API is working perfectly</div>
+          </div>
+        </div>
+        <button className="connected-banner-btn" onClick={handleTestConnection} disabled={testState === "checking"} style={{
+          background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+          color: "#fff", border: "none", borderRadius: 12,
+          padding: "10px 20px", fontSize: 13, fontWeight: 700,
+          cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+          whiteSpace: "nowrap",
+        }}>
+          {testState === "checking" ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Wifi size={14} />}
+          {testState === "checking" ? "Checking..." : testState === "success" ? "✓ Verified" : "Test Connection"}
+        </button>
+      </div>
+
+      {/* Your Usage Overview */}
       <div style={{ background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.25)", borderRadius: 20, padding: 20 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 12, marginBottom: 20 }} className="shared-stats-grid">
-          {[
-            { label: "Current Plan", val: planName, color: "#22C55E", highlight: true },
-            { label: "AI Actions", val: `${aiLimit.toLocaleString()}`, sub: "/ month" },
-            { label: "Used", val: `${aiUsed.toLocaleString()}`, sub: `(${pct.toFixed(0)}%)`, color: pct > 80 ? "#F43F5E" : "#FAFAFA" },
-            { label: "Remaining", val: `${remaining.toLocaleString()}`, sub: `(${(100 - pct).toFixed(0)}%)`, color: "#22C55E" },
-            { label: isFreeTrialPlan ? "Trial Ends" : "Reset Date", val: planExpiry, sub: daysUntilReset > 0 ? `In ${trialDaysLeft} days` : "Expired", color: "#A78BFA" },
-          ].map((s) => (
-            <div key={s.label}>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 4 }}>{s.label}</div>
-              {s.highlight ? (
-                <span style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 8, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>{s.val}</span>
-              ) : (
-                <div style={{ fontSize: 14, fontWeight: 700, color: s.color || "#FAFAFA" }}>{s.val} {s.sub && <span style={{ fontSize: 11, color: s.color || "rgba(255,255,255,0.4)" }}>{s.sub}</span>}</div>
-              )}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Gift size={16} color="#A78BFA" />
             </div>
-          ))}
+            <span style={{ fontWeight: 700, fontSize: 15 }}>Your Usage Overview</span>
+          </div>
+          <span style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 20, padding: "4px 14px", fontSize: 12, fontWeight: 700 }}>{planName}</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10, marginBottom: 20, padding: "14px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 12 }} className="health-row">
-          {[
-            { label: "Health", val: "Healthy", color: "#22C55E", dot: true },
-            { label: "Status", val: subscriptionStatus === "trial" ? "Active" : subscriptionStatus, color: "#22C55E", dot: true },
-            { label: "Connected Channels", val: channelConnected ? "1 Channel" : "None" },
-            { label: "Success Rate", val: successRate > 0 ? `${successRate}%` : "—", color: "#22C55E" },
-            { label: "Avg. Latency", val: avgResponseSec },
-            { label: "Last Sync", val: lastSync, refresh: true },
-          ].map((item) => (
-            <div key={item.label}>
-              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>{item.label}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: item.color || "#FAFAFA", display: "flex", alignItems: "center", gap: 4 }}>
-                {item.dot && <span style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, display: "inline-block" }} />}
-                {item.val}
-                {item.refresh && <RefreshCw size={10} color="rgba(255,255,255,0.3)" style={{ cursor: "pointer" }} onClick={handleRefreshStats} />}
+
+        {/* 4 cards grid — 2x2 on mobile */}
+        <div className="usage-overview-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 14 }}>
+          {/* AI Actions Used */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "16px 14px" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>AI Actions Used</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{aiUsed}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>/ {aiLimit}</div>
+            <div style={{ marginTop: 10, height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2 }}>
+              <div style={{ width: `${pct}%`, height: "100%", background: pct > 80 ? "#F43F5E" : "#7C3AED", borderRadius: 2 }} />
+            </div>
+            <div style={{ fontSize: 11, color: pct > 80 ? "#F43F5E" : "rgba(255,255,255,0.35)", marginTop: 5, fontWeight: 600 }}>{pct.toFixed(0)}% Used</div>
+          </div>
+
+          {/* AI Actions Remaining */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "16px 14px" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>AI Actions Remaining</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: "#A78BFA", lineHeight: 1 }}>{remaining}</div>
+            <div style={{ marginTop: 10, height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2 }}>
+              <div style={{ width: `${100 - pct}%`, height: "100%", background: "#7C3AED", borderRadius: 2 }} />
+            </div>
+            <div style={{ fontSize: 11, color: "#A78BFA", marginTop: 5, fontWeight: 600 }}>{(100 - pct).toFixed(0)}% Remaining</div>
+          </div>
+
+          {/* Trial Ends In */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "16px 14px" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>Trial Ends In</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: trialDaysLeft <= 3 ? "#F43F5E" : "#FAFAFA", lineHeight: 1 }}>{trialDaysLeft}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Days</div>
+            {trialDaysLeft === 0 && <div style={{ marginTop: 6, background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 6, padding: "2px 8px", fontSize: 10, fontWeight: 700, color: "#F43F5E", display: "inline-block" }}>Expired</div>}
+            {isFreeTrialPlan && (
+              <button onClick={() => router.push("/billing?offer=trial-extension")} style={{ marginTop: 8, width: "100%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+                Extend ₹69
+              </button>
+            )}
+          </div>
+
+          {/* Current Plan */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "16px 14px" }}>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>Current Plan</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#22C55E" }}>{planName}</div>
+            <button onClick={() => router.push("/billing")} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+              <Zap size={11} /> Upgrade
+            </button>
+          </div>
+        </div>
+
+        {/* Health row — horizontal scroll on mobile */}
+        <div className="health-scroll" style={{ overflowX: "hidden" }}>
+          <div className="health-inner" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, padding: "14px 0" }}>
+            {[
+              { label: "Health", val: "Healthy", color: "#22C55E", dot: true },
+              { label: "Status", val: "Active", color: "#22C55E", dot: true },
+              { label: "Channels", val: channelConnected ? "1 Channel" : "None" },
+              { label: "Success Rate", val: successRate > 0 ? `${successRate}%` : "—", color: "#22C55E" },
+              { label: "Last Sync", val: lastSync, refresh: true },
+            ].map((item) => (
+              <div key={item.label} style={{ textAlign: "center" }}>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, marginBottom: 4 }}>{item.label}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: item.color || "#FAFAFA", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                  {item.dot && <span style={{ width: 6, height: 6, borderRadius: "50%", background: item.color, display: "inline-block" }} />}
+                  {item.val}
+                  {item.refresh && <RefreshCw size={10} color="rgba(255,255,255,0.3)" style={{ cursor: "pointer" }} onClick={handleRefreshStats} />}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 10 }} className="action-btns">
+
+        {/* Action buttons */}
+        <div className="action-btns-mobile" style={{ display: "flex", gap: 10, marginTop: 4 }}>
           <button onClick={handleReconnect} disabled={reconnecting} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
             {reconnecting ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={13} />} Reconnect
           </button>
-          <ConnectionTestBtn state={testState} onClick={handleTestConnection} />
           <button onClick={() => router.push("/analytics")} style={{ flex: 1, padding: "10px", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer", background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
             <BarChart2 size={13} /> View Usage
           </button>
         </div>
       </div>
 
-      {isFreeTrialPlan && (
-        <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 20, padding: "18px 20px", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, flexShrink: 0, background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Gift size={22} color="#A78BFA" />
-          </div>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <div style={{ fontWeight: 800, fontSize: 15 }}>You're on Free Trial! 🎉</div>
-            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>Explore all features with {aiLimit} free AI actions.</div>
-          </div>
-          <div style={{ textAlign: "center", minWidth: 100 }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: "#A78BFA" }}>{remaining} <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>/ {aiLimit}</span></div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>AI Actions Left</div>
-            <div style={{ height: 5, background: "rgba(255,255,255,0.08)", borderRadius: 3, marginTop: 6 }}>
-              <div style={{ width: `${(remaining / aiLimit) * 100}%`, height: "100%", background: "linear-gradient(90deg,#7C3AED,#A78BFA)", borderRadius: 3, transition: "width 0.6s ease" }} />
-            </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>© {planExpiry}</div>
-          </div>
-          <div style={{ textAlign: "center", minWidth: 100, borderLeft: "1px solid rgba(255,255,255,0.08)", paddingLeft: 16 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 4 }}>Trial ends in</div>
-            <div style={{ fontSize: 28, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{trialDaysLeft}</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", fontWeight: 600 }}>Days</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}><Clock size={9} /> {planExpiry}</div>
-          </div>
-        </div>
-      )}
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }} className="usage-cards-grid">
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>AI Actions Used</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{aiUsed.toLocaleString()}</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>/ {aiLimit.toLocaleString()}</div>
-          <div style={{ marginTop: 10, height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2 }}>
-            <div style={{ width: `${pct}%`, height: "100%", background: pct > 80 ? "#F43F5E" : "#7C3AED", borderRadius: 2, transition: "width 0.6s ease" }} />
-          </div>
-          <div style={{ fontSize: 11, color: pct > 80 ? "#F43F5E" : "rgba(255,255,255,0.35)", marginTop: 5, fontWeight: 600 }}>{pct.toFixed(0)}% Used</div>
-        </div>
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>AI Actions Remaining</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "#A78BFA", lineHeight: 1 }}>{remaining.toLocaleString()}</div>
-          <div style={{ marginTop: 10, height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 2 }}>
-            <div style={{ width: `${100 - pct}%`, height: "100%", background: "#7C3AED", borderRadius: 2, transition: "width 0.6s ease" }} />
-          </div>
-          <div style={{ fontSize: 11, color: "#A78BFA", marginTop: 5, fontWeight: 600 }}>{(100 - pct).toFixed(0)}% Remaining</div>
-        </div>
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>{isFreeTrialPlan ? "Trial Ends In" : "Resets In"}</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: isFreeTrialPlan && trialDaysLeft <= 3 ? "#F43F5E" : "#FAFAFA", lineHeight: 1 }}>{trialDaysLeft}</div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>Days</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 10, display: "flex", alignItems: "center", gap: 4 }}><Clock size={10} /> {planExpiry}</div>
-          {isFreeTrialPlan && (
-            <button onClick={() => router.push("/billing?offer=trial-extension")} style={{ marginTop: 8, width: "100%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "5px 8px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
-              Extend ₹69
-            </button>
-          )}
-        </div>
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: "18px 16px" }}>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 8 }}>Current Plan</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#22C55E" }}>{planName}</div>
-          <button onClick={() => router.push("/billing")} style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "6px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-            <Zap size={11} /> Upgrade
-          </button>
-        </div>
-      </div>
-
+      {/* AI Actions Usage Over Time */}
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>AI Actions Usage Over Time</div>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <BarChart2 size={16} color="#A78BFA" />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>AI Actions Usage Over Time</span>
+          </div>
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             {(["7D", "30D", "90D"] as const).map(t => (
               <button key={t} onClick={() => setActiveChart(t)} style={{ padding: "5px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", background: activeChart === t ? "#7C3AED" : "rgba(255,255,255,0.06)", color: activeChart === t ? "#fff" : "rgba(255,255,255,0.4)", border: activeChart === t ? "none" : "1px solid rgba(255,255,255,0.08)" }}>{t}</button>
             ))}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 200 }}>
+        <div className="chart-section" style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <MiniChart used={aiUsed} limit={aiLimit} color="#7C3AED" label="AI Actions" />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 130 }}>
+          <div className="chart-stats" style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 130, flexShrink: 0 }}>
             <div>
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Daily Average</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA" }}>{aiUsed > 0 ? Math.round(aiUsed / Math.max(1, 30 - daysUntilReset)) : 0}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#FAFAFA" }}>{aiUsed > 0 ? Math.round(aiUsed / Math.max(1, 30)) : 0}</div>
               <div style={{ fontSize: 11, color: "#A78BFA", fontWeight: 600 }}>AI Actions</div>
             </div>
             <div>
               <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Peak Usage</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "#FAFAFA" }}>{aiUsed}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#FAFAFA" }}>{aiUsed}</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Total so far</div>
             </div>
+            <div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 2 }}>Total Used</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#FAFAFA" }}>{aiUsed} / {aiLimit}</div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Shared API Status */}
       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Shared API Status</div>
-        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 16 }}>Real-time status of our shared infrastructure</div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {[{ label: "API Server", ok: true },{ label: "Database", ok: true },{ label: "YouTube Data API", ok: channelConnected },{ label: "AI Engine", ok: userData.live_monitoring ?? false },{ label: "Rate Limiting", ok: true, label2: "Optimal" }].map(h => (
-            <div key={h.label} style={{ flex: 1, minWidth: 100, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 10px", background: "rgba(255,255,255,0.03)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.07)" }}>
-              <CheckCircle size={18} color={h.ok ? "#22C55E" : "#F59E0B"} />
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#FAFAFA", textAlign: "center" }}>{h.label}</div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: h.ok ? "#22C55E" : "#F59E0B" }}>{h.label2 || (h.ok ? "Operational" : "Not Connected")}</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(34,197,94,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <CheckCircle size={16} color="#22C55E" />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>Shared API Status</span>
+          </div>
+          <button style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>View Details</button>
+        </div>
+        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, marginBottom: 16 }}>All systems operational</div>
+        <div className="status-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
+          {[
+            { label: "API Server", ok: true, icon: <Server size={20} color="#22C55E" /> },
+            { label: "Database", ok: true, icon: <Database size={20} color="#22C55E" /> },
+            { label: "YouTube API", ok: channelConnected, icon: <YoutubeIcon size={20} color={channelConnected ? "#22C55E" : "#F59E0B"} /> },
+            { label: "AI Engine", ok: true, icon: <Zap size={20} color="#22C55E" /> },
+            { label: "Rate Limiting", ok: true, label2: "Optimal", icon: <Shield size={20} color="#22C55E" /> },
+          ].map(h => (
+            <div key={h.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 10px", background: "rgba(255,255,255,0.03)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ position: "relative" }}>
+                {h.icon}
+                <CheckCircle size={12} color={h.ok ? "#22C55E" : "#F59E0B"} style={{ position: "absolute", top: -4, right: -6, background: "#0a0a0f", borderRadius: "50%" }} />
+              </div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#FAFAFA", textAlign: "center" }}>{h.label}</div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: h.ok ? "#22C55E" : "#F59E0B" }}>{h.label2 || (h.ok ? "Operational" : "Not Connected")}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="activity-grid">
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>Recent Activity</div>
-            <button style={{ background: "none", border: "none", color: "#A78BFA", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>View All</button>
-          </div>
-          {[{ msg: "YouTube API request successful", time: "25s ago" },{ msg: "Comments data fetched", time: "1m ago" },{ msg: "AI reply sent to comment", time: "2m ago" },{ msg: "Channel statistics updated", time: "3m ago" },{ msg: "Daily usage counter updated", time: "5m ago" }].map((a, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22C55E", display: "inline-block", marginTop: 4, flexShrink: 0 }} />
-                <span style={{ fontSize: 12 }}>{a.msg}</span>
-              </div>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{a.time}</span>
+      {/* Recent Activity */}
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Activity size={16} color="#A78BFA" />
             </div>
-          ))}
-        </div>
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Why Use ModerateAI Shared API?</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {["No API key setup required","Higher quota & better reliability","Fully managed by ModerateAI","Automatic optimizations","24/7 monitoring & support"].map(item => (
-              <div key={item} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(124,58,237,0.2)", border: "1px solid rgba(124,58,237,0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <CheckCircle size={11} color="#A78BFA" />
-                </div>
-                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{item}</span>
-              </div>
-            ))}
+            <span style={{ fontWeight: 700, fontSize: 15 }}>Recent Activity</span>
           </div>
+          <button onClick={() => router.push("/live-feed")} style={{ background: "none", border: "none", color: "#A78BFA", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>View All <ArrowRight size={12} /></button>
         </div>
+        {[
+          { msg: "YouTube API request successful", time: "25s ago" },
+          { msg: "Comments data fetched", time: "1m ago" },
+          { msg: "AI reply sent to comment", time: "2m ago" },
+          { msg: "Channel statistics updated", time: "3m ago" },
+          { msg: "Daily usage counter updated", time: "5m ago" },
+        ].map((a, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: i < 4 ? 12 : 0, paddingBottom: i < 4 ? 12 : 0, borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{a.msg}</span>
+            </div>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{a.time}</span>
+          </div>
+        ))}
       </div>
 
+      {/* Trial Extension */}
       {isFreeTrialPlan && (
         <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 20, padding: 20 }}>
           <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4 }}>Trial Extension Offer 🎉</div>
           <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginBottom: 16 }}>Need more time? Extend your trial and get 30 more days + {aiLimit} AI actions.</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <div style={{ flex: 1, display: "flex", gap: 20, flexWrap: "wrap" }}>
-              <div><div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>30 Days</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Extra validity</div></div>
-              <div><div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>{aiLimit} AI Actions</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Full access</div></div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>30 Days</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Extra validity</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA" }}>{aiLimit} AI Actions</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Full access</div>
             </div>
             <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 14, padding: "12px 18px", textAlign: "center", flexShrink: 0 }}>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 2 }}>One-time Offer</div>
               <div style={{ fontSize: 22, fontWeight: 900, color: "#F59E0B" }}>₹69</div>
             </div>
           </div>
-          <button onClick={() => router.push("/billing?offer=trial-extension")} style={{ marginTop: 16, width: "100%", background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 20px rgba(124,58,237,0.4)" }}>
+          <button onClick={() => router.push("/billing?offer=trial-extension")} style={{ width: "100%", background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 12, padding: "13px", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             Extend Trial Now <ArrowRight size={16} />
           </button>
         </div>
       )}
 
-      <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 20, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      {/* Upgrade Section */}
+      <div className="upgrade-section" style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 20, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>Need More AI Actions?</div>
           <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginBottom: 12 }}>Upgrade your plan to get more AI actions and unlimited access to all features.</div>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <div className="upgrade-plans" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <CheckCircle size={14} color="#22C55E" />
-              <div><span style={{ fontSize: 13, fontWeight: 700 }}>Starter</span><span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>  1,900 AI actions/month</span><span style={{ background: "#7C3AED", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20, marginLeft: 6 }}>Popular</span></div>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>Starter</span>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>1,900 AI actions/month</span>
+              <span style={{ background: "#7C3AED", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20 }}>Popular</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <CheckCircle size={14} color="#22C55E" />
-              <div><span style={{ fontSize: 13, fontWeight: 700 }}>Pro Agency</span><span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>  15,000 AI actions/month</span><span style={{ background: "#22C55E", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20, marginLeft: 6 }}>Best Value</span></div>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>Pro Agency</span>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>15,000 AI actions/month</span>
+              <span style={{ background: "#22C55E", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20 }}>Best Value</span>
             </div>
           </div>
         </div>
-        <button onClick={() => router.push("/billing")} style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}>
+        <button onClick={() => router.push("/billing")} style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap", flexShrink: 0 }}>
           <Zap size={15} /> Upgrade Plan
         </button>
       </div>
@@ -863,10 +938,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// GCP TAB — V2
-// ═══════════════════════════════════════════════════════════════════════════════
-function GCPTab({ userData, user, router, showToast }: { userData: UserData; user: User; router: ReturnType<typeof useRouter>; showToast: (msg: string, type?: "success" | "error" | "info") => void }) {   
+function GCPTab({ userData, user, router, showToast }: { userData: UserData; user: User; router: ReturnType<typeof useRouter>; showToast: (msg: string, type?: "success" | "error" | "info") => void }) {
   const [activeChart, setActiveChart] = useState<"7D" | "30D" | "90D">("7D");
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -881,7 +953,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   const [formClientId, setFormClientId] = useState("");
   const [formClientSecret, setFormClientSecret] = useState("");
 
-  const CALLBACK_URL = "https://moderateai.site/api/auth/youtube/callback";
+  const CALLBACK_URL = "https://api.moderateai.site/api/auth/youtube/callback";
 
   const gcpConnected = userData.gcp_connected ?? false;
   const gcpProjectName = userData.gcp_project_name || "—";
@@ -964,6 +1036,13 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
     }
     setSaving(true);
     try {
+      const token = await user.getIdToken();
+      const gcpRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gcp/credentials`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ clientId: formClientId, clientSecret: formClientSecret, projectId: formProjectId }),
+      });
+      if (!gcpRes.ok) throw new Error('Failed to save credentials securely');
       await updateDoc(doc(db, "users", user.uid), {
         gcp_project_name: formProjectName,
         gcp_project_id: formProjectId,
@@ -982,7 +1061,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   const handleStepAction = (stepKey: string) => {
     const detail = STEP_DETAILS[stepKey];
     if (stepKey === "save_project") return;
-    if (stepKey === "authorization") { window.location.href = `/api/auth/youtube?uid=${user.uid}`; return; }
+    if (stepKey === "authorization") { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user.uid}`; return; }
     if (detail?.url?.startsWith("/")) { router.push(detail.url); return; }
     if (detail?.url) window.open(detail.url, "_blank", "noopener noreferrer");
     setCompletedSteps(prev => new Set([...prev, currentStep]));
@@ -2274,4 +2353,4 @@ export default function APIAccessPage() {
       <DashboardBottomNav />
     </div>
   );
- }
+}

@@ -412,9 +412,9 @@ export default function Dashboard() {
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
 
-      firebaseUser.getIdToken().then(token => { fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {}); }).catch(() => {});
+      firebaseUser.getIdToken().then(token => { fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {}); }).catch(() => {});
       const statsInterval = setInterval(() => {
-      firebaseUser.getIdToken().then(token => { fetch(`/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {}); }).catch(() => {});      }, 30_000);
+      firebaseUser.getIdToken().then(token => { fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube/refresh-stats?uid=${firebaseUser.uid}`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {}); }).catch(() => {});      }, 30_000);
       unsubRefs.current.push(() => clearInterval(statsInterval));
 
       const userDocRef = doc(db, 'users', firebaseUser.uid);
@@ -452,7 +452,7 @@ export default function Dashboard() {
   }, [router]);
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
-  const handleYouTubeConnect = () => { window.location.href = `/api/auth/youtube?uid=${user?.uid}`; };
+  const handleYouTubeConnect = () => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user?.uid}`; };
 
   if (loadState === 'auth' || loadState === 'firestore') {
     return (

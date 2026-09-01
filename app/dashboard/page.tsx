@@ -452,7 +452,15 @@ export default function Dashboard() {
   }, [router]);
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
-  const handleYouTubeConnect = () => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user?.uid}`; };
+  const handleYouTubeConnect = async () => {
+  if (!user) return;
+  try {
+    const token = await user.getIdToken();
+    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?token=${token}`;
+  } catch {
+    console.error('Failed to get auth token');
+  }
+};
 
   if (loadState === 'auth' || loadState === 'firestore') {
     return (

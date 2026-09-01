@@ -588,141 +588,131 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
   };
 
   const handleRefreshStats = async () => {
-    if (!userData.youtube_connected) { showToast("Connect a YouTube channel first.", "error"); return; }
     setRefreshing(true);
     try {
       const token = await user.getIdToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube/refresh-stats`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube/refresh-stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (res.ok) showToast("Stats refreshed.", "success");
-      else showToast("Failed to refresh.", "error");
-    } catch { showToast("Failed to refresh.", "error"); }
+    } catch { /* ignore */ }
     finally { setRefreshing(false); }
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-purple-500/30 p-4 md:p-6"
-        style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,70,229,0.12) 60%, rgba(15,10,40,0.6) 100%)" }}>
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)" }} />
-        <div className="flex items-center gap-3 relative">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", boxShadow: "0 0 24px rgba(124,58,237,0.45)" }}>
+      <div style={{
+        background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,70,229,0.12) 60%, rgba(15,10,40,0.6) 100%)",
+        border: "1.5px solid rgba(124,58,237,0.4)", borderRadius: 20, padding: 16, position: "relative", overflow: "hidden"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+            background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+            boxShadow: "0 0 24px rgba(124,58,237,0.45)",
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}>
             <Shield size={22} color="white" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-black text-base md:text-xl tracking-tight">ModerateAI Shared API</span>
-              <span className="text-white text-xs font-bold px-2.5 py-0.5 rounded-full"
-                style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)" }}>Recommended</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 900, fontSize: 16 }}>ModerateAI Shared API</span>
+              <span style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20 }}>Recommended</span>
             </div>
-            <div className="text-white/50 text-xs mt-0.5">We handle everything for you. No setup required.</div>
-          </div>
-          <div className="hidden md:flex w-20 h-20 flex-shrink-0 rounded-2xl items-center justify-center"
-            style={{ background: "radial-gradient(circle at 40% 40%, rgba(124,58,237,0.35), rgba(79,70,229,0.15))", border: "1px solid rgba(124,58,237,0.25)" }}>
-            <Cloud size={38} color="#A78BFA" strokeWidth={1.5} />
+            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 2 }}>We handle everything for you. No setup required.</div>
           </div>
         </div>
       </div>
 
-      {/* Connected & Active */}
-      <div className="rounded-2xl p-4" style={{ background: "rgba(34,197,94,0.08)", border: "1.5px solid rgba(34,197,94,0.3)" }}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 relative"
-            style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}>
-            <Link2 size={20} color="#22C55E" />
-            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500"
-              style={{ border: "2px solid #0a0a0f" }} />
-          </div>
-          <div>
-            <div className="font-black text-base text-white">Connected & Active</div>
-            <div className="text-white/45 text-xs">Your API is working perfectly</div>
+      {/* Connected & Active — reference style: icon+text left, button right */}
+      <div style={{ background: "rgba(34,197,94,0.08)", border: "1.5px solid rgba(34,197,94,0.3)", borderRadius: 18, padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, position: "relative" }}>
+              <Link2 size={20} color="#22C55E" />
+              <span style={{ position: "absolute", bottom: -2, right: -2, width: 10, height: 10, borderRadius: "50%", background: "#22C55E", border: "2px solid #0a0a0f" }} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 15 }}>Connected & Active</div>
+              <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>Your API is working perfectly</div>
+            </div>
           </div>
         </div>
-        <button onClick={handleTestConnection} disabled={testState === "checking"}
-          className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white"
-          style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", cursor: "pointer" }}>
-          {testState === "checking" ? <Loader2 size={14} className="animate-spin" /> : <Wifi size={14} />}
+        <button onClick={handleTestConnection} disabled={testState === "checking"} style={{
+          width: "100%", padding: "12px", borderRadius: 12, fontSize: 13, fontWeight: 700,
+          cursor: "pointer", background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+          color: "#fff", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+        }}>
+          {testState === "checking" ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Wifi size={14} />}
           {testState === "checking" ? "Checking..." : testState === "success" ? "✓ Verified" : "Test Connection"}
         </button>
       </div>
 
       {/* Your Usage Overview */}
-      <div className="rounded-2xl p-4" style={{ background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.25)" }}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
+      <div style={{ background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.25)", borderRadius: 18, padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Gift size={14} color="#A78BFA" />
             </div>
-            <span className="font-bold text-sm">Your Usage Overview</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>Your Usage Overview</span>
           </div>
-          <span className="text-xs font-bold px-2.5 py-1 rounded-full text-green-400"
-            style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}>{planName}</span>
+          <span style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 20, padding: "3px 12px", fontSize: 11, fontWeight: 700 }}>{planName}</span>
         </div>
 
-        {/* 4 cards — horizontal scroll on mobile, 4 col on desktop */}
-        <div className="overflow-x-auto -mx-1 px-1 pb-1" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
-          <div className="flex gap-2.5 md:grid md:grid-cols-4" style={{ minWidth: "max-content" }}>
-            {/* AI Actions Used */}
-            <div className="rounded-xl p-3 flex-shrink-0 w-36 md:w-auto" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="text-white/40 text-xs mb-1">AI Actions Used</div>
-              <div className="text-2xl font-black text-white leading-none">{aiUsed}</div>
-              <div className="text-white/35 text-xs mt-1">/ {aiLimit}</div>
-              <div className="mt-2 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }}>
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: pct > 80 ? "#F43F5E" : "#7C3AED" }} />
-              </div>
-              <div className="text-xs mt-1 font-semibold" style={{ color: pct > 80 ? "#F43F5E" : "rgba(255,255,255,0.35)" }}>{pct.toFixed(0)}% Used</div>
+        {/* 4 cards — grid-cols-4 always, smaller text on mobile */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 14 }}>
+          {/* AI Actions Used */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 8px" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4, lineHeight: 1.2 }}>AI Actions Used</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{aiUsed}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>/ {aiLimit}</div>
+            <div style={{ marginTop: 8, height: 3, background: "rgba(255,255,255,0.07)", borderRadius: 2 }}>
+              <div style={{ width: `${pct}%`, height: "100%", background: pct > 80 ? "#F43F5E" : "#7C3AED", borderRadius: 2 }} />
             </div>
+            <div style={{ fontSize: 9, color: pct > 80 ? "#F43F5E" : "rgba(255,255,255,0.35)", marginTop: 3, fontWeight: 600 }}>{pct.toFixed(0)}% Used</div>
+          </div>
 
-            {/* AI Actions Remaining */}
-            <div className="rounded-xl p-3 flex-shrink-0 w-36 md:w-auto" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="text-white/40 text-xs mb-1">AI Actions Remaining</div>
-              <div className="text-2xl font-black text-purple-400 leading-none">{aiCreditsRemaining}</div>
-              <div className="text-white/35 text-xs mt-1">/ {aiLimit}</div>
-              <div className="mt-2 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }}>
-                <div className="h-full rounded-full bg-purple-600" style={{ width: `${100 - pct}%` }} />
-              </div>
-              <div className="text-xs mt-1 font-semibold text-purple-400">{(100 - pct).toFixed(0)}% Remaining</div>
+          {/* AI Actions Remaining */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 8px" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4, lineHeight: 1.2 }}>AI Actions Remaining</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: "#A78BFA", lineHeight: 1 }}>{aiCreditsRemaining}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>/ {aiLimit}</div>
+            <div style={{ marginTop: 8, height: 3, background: "rgba(255,255,255,0.07)", borderRadius: 2 }}>
+              <div style={{ width: `${100 - pct}%`, height: "100%", background: "#7C3AED", borderRadius: 2 }} />
             </div>
+            <div style={{ fontSize: 9, color: "#A78BFA", marginTop: 3, fontWeight: 600 }}>{(100 - pct).toFixed(0)}% Remaining</div>
+          </div>
 
-            {/* Trial Ends In */}
-            <div className="rounded-xl p-3 flex-shrink-0 w-36 md:w-auto" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="text-white/40 text-xs mb-1">Trial Ends In</div>
-              <div className="text-2xl font-black leading-none" style={{ color: trialDaysLeft <= 3 ? "#F43F5E" : "#FAFAFA" }}>{trialDaysLeft}</div>
-              <div className="text-white/35 text-xs mt-1">Days</div>
-              {trialDaysLeft === 0 && (
-                <div className="mt-1 inline-block text-xs font-bold px-2 py-0.5 rounded text-red-400"
-                  style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>Expired</div>
-              )}
-              {isFreeTrialPlan && (
-                <button onClick={() => router.push("/billing?offer=trial-extension")}
-                  className="mt-2 w-full text-xs font-bold py-1 rounded-lg text-purple-400"
-                  style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", cursor: "pointer" }}>
-                  Extend ₹69
-                </button>
-              )}
-            </div>
-
-            {/* Current Plan */}
-            <div className="rounded-xl p-3 flex-shrink-0 w-36 md:w-auto" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="text-white/40 text-xs mb-1">Current Plan</div>
-              <div className="text-base font-black text-green-400">{planName}</div>
-              <button onClick={() => router.push("/billing")}
-                className="mt-3 inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg text-purple-400"
-                style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", cursor: "pointer" }}>
-                <Zap size={10} /> Upgrade
+          {/* Trial Ends In */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 8px" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4, lineHeight: 1.2 }}>Trial Ends In</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: trialDaysLeft <= 3 ? "#F43F5E" : "#FAFAFA", lineHeight: 1 }}>{trialDaysLeft}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>Days</div>
+            {trialDaysLeft === 0 && (
+              <div style={{ marginTop: 4, background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 4, padding: "1px 5px", fontSize: 9, fontWeight: 700, color: "#F43F5E", display: "inline-block" }}>Expired</div>
+            )}
+            {isFreeTrialPlan && (
+              <button onClick={() => router.push("/billing?offer=trial-extension")} style={{ marginTop: 4, width: "100%", background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 6, padding: "3px 0", fontSize: 9, fontWeight: 700, cursor: "pointer" }}>
+                Ext ₹69
               </button>
-            </div>
+            )}
+          </div>
+
+          {/* Current Plan */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "10px 8px" }}>
+            <div style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginBottom: 4, lineHeight: 1.2 }}>Current Plan</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#22C55E" }}>{planName}</div>
+            <button onClick={() => router.push("/billing")} style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 3, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 6, padding: "3px 7px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+              <Zap size={9} /> Upgrade
+            </button>
           </div>
         </div>
 
-        {/* Health row */}
-        <div className="overflow-x-auto mt-3" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
-          <div className="flex gap-4 min-w-max md:grid md:grid-cols-5 md:min-w-0 py-2 border-t border-white/5">
+        {/* Health row — 5 items, horizontal scroll if needed */}
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"], scrollbarWidth: "none" as React.CSSProperties["scrollbarWidth"] }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", minWidth: 280 }}>
             {[
               { label: "Health", val: "Healthy", color: "#22C55E", dot: true },
               { label: "Status", val: "Active", color: "#22C55E", dot: true },
@@ -730,12 +720,12 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
               { label: "Success Rate", val: successRate > 0 ? `${successRate}%` : "—", color: "#22C55E" },
               { label: "Last Sync", val: lastSync, refresh: true },
             ].map((item) => (
-              <div key={item.label} className="text-center px-2 md:px-0">
-                <div className="text-white/40 text-xs mb-1">{item.label}</div>
-                <div className="text-xs font-bold flex items-center justify-center gap-1" style={{ color: item.color || "#FAFAFA" }}>
-                  {item.dot && <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: item.color }} />}
-                  <span className="whitespace-nowrap">{item.val}</span>
-                  {item.refresh && <RefreshCw size={9} color="rgba(255,255,255,0.3)" style={{ cursor: "pointer" }} onClick={handleRefreshStats} />}
+              <div key={item.label} style={{ textAlign: "center" }}>
+                <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, marginBottom: 3 }}>{item.label}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: item.color || "#FAFAFA", display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
+                  {item.dot && <span style={{ width: 5, height: 5, borderRadius: "50%", background: item.color, display: "inline-block" }} />}
+                  <span style={{ fontSize: 10 }}>{item.val}</span>
+                  {item.refresh && <RefreshCw size={8} color="rgba(255,255,255,0.3)" style={{ cursor: "pointer" }} onClick={handleRefreshStats} />}
                 </div>
               </div>
             ))}
@@ -743,126 +733,128 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col gap-2 mt-3">
-          <button onClick={handleReconnect} disabled={reconnecting}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer" }}>
-            {reconnecting ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Reconnect
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+          <button onClick={handleReconnect} disabled={reconnecting} style={{
+            width: "100%", padding: "10px", borderRadius: 10, fontSize: 13, fontWeight: 700,
+            cursor: "pointer", background: "rgba(255,255,255,0.06)", color: "#fff",
+            border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+          }}>
+            {reconnecting ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <RefreshCw size={13} />} Reconnect
           </button>
-          <button onClick={() => router.push("/analytics")}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white"
-            style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", cursor: "pointer" }}>
+          <button onClick={() => router.push("/analytics")} style={{
+            width: "100%", padding: "10px", borderRadius: 10, fontSize: 13, fontWeight: 700,
+            cursor: "pointer", background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+            color: "#fff", border: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+          }}>
             <BarChart2 size={13} /> View Usage
           </button>
         </div>
       </div>
 
       {/* AI Actions Usage Over Time */}
-      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <BarChart2 size={14} color="#A78BFA" />
             </div>
-            <span className="font-bold text-sm">AI Actions Usage Over Time</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>AI Actions Usage Over Time</span>
           </div>
-          <div className="flex gap-1.5">
+          <div style={{ display: "flex", gap: 6 }}>
             {(["7D", "30D", "90D"] as const).map(t => (
-              <button key={t} onClick={() => setActiveChart(t)}
-                className="px-2.5 py-1 rounded-lg text-xs font-semibold"
-                style={{ background: activeChart === t ? "#7C3AED" : "rgba(255,255,255,0.06)", color: activeChart === t ? "#fff" : "rgba(255,255,255,0.4)", border: activeChart === t ? "none" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}>{t}</button>
+              <button key={t} onClick={() => setActiveChart(t)} style={{
+                padding: "4px 12px", borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: "pointer",
+                background: activeChart === t ? "#7C3AED" : "rgba(255,255,255,0.06)",
+                color: activeChart === t ? "#fff" : "rgba(255,255,255,0.4)",
+                border: activeChart === t ? "none" : "1px solid rgba(255,255,255,0.08)"
+              }}>{t}</button>
             ))}
           </div>
         </div>
 
-        {/* Chart with Y-axis */}
-        <div className="flex gap-3">
-          <div className="flex flex-col justify-between text-right flex-shrink-0 py-1" style={{ minWidth: 28 }}>
+        {/* Chart — Y-axis left, chart center, stats right */}
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+          {/* Y-axis */}
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "flex-end", flexShrink: 0, height: 100, paddingBottom: 4 }}>
             {[aiLimit, Math.round(aiLimit * 0.8), Math.round(aiLimit * 0.6), Math.round(aiLimit * 0.4), Math.round(aiLimit * 0.2), 0].map(v => (
-              <span key={v} className="text-white/30 text-xs">{v}</span>
+              <span key={v} style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", lineHeight: 1 }}>{v}</span>
             ))}
           </div>
-          <div className="flex-1 min-w-0">
+          {/* Chart */}
+          <div style={{ flex: 1, minWidth: 0 }}>
             <MiniChart used={aiUsed} limit={aiLimit} color="#7C3AED" label="AI Actions" />
-            {/* Date labels */}
-            <div className="flex justify-between mt-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, overflowX: "auto", scrollbarWidth: "none" as React.CSSProperties["scrollbarWidth"] }}>
               {chartLabels.map((label, i) => (
-                <span key={i} className="text-white/30 text-xs whitespace-nowrap">{label}</span>
+                <span key={i} style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", whiteSpace: "nowrap" }}>{label}</span>
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Stats row below chart */}
-        <div className="flex gap-4 mt-3 pt-3 border-t border-white/5">
-          <div>
-            <div className="text-white/40 text-xs mb-0.5">Daily Average</div>
-            <div className="text-lg font-black text-white">{aiUsed > 0 ? Math.round(aiUsed / Math.max(1, days)) : 0}</div>
-            <div className="text-xs font-semibold text-purple-400">AI Actions</div>
-          </div>
-          <div>
-            <div className="text-white/40 text-xs mb-0.5">Peak Usage</div>
-            <div className="text-lg font-black text-white">{aiUsed}</div>
-            <div className="text-xs text-white/35">Total so far</div>
-          </div>
-          <div>
-            <div className="text-white/40 text-xs mb-0.5">Total Used</div>
-            <div className="text-sm font-bold text-white">{aiUsed} / {aiLimit}</div>
+          {/* Stats — right side vertical */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, flexShrink: 0, minWidth: 80 }}>
+            <div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, marginBottom: 1 }}>Daily Average</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{aiUsed > 0 ? Math.round(aiUsed / Math.max(1, days)) : 0}</div>
+              <div style={{ fontSize: 10, color: "#A78BFA", fontWeight: 600 }}>AI Actions</div>
+            </div>
+            <div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, marginBottom: 1 }}>Peak Usage</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "#FAFAFA", lineHeight: 1 }}>{aiUsed}</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>AI Actions</div>
+            </div>
+            <div>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, marginBottom: 1 }}>Total Used</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#FAFAFA" }}>{aiUsed} / {aiLimit}</div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Shared API Status */}
-      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(34,197,94,0.15)" }}>
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(34,197,94,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <CheckCircle size={14} color="#22C55E" />
             </div>
-            <span className="font-bold text-sm">Shared API Status</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>Shared API Status</span>
           </div>
-          <button className="text-xs font-bold px-2.5 py-1 rounded-lg text-purple-400"
-            style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", cursor: "pointer" }}>View Details</button>
+          <button style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#A78BFA", borderRadius: 8, padding: "4px 10px", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>View Details</button>
         </div>
-        <div className="text-white/40 text-xs mb-3">All systems operational</div>
+        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, marginBottom: 14 }}>All systems operational</div>
 
-        {/* 5 cards — horizontal scroll on mobile */}
-        <div className="overflow-x-auto -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
-          <div className="flex gap-2 md:grid md:grid-cols-5" style={{ minWidth: "max-content" }}>
-            {[
-              { label: "API Server", ok: true, label2: "Operational", icon: <Server size={18} color="#22C55E" /> },
-              { label: "Database", ok: true, label2: "Operational", icon: <Database size={18} color="#22C55E" /> },
-              { label: "YouTube API", ok: channelConnected, label2: channelConnected ? "Operational" : "Not Connected", icon: <YoutubeIcon size={18} color={channelConnected ? "#22C55E" : "#F59E0B"} /> },
-              { label: "AI Engine", ok: true, label2: "Operational", icon: <Zap size={18} color="#22C55E" /> },
-              { label: "Rate Limiting", ok: true, label2: "Optimal", icon: <Shield size={18} color="#22C55E" /> },
-            ].map(h => (
-              <div key={h.label} className="flex flex-col items-center gap-1.5 py-3 px-3 rounded-xl flex-shrink-0 md:flex-shrink"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", minWidth: 90 }}>
-                <div className="relative">
-                  {h.icon}
-                  <CheckCircle size={11} color={h.ok ? "#22C55E" : "#F59E0B"}
-                    style={{ position: "absolute", top: -3, right: -5, background: "#0a0a0f", borderRadius: "50%" }} />
-                </div>
-                <div className="text-xs font-semibold text-white text-center leading-tight">{h.label}</div>
-                <span className="text-xs font-bold" style={{ color: h.ok ? "#22C55E" : "#F59E0B" }}>{h.label2}</span>
+        {/* 5 cards — grid always, smaller on mobile */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
+          {[
+            { label: "API Server", ok: true, label2: "Operational", icon: <Server size={16} color="#22C55E" /> },
+            { label: "Database", ok: true, label2: "Operational", icon: <Database size={16} color="#22C55E" /> },
+            { label: "YouTube API", ok: channelConnected, label2: channelConnected ? "Operational" : "N/A", icon: <YoutubeIcon size={16} color={channelConnected ? "#22C55E" : "#F59E0B"} /> },
+            { label: "AI Engine", ok: true, label2: "Operational", icon: <Zap size={16} color="#22C55E" /> },
+            { label: "Rate Limiting", ok: true, label2: "Optimal", icon: <Shield size={16} color="#22C55E" /> },
+          ].map(h => (
+            <div key={h.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 4px", background: "rgba(255,255,255,0.03)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ position: "relative" }}>
+                {h.icon}
+                <CheckCircle size={10} color={h.ok ? "#22C55E" : "#F59E0B"} style={{ position: "absolute", top: -3, right: -5, background: "#0a0a0f", borderRadius: "50%" }} />
               </div>
-            ))}
-          </div>
+              <div style={{ fontSize: 9, fontWeight: 600, color: "#FAFAFA", textAlign: "center", lineHeight: 1.2 }}>{h.label}</div>
+              <span style={{ fontSize: 9, fontWeight: 700, color: h.ok ? "#22C55E" : "#F59E0B" }}>{h.label2}</span>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
+      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 18, padding: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(124,58,237,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Activity size={14} color="#A78BFA" />
             </div>
-            <span className="font-bold text-sm">Recent Activity</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>Recent Activity</span>
           </div>
-          <button onClick={() => router.push("/live-feed")}
-            className="flex items-center gap-1 text-xs font-semibold text-purple-400"
-            style={{ background: "none", border: "none", cursor: "pointer" }}>View All <ArrowRight size={11} /></button>
+          <button onClick={() => router.push("/live-feed")} style={{ background: "none", border: "none", color: "#A78BFA", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+            View All <ArrowRight size={12} />
+          </button>
         </div>
         {[
           { msg: "YouTube API request successful", time: "25s ago" },
@@ -871,67 +863,69 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           { msg: "Channel statistics updated", time: "3m ago" },
           { msg: "Daily usage counter updated", time: "5m ago" },
         ].map((a, i) => (
-          <div key={i} className="flex items-center justify-between gap-2 py-2.5"
-            style={{ borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
-            <div className="flex items-center gap-2.5">
-              <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-              <span className="text-sm text-white/80">{a.msg}</span>
+          <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: i < 4 ? 12 : 0, paddingBottom: i < 4 ? 12 : 0, borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22C55E", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{a.msg}</span>
             </div>
-            <span className="text-xs text-white/35 whitespace-nowrap">{a.time}</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{a.time}</span>
           </div>
         ))}
       </div>
 
       {/* Trial Extension */}
       {isFreeTrialPlan && (
-        <div className="rounded-2xl p-4" style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)" }}>
-          <div className="font-black text-sm mb-1">Trial Extension Offer 🎉</div>
-          <div className="text-white/50 text-xs mb-4">Need more time? Extend your trial and get 30 more days + {aiLimit} AI actions.</div>
-          <div className="flex items-start gap-3 mb-4">
-            <div className="flex-1">
-              <div className="text-xl font-black text-white">30 Days</div>
-              <div className="text-xs text-white/40">Extra validity</div>
+        <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 18, padding: 16 }}>
+          <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 4 }}>Trial Extension Offer 🎉</div>
+          <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 16 }}>Need more time? Extend your trial and get 30 more days + {aiLimit} AI actions.</div>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 900 }}>30 Days</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Extra validity</div>
             </div>
-            <div className="flex-1">
-              <div className="text-xl font-black text-white">{aiLimit} AI Actions</div>
-              <div className="text-xs text-white/40">Full access</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 900 }}>{aiLimit} AI Actions</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Full access</div>
             </div>
-            <div className="rounded-xl p-2.5 text-center flex-shrink-0"
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
-              <div className="text-xs text-white/40">One-time Offer</div>
-              <div className="text-xl font-black text-yellow-500">₹69</div>
+            <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "10px 14px", textAlign: "center", flexShrink: 0 }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginBottom: 2 }}>One-time Offer</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "#F59E0B" }}>₹69</div>
             </div>
           </div>
-          <button onClick={() => router.push("/billing?offer=trial-extension")}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white"
-            style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", cursor: "pointer" }}>
-            Extend Trial Now <ArrowRight size={14} />
+          <button onClick={() => router.push("/billing?offer=trial-extension")} style={{
+            width: "100%", background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff",
+            border: "none", borderRadius: 12, padding: "13px", fontWeight: 700, fontSize: 14,
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+          }}>
+            Extend Trial Now <ArrowRight size={16} />
           </button>
         </div>
       )}
 
       {/* Upgrade Section */}
-      <div className="rounded-2xl p-4" style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)" }}>
-        <div className="font-black text-sm mb-1">Need More AI Actions?</div>
-        <div className="text-white/50 text-xs mb-3">Upgrade your plan to get more AI actions and unlimited access to all features.</div>
-        <div className="flex flex-col gap-2 mb-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <CheckCircle size={13} color="#22C55E" />
-            <span className="text-sm font-bold">Starter</span>
-            <span className="text-xs text-white/40">1,900 AI actions/month</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white bg-purple-600">Popular</span>
+      <div style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)", borderRadius: 18, padding: 16 }}>
+        <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 4 }}>Need More AI Actions?</div>
+        <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginBottom: 14 }}>Upgrade your plan to get more AI actions and unlimited access to all features.</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <CheckCircle size={14} color="#22C55E" />
+            <span style={{ fontSize: 13, fontWeight: 700 }}>Starter</span>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>1,900 AI actions/month</span>
+            <span style={{ background: "#7C3AED", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20 }}>Popular</span>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <CheckCircle size={13} color="#22C55E" />
-            <span className="text-sm font-bold">Pro Agency</span>
-            <span className="text-xs text-white/40">15,000 AI actions/month</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white bg-green-600">Best Value</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <CheckCircle size={14} color="#22C55E" />
+            <span style={{ fontSize: 13, fontWeight: 700 }}>Pro Agency</span>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>15,000 AI actions/month</span>
+            <span style={{ background: "#22C55E", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 8px", borderRadius: 20 }}>Best Value</span>
           </div>
         </div>
-        <button onClick={() => router.push("/billing")}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white"
-          style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", cursor: "pointer" }}>
-          <Zap size={14} /> Upgrade Plan
+        <button onClick={() => router.push("/billing")} style={{
+          width: "100%", background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "#fff",
+          border: "none", borderRadius: 12, padding: "13px", fontWeight: 700, fontSize: 14,
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8
+        }}>
+          <Zap size={15} /> Upgrade Plan
         </button>
       </div>
 

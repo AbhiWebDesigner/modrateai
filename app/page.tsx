@@ -402,7 +402,7 @@ export default function LandingPage() {
         }
         .n-burger { display: none; background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.6); padding: 4px; }
 
-        @media (max-width: 800px) {
+        @media (max-width: 1024px) {
           .lp-nav {
             top: 0; left: 0; right: 0; transform: none;
             width: 100%; max-width: 100%; border-radius: 0;
@@ -589,7 +589,7 @@ export default function LandingPage() {
         /* Floating dashboard */
         .hero-right { animation: lp-float 8s ease-in-out infinite; }
 
-        @media (max-width: 800px) {
+        @media (max-width: 1024px) {
           .hero {
             padding: 70px 0 0;
             min-height: 100svh;
@@ -630,7 +630,7 @@ export default function LandingPage() {
         .s-icon-wrap { display: none; }
         .s-text { display: flex; flex-direction: column; align-items: center; }
 
-        @media (max-width: 800px) {
+        @media (max-width: 1024px) {
           .stats { background: transparent; border: none; padding: 16px 16px 0; }
           .stats-inner-mob { background: #0A0A12; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; }
           .stats-row { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; }
@@ -648,6 +648,11 @@ export default function LandingPage() {
 
         /* ══ SECTIONS ══ */
         .section { padding: 100px 24px; }
+
+        @media (max-width: 1024px) {
+          .hero { min-height: auto !important; padding: 80px 20px 48px !important; }
+          .section { padding: 56px 20px !important; }
+        }
         .con { max-width: 1100px; margin: 0 auto; }
         .eyebrow { display: inline-flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.25); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
         .eyebrow-dark { display: inline-flex; align-items: center; gap: 5px; color: rgba(0,0,0,0.28); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
@@ -657,7 +662,7 @@ export default function LandingPage() {
         .sub-dark { color: rgba(0,0,0,0.42); font-size: 15.5px; line-height: 1.68; max-width: 480px; }
 
         .mob-pill { display: none; }
-        @media (max-width: 800px) {
+        @media (max-width: 1024px) {
           .mob-pill {
             display: inline-flex !important; align-items: center; gap: 6px;
             background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.22);
@@ -682,7 +687,7 @@ export default function LandingPage() {
         .tl-body h3 { font-size: 14.5px; font-weight: 700; color: #F0F0F0; margin-bottom: 4px; letter-spacing: -0.02em; }
         .tl-body p { font-size: 13px; color: rgba(255,255,255,0.32); line-height: 1.55; }
 
-        @media (max-width: 800px) {
+        @media (max-width: 1024px) {
           .how-bg { background: #06060E; }
           .how-grid { grid-template-columns: 1fr !important; gap: 0 !important; }
           .tl { margin-top: 24px !important; }
@@ -710,7 +715,7 @@ export default function LandingPage() {
         .f-card h3 { font-size: 15px; font-weight: 700; color: #F0F0F0; margin-bottom: 8px; letter-spacing: -0.02em; }
         .f-card p { font-size: 13.5px; color: rgba(255,255,255,0.34); line-height: 1.62; }
 
-        @media (max-width: 800px) {
+        @media (max-width: 1024px) {
           .feat-bg { background: #06060E; }
           .feat-grid { grid-template-columns: repeat(3,1fr) !important; gap: 8px !important; margin-top: 20px !important; }
           .f-card { padding: 14px 12px !important; border-radius: 12px !important; background: rgba(255,255,255,0.025) !important; }
@@ -730,7 +735,7 @@ export default function LandingPage() {
         }
         .l-chip:hover { background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.22); color: rgba(255,255,255,0.85); }
 
-        @media (max-width: 800px) {
+        @media (max-width: 1024px) {
           .lang-bg { background: #06060E; }
           .l-chip { font-size: 11.5px !important; padding: 6px 11px !important; }
           .lang-chips { gap: 6px !important; margin-top: 20px !important; }

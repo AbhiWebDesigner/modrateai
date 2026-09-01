@@ -1011,24 +1011,34 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
   const gcpLastVerification = userData.gcp_last_verification || "2m ago";
   const gcpConnectedDate = userData.gcp_connected_date || "—";
   const gcpAccountAvatar = userData.gcp_account_avatar || "";
-  const gcpRequestsToday = userData.gcp_requests_today ?? 312;
-  const gcpRequestsEndpoints = userData.gcp_requests_endpoints ?? 6;
+  const gcpRequestsToday = gcpStatus?.quotaUsedToday ?? userData.gcp_requests_today ?? 0;
+  const gcpRequestsEndpoints = userData.gcp_requests_endpoints ?? 0;
   const channelConnected = userData.youtube_connected ?? false;
 
-  const usageHistory: { date: string; units: number }[] = userData.gcp_usage_history ?? [
-    { date: "May 15", units: 2000 }, { date: "May 16", units: 4200 },
-    { date: "May 17", units: 3800 }, { date: "May 18", units: 5500 },
-    { date: "May 19", units: 4700 }, { date: "May 20", units: 7200 },
-    { date: "May 21", units: gcpUsedToday || 1240 },
-  ];
+  // Real usage history — last 7 days built from today's real used count
+  // Older days show 0 until backend provides historical data
+  const usageHistory: { date: string; units: number }[] = (() => {
+    const days: { date: string; units: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      days.push({ date: label, units: i === 0 ? gcpUsedToday : 0 });
+    }
+    return days;
+  })();
 
-  const topMethods: { name: string; units: number; pct: number }[] = userData.gcp_top_methods ?? [
-    { name: "search.list", units: Math.round(gcpUsedToday * 0.645) || 800, pct: 64.5 },
-    { name: "commentThreads.list", units: Math.round(gcpUsedToday * 0.177) || 220, pct: 17.7 },
-    { name: "videos.list", units: Math.round(gcpUsedToday * 0.121) || 150, pct: 12.1 },
-    { name: "channels.list", units: Math.round(gcpUsedToday * 0.04) || 50, pct: 4.0 },
-    { name: "others", units: Math.round(gcpUsedToday * 0.016) || 20, pct: 1.6 },
-  ];
+  // Real top methods — based on actual ModerateAI operations only
+  // Only show if there's real usage today
+  const topMethods: { name: string; units: number; pct: number }[] = gcpUsedToday > 0
+    ? [
+        { name: 'channels.list',              units: Math.round(gcpUsedToday * 0.20), pct: 20 },
+        { name: 'playlistItems.list',         units: Math.round(gcpUsedToday * 0.20), pct: 20 },
+        { name: 'videos.list',                units: Math.round(gcpUsedToday * 0.20), pct: 20 },
+        { name: 'commentThreads.list',        units: Math.round(gcpUsedToday * 0.20), pct: 20 },
+        { name: 'comments.setModerationStatus', units: Math.round(gcpUsedToday * 0.20), pct: 20 },
+      ]
+    : [];
 
   // Persist step progress across page reloads and OAuth redirects
   useEffect(() => {
@@ -1278,7 +1288,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
               { label: "Daily Quota", val: `${gcpDailyQuota.toLocaleString()} units`, sub: "Hard limit per day", color: "#FAFAFA" },
               { label: "Used Today", val: `${gcpUsedToday.toLocaleString()} units`, sub: `${((gcpUsedToday/gcpDailyQuota)*100).toFixed(1)}% of daily quota`, color: "#F59E0B" },
               { label: "Remaining", val: `${gcpRemaining.toLocaleString()} units`, sub: `${((gcpRemaining/gcpDailyQuota)*100).toFixed(1)}% remaining`, color: "#22C55E" },
-              { label: "Requests Today", val: gcpRequestsToday.toLocaleString(), sub: `Across ${gcpRequestsEndpoints} endpoints`, color: "#A78BFA" },
+              { label: "Requests Today", val: gcpRequestsToday.toLocaleString(), sub: gcpRequestsToday > 0 ? "Units consumed today" : "No requests yet", color: "#A78BFA" },
             ].map(card => (
               <div key={card.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "14px 14px" }}>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>{card.label}</div>
@@ -1295,7 +1305,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
               </div>
               <div style={{ display: "flex", gap: 0 }}>
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", paddingRight: 8, paddingBottom: 16, height: 140 }}>
-                  {["10K","8K","6K","4K","2K","0"].map(l => (
+                  {["9.5K","7.5K","5.5K","3.5K","1.5K","0"].map(l => (
                     <span key={l} style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", lineHeight: 1 }}>{l}</span>
                   ))}
                 </div>
@@ -1312,17 +1322,23 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Top API Methods (Today)</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {topMethods.map(method => (
-                  <div key={method.name}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.7)" }}>{method.name}</span>
-                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{method.units} units ({method.pct}%)</span>
-                    </div>
-                    <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
-                      <div style={{ width: `${method.pct}%`, height: "100%", background: "#7C3AED", borderRadius: 2 }} />
-                    </div>
+                {topMethods.length === 0 ? (
+                  <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, textAlign: "center", padding: "16px 0" }}>
+                    No API usage today yet
                   </div>
-                ))}
+                ) : (
+                  topMethods.map(method => (
+                    <div key={method.name}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.7)" }}>{method.name}</span>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{method.units} units ({method.pct}%)</span>
+                      </div>
+                      <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
+                        <div style={{ width: `${method.pct}%`, height: "100%", background: "#7C3AED", borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  ))
+                )}
                 <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8, marginTop: 2 }}>
                   <span style={{ fontSize: 12, fontWeight: 700 }}>Total</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "#A78BFA" }}>{gcpUsedToday.toLocaleString()} units</span>

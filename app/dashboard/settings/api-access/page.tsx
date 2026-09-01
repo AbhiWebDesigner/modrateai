@@ -1421,7 +1421,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
 
         /* ── Mobile: hide laptop layout ── */
         .gcp-v2-mobile { display: none; }
-        @media (pointer: coarse), (max-width: 900px) {
+        @media (pointer: coarse), (max-width: 1024px) {
           .gcp-v3-wrap { display: none !important; }
           .gcp-v2-mobile { display: flex !important; flex-direction: column; gap: 16px; }
         }

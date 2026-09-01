@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, memo, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -957,15 +957,36 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
 
   const CALLBACK_URL = "https://api.moderateai.site/api/auth/youtube/callback";
 
+  const [gcpStatus, setGcpStatus] = useState<{
+    connected: boolean;
+    projectId: string | null;
+    quotaUsedToday: number;
+    quotaRemaining: number;
+    quotaLimit: number;
+    quotaPercent: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    user.getIdToken().then(token => {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gcp/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(r => r.json())
+        .then(data => setGcpStatus(data))
+        .catch(() => {});
+    }).catch(() => {});
+  }, [user]);
+
   const gcpConnected = userData.gcp_connected ?? false;
   const gcpProjectName = userData.gcp_project_name || "—";
   const gcpProjectId = userData.gcp_project_id || "—";
   const gcpProjectNumber = userData.gcp_project_number || "—";
   const gcpLocation = userData.gcp_location || "us-central1";
   const gcpAccount = userData.gcp_google_account || "—";
-  const gcpDailyQuota = userData.gcp_daily_quota ?? 10000;
-  const gcpUsedToday = userData.gcp_used_today ?? 0;
-  const gcpRemaining = gcpDailyQuota - gcpUsedToday;
+  const gcpDailyQuota = gcpStatus?.quotaLimit ?? userData.gcp_daily_quota ?? 9500;
+  const gcpUsedToday = gcpStatus?.quotaUsedToday ?? userData.gcp_used_today ?? 0;
+  const gcpRemaining = gcpStatus?.quotaRemaining ?? (gcpDailyQuota - gcpUsedToday);
   const gcpResetTime = userData.gcp_quota_reset_time || "Midnight UTC";
   const gcpResetAt = userData.gcp_quota_reset_at || "";
   const gcpLastSync = userData.gcp_last_sync
@@ -2233,10 +2254,18 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function APIAccessPage() { 
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"shared" | "gcp">("shared");
+  const [activeTab, setActiveTab] = useState<"shared" | "gcp">(() => {
+    // If redirected back from GCP OAuth, open GCP tab automatically
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('gcp') === 'connected') return 'gcp';
+    }
+    return 'shared';
+  });
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error" | "info">("info");
 

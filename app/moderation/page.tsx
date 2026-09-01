@@ -766,6 +766,10 @@ export default function ModerationPage() {
             </button>
             <span style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
           </div>
+          <Link href="/alerts" className={"r-bnav-item"}>
+                      <span className="r-bnav-icon"><Bell size={24} strokeWidth={1.7} /></span>
+                      <span style={{ fontSize: 11 }}>Alerts</span>
+                    </Link> 
           <button className={`r-bnav-item active`} onClick={() => setMoreOpen(v => !v)}>
             <span className="r-bnav-icon"><MoreHorizontal size={19} strokeWidth={1.7} /></span>
             <span style={{ fontSize: 9 }}>More</span>

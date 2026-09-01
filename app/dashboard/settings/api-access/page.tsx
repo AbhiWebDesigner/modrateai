@@ -2067,12 +2067,12 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 )}
               </div>
 
-              {/* Row 2: Demo screenshot (left ~45%) + Buttons (right ~55%) — side by side like reference */}
-              <div style={{ display: "flex", gap: 10, padding: "0 14px 14px", alignItems: "stretch" }}>
+              {/* Row 2: Demo screenshot full width top + Buttons full width below — reference match */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 14px 14px" }}>
 
-                {/* Demo screenshot — left */}
+                {/* Demo screenshot — full width */}
                 <div style={{
-                  flex: "0 0 44%",
+                  width: "100%",
                   borderRadius: 10,
                   overflow: "hidden",
                   background: "#0d0d1a",
@@ -2088,8 +2088,8 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                   }
                 </div>
 
-                {/* Buttons — right, stacked */}
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
+                {/* Buttons — full width, stacked */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
 
                   {/* Primary action button */}
                   {s.key === "authorization" ? (
@@ -2099,7 +2099,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                         background: "linear-gradient(135deg,#22C55E,#16A34A)",
                         color: "#fff", border: "none", borderRadius: 10,
-                        padding: "11px 6px", fontWeight: 800, fontSize: 12,
+                        padding: "13px 8px", fontWeight: 800, fontSize: 13,
                         cursor: "pointer", boxShadow: "0 4px 14px rgba(34,197,94,0.3)",
                         lineHeight: 1.2, textAlign: "center",
                       }}
@@ -2113,7 +2113,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                         background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
                         color: "#fff", border: "none", borderRadius: 10,
-                        padding: "11px 6px", fontWeight: 700, fontSize: 12,
+                        padding: "13px 8px", fontWeight: 700, fontSize: 13,
                         cursor: "pointer",
                       }}
                     >
@@ -2128,7 +2128,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                         background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
                         color: "#fff", border: "none", borderRadius: 10,
-                        padding: "11px 6px", fontWeight: 700, fontSize: 12,
+                        padding: "13px 8px", fontWeight: 700, fontSize: 13,
                         cursor: saving ? "default" : "pointer",
                       }}
                     >
@@ -2142,7 +2142,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                         width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                         background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
                         color: "#fff", border: "none", borderRadius: 10,
-                        padding: "11px 6px", fontWeight: 700, fontSize: 12,
+                        padding: "13px 8px", fontWeight: 700, fontSize: 13,
                         cursor: "pointer", boxShadow: "0 3px 10px rgba(124,58,237,0.35)",
                         lineHeight: 1.2,
                       }}

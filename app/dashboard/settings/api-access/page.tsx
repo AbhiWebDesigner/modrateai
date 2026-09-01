@@ -964,6 +964,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
     quotaRemaining: number;
     quotaLimit: number;
     quotaPercent: number;
+    topMethods: { name: string; units: number; pct: number }[];
   } | null>(null);
 
   useEffect(() => {
@@ -1028,17 +1029,8 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
     return days;
   })();
 
-  // Real top methods — based on actual ModerateAI operations only
-  // Only show if there's real usage today
-  const topMethods: { name: string; units: number; pct: number }[] = gcpUsedToday > 0
-    ? [
-        { name: 'channels.list',              units: Math.round(gcpUsedToday * 0.20), pct: 20 },
-        { name: 'playlistItems.list',         units: Math.round(gcpUsedToday * 0.20), pct: 20 },
-        { name: 'videos.list',                units: Math.round(gcpUsedToday * 0.20), pct: 20 },
-        { name: 'commentThreads.list',        units: Math.round(gcpUsedToday * 0.20), pct: 20 },
-        { name: 'comments.setModerationStatus', units: Math.round(gcpUsedToday * 0.20), pct: 20 },
-      ]
-    : [];
+  // Real per-operation breakdown from Firestore via /api/gcp/status
+  const topMethods: { name: string; units: number; pct: number }[] = gcpStatus?.topMethods ?? [];
 
   // Persist step progress across page reloads and OAuth redirects
   useEffect(() => {

@@ -561,9 +561,9 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
     : "—";
 
   const days = activeChart === "7D" ? 7 : activeChart === "30D" ? 30 : 90;
-  const chartLabels = Array.from({ length: Math.min(days, 7) }, (_, i) => {
+  const chartLabels = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
-    d.setDate(d.getDate() - (Math.min(days, 7) - 1 - i));
+    d.setDate(d.getDate() - (6 - i));
     return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
   });
 
@@ -605,32 +605,22 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
     <div className="flex flex-col gap-4">
 
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-purple-500/30 p-5 md:p-6"
+      <div className="relative overflow-hidden rounded-2xl border border-purple-500/30 p-4 md:p-6"
         style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(79,70,229,0.12) 60%, rgba(15,10,40,0.6) 100%)" }}>
         <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)" }} />
-        <div className="flex items-start justify-between gap-4 relative">
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", boxShadow: "0 0 32px rgba(124,58,237,0.45)" }}>
-              <Shield size={22} color="white" />
+        <div className="flex items-center gap-3 relative">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", boxShadow: "0 0 24px rgba(124,58,237,0.45)" }}>
+            <Shield size={22} color="white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-black text-base md:text-xl tracking-tight">ModerateAI Shared API</span>
+              <span className="text-white text-xs font-bold px-2.5 py-0.5 rounded-full"
+                style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)" }}>Recommended</span>
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-black text-lg md:text-xl tracking-tight">ModerateAI Shared API</span>
-                <span className="text-white text-xs font-bold px-3 py-1 rounded-full"
-                  style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)" }}>Recommended</span>
-              </div>
-              <div className="text-white/50 text-xs md:text-sm mt-1">We handle everything for you. No setup required.</div>
-              <div className="hidden md:flex gap-2 mt-3 flex-wrap">
-                {[{ icon: <Shield size={11} />, label: "Secure" }, { icon: <CheckCircle size={11} />, label: "Reliable" }, { icon: <Zap size={11} />, label: "Always On" }, { icon: <Star size={11} />, label: "Optimized" }].map(b => (
-                  <span key={b.label} className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold text-white/80"
-                    style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                    <span className="text-green-400">{b.icon}</span> {b.label}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <div className="text-white/50 text-xs mt-0.5">We handle everything for you. No setup required.</div>
           </div>
           <div className="hidden md:flex w-20 h-20 flex-shrink-0 rounded-2xl items-center justify-center"
             style={{ background: "radial-gradient(circle at 40% 40%, rgba(124,58,237,0.35), rgba(79,70,229,0.15))", border: "1px solid rgba(124,58,237,0.25)" }}>
@@ -640,9 +630,8 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
       </div>
 
       {/* Connected & Active */}
-      <div className="rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-        style={{ background: "rgba(34,197,94,0.08)", border: "1.5px solid rgba(34,197,94,0.3)" }}>
-        <div className="flex items-center gap-3">
+      <div className="rounded-2xl p-4" style={{ background: "rgba(34,197,94,0.08)", border: "1.5px solid rgba(34,197,94,0.3)" }}>
+        <div className="flex items-center gap-3 mb-3">
           <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 relative"
             style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}>
             <Link2 size={20} color="#22C55E" />
@@ -651,11 +640,11 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           </div>
           <div>
             <div className="font-black text-base text-white">Connected & Active</div>
-            <div className="text-white/45 text-xs mt-0.5">Your API is working perfectly</div>
+            <div className="text-white/45 text-xs">Your API is working perfectly</div>
           </div>
         </div>
         <button onClick={handleTestConnection} disabled={testState === "checking"}
-          className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white"
+          className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white"
           style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", cursor: "pointer" }}>
           {testState === "checking" ? <Loader2 size={14} className="animate-spin" /> : <Wifi size={14} />}
           {testState === "checking" ? "Checking..." : testState === "success" ? "✓ Verified" : "Test Connection"}
@@ -663,82 +652,85 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
       </div>
 
       {/* Your Usage Overview */}
-      <div className="rounded-2xl p-4 md:p-5" style={{ background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.25)" }}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
-              <Gift size={15} color="#A78BFA" />
+      <div className="rounded-2xl p-4" style={{ background: "rgba(124,58,237,0.06)", border: "1.5px solid rgba(124,58,237,0.25)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
+              <Gift size={14} color="#A78BFA" />
             </div>
-            <span className="font-bold text-base">Your Usage Overview</span>
+            <span className="font-bold text-sm">Your Usage Overview</span>
           </div>
-          <span className="text-xs font-bold px-3 py-1 rounded-full text-green-400"
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full text-green-400"
             style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}>{planName}</span>
         </div>
 
-        {/* 4 cards — 2x2 on mobile, 4 col on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
-          {/* AI Actions Used */}
-          <div className="rounded-xl p-3.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div className="text-white/40 text-xs mb-1.5">AI Actions Used</div>
-            <div className="text-2xl font-black text-white leading-none">{aiUsed}</div>
-            <div className="text-white/35 text-xs mt-1">/ {aiLimit}</div>
-            <div className="mt-2.5 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }}>
-              <div className="h-full rounded-full" style={{ width: `${pct}%`, background: pct > 80 ? "#F43F5E" : "#7C3AED" }} />
+        {/* 4 cards — horizontal scroll on mobile, 4 col on desktop */}
+        <div className="overflow-x-auto -mx-1 px-1 pb-1" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+          <div className="flex gap-2.5 md:grid md:grid-cols-4" style={{ minWidth: "max-content" }}>
+            {/* AI Actions Used */}
+            <div className="rounded-xl p-3 flex-shrink-0 w-36 md:w-auto" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="text-white/40 text-xs mb-1">AI Actions Used</div>
+              <div className="text-2xl font-black text-white leading-none">{aiUsed}</div>
+              <div className="text-white/35 text-xs mt-1">/ {aiLimit}</div>
+              <div className="mt-2 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }}>
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: pct > 80 ? "#F43F5E" : "#7C3AED" }} />
+              </div>
+              <div className="text-xs mt-1 font-semibold" style={{ color: pct > 80 ? "#F43F5E" : "rgba(255,255,255,0.35)" }}>{pct.toFixed(0)}% Used</div>
             </div>
-            <div className="text-xs mt-1.5 font-semibold" style={{ color: pct > 80 ? "#F43F5E" : "rgba(255,255,255,0.35)" }}>{pct.toFixed(0)}% Used</div>
-          </div>
 
-          {/* AI Actions Remaining */}
-          <div className="rounded-xl p-3.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div className="text-white/40 text-xs mb-1.5">AI Actions Remaining</div>
-            <div className="text-2xl font-black text-purple-400 leading-none">{aiCreditsRemaining}</div>
-            <div className="mt-2.5 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }}>
-              <div className="h-full rounded-full bg-purple-600" style={{ width: `${100 - pct}%` }} />
+            {/* AI Actions Remaining */}
+            <div className="rounded-xl p-3 flex-shrink-0 w-36 md:w-auto" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="text-white/40 text-xs mb-1">AI Actions Remaining</div>
+              <div className="text-2xl font-black text-purple-400 leading-none">{aiCreditsRemaining}</div>
+              <div className="text-white/35 text-xs mt-1">/ {aiLimit}</div>
+              <div className="mt-2 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }}>
+                <div className="h-full rounded-full bg-purple-600" style={{ width: `${100 - pct}%` }} />
+              </div>
+              <div className="text-xs mt-1 font-semibold text-purple-400">{(100 - pct).toFixed(0)}% Remaining</div>
             </div>
-            <div className="text-xs mt-1.5 font-semibold text-purple-400">{(100 - pct).toFixed(0)}% Remaining</div>
-          </div>
 
-          {/* Trial Ends In */}
-          <div className="rounded-xl p-3.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div className="text-white/40 text-xs mb-1.5">Trial Ends In</div>
-            <div className="text-2xl font-black leading-none" style={{ color: trialDaysLeft <= 3 ? "#F43F5E" : "#FAFAFA" }}>{trialDaysLeft}</div>
-            <div className="text-white/35 text-xs mt-1">Days</div>
-            {trialDaysLeft === 0 && (
-              <div className="mt-1.5 inline-block text-xs font-bold px-2 py-0.5 rounded-md text-red-400"
-                style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>Expired</div>
-            )}
-            {isFreeTrialPlan && (
-              <button onClick={() => router.push("/billing?offer=trial-extension")}
-                className="mt-2 w-full text-xs font-bold py-1 rounded-lg text-purple-400"
+            {/* Trial Ends In */}
+            <div className="rounded-xl p-3 flex-shrink-0 w-36 md:w-auto" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="text-white/40 text-xs mb-1">Trial Ends In</div>
+              <div className="text-2xl font-black leading-none" style={{ color: trialDaysLeft <= 3 ? "#F43F5E" : "#FAFAFA" }}>{trialDaysLeft}</div>
+              <div className="text-white/35 text-xs mt-1">Days</div>
+              {trialDaysLeft === 0 && (
+                <div className="mt-1 inline-block text-xs font-bold px-2 py-0.5 rounded text-red-400"
+                  style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>Expired</div>
+              )}
+              {isFreeTrialPlan && (
+                <button onClick={() => router.push("/billing?offer=trial-extension")}
+                  className="mt-2 w-full text-xs font-bold py-1 rounded-lg text-purple-400"
+                  style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", cursor: "pointer" }}>
+                  Extend ₹69
+                </button>
+              )}
+            </div>
+
+            {/* Current Plan */}
+            <div className="rounded-xl p-3 flex-shrink-0 w-36 md:w-auto" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="text-white/40 text-xs mb-1">Current Plan</div>
+              <div className="text-base font-black text-green-400">{planName}</div>
+              <button onClick={() => router.push("/billing")}
+                className="mt-3 inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg text-purple-400"
                 style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", cursor: "pointer" }}>
-                Extend ₹69
+                <Zap size={10} /> Upgrade
               </button>
-            )}
-          </div>
-
-          {/* Current Plan */}
-          <div className="rounded-xl p-3.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div className="text-white/40 text-xs mb-1.5">Current Plan</div>
-            <div className="text-base font-black text-green-400">{planName}</div>
-            <button onClick={() => router.push("/billing")}
-              className="mt-3 inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg text-purple-400"
-              style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", cursor: "pointer" }}>
-              <Zap size={10} /> Upgrade
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* Health row — horizontal scroll on mobile */}
-        <div className="overflow-x-auto -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
-          <div className="flex gap-2 min-w-max md:grid md:grid-cols-5 md:min-w-0 py-3">
+        {/* Health row */}
+        <div className="overflow-x-auto mt-3" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+          <div className="flex gap-4 min-w-max md:grid md:grid-cols-5 md:min-w-0 py-2 border-t border-white/5">
             {[
               { label: "Health", val: "Healthy", color: "#22C55E", dot: true },
               { label: "Status", val: "Active", color: "#22C55E", dot: true },
-              { label: "Channels", val: channelConnected ? "1 Channel" : "None", color: "#FAFAFA" },
+              { label: "Channels", val: channelConnected ? "1 Channel" : "None" },
               { label: "Success Rate", val: successRate > 0 ? `${successRate}%` : "—", color: "#22C55E" },
               { label: "Last Sync", val: lastSync, refresh: true },
             ].map((item) => (
-              <div key={item.label} className="text-center px-3 md:px-0">
+              <div key={item.label} className="text-center px-2 md:px-0">
                 <div className="text-white/40 text-xs mb-1">{item.label}</div>
                 <div className="text-xs font-bold flex items-center justify-center gap-1" style={{ color: item.color || "#FAFAFA" }}>
                   {item.dot && <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: item.color }} />}
@@ -751,14 +743,14 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col md:flex-row gap-2.5 mt-1">
+        <div className="flex flex-col gap-2 mt-3">
           <button onClick={handleReconnect} disabled={reconnecting}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white"
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer" }}>
             {reconnecting ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Reconnect
           </button>
           <button onClick={() => router.push("/analytics")}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white"
             style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", cursor: "pointer" }}>
             <BarChart2 size={13} /> View Usage
           </button>
@@ -766,102 +758,111 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
       </div>
 
       {/* AI Actions Usage Over Time */}
-      <div className="rounded-2xl p-4 md:p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
-              <BarChart2 size={15} color="#A78BFA" />
+      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
+              <BarChart2 size={14} color="#A78BFA" />
             </div>
-            <span className="font-bold text-base">AI Actions Usage Over Time</span>
+            <span className="font-bold text-sm">AI Actions Usage Over Time</span>
           </div>
           <div className="flex gap-1.5">
             {(["7D", "30D", "90D"] as const).map(t => (
               <button key={t} onClick={() => setActiveChart(t)}
-                className="px-3 py-1 rounded-lg text-xs font-semibold"
+                className="px-2.5 py-1 rounded-lg text-xs font-semibold"
                 style={{ background: activeChart === t ? "#7C3AED" : "rgba(255,255,255,0.06)", color: activeChart === t ? "#fff" : "rgba(255,255,255,0.4)", border: activeChart === t ? "none" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}>{t}</button>
             ))}
           </div>
         </div>
 
-        {/* Chart + Stats */}
-        <div className="flex flex-col md:flex-row gap-4">
+        {/* Chart with Y-axis */}
+        <div className="flex gap-3">
+          <div className="flex flex-col justify-between text-right flex-shrink-0 py-1" style={{ minWidth: 28 }}>
+            {[aiLimit, Math.round(aiLimit * 0.8), Math.round(aiLimit * 0.6), Math.round(aiLimit * 0.4), Math.round(aiLimit * 0.2), 0].map(v => (
+              <span key={v} className="text-white/30 text-xs">{v}</span>
+            ))}
+          </div>
           <div className="flex-1 min-w-0">
             <MiniChart used={aiUsed} limit={aiLimit} color="#7C3AED" label="AI Actions" />
             {/* Date labels */}
-            <div className="flex justify-between mt-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="flex justify-between mt-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
               {chartLabels.map((label, i) => (
-                <span key={i} className="text-white/30 text-xs whitespace-nowrap px-1">{label}</span>
+                <span key={i} className="text-white/30 text-xs whitespace-nowrap">{label}</span>
               ))}
             </div>
           </div>
-          <div className="flex flex-row md:flex-col gap-4 md:gap-3 md:min-w-28 md:flex-shrink-0">
-            <div>
-              <div className="text-white/40 text-xs mb-1">Daily Average</div>
-              <div className="text-xl font-black text-white">{aiUsed > 0 ? Math.round(aiUsed / Math.max(1, days)) : 0}</div>
-              <div className="text-xs font-semibold text-purple-400">AI Actions</div>
-            </div>
-            <div>
-              <div className="text-white/40 text-xs mb-1">Peak Usage</div>
-              <div className="text-xl font-black text-white">{aiUsed}</div>
-              <div className="text-xs text-white/35">Total so far</div>
-            </div>
-            <div>
-              <div className="text-white/40 text-xs mb-1">Total Used</div>
-              <div className="text-sm font-bold text-white">{aiUsed} / {aiLimit}</div>
-            </div>
+        </div>
+
+        {/* Stats row below chart */}
+        <div className="flex gap-4 mt-3 pt-3 border-t border-white/5">
+          <div>
+            <div className="text-white/40 text-xs mb-0.5">Daily Average</div>
+            <div className="text-lg font-black text-white">{aiUsed > 0 ? Math.round(aiUsed / Math.max(1, days)) : 0}</div>
+            <div className="text-xs font-semibold text-purple-400">AI Actions</div>
+          </div>
+          <div>
+            <div className="text-white/40 text-xs mb-0.5">Peak Usage</div>
+            <div className="text-lg font-black text-white">{aiUsed}</div>
+            <div className="text-xs text-white/35">Total so far</div>
+          </div>
+          <div>
+            <div className="text-white/40 text-xs mb-0.5">Total Used</div>
+            <div className="text-sm font-bold text-white">{aiUsed} / {aiLimit}</div>
           </div>
         </div>
       </div>
 
       {/* Shared API Status */}
-      <div className="rounded-2xl p-4 md:p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
         <div className="flex items-center justify-between mb-1">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(34,197,94,0.15)" }}>
-              <CheckCircle size={15} color="#22C55E" />
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(34,197,94,0.15)" }}>
+              <CheckCircle size={14} color="#22C55E" />
             </div>
-            <span className="font-bold text-base">Shared API Status</span>
+            <span className="font-bold text-sm">Shared API Status</span>
           </div>
-          <button className="text-xs font-bold px-3 py-1 rounded-lg text-purple-400"
+          <button className="text-xs font-bold px-2.5 py-1 rounded-lg text-purple-400"
             style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", cursor: "pointer" }}>View Details</button>
         </div>
-        <div className="text-white/40 text-xs mb-4">All systems operational</div>
+        <div className="text-white/40 text-xs mb-3">All systems operational</div>
 
-        {/* 2x3 grid on mobile, 5 col on desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5">
-          {[
-            { label: "API Server", ok: true, label2: "Operational", icon: <Server size={20} color="#22C55E" /> },
-            { label: "Database", ok: true, label2: "Operational", icon: <Database size={20} color="#22C55E" /> },
-            { label: "YouTube API", ok: channelConnected, label2: channelConnected ? "Operational" : "Not Connected", icon: <YoutubeIcon size={20} color={channelConnected ? "#22C55E" : "#F59E0B"} /> },
-            { label: "AI Engine", ok: true, label2: "Operational", icon: <Zap size={20} color="#22C55E" /> },
-            { label: "Rate Limiting", ok: true, label2: "Optimal", icon: <Shield size={20} color="#22C55E" /> },
-          ].map(h => (
-            <div key={h.label} className="flex flex-col items-center gap-2 py-4 px-2 rounded-xl"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div className="relative">
-                {h.icon}
-                <CheckCircle size={12} color={h.ok ? "#22C55E" : "#F59E0B"}
-                  style={{ position: "absolute", top: -4, right: -6, background: "#0a0a0f", borderRadius: "50%" }} />
+        {/* 5 cards — horizontal scroll on mobile */}
+        <div className="overflow-x-auto -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none" }}>
+          <div className="flex gap-2 md:grid md:grid-cols-5" style={{ minWidth: "max-content" }}>
+            {[
+              { label: "API Server", ok: true, label2: "Operational", icon: <Server size={18} color="#22C55E" /> },
+              { label: "Database", ok: true, label2: "Operational", icon: <Database size={18} color="#22C55E" /> },
+              { label: "YouTube API", ok: channelConnected, label2: channelConnected ? "Operational" : "Not Connected", icon: <YoutubeIcon size={18} color={channelConnected ? "#22C55E" : "#F59E0B"} /> },
+              { label: "AI Engine", ok: true, label2: "Operational", icon: <Zap size={18} color="#22C55E" /> },
+              { label: "Rate Limiting", ok: true, label2: "Optimal", icon: <Shield size={18} color="#22C55E" /> },
+            ].map(h => (
+              <div key={h.label} className="flex flex-col items-center gap-1.5 py-3 px-3 rounded-xl flex-shrink-0 md:flex-shrink"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", minWidth: 90 }}>
+                <div className="relative">
+                  {h.icon}
+                  <CheckCircle size={11} color={h.ok ? "#22C55E" : "#F59E0B"}
+                    style={{ position: "absolute", top: -3, right: -5, background: "#0a0a0f", borderRadius: "50%" }} />
+                </div>
+                <div className="text-xs font-semibold text-white text-center leading-tight">{h.label}</div>
+                <span className="text-xs font-bold" style={{ color: h.ok ? "#22C55E" : "#F59E0B" }}>{h.label2}</span>
               </div>
-              <div className="text-xs font-semibold text-white text-center">{h.label}</div>
-              <span className="text-xs font-bold" style={{ color: h.ok ? "#22C55E" : "#F59E0B" }}>{h.label2}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div className="rounded-2xl p-4 md:p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
-              <Activity size={15} color="#A78BFA" />
+      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(124,58,237,0.2)" }}>
+              <Activity size={14} color="#A78BFA" />
             </div>
-            <span className="font-bold text-base">Recent Activity</span>
+            <span className="font-bold text-sm">Recent Activity</span>
           </div>
           <button onClick={() => router.push("/live-feed")}
             className="flex items-center gap-1 text-xs font-semibold text-purple-400"
-            style={{ background: "none", border: "none", cursor: "pointer" }}>View All <ArrowRight size={12} /></button>
+            style={{ background: "none", border: "none", cursor: "pointer" }}>View All <ArrowRight size={11} /></button>
         </div>
         {[
           { msg: "YouTube API request successful", time: "25s ago" },
@@ -870,7 +871,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
           { msg: "Channel statistics updated", time: "3m ago" },
           { msg: "Daily usage counter updated", time: "5m ago" },
         ].map((a, i) => (
-          <div key={i} className="flex items-center justify-between gap-2 py-3"
+          <div key={i} className="flex items-center justify-between gap-2 py-2.5"
             style={{ borderBottom: i < 4 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
             <div className="flex items-center gap-2.5">
               <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
@@ -883,10 +884,10 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
 
       {/* Trial Extension */}
       {isFreeTrialPlan && (
-        <div className="rounded-2xl p-4 md:p-5" style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)" }}>
-          <div className="font-black text-base mb-1">Trial Extension Offer 🎉</div>
-          <div className="text-white/50 text-sm mb-4">Need more time? Extend your trial and get 30 more days + {aiLimit} AI actions.</div>
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
+        <div className="rounded-2xl p-4" style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)" }}>
+          <div className="font-black text-sm mb-1">Trial Extension Offer 🎉</div>
+          <div className="text-white/50 text-xs mb-4">Need more time? Extend your trial and get 30 more days + {aiLimit} AI actions.</div>
+          <div className="flex items-start gap-3 mb-4">
             <div className="flex-1">
               <div className="text-xl font-black text-white">30 Days</div>
               <div className="text-xs text-white/40">Extra validity</div>
@@ -895,43 +896,40 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
               <div className="text-xl font-black text-white">{aiLimit} AI Actions</div>
               <div className="text-xs text-white/40">Full access</div>
             </div>
-            <div className="rounded-xl p-3 text-center flex-shrink-0"
+            <div className="rounded-xl p-2.5 text-center flex-shrink-0"
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
-              <div className="text-xs text-white/40 mb-1">One-time Offer</div>
+              <div className="text-xs text-white/40">One-time Offer</div>
               <div className="text-xl font-black text-yellow-500">₹69</div>
             </div>
           </div>
           <button onClick={() => router.push("/billing?offer=trial-extension")}
             className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white"
             style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", cursor: "pointer" }}>
-            Extend Trial Now <ArrowRight size={15} />
+            Extend Trial Now <ArrowRight size={14} />
           </button>
         </div>
       )}
 
       {/* Upgrade Section */}
-      <div className="rounded-2xl p-4 md:p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-        style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)" }}>
-        <div className="flex-1">
-          <div className="font-black text-base mb-1">Need More AI Actions?</div>
-          <div className="text-white/50 text-sm mb-3">Upgrade your plan to get more AI actions and unlimited access to all features.</div>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <CheckCircle size={14} color="#22C55E" />
-              <span className="text-sm font-bold">Starter</span>
-              <span className="text-xs text-white/40">1,900 AI actions/month</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white bg-purple-600">Popular</span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <CheckCircle size={14} color="#22C55E" />
-              <span className="text-sm font-bold">Pro Agency</span>
-              <span className="text-xs text-white/40">15,000 AI actions/month</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white bg-green-600">Best Value</span>
-            </div>
+      <div className="rounded-2xl p-4" style={{ background: "rgba(124,58,237,0.08)", border: "1.5px solid rgba(124,58,237,0.3)" }}>
+        <div className="font-black text-sm mb-1">Need More AI Actions?</div>
+        <div className="text-white/50 text-xs mb-3">Upgrade your plan to get more AI actions and unlimited access to all features.</div>
+        <div className="flex flex-col gap-2 mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <CheckCircle size={13} color="#22C55E" />
+            <span className="text-sm font-bold">Starter</span>
+            <span className="text-xs text-white/40">1,900 AI actions/month</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white bg-purple-600">Popular</span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <CheckCircle size={13} color="#22C55E" />
+            <span className="text-sm font-bold">Pro Agency</span>
+            <span className="text-xs text-white/40">15,000 AI actions/month</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white bg-green-600">Best Value</span>
           </div>
         </div>
         <button onClick={() => router.push("/billing")}
-          className="w-full md:w-auto flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold text-sm text-white flex-shrink-0"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white"
           style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", border: "none", cursor: "pointer" }}>
           <Zap size={14} /> Upgrade Plan
         </button>

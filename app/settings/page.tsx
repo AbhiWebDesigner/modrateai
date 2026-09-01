@@ -114,7 +114,7 @@ export default function SettingsPage() {
     setDisconnecting(false);
   };
 
-  const handleConnectYouTube = () => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user?.uid}`; };
+  const handleConnectYouTube = async () => { if (!user) return; try { const token = await user.getIdToken(); window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?token=${token}`; } catch { console.error('Failed to get auth token'); } };
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
 
   if (loading) return (

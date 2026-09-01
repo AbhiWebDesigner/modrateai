@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, memo, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -2254,18 +2254,16 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function APIAccessPage() { 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"shared" | "gcp">(() => {
-    // If redirected back from GCP OAuth, open GCP tab automatically
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('gcp') === 'connected') return 'gcp';
-    }
-    return 'shared';
-  });
+  const [activeTab, setActiveTab] = useState<"shared" | "gcp">("shared");
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('gcp') === 'connected') setActiveTab('gcp');
+  }, []);
   const [toastMsg, setToastMsg] = useState("");
   const [toastType, setToastType] = useState<"success" | "error" | "info">("info");
 

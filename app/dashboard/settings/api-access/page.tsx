@@ -569,7 +569,7 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
 
   const handleReconnect = async () => {
     setReconnecting(true);
-    try { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user.uid}`; }
+    try { const token = await user.getIdToken(); window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?token=${token}`; } 
     catch { showToast("Reconnect failed.", "error"); setReconnecting(false); }
   };
 
@@ -1053,10 +1053,10 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
     finally { setSaving(false); }
   };
 
-  const handleStepAction = (stepKey: string) => {
+  const handleStepAction = async (stepKey: string) => {
     const detail = STEP_DETAILS[stepKey];
     if (stepKey === "save_project") return;
-    if (stepKey === "authorization") { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${user.uid}`; return; }
+    if (stepKey === "authorization") { try { const token = await user.getIdToken(); window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?token=${token}`; } catch { console.error('Failed to get auth token'); } return; }
     if (detail?.url?.startsWith("/")) { router.push(detail.url); return; }
     if (detail?.url) window.open(detail.url, "_blank", "noopener noreferrer");
     setCompletedSteps(prev => new Set([...prev, currentStep]));

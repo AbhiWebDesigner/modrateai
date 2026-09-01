@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   Bell, Send, LayoutDashboard, BarChart2, Zap, Settings,
   MoreHorizontal, CreditCard, LogOut, Rss, Shield, Eye,
-  Clock, Flag, MessageSquare, AlertTriangle, FileText, Moon,
+  Clock, Flag, MessageSquare, AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -41,31 +41,16 @@ const NOTIFICATION_EVENTS = [
   { id: 'auto_reply',      label: 'Auto-reply sent',          desc: 'Get notified when AI auto-reply is sent',                   icon: MessageSquare,color: '#F59E0B', freq: 'Instant', default: false },
   { id: 'user_timeout',    label: 'User reported a DM',       desc: 'Get notified when a DM is reported by a user',              icon: Flag,         color: '#60a5fa', freq: 'Instant', default: false },
   { id: 'repeat_offender', label: 'Repeat offender detected', desc: 'Get notified about repeat offenders',                       icon: AlertTriangle,color: '#f87171', freq: 'Hourly',  default: true  },
-  { id: 'daily_summary',   label: 'Daily summary',            desc: 'Receive daily summary of all alerts',                       icon: FileText,     color: '#34d399', freq: 'Daily',   default: false },
-  { id: 'weekly_report',   label: 'Weekly analytics report',  desc: 'Receive weekly analytics and insights',                     icon: BarChart2,    color: '#a78bfa', freq: 'Weekly',  default: true  },
+  { id: 'weekly_report',   label: 'Weekly analytics report',  desc: 'Receive weekly analytics and insights every Monday',        icon: BarChart2,    color: '#a78bfa', freq: 'Weekly',  default: true  },
 ];
 
 const FREQ_COLORS: Record<string, string> = {
   Instant: '#34d399',
   Hourly:  '#F59E0B',
-  Daily:   '#60a5fa',
   Weekly:  '#a78bfa',
 };
 
-const HOURS = Array.from({ length: 24 }, (_, i) => {
-  const h = i % 12 === 0 ? 12 : i % 12;
-  const ampm = i < 12 ? 'AM' : 'PM';
-  return `${String(h).padStart(2, '0')}:00 ${ampm}`;
-});
 
-const TIMEZONES = [
-  '(GMT+05:30) Asia/Kolkata',
-  '(GMT+00:00) UTC',
-  '(GMT-05:00) America/New_York',
-  '(GMT-08:00) America/Los_Angeles',
-  '(GMT+01:00) Europe/London',
-  '(GMT+08:00) Asia/Singapore',
-];
 
 export default function AlertsPage() {
   const router   = useRouter();
@@ -91,11 +76,7 @@ export default function AlertsPage() {
   const [detectionRate,  setDetectionRate]  = useState(0);
   const [lastAlertTime,  setLastAlertTime]  = useState<string>('—');
 
-  // Quiet Hours
-  const [quietEnabled,  setQuietEnabled]  = useState(false);
-  const [quietFrom,     setQuietFrom]     = useState('10:00 PM');
-  const [quietTo,       setQuietTo]       = useState('07:00 AM');
-  const [quietTimezone, setQuietTimezone] = useState('(GMT+05:30) Asia/Kolkata');
+
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -115,10 +96,7 @@ export default function AlertsPage() {
           if (d.emailConnected    !== undefined) setEmailConnected(d.emailConnected);
           if (d.telegramUsername)                setTelegramUsername(d.telegramUsername);
           if (d.toggles)                         setToggles(d.toggles);
-          if (d.quietEnabled  !== undefined)     setQuietEnabled(d.quietEnabled);
-          if (d.quietFrom)                       setQuietFrom(d.quietFrom);
-          if (d.quietTo)                         setQuietTo(d.quietTo);
-          if (d.quietTimezone)                   setQuietTimezone(d.quietTimezone);
+
         }
 
         // Real stats from Firestore
@@ -169,7 +147,7 @@ export default function AlertsPage() {
     try {
       await setDoc(doc(db, 'users', user.uid, 'settings', 'alerts'), {
         telegramConnected, emailConnected, telegramUsername, toggles,
-        quietEnabled, quietFrom, quietTo, quietTimezone,
+
         updatedAt: new Date(),
       });
       setSaved(true);
@@ -424,7 +402,7 @@ export default function AlertsPage() {
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14.5 }}>Email</span>
                       <span style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', color: '#34d399', fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 5, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Free</span>
                     </div>
-                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12 }}>Daily digest of moderation activity</p>
+                    <p style={{ color: 'rgba(255,255,255,0.32)', fontSize: 12 }}>Weekly digest of moderation activity</p>
                   </div>
                   {emailConnected && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
@@ -484,49 +462,7 @@ export default function AlertsPage() {
               ))}
             </div>
 
-            {/* QUIET HOURS */}
-            <div className="a-card" style={{ padding: '20px 24px', marginBottom: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: quietEnabled ? 16 : 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Moon size={15} color="#a78bfa" strokeWidth={1.9} />
-                  </div>
-                  <div>
-                    <p style={{ color: 'rgba(255,255,255,0.88)', fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>Quiet Hours</p>
-                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>Pause non-critical alerts during quiet hours</p>
-                  </div>
-                </div>
-                <button
-                  className="a-toggle"
-                  style={{ background: quietEnabled ? '#7C3AED' : 'rgba(255,255,255,0.1)', boxShadow: quietEnabled ? '0 0 10px rgba(124,58,237,0.4)' : 'none' }}
-                  onClick={() => setQuietEnabled(v => !v)}
-                >
-                  <div className="a-knob" style={{ left: quietEnabled ? 22 : 2 }} />
-                </button>
-              </div>
-              {quietEnabled && (
-                <div className="a-qh-row" style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, display: 'block', marginBottom: 6 }}>From</label>
-                    <select className="a-select" value={quietFrom} onChange={e => setQuietFrom(e.target.value)}>
-                      {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, display: 'block', marginBottom: 6 }}>To</label>
-                    <select className="a-select" value={quietTo} onChange={e => setQuietTo(e.target.value)}>
-                      {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
-                    </select>
-                  </div>
-                  <div style={{ flex: 2 }}>
-                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, display: 'block', marginBottom: 6 }}>Timezone</label>
-                    <select className="a-select" value={quietTimezone} onChange={e => setQuietTimezone(e.target.value)}>
-                      {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
-                    </select>
-                  </div>
-                </div>
-              )}
-            </div>
+
 
             {/* SAVE */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 8 }}>

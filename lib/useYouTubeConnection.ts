@@ -1,11 +1,11 @@
 import { DocumentData } from 'firebase/firestore';
+import { User } from 'firebase/auth';
 
 /**
  * Derives YouTube connection state from the user's Firestore document.
- * This is the single source of truth shared by Dashboard and Live Feed.
+ * Single source of truth shared by Dashboard, Settings, and Live Feed.
  *
  * Field: userData.youtube_connected (boolean)
- * Same field read by Dashboard — do NOT change this without updating Dashboard too.
  */
 export function getYouTubeConnected(userData: DocumentData | null): boolean {
   return (userData?.youtube_connected as boolean) || false;
@@ -13,9 +13,16 @@ export function getYouTubeConnected(userData: DocumentData | null): boolean {
 
 /**
  * Initiates the YouTube OAuth flow.
- * Identical to handleYouTubeConnect in Dashboard — do NOT duplicate this elsewhere.
+ * Fetches a fresh Firebase ID token and passes it as a query param
+ * because browser redirects cannot send Authorization headers.
  */
-export function connectYouTube(uid: string | undefined): void {
-  if (!uid) return;
-  window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?uid=${uid}`;
+export async function connectYouTube(user: User | null): Promise<void> {
+  if (!user) return;
+
+  try {
+    const token = await user.getIdToken();
+    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?token=${token}`;
+  } catch {
+    console.error('Failed to get auth token for YouTube connect');
+  }
 }

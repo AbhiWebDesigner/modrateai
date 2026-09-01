@@ -935,8 +935,15 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
 
 function GCPTab({ userData, user, router, showToast }: { userData: UserData; user: User; router: ReturnType<typeof useRouter>; showToast: (msg: string, type?: "success" | "error" | "info") => void }) {
   const [activeChart, setActiveChart] = useState<"7D" | "30D" | "90D">("7D");
-  const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [currentStep, setCurrentStep] = useState<number>(() => {
+    try { return parseInt(localStorage.getItem('gcp_current_step') || '0', 10); } catch { return 0; }
+  });
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(() => {
+    try {
+      const saved = localStorage.getItem('gcp_completed_steps');
+      return saved ? new Set(JSON.parse(saved) as number[]) : new Set();
+    } catch { return new Set(); }
+  });
   const [gcpRefreshing, setGcpRefreshing] = useState(false);
   const [gcpDisconnecting, setGcpDisconnecting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -1001,6 +1008,15 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
     { name: "channels.list", units: Math.round(gcpUsedToday * 0.04) || 50, pct: 4.0 },
     { name: "others", units: Math.round(gcpUsedToday * 0.016) || 20, pct: 1.6 },
   ];
+
+  // Persist step progress across page reloads and OAuth redirects
+  useEffect(() => {
+    try { localStorage.setItem('gcp_current_step', String(currentStep)); } catch {}
+  }, [currentStep]);
+
+  useEffect(() => {
+    try { localStorage.setItem('gcp_completed_steps', JSON.stringify([...completedSteps])); } catch {}
+  }, [completedSteps]);
 
   const progressPct = Math.round((completedSteps.size / SETUP_STEPS.length) * 100);
 

@@ -1116,6 +1116,8 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
         } catch { console.error('Auto-save failed'); }
       }
       try {
+        // Mark that OAuth was initiated from GCP tab so we return here after OAuth
+        localStorage.setItem('gcp_oauth_return', '1');
         const token = await user.getIdToken();
         window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?token=${token}`;
       } catch { console.error('Failed to get auth token'); }

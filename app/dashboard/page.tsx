@@ -405,6 +405,15 @@ export default function Dashboard() {
   useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) { router.push('/login'); return; }
+      // If user came from GCP OAuth flow, redirect back to api-access page
+      if (typeof window !== 'undefined') {
+        const gcpReturn = localStorage.getItem('gcp_oauth_return');
+        if (gcpReturn === '1') {
+          localStorage.removeItem('gcp_oauth_return');
+          router.push('/dashboard/settings/api-access?gcp=connected');
+          return;
+        }
+      }
       setUser(firebaseUser);
       setLoadState('firestore');
       if (process.env.NODE_ENV === 'development') console.log('Dashboard UID:', firebaseUser.uid);
@@ -453,14 +462,12 @@ export default function Dashboard() {
 
   const handleLogout = async () => { await signOut(auth); router.push('/'); };
   const handleYouTubeConnect = async () => {
-  if (!user) return;
-  try {
-    const token = await user.getIdToken();
-    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?token=${token}`;
-  } catch {
-    console.error('Failed to get auth token');
-  }
-};
+    if (!user) return;
+    try {
+      const token = await user.getIdToken();
+      window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube?token=${token}`;
+    } catch { console.error('Failed to get auth token'); }
+  };
 
   if (loadState === 'auth' || loadState === 'firestore') {
     return (

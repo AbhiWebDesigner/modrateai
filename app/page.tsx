@@ -414,7 +414,7 @@ export default function LandingPage() {
           .n-links { display: none !important; }
           .n-right { display: none !important; }
           .n-burger { display: flex !important; margin-left: auto; }
-          .n-mob-login { display: flex !important; }
+          .n-mob-login { display: none !important; }
         }
 
         .n-mob-login {

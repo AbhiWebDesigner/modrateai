@@ -1681,7 +1681,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 </button>
               )}
 
-              <a href="https://docs.moderateai.site" target="_blank" rel="noopener noreferrer"
+              <a href="https://moderateai.site/documentation" target="_blank" rel="noopener noreferrer"
                 style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "rgba(255,255,255,0.4)", fontSize: 13, textDecoration: "none" }}>
                 <FileText size={14} color="#3B82F6" /> Documentation
               </a>
@@ -1819,21 +1819,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
                 Our support team is here to help you.
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <a href="https://discord.gg/moderateai" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                  <div className="gcp-quick-link" style={{
-                    display: "flex", alignItems: "center", gap: 9,
-                    background: "rgba(88,101,242,0.1)",
-                    border: "1px solid rgba(88,101,242,0.2)",
-                    borderRadius: 10, padding: "10px 12px",
-                    cursor: "pointer", transition: "background 0.13s",
-                  }}>
-                    <div style={{ width: 20, height: 20, borderRadius: 6, background: "#5865F2", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <MessageCircle size={11} color="#fff" />
-                    </div>
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", fontWeight: 600 }}>Join Discord</span>
-                    <ExternalLink size={10} color="rgba(255,255,255,0.2)" style={{ marginLeft: "auto" }} />
-                  </div>
-                </a>
+
                 <a href="mailto:ModerateAiSite@protonmail.com" style={{ textDecoration: "none" }}>
                   <div className="gcp-quick-link" style={{
                     display: "flex", alignItems: "center", gap: 9,
@@ -2153,7 +2139,7 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
 
                   {/* View Documentation — secondary */}
                   <button
-                    onClick={() => window.open("https://developers.google.com/youtube/v3", "_blank")}
+                    onClick={() => window.open("https://moderateai.site/documentation", "_blank")}
                     style={{
                       width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                       background: "transparent",

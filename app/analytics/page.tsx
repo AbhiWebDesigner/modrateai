@@ -525,6 +525,7 @@ export default function AnalyticsPage() {
            d?.youtube_connected === true ||
            d?.youtubeConnected === true ||
            d?.youtube?.connected === true ||
+          (typeof d?.youtube_channel_id === 'string' && d.youtube_channel_id.trim() !== '') ||
           (typeof d?.youtube?.channelId === 'string' && d.youtube.channelId.trim() !== '');
         setYoutubeConnected(ytConnected);
       },
@@ -701,13 +702,13 @@ export default function AnalyticsPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => router.push('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13 }}>
-                  {firstName.charAt(0)}
+            <button onClick={() => router.push('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '6px 12px 6px 6px', whiteSpace: 'nowrap' }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+                  {(user?.displayName || 'U')[0].toUpperCase()}
                 </div>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>{user?.displayName || firstName}</div>
+                  <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>{user?.displayName || 'User'}</div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, lineHeight: 1.2, textTransform: 'capitalize' }}>{plan} plan</div>
                 </div>
               </div>

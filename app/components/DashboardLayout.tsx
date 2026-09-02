@@ -223,9 +223,10 @@ export function DashboardBottomNav() {
       )}
 
       <div style={{
-        position: "fixed", bottom: showMore ? 0 : -400, left: 0, right: 0, zIndex: 49,
-        background: "rgba(20,8,45,0.75)", borderTop: "1px solid rgba(124,58,237,0.3)",
+        position: "fixed", bottom: showMore ? 0 : -600, left: 0, right: 0, zIndex: 49,
+        background: "rgba(20,8,45,0.95)", borderTop: "1px solid rgba(124,58,237,0.3)",
         borderRadius: "20px 20px 0 0",
+        maxHeight: "80vh", overflowY: "auto",
         padding: `0 0 env(safe-area-inset-bottom,${isDesktopSiteOn ? '20px' : '16px'})`,
         transition: "bottom 0.28s cubic-bezier(0.32,0.72,0,1)",
         backdropFilter: "blur(20px)",
@@ -241,9 +242,11 @@ export function DashboardBottomNav() {
               </Link>
             );
           })}
-          <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: drawerPad, borderRadius: isDesktopSiteOn ? 16 : 12, fontSize: drawerFont, fontWeight: 500, color: "rgba(255,80,80,0.8)", background: "none", border: "1px solid transparent", cursor: "pointer", width: "100%", transition: "all 0.15s" }}>
-            <LogOut size={drawerIcon} /> Logout
-          </button>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 6, paddingTop: 6, marginBottom: isDesktopSiteOn ? 12 : 4 }}>
+            <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: drawerPad, borderRadius: isDesktopSiteOn ? 16 : 12, fontSize: drawerFont, fontWeight: 500, color: "rgba(255,80,80,0.8)", background: "none", border: "1px solid transparent", cursor: "pointer", width: "100%", transition: "all 0.15s" }}>
+              <LogOut size={drawerIcon} /> Logout
+            </button>
+          </div>
         </div>
       </div>
 

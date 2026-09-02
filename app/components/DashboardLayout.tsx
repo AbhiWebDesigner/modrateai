@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
-import { LogOut, MoreHorizontal, X } from "lucide-react";
+import { LogOut, MoreHorizontal, X, CreditCard, BarChart2, Shield, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const SIDEBAR_LINKS = [
@@ -248,24 +248,24 @@ export function DashboardBottomNav() {
             </div>
           </div>
         )}
-
-        {/* Menu Items */}
         <div style={{ padding: isDesktopSiteOn ? "10px 14px" : "6px 8px" }}>
-          {MORE_LINKS.map((link) => {
-            const active = pathname === link.href;
-            return (
-              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: "none", fontSize: isDesktopSiteOn ? 24 : 13, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.72)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
-                <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: `${link.color}12`, border: `1px solid ${link.color}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ display: "flex" }}>{link.icon}</span>
-                </div>
-                {link.label}
-              </Link>
-            );
-          })}
-
-          {/* Logout */}
-          <div style={{ margin: isDesktopSiteOn ? "6px 0 0" : "6px 0 0", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 6, paddingBottom: isDesktopSiteOn ? 20 : 12 }}>
-            <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, fontSize: isDesktopSiteOn ? 24 : 13, fontWeight: 600, color: "#f87171", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
+          {[
+            { icon: CreditCard, label: "Billing",    href: "/billing",    color: "#F59E0B" },
+            { icon: BarChart2,  label: "Analytics",  href: "/analytics",  color: "#34d399" },
+            { icon: Shield,     label: "Moderation", href: "/moderation", color: "#60a5fa" },
+            { icon: Settings,   label: "Settings",   href: "/settings",   color: "#a78bfa" },
+          ].map(item => (
+            <Link key={item.href} href={item.href} onClick={() => setShowMore(false)}
+              style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: "none", color: pathname === item.href ? "#F59E0B" : "rgba(255,255,255,0.72)", fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 13, background: pathname === item.href ? "rgba(245,158,11,0.1)" : "transparent", border: pathname === item.href ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent" }}>
+              <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <item.icon size={isDesktopSiteOn ? 26 : 14} color={item.color} strokeWidth={1.8} />
+              </div>
+              {item.label}
+            </Link>
+          ))}
+          <div style={{ margin: isDesktopSiteOn ? "6px 14px 0" : "6px 12px 0", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 6, paddingBottom: isDesktopSiteOn ? 20 : 12 }}>
+            <button onClick={handleLogout}
+              style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 0" : "10px 0", background: "none", border: "none", cursor: "pointer", color: "#f87171", fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 13, width: "100%" }}>
               <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <LogOut size={isDesktopSiteOn ? 26 : 14} color="#f87171" strokeWidth={1.8} />
               </div>

@@ -906,7 +906,7 @@ export default function AutomationPage() {
         .desktop-sidebar { display: none !important; }
         .bottom-nav      { display: flex !important; }
         .main-content    { margin-left: 0 !important; padding: 20px 16px 160px !important; }
-        @media (min-width: 1024px) {
+        @media (min-width: 1280px) {
           .desktop-sidebar    { display: flex !important; }
           .bottom-nav         { display: none !important; }
           .main-content       { margin-left: 228px !important; padding: 32px 40px 60px !important; }
@@ -917,7 +917,7 @@ export default function AutomationPage() {
         @keyframes sidebarPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
         .template-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .template-scroll::-webkit-scrollbar { display: none; }
-        @media (min-width: 1024px) { .template-scroll { flex-wrap: wrap; overflow-x: visible; } }
+        @media (min-width: 1280px) { .template-scroll { flex-wrap: wrap; overflow-x: visible; } }
         .template-chip { flex-shrink: 0; }
         .video-option-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
         @media (min-width: 640px) { .video-option-grid { grid-template-columns: 1fr 1fr; } }
@@ -937,7 +937,7 @@ export default function AutomationPage() {
         .rule-desktop-layout { display: none !important; }
         .rules-table-header  { display: none !important; }
         .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        @media (min-width: 1024px) {
+        @media (min-width: 1280px) {
           .rule-mobile-layout  { display: none !important; }
           .rule-desktop-layout { display: grid !important; }
           .rules-table-header  { display: grid !important; }
@@ -1002,7 +1002,7 @@ export default function AutomationPage() {
             )}
 
             {/* ── Stats Cards ─────────────────────────────────────────────── */}
-            <div style={{ display: "grid", gridTemplateColumns: windowWidth >= 1024 ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: windowWidth >= 1280 ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
               {[
                 { icon: "⚡", label: "Active Rules",       value: rules.filter(r => r.active).length.toString(), sub: "Running",           color: "#a78bfa", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.18)" },
                 { icon: "💬", label: "Comments Processed", value: (analytics?.totalScanned ?? 0).toLocaleString(), sub: "All time",        color: "#60a5fa", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.18)"  },

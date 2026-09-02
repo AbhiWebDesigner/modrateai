@@ -611,6 +611,18 @@ export default function AutomationPage() {
   const [replyDelay, setReplyDelay] = useState(20);
 
   const [moreOpen,          setMoreOpen]          = useState(false);
+  const [isDesktopSiteOn,   setIsDesktopSiteOn]   = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      const touch = navigator.maxTouchPoints > 0;
+      const wide  = window.innerWidth >= 600;
+      setIsDesktopSiteOn(touch && wide);
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
   // ── Window width for responsive grid ────────────────────────────────────────
@@ -945,7 +957,32 @@ export default function AutomationPage() {
           .rule-mobile-layout  { display: none !important; }
           .rule-desktop-layout { display: grid !important; }
           .rules-table-header  { display: grid !important; }
-          .stats-grid          { grid-template-columns: repeat(4, 1fr) !important; }
+        .stats-grid          { grid-template-columns: repeat(4, 1fr) !important; }
+        }
+
+        /* ══ MOBILE Desktop Site ON — touch device + wide viewport ══ */
+        @media (pointer: coarse) and (min-width: 600px) {
+          .desktop-sidebar { display: none !important; }
+          .bottom-nav      { display: flex !important; }
+          .main-content    { margin-left: 0 !important; padding: 20px 16px 160px !important; }
+          .stats-grid      { grid-template-columns: repeat(2, 1fr) !important; }
+          .rule-mobile-layout  { display: flex !important; }
+          .rule-desktop-layout { display: none !important; }
+          .rules-table-header  { display: none !important; }
+
+          /* Stats cards — bigger */
+          .stats-grid > div { padding: 24px 20px !important; min-height: 120px !important; }
+          .stats-grid > div > div:first-child { font-size: 36px !important; }
+          .stats-grid > div > div:last-child > div:nth-child(1) { font-size: 18px !important; }
+          .stats-grid > div > div:last-child > div:nth-child(2) { font-size: 38px !important; }
+          .stats-grid > div > div:last-child > div:nth-child(3) { font-size: 16px !important; }
+
+          /* Rule cards — bigger */
+          .rule-card { padding: 24px 20px !important; }
+          .rule-card > div > div:first-child > div:first-child { width: 56px !important; height: 56px !important; font-size: 24px !important; }
+          .rule-card > div > div:first-child > div:last-child > div:first-child { font-size: 22px !important; font-weight: 700 !important; }
+          .rule-card > div > div:first-child > div:last-child > div:last-child { font-size: 18px !important; margin-top: 6px !important; }
+          .rule-card > div > div:last-child button { font-size: 18px !important; padding: 8px 18px !important; }
         }
         .template-btn:hover { border-color: rgba(245,158,11,0.30) !important; background: rgba(245,158,11,0.08) !important; color: #F59E0B !important; }
         .suggestion-chip:hover { background: rgba(245,158,11,0.18) !important; }

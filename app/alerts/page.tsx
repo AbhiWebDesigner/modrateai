@@ -295,7 +295,15 @@ export default function AlertsPage() {
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;width:100%!important;padding-bottom:120px!important;}
           .r-topbar{display:none!important;}
-          .r-mobile-topbar{display:flex!important;}
+          .r-mobile-topbar{display:none!important;}
+          .r-topbar{display:none!important;}
+          .r-bnav{display:block!important;}
+          @media (pointer: coarse) and (min-width: 600px) {
+            .r-mobile-topbar{display:flex!important;}
+          }
+          @media (pointer: coarse) and (max-width: 599px) {
+            .r-mobile-topbar{display:flex!important;}
+          }
           .r-bnav{display:block!important;}
         }
 
@@ -366,7 +374,7 @@ export default function AlertsPage() {
         {/* MAIN */}
         <div className="r-main">
 
-          {/* TOPBAR */}
+          {/* DESKTOP TOPBAR */}
           <header className="r-topbar">
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
               <h1 style={{ fontSize: 22, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.03em' }}>Alerts</h1>
@@ -383,12 +391,27 @@ export default function AlertsPage() {
               <input className="r-search" placeholder="Search comments, users…" />
             </div>
             <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: '4px 11px 4px 4px', textDecoration: 'none', flexShrink: 0 }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 11 }}>{initials}</div>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 11 }}>{initials}</div>
               <div>
                 <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 12.5, lineHeight: 1.2 }}>{user?.displayName || 'User'}</div>
                 <div style={{ color: 'rgba(255,255,255,0.28)', fontSize: 10.5 }}>{planLabel}</div>
               </div>
             </Link>
+          </header>
+
+          {/* MOBILE TOPBAR */}
+          <header className="r-mobile-topbar" style={{ position: 'sticky', top: 0, zIndex: 30, background: 'rgba(10,10,15,0.96)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '0 14px', height: 52, display: 'none', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+              <div style={{ width: isDesktopSiteOn ? 48 : 30, height: isDesktopSiteOn ? 48 : 30, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 18 : 11, flexShrink: 0 }}>{initials}</div>
+              <div>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 20 : 13 }}>{user?.displayName?.split(' ')[0] || 'User'}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: isDesktopSiteOn ? 16 : 10 }}>{planLabel}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: isDesktopSiteOn ? '6px 14px' : '3px 10px' }}>
+              <div style={{ width: isDesktopSiteOn ? 8 : 6, height: isDesktopSiteOn ? 8 : 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.8)', animation: 'pulse 2s infinite' }} />
+              <span style={{ color: '#22c55e', fontSize: isDesktopSiteOn ? 16 : 11, fontWeight: 700 }}>Live</span>
+            </div>
           </header>
 
           {/* CONTENT */}

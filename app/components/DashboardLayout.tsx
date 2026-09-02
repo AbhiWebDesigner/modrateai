@@ -223,13 +223,19 @@ export function DashboardBottomNav() {
       )}
 
       <div style={{
-        position: "fixed", bottom: showMore ? 0 : -700, left: 0, right: 0, zIndex: 49,
-        background: "rgba(20,8,45,0.95)", borderTop: "1px solid rgba(124,58,237,0.3)",
+        position: "fixed",
+        bottom: showMore ? 0 : -700,
+        top: showMore ? "auto" : "auto",
+        left: 0, right: 0, zIndex: 49,
+        background: "rgba(20,8,45,0.95)",
+        borderTop: "1px solid rgba(124,58,237,0.3)",
         borderRadius: "20px 20px 0 0",
+        maxHeight: "calc(100vh - 60px)",
+        overflowY: "auto",
         transition: "bottom 0.28s cubic-bezier(0.32,0.72,0,1)",
         backdropFilter: "blur(20px)",
         boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)",
-        paddingBottom: "env(safe-area-inset-bottom, 16px)",
+        paddingBottom: "env(safe-area-inset-bottom, 80px)",
       }}>
         <div style={{ width: isDesktopSiteOn ? 56 : 30, height: isDesktopSiteOn ? 6 : 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: isDesktopSiteOn ? "18px auto 12px" : "6px auto 12px" }} />
         

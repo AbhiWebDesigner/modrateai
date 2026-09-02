@@ -1006,16 +1006,22 @@ export default function LiveFeedPage() {
           </header>
 
           {/* MOBILE TOPBAR */}
-          <header className="r-mobile-topbar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Shield size={12} color="white" strokeWidth={2.2} />
+          <header className="r-mobile-topbar" style={{ height: isDesktopSiteOn ? 72 : 52 }}>
+            {/* Left — title + live badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+              <h1 style={{ fontSize: isDesktopSiteOn ? 24 : 16, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.02em' }}>Live Feed</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: isDesktopSiteOn ? '6px 14px' : '3px 8px' }}>
+                <div style={{ width: isDesktopSiteOn ? 8 : 5, height: isDesktopSiteOn ? 8 : 5, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                <span style={{ color: '#22c55e', fontSize: isDesktopSiteOn ? 16 : 10, fontWeight: 700 }}>Live</span>
               </div>
-              <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13 }}>ModerateAI</span>
             </div>
-            <div style={{ flex: 1 }} />
-            <button className="r-avatar-btn" style={{ padding: '2px 6px 2px 2px' }} onClick={() => router.push('/settings')}>
-              <UserAvatar src={userPhoto} initials={initials} size={22} />
+            {/* Right — avatar + name + plan */}
+            <button onClick={() => router.push('/settings')} style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 12 : 7, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: isDesktopSiteOn ? '8px 16px 8px 8px' : '4px 10px 4px 4px', cursor: 'pointer', flexShrink: 0 }}>
+              <div style={{ width: isDesktopSiteOn ? 44 : 26, height: isDesktopSiteOn ? 44 : 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 16 : 10, flexShrink: 0 }}>{initials}</div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 20 : 12, lineHeight: 1.2 }}>{user?.displayName || 'User'}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: isDesktopSiteOn ? 15 : 10 }}>{userData?.plan === 'pro' ? 'Pro plan' : userData?.plan === 'agency' ? 'Agency plan' : 'Free plan'}</div>
+              </div>
             </button>
           </header>
 

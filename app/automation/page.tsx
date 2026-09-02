@@ -584,8 +584,9 @@ export default function AutomationPage() {
   const [saving,       setSaving]       = useState(false);
   const [deleting,     setDeleting]     = useState<string | null>(null);
 
-  const [showBuilder,  setShowBuilder]  = useState(false);
-  const [currentStep,  setCurrentStep]  = useState(0);
+  const [showBuilder,    setShowBuilder]    = useState(false);
+  const [editingRuleId,  setEditingRuleId]  = useState<string | null>(null);
+  const [currentStep,    setCurrentStep]    = useState(0);
   // Track which steps the user has visited (to show ⚠️ vs grey for unvisited)
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([0]));
 
@@ -749,6 +750,33 @@ export default function AutomationPage() {
     setRuleActive(true); setAdvanced(DEFAULT_ADVANCED); setShowBuilder(false);
     setSuggestions([]); setMobilePreviewOpen(false);
     setVisitedSteps(new Set([0]));
+    setEditingRuleId(null);
+  };
+
+  const editRule = (rule: Rule) => {
+    setEditingRuleId(rule.id);
+    setRuleName(rule.name);
+    setSelectedVideo(rule.video ?? null);
+    setKeywords(rule.keywords ?? []);
+    setReplyMode(rule.replyMode ?? "random");
+    setReplies(rule.replies?.length ? rule.replies : ["", "", ""]);
+    setAiInstruction(rule.aiInstruction ?? "");
+    setReplyDelay(rule.replyDelay ?? 20);
+    setRuleActive(rule.active ?? true);
+    setAdvanced({
+      maxRepliesPerUser:  rule.maxRepliesPerUser  ?? 3,
+      cooldownMinutes:    rule.cooldownMinutes    ?? 60,
+      workingHoursStart:  rule.workingHoursStart  ?? 9,
+      workingHoursEnd:    rule.workingHoursEnd    ?? 21,
+      enableWeekends:     rule.enableWeekends     ?? true,
+      minCommentLength:   rule.minCommentLength   ?? 0,
+      ignoreLinks:        rule.ignoreLinks        ?? true,
+      ignoreEmojisOnly:   rule.ignoreEmojisOnly   ?? false,
+      ignoreBots:         rule.ignoreBots         ?? true,
+    });
+    setCurrentStep(0);
+    setVisitedSteps(new Set([0]));
+    setShowBuilder(true);
   };
 
   const navigateToStep = (i: number) => {
@@ -776,17 +804,25 @@ export default function AutomationPage() {
     setSaving(true);
     try {
       await ensureParentDoc(user.uid);
-      const rulesRef = collection(db, "automations", user.uid, "rules");
-      await addDoc(rulesRef, {
+      const ruleData = {
         name: ruleName, video: selectedVideo, keywords, replyMode, replies, aiInstruction,
-        publicReply: true, replyDelay, active: ruleActive, createdAt: serverTimestamp(),
-        ...advanced,
-      });
-      const parentRef = doc(db, "automations", user.uid);
-      await setDoc(parentRef, {
-        totalRules:  increment(1),
-        activeRules: increment(ruleActive ? 1 : 0),
-      }, { merge: true });
+        publicReply: true, replyDelay, active: ruleActive, ...advanced,
+      };
+
+      if (editingRuleId) {
+        // Edit mode — update existing rule
+        const ruleRef = doc(db, "automations", user.uid, "rules", editingRuleId);
+        await updateDoc(ruleRef, ruleData);
+      } else {
+        // Create mode — add new rule
+        const rulesRef = collection(db, "automations", user.uid, "rules");
+        await addDoc(rulesRef, { ...ruleData, createdAt: serverTimestamp() });
+        const parentRef = doc(db, "automations", user.uid);
+        await setDoc(parentRef, {
+          totalRules:  increment(1),
+          activeRules: increment(ruleActive ? 1 : 0),
+        }, { merge: true });
+      }
       resetBuilder();
     } catch (err) {
       console.error("Failed to save rule:", err);
@@ -1073,6 +1109,12 @@ export default function AutomationPage() {
                               {rule.active ? "● On" : "○ Off"}
                             </button>
                             <button
+                              onClick={() => editRule(rule)}
+                              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, padding: "4px 8px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.60)", cursor: "pointer" }}
+                            >
+                              ✏️
+                            </button>
+                            <button
                               onClick={() => deleteRule(rule.id, rule.active)}
                               disabled={deleting === rule.id}
                               style={{ color: "rgba(255,80,80,0.55)", background: "none", border: "none", cursor: "pointer", opacity: deleting === rule.id ? 0.4 : 1, padding: "4px", fontSize: 15 }}
@@ -1120,9 +1162,15 @@ export default function AutomationPage() {
                           {/* Actions */}
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <button
+                              onClick={() => editRule(rule)}
+                              style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.60)", cursor: "pointer" }}
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
                               onClick={() => deleteRule(rule.id, rule.active)}
                               disabled={deleting === rule.id}
-                              style={{ color: "rgba(255,80,80,0.55)", background: "none", border: "none", cursor: "pointer", opacity: deleting === rule.id ? 0.4 : 1, padding: "4px", fontSize: 15 }}
+                              style={{ color: "rgba(255,80,80,0.55)", background: "rgba(255,80,80,0.06)", border: "1px solid rgba(255,80,80,0.12)", borderRadius: 8, padding: "5px 8px", cursor: "pointer", opacity: deleting === rule.id ? 0.4 : 1, fontSize: 13 }}
                             >
                               {deleting === rule.id ? "⏳" : "🗑️"}
                             </button>
@@ -1148,7 +1196,7 @@ export default function AutomationPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                   <button onClick={resetBuilder} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", color: "white", cursor: "pointer", fontSize: 14, flexShrink: 0 }}>←</button>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>Automation / New Rule</div>
+                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>Automation / {editingRuleId ? "Edit Rule" : "New Rule"}</div>
                     <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ruleName || "Untitled Rule"}</div>
                   </div>
                 </div>

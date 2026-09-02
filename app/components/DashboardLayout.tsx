@@ -189,15 +189,32 @@ export function DashboardBottomNav() {
   const handleLogout = async () => { await signOut(auth); router.push("/"); };
   const isMoreActive = MORE_LINKS.some(l => pathname === l.href);
   const [isMobile, setIsMobile] = useState(true);
+  const [isDesktopSiteOn, setIsDesktopSiteOn] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+    const check = () => {
+      setIsMobile(window.matchMedia("(pointer: coarse)").matches);
+      setIsDesktopSiteOn(navigator.maxTouchPoints > 0 && window.innerWidth >= 600);
+    };
     check();
     window.matchMedia("(pointer: coarse)").addEventListener("change", check);
-    return () => window.matchMedia("(pointer: coarse)").removeEventListener("change", check);
+    window.addEventListener("resize", check);
+    return () => {
+      window.matchMedia("(pointer: coarse)").removeEventListener("change", check);
+      window.removeEventListener("resize", check);
+    };
   }, []);
 
   if (!isMobile) return null;
+
+  const iconSize   = isDesktopSiteOn ? 28 : 20;
+  const labelSize  = isDesktopSiteOn ? 16 : 9;
+  const itemPad    = isDesktopSiteOn ? "14px 2px 18px" : "6px 2px";
+  const iconBoxW   = isDesktopSiteOn ? 64 : 44;
+  const iconBoxH   = isDesktopSiteOn ? 48 : 34;
+  const drawerFont = isDesktopSiteOn ? 22 : 14;
+  const drawerPad  = isDesktopSiteOn ? "18px 20px" : "12px 14px";
+  const drawerIcon = isDesktopSiteOn ? 28 : 18;
 
   return (
     <>
@@ -206,30 +223,26 @@ export function DashboardBottomNav() {
       )}
 
       <div style={{
-        position: "fixed", bottom: showMore ? 65 : -300, left: 0, right: 0, zIndex: 49,
+        position: "fixed", bottom: showMore ? 0 : -400, left: 0, right: 0, zIndex: 49,
         background: "rgba(20,8,45,0.75)", borderTop: "1px solid rgba(124,58,237,0.3)",
-        borderRadius: "20px 20px 0 0", padding: "16px 12px 12px",
+        borderRadius: "20px 20px 0 0",
+        padding: `0 0 env(safe-area-inset-bottom,${isDesktopSiteOn ? '20px' : '16px'})`,
         transition: "bottom 0.28s cubic-bezier(0.32,0.72,0,1)",
         backdropFilter: "blur(20px)",
         boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)",
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, padding: "0 4px" }}>
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>More</span>
-          <button onClick={() => setShowMore(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", padding: 4 }}>
-            <X size={16} />
-          </button>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ width: isDesktopSiteOn ? 56 : 30, height: isDesktopSiteOn ? 6 : 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: isDesktopSiteOn ? "18px auto 12px" : "6px auto 12px" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: isDesktopSiteOn ? "0 14px" : "0 8px" }}>
           {MORE_LINKS.map((link) => {
             const active = pathname === link.href;
             return (
-              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, textDecoration: "none", fontSize: 14, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.7)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
+              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: drawerPad, borderRadius: isDesktopSiteOn ? 16 : 12, textDecoration: "none", fontSize: drawerFont, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.7)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
                 {link.icon}{link.label}
               </Link>
             );
           })}
-          <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, fontSize: 14, fontWeight: 500, color: "rgba(255,80,80,0.8)", background: "none", border: "1px solid transparent", cursor: "pointer", width: "100%", transition: "all 0.15s" }}>
-            <LogOut size={18} /> Logout
+          <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: drawerPad, borderRadius: isDesktopSiteOn ? 16 : 12, fontSize: drawerFont, fontWeight: 500, color: "rgba(255,80,80,0.8)", background: "none", border: "1px solid transparent", cursor: "pointer", width: "100%", transition: "all 0.15s" }}>
+            <LogOut size={drawerIcon} /> Logout
           </button>
         </div>
       </div>
@@ -238,16 +251,16 @@ export function DashboardBottomNav() {
         {BOTTOM_NAV_LINKS.map((link) => {
           const active = pathname === link.href;
           return (
-            <Link key={link.href} href={link.href} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, flex: 1, padding: "6px 2px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,0.35)", fontSize: 9, fontWeight: active ? 600 : 500, transition: "all 0.2s", position: "relative" }}>
+            <Link key={link.href} href={link.href} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, flex: 1, padding: itemPad, textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,0.35)", fontSize: labelSize, fontWeight: active ? 600 : 500, transition: "all 0.2s", position: "relative" }}>
               {active && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 34, borderRadius: 10, background: active ? "rgba(245,158,11,0.15)" : "transparent", boxShadow: active ? "0 0 14px rgba(245,158,11,0.4)" : "none", transition: "all 0.2s" }}>{link.icon}</span>
+              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: iconBoxW, height: iconBoxH, borderRadius: 10, background: active ? "rgba(245,158,11,0.15)" : "transparent", boxShadow: active ? "0 0 14px rgba(245,158,11,0.4)" : "none", transition: "all 0.2s" }}>{link.icon}</span>
               <span>{link.label}</span>
             </Link>
           );
         })}
-        <button onClick={() => setShowMore(prev => !prev)} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, flex: 1, padding: "6px 2px", background: "none", border: "none", cursor: "pointer", color: (showMore || isMoreActive) ? "#F59E0B" : "rgba(255,255,255,0.35)", fontSize: 9, fontWeight: (showMore || isMoreActive) ? 600 : 500, position: "relative" }}>
+        <button onClick={() => setShowMore(prev => !prev)} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, flex: 1, padding: itemPad, background: "none", border: "none", cursor: "pointer", color: (showMore || isMoreActive) ? "#F59E0B" : "rgba(255,255,255,0.35)", fontSize: labelSize, fontWeight: (showMore || isMoreActive) ? 600 : 500, position: "relative" }}>
           {(showMore || isMoreActive) && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 34, borderRadius: 10, background: (showMore || isMoreActive) ? "rgba(245,158,11,0.15)" : "transparent", transition: "all 0.2s" }}><MoreHorizontal size={20} /></span>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: iconBoxW, height: iconBoxH, borderRadius: 10, background: (showMore || isMoreActive) ? "rgba(245,158,11,0.15)" : "transparent", transition: "all 0.2s" }}><MoreHorizontal size={iconSize} /></span>
           <span>More</span>
         </button>
       </nav>

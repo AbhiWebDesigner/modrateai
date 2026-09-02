@@ -701,17 +701,13 @@ export default function AnalyticsPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button className="desktop-only" onClick={() => router.push('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <button onClick={() => router.push('/settings')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 12, padding: '6px 12px 6px 6px' }}>
-                {user?.photoURL ? (
-                  <img src={user.photoURL} style={{ width: 32, height: 32, borderRadius: '50%' }} alt="avatar" />
-                ) : (
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#F59E0B,#7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13 }}>
-                    {firstName.charAt(0)}
-                  </div>
-                )}
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13 }}>
+                  {firstName.charAt(0)}
+                </div>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>{firstName}</div>
+                  <div style={{ color: '#FAFAFA', fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>{user?.displayName || firstName}</div>
                   <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, lineHeight: 1.2, textTransform: 'capitalize' }}>{plan} plan</div>
                 </div>
               </div>

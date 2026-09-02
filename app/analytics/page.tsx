@@ -488,12 +488,36 @@ export default function AnalyticsPage() {
     return () => { mounted.current = false; };
   }, []);
 
-  // Auth
+  // Auth + immediate user doc fetch for faster load
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
       if (!mounted.current) return;
       if (!u) { router.push('/login'); return; }
       setUser(u);
+
+      // Immediate getDoc for fast first render
+      try {
+        const snap = await import('firebase/firestore').then(({ getDoc, doc: firestoreDoc }) =>
+          getDoc(firestoreDoc(db, 'users', u.uid))
+        );
+        if (!mounted.current) return;
+        if (snap.exists()) {
+          const d = snap.data();
+          const rawPlan = typeof d?.plan === 'string' ? d.plan : 'free';
+          const normalizedPlan = rawPlan.toLowerCase().trim();
+          if      (normalizedPlan === 'pro')    setPlan('pro');
+          else if (normalizedPlan === 'agency') setPlan('agency');
+          else                                  setPlan('free');
+
+          const ytConnected =
+             d?.youtube_connected === true ||
+             d?.youtubeConnected === true ||
+            (typeof d?.youtube_channel_id   === 'string' && d.youtube_channel_id.trim()   !== '') ||
+            (typeof d?.youtube_channel_name === 'string' && d.youtube_channel_name.trim() !== '');
+          setYoutubeConnected(ytConnected);
+        }
+      } catch {}
+
       setLoading(false);
     });
     return () => unsub();

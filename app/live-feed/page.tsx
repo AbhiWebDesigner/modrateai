@@ -466,6 +466,18 @@ export default function LiveFeedPage() {
   const [loading, setLoading] = useState(true);
   const [feedLoading, setFeedLoading] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [isDesktopSiteOn, setIsDesktopSiteOn] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      const touch = navigator.maxTouchPoints > 0;
+      const wide  = window.innerWidth >= 600;
+      setIsDesktopSiteOn(touch && wide);
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [comments, setComments] = useState<FeedComment[]>([]);
@@ -647,7 +659,7 @@ export default function LiveFeedPage() {
   const lastScanTime = timeAgoFn(lastScanTimestamp);
 
   const isYouTubeConnected = getYouTubeConnected(userData);
-  const handleYouTubeConnect = () => connectYouTube(user?.uid);
+  const handleYouTubeConnect = () => { if (user) connectYouTube(user.uid); };
 
   const channelsCount: number = isYouTubeConnected
     ? ((userData?.channels_count as number) ?? 1)
@@ -807,6 +819,44 @@ export default function LiveFeedPage() {
           display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
+
+        /* ══ DSO bottom nav — bigger icons + labels ══ */
+        @media (pointer: coarse) and (min-width: 600px) {
+          .r-bnav-item{padding:14px 4px 18px!important;}
+          .r-bnav-icon{width:64px!important;height:48px!important;border-radius:14px!important;}
+          .r-bnav-icon svg{width:28px!important;height:28px!important;}
+          .r-bnav-item > span:last-child{font-size:16px!important;}
+          .r-bnav-fab{width:64px!important;height:64px!important;}
+          .r-bnav-fab svg{width:30px!important;height:30px!important;}
+
+          /* Content */
+          .r-sidebar{display:none!important;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:120px!important;}
+          .r-topbar{display:none!important;}
+          .r-mobile-topbar{display:flex!important;}
+          .r-bottom-nav{display:flex!important;}
+          .r-content{padding:20px 16px 24px!important;}
+
+          /* Status bar */
+          .lf-status-bar{border-radius:16px!important;}
+          .lf-status-item{padding:18px 22px!important;gap:12px!important;}
+          .lf-status-item > div > div:first-child{font-size:18px!important;}
+          .lf-status-item > div > div:last-child{font-size:15px!important;}
+
+          /* Metrics grid — bigger */
+          .lf-metrics-grid{grid-template-columns:repeat(2,1fr)!important;gap:14px!important;}
+          .lf-metrics-grid > div{padding:24px 20px!important;border-radius:18px!important;}
+          .lf-metrics-grid > div span[style*="font-size: 9.5"]{font-size:18px!important;}
+          .lf-metrics-grid > div > div:last-child > span:first-child{font-size:38px!important;font-weight:800!important;}
+          .lf-metrics-grid > div > div:last-child > span:last-child{font-size:17px!important;}
+
+          /* Filter bar */
+          .lf-filter-bar{gap:10px!important;padding:16px 0!important;}
+          .lf-filter-bar > button{font-size:18px!important;padding:10px 20px!important;border-radius:12px!important;}
+
+          /* Feed items */
+          .lf-feed-scroll{max-height:none!important;}
+        }
 
         .lf-status-bar{display:flex;align-items:center;gap:0;padding:0;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none;border-radius:12px;background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);}
         .lf-status-bar::-webkit-scrollbar{display:none;}
@@ -1312,21 +1362,21 @@ export default function LiveFeedPage() {
             background: 'rgba(20,8,45,0.75)',
             borderTop: '1px solid rgba(124,58,237,0.3)',
             borderRadius: '20px 20px 0 0',
-            padding: '0 0 env(safe-area-inset-bottom,16px)',
+            padding: `0 0 env(safe-area-inset-bottom,${isDesktopSiteOn ? '20px' : '16px'})`,
             boxShadow: '0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)',
             backdropFilter: 'blur(10px)',
             animation: 'slideUp 0.22s ease',
           }}>
               {/* Handle */}
-              <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '12px auto 8px' }} />
+              <div style={{ width: isDesktopSiteOn ? 56 : 36, height: isDesktopSiteOn ? 6 : 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: isDesktopSiteOn ? '18px auto 12px' : '12px auto 8px' }} />
 
               {/* User Profile */}
-              <div style={{ padding: '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <UserAvatar src={userPhoto} initials={initials} size={38} />
+              <div style={{ padding: isDesktopSiteOn ? '0 24px 16px' : '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: isDesktopSiteOn ? 12 : 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 18 : 10 }}>
+                  <UserAvatar src={userPhoto} initials={initials} size={isDesktopSiteOn ? 60 : 38} />
                   <div>
-                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14 }}>{firstName}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>{user?.email}</div>
+                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{firstName}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: isDesktopSiteOn ? 20 : 11 }}>{user?.email}</div>
                   </div>
                 </div>
               </div>
@@ -1339,8 +1389,8 @@ export default function LiveFeedPage() {
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', color: '#ffffff', fontWeight: 500, fontSize: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <item.icon size={20} color={item.color} strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? '20px 28px' : '14px 20px', textDecoration: 'none', color: '#ffffff', fontWeight: 500, fontSize: isDesktopSiteOn ? 24 : 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <item.icon size={isDesktopSiteOn ? 28 : 20} color={item.color} strokeWidth={1.8} />
                   {item.label}
                 </Link>
               ))}
@@ -1348,8 +1398,8 @@ export default function LiveFeedPage() {
               {/* Logout */}
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 500, fontSize: 15, width: '100%' }}>
-                  <LogOut size={20} color="#f87171" strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? '20px 28px' : '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 500, fontSize: isDesktopSiteOn ? 24 : 15, width: '100%' }}>
+                  <LogOut size={isDesktopSiteOn ? 28 : 20} color="#f87171" strokeWidth={1.8} />
                   Logout
                 </button>
               </div>

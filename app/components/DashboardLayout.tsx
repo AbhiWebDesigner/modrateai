@@ -225,13 +225,14 @@ export function DashboardBottomNav() {
       <div style={{
         position: "fixed",
         bottom: showMore ? 0 : -700,
-        left: 0, right: 0, zIndex: 49,
-        background: "rgba(20,8,45,0.75)",
+        left: 0, right: 0, zIndex: 60,
+        background: "rgba(20,8,45,0.95)",
         borderTop: "1px solid rgba(124,58,237,0.3)",
         borderRadius: "20px 20px 0 0",
         boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)",
         backdropFilter: "blur(28px)",
         animation: showMore ? "slideUp 0.22s ease" : "none",
+        paddingBottom: isDesktopSiteOn ? 20 : 80,
       }}>
         <div style={{ width: 30, height: 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: "6px auto 12px" }} />
 

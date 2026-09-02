@@ -233,6 +233,20 @@ export function DashboardBottomNav() {
         boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)",
       }}>
         <div style={{ width: isDesktopSiteOn ? 56 : 30, height: isDesktopSiteOn ? 6 : 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: isDesktopSiteOn ? "18px auto 12px" : "6px auto 12px" }} />
+        
+        {/* User profile */}
+        {auth.currentUser && (
+          <div style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 18 : 10, padding: isDesktopSiteOn ? "14px 24px 20px" : "10px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
+            <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13, flexShrink: 0 }}>
+              {(auth.currentUser.displayName || auth.currentUser.email || "U")[0].toUpperCase()}
+            </div>
+            <div>
+              <div style={{ color: "#FAFAFA", fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{auth.currentUser.displayName || "User"}</div>
+              <div style={{ color: "rgba(255,255,255,0.32)", fontSize: isDesktopSiteOn ? 20 : 11 }}>{auth.currentUser.email}</div>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: isDesktopSiteOn ? "0 14px" : "0 8px" }}>
           {MORE_LINKS.map((link) => {
             const active = pathname === link.href;

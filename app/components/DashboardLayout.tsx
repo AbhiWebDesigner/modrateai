@@ -232,7 +232,7 @@ export function DashboardBottomNav() {
         boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)",
         backdropFilter: "blur(28px)",
         animation: showMore ? "slideUp 0.22s ease" : "none",
-        paddingBottom: isDesktopSiteOn ? 20 : 80,
+        paddingBottom: "env(safe-area-inset-bottom, 16px)",
       }}>
         <div style={{ width: 30, height: 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: "6px auto 12px" }} />
 

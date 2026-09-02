@@ -242,7 +242,7 @@ export function DashboardBottomNav() {
               </Link>
             );
           })}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 6, paddingTop: 6, marginBottom: isDesktopSiteOn ? 12 : 4 }}>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 6, paddingTop: 6, paddingBottom: isDesktopSiteOn ? 20 : 12 }}>
             <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: drawerPad, borderRadius: isDesktopSiteOn ? 16 : 12, fontSize: drawerFont, fontWeight: 500, color: "rgba(255,80,80,0.8)", background: "none", border: "1px solid transparent", cursor: "pointer", width: "100%", transition: "all 0.15s" }}>
               <LogOut size={drawerIcon} /> Logout
             </button>

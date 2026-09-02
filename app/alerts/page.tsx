@@ -545,7 +545,7 @@ export default function AlertsPage() {
                 <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13, flexShrink: 0 }}>{user?.displayName?.[0] || 'U'}</div>
                 <div>
                   <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{user?.displayName || 'User'}</div>
-                  <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: isDesktopSiteOn ? 20 : 11 }}>{planLabel}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: isDesktopSiteOn ? 20 : 11 }}>{user?.email}</div>
                 </div>
               </div>
               <div style={{ padding: isDesktopSiteOn ? '10px 14px' : '6px 8px' }}>

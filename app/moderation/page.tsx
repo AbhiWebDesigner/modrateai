@@ -174,6 +174,18 @@ export default function ModerationPage() {
   const [automationData, setAutomationData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [isDesktopSiteOn, setIsDesktopSiteOn] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      const touch = navigator.maxTouchPoints > 0;
+      const wide  = window.innerWidth >= 600;
+      setIsDesktopSiteOn(touch && wide);
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [activeFilters, setActiveFilters] = useState<string[]>(DEFAULT_FILTERS);
   const filtersInitialized = useRef(false);
   const initialSnapCount = useRef(0);
@@ -278,7 +290,7 @@ export default function ModerationPage() {
   const planLabel     = plan === 'pro' ? 'Pro Plan' : plan === 'agency' ? 'Agency' : 'Free Trial';
 
   const firstName  = user?.displayName?.split(' ')[0] || 'there';
-  const initials   = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const initials   = (user?.displayName || 'U')[0].toUpperCase();
 
   // SECURITY FIX 2: Validate photo URL domain before rendering
   const rawPhoto   = user?.photoURL || (userData?.photo as string) || null;
@@ -416,6 +428,24 @@ export default function ModerationPage() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
+        /* ══ DSO — touch + wide viewport ══ */
+        @media (pointer: coarse) and (min-width: 600px) {
+          .r-sidebar{display:none!important;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:120px!important;}
+          .r-topbar{display:none!important;}
+          .r-mobile-topbar{display:flex!important;}
+          .r-bottom-nav{display:flex!important;}
+          .r-bnav-item{padding:14px 4px 18px!important;gap:6px!important;}
+          .r-bnav-icon{width:64px!important;height:48px!important;border-radius:14px!important;}
+          .r-bnav-icon svg{width:28px!important;height:28px!important;}
+          .r-bnav-item > span:last-child{font-size:16px!important;}
+          .r-bnav-fab{width:64px!important;height:64px!important;}
+          .r-bnav-fab svg{width:30px!important;height:30px!important;}
+          .r-card{padding:24px 20px!important;border-radius:18px!important;}
+          .r-card-title{font-size:20px!important;}
+          .r-card-sub{font-size:16px!important;}
+        }
+
         .mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
         .mod-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
         .mod-filter-wrap{display:flex;flex-wrap:wrap;gap:7px;padding:12px 14px;}
@@ -536,19 +566,18 @@ export default function ModerationPage() {
           </header>
 
           {/* MOBILE TOPBAR */}
-          <header className="r-mobile-topbar">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 26, height: 26, borderRadius: 8, background: 'linear-gradient(135deg,#7C3AED,#5B21B6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Shield size={12} color="white" strokeWidth={2.2} />
-              </div>
-              <span style={{ color: '#FAFAFA', fontWeight: 800, fontSize: 13 }}>ModerateAI</span>
+          <header className="r-mobile-topbar" style={{ height: isDesktopSiteOn ? 72 : 52 }}>
+            {/* Left — title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+              <h1 style={{ fontSize: isDesktopSiteOn ? 24 : 16, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.02em' }}>Moderation</h1>
             </div>
-            <div style={{ flex: 1 }} />
-            <button className="r-avatar-btn" style={{ padding: '2px 6px 2px 2px' }} onClick={() => router.push('/settings')}>
-              {userPhoto
-                ? <img src={userPhoto} style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
-                : <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 8 }}>{initials}</div>
-              }
+            {/* Right — avatar + name + plan */}
+            <button onClick={() => router.push('/settings')} style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 12 : 7, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: isDesktopSiteOn ? '8px 16px 8px 8px' : '4px 10px 4px 4px', cursor: 'pointer', flexShrink: 0 }}>
+              <div style={{ width: isDesktopSiteOn ? 44 : 26, height: isDesktopSiteOn ? 44 : 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 16 : 10, flexShrink: 0 }}>{initials}</div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 20 : 12, lineHeight: 1.2 }}>{user?.displayName || 'User'}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: isDesktopSiteOn ? 15 : 10 }}>{planLabel}</div>
+              </div>
             </button>
           </header>
 
@@ -780,30 +809,40 @@ export default function ModerationPage() {
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />
-            <div style={{ position: 'fixed', bottom: 68, left: 10, right: 10, zIndex: 60, background: 'rgba(20,8,45,0.75)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 18, padding: '6px 6px 10px', boxShadow: '0 -8px 40px rgba(0,0,0,0.65)', backdropFilter: 'blur(28px)', animation: 'slideUp 0.18s ease' }}>
-              <div style={{ width: 30, height: 3, background: 'rgba(255,255,255,0.09)', borderRadius: 3, margin: '6px auto 12px' }} />
-              {[
-                { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
-                { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
-                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
-              ].map(item => (
-                <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: 13 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <item.icon size={14} color={item.color} strokeWidth={1.8} />
-                  </div>
-                  {item.label}
-                </Link>
-              ))}
-              <div style={{ margin: '6px 12px 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 6 }}>
-                <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: 13, width: '100%' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <LogOut size={14} color="#f87171" strokeWidth={1.8} />
-                  </div>
-                  Logout
-                </button>
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60, background: 'rgba(20,8,45,0.75)', borderTop: '1px solid rgba(124,58,237,0.3)', borderRadius: '20px 20px 0 0', padding: `0 0 env(safe-area-inset-bottom,${isDesktopSiteOn ? '20px' : '16px'})`, boxShadow: '0 -12px 60px rgba(124,58,237,0.25)', backdropFilter: 'blur(28px)', animation: 'slideUp 0.18s ease' }}>
+              <div style={{ width: isDesktopSiteOn ? 56 : 30, height: isDesktopSiteOn ? 6 : 3, background: 'rgba(255,255,255,0.09)', borderRadius: 3, margin: isDesktopSiteOn ? '18px auto 12px' : '6px auto 12px' }} />
+              {/* User Profile */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 18 : 10, padding: isDesktopSiteOn ? '14px 24px 20px' : '10px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13, flexShrink: 0 }}>{initials}</div>
+                <div>
+                  <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{user?.displayName || 'User'}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: isDesktopSiteOn ? 20 : 11 }}>{user?.email}</div>
+                </div>
+              </div>
+              <div style={{ padding: isDesktopSiteOn ? '10px 14px' : '6px 8px' }}>
+                {[
+                  { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
+                  { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
+                  { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
+                  { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
+                ].map(item => (
+                  <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
+                    style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? '18px 14px' : '10px 12px', borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 13 }}>
+                    <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <item.icon size={isDesktopSiteOn ? 26 : 14} color={item.color} strokeWidth={1.8} />
+                    </div>
+                    {item.label}
+                  </Link>
+                ))}
+                <div style={{ margin: isDesktopSiteOn ? '6px 14px 0' : '6px 12px 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 6 }}>
+                  <button onClick={() => { setMoreOpen(false); handleLogout(); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? '18px 0' : '10px 0', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 13, width: '100%' }}>
+                    <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <LogOut size={isDesktopSiteOn ? 26 : 14} color="#f87171" strokeWidth={1.8} />
+                    </div>
+                    Logout
+                  </button>
+                </div>
               </div>
             </div>
           </>

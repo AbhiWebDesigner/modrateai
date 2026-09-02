@@ -300,23 +300,31 @@ function Sidebar({ pathname }: { pathname: string }) {
   );
 }
 
-function BottomNav({ pathname, moreOpen, setMoreOpen }: { pathname: string; moreOpen: boolean; setMoreOpen: (v: (prev: boolean) => boolean) => void }) {
+function BottomNav({ pathname, moreOpen, setMoreOpen, isDesktopSiteOn }: { pathname: string; moreOpen: boolean; setMoreOpen: (v: (prev: boolean) => boolean) => void; isDesktopSiteOn: boolean }) {
+  const iconSize = isDesktopSiteOn ? 28 : 22;
+  const labelSize = isDesktopSiteOn ? 16 : 10;
+  const itemPad = isDesktopSiteOn ? '14px 2px 18px' : '8px 2px 10px';
+  const iconBoxW = isDesktopSiteOn ? 64 : 44;
+  const iconBoxH = isDesktopSiteOn ? 48 : 34;
+
   return (
     <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, background: "rgba(9,9,11,.97)", borderTop: "1px solid rgba(255,255,255,.055)", display: "flex", backdropFilter: "blur(28px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {NAV_LINKS.map(link => {
         const active = pathname === link.href;
         return (
-          <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,.35)", transition: "color 0.18s", position: "relative" }}>
+          <Link key={link.href} href={link.href} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: itemPad, textDecoration: "none", color: active ? "#F59E0B" : "rgba(255,255,255,.35)", transition: "color 0.18s", position: "relative" }}>
             {active && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
-            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 34, borderRadius: 10, background: active ? "rgba(245,158,11,0.15)" : "transparent", boxShadow: active ? "0 0 14px rgba(245,158,11,0.4)" : "none", transition: "all 0.2s" }}>{link.icon}</span>
-            <span style={{ fontSize: 10, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: iconBoxW, height: iconBoxH, borderRadius: 10, background: active ? "rgba(245,158,11,0.15)" : "transparent", boxShadow: active ? "0 0 14px rgba(245,158,11,0.4)" : "none", transition: "all 0.2s" }}>
+              {link.icon}
+            </span>
+            <span style={{ fontSize: labelSize, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
           </Link>
         );
       })}
-      <button onClick={() => setMoreOpen(v => !v)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: "8px 2px 10px", background: "none", border: "none", cursor: "pointer", color: moreOpen ? "#F59E0B" : "rgba(255,255,255,.35)", position: "relative" }}>
+      <button onClick={() => setMoreOpen(v => !v)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, padding: itemPad, background: "none", border: "none", cursor: "pointer", color: moreOpen ? "#F59E0B" : "rgba(255,255,255,.35)", position: "relative" }}>
         {moreOpen && <span style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 28, height: 2, background: "linear-gradient(90deg,#F59E0B,#EA580C)", borderRadius: "0 0 4px 4px" }} />}
-        <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-        <span style={{ fontSize: 10, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
+        <svg width={iconSize} height={iconSize} fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+        <span style={{ fontSize: labelSize, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
       </button>
     </div>
   );
@@ -983,6 +991,12 @@ export default function AutomationPage() {
           .rule-card > div > div:first-child > div:last-child > div:first-child { font-size: 22px !important; font-weight: 700 !important; }
           .rule-card > div > div:first-child > div:last-child > div:last-child { font-size: 18px !important; margin-top: 6px !important; }
           .rule-card > div > div:last-child button { font-size: 18px !important; padding: 8px 18px !important; }
+
+          /* Bottom nav — bigger icons and labels */
+          .bottom-nav > a, .bottom-nav > button { padding: 14px 2px 18px !important; }
+          .bottom-nav svg { width: 28px !important; height: 28px !important; }
+          .bottom-nav span[style*="font-size: 10"] { font-size: 16px !important; }
+          .bottom-nav > a > span:nth-child(2), .bottom-nav > button > span:nth-child(2) { font-size: 16px !important; }
         }
         .template-btn:hover { border-color: rgba(245,158,11,0.30) !important; background: rgba(245,158,11,0.08) !important; color: #F59E0B !important; }
         .suggestion-chip:hover { background: rgba(245,158,11,0.18) !important; }
@@ -1004,7 +1018,7 @@ export default function AutomationPage() {
         <Sidebar pathname={pathname} />
       </div>
       <div className="bottom-nav">
-        <BottomNav pathname={pathname} moreOpen={moreOpen} setMoreOpen={setMoreOpen} />
+        <BottomNav pathname={pathname} moreOpen={moreOpen} setMoreOpen={setMoreOpen} isDesktopSiteOn={isDesktopSiteOn} />
       </div>
 
       <main className="main-content" style={{ position: "relative", zIndex: 10, minHeight: "100vh"}}>

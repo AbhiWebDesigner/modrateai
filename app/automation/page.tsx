@@ -614,9 +614,10 @@ export default function AutomationPage() {
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
   // ── Window width for responsive grid ────────────────────────────────────────
-  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  const [windowWidth, setWindowWidth] = useState(0);
   useEffect(() => {
     const update = () => setWindowWidth(window.innerWidth);
+    update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);

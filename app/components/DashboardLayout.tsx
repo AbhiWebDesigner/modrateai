@@ -254,16 +254,22 @@ export function DashboardBottomNav() {
           {MORE_LINKS.map((link) => {
             const active = pathname === link.href;
             return (
-              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: "none", fontSize: isDesktopSiteOn ? 24 : 14, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.7)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
-                {link.icon}{link.label}
+              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: "none", fontSize: isDesktopSiteOn ? 24 : 13, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.72)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
+                <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span style={{ display: "flex" }}>{link.icon}</span>
+                </div>
+                {link.label}
               </Link>
             );
           })}
 
           {/* Logout */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: 6, paddingTop: 6, paddingBottom: isDesktopSiteOn ? 20 : 12 }}>
-            <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, fontSize: isDesktopSiteOn ? 24 : 14, fontWeight: 500, color: "#f87171", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
-              <LogOut size={isDesktopSiteOn ? 26 : 18} color="#f87171" /> Logout
+          <div style={{ margin: isDesktopSiteOn ? "6px 0 0" : "6px 0 0", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 6, paddingBottom: isDesktopSiteOn ? 20 : 12 }}>
+            <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, fontSize: isDesktopSiteOn ? 24 : 13, fontWeight: 600, color: "#f87171", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
+              <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <LogOut size={isDesktopSiteOn ? 26 : 14} color="#f87171" strokeWidth={1.8} />
+              </div>
+              Logout
             </button>
           </div>
         </div>

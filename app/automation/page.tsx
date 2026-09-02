@@ -966,7 +966,7 @@ export default function AutomationPage() {
         <BottomNav pathname={pathname} moreOpen={moreOpen} setMoreOpen={setMoreOpen} />
       </div>
 
-      <main className="main-content" style={{ position: "relative", zIndex: 10, minHeight: "100vh", maxWidth: 1100, margin: "0 auto" }}>
+      <main className="main-content" style={{ position: "relative", zIndex: 10, minHeight: "100vh"}}>
 
         {!showBuilder ? (
           <>

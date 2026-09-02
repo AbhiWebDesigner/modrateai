@@ -298,11 +298,12 @@ export default function AlertsPage() {
           .r-mobile-topbar{display:none!important;}
           .r-topbar{display:none!important;}
           .r-bnav{display:block!important;}
-          @media (pointer: coarse) and (min-width: 600px) {
+          @media (pointer: coarse) {
             .r-mobile-topbar{display:flex!important;}
-          }
-          @media (pointer: coarse) and (max-width: 599px) {
-            .r-mobile-topbar{display:flex!important;}
+            .r-topbar{display:none!important;}
+            .r-sidebar{display:none!important;}
+            .r-main{margin-left:0!important;width:100%!important;padding-bottom:120px!important;}
+            .r-bnav{display:block!important;}
           }
           .r-bnav{display:block!important;}
         }
@@ -399,19 +400,24 @@ export default function AlertsPage() {
             </Link>
           </header>
 
-          {/* MOBILE TOPBAR */}
-          <header className="r-mobile-topbar" style={{ position: 'sticky', top: 0, zIndex: 30, background: 'rgba(10,10,15,0.96)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '0 14px', height: 52, display: 'none', alignItems: 'center', gap: 10 }}>
+          {/* MOBILE TOPBAR — shown on mobile (both DSO on/off) */}
+          <header className="r-mobile-topbar" style={{ position: 'sticky', top: 0, zIndex: 30, background: 'rgba(10,10,15,0.96)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '0 14px', height: isDesktopSiteOn ? 72 : 52, display: 'none', alignItems: 'center', gap: 10 }}>
+            {/* Left — title + live badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-              <div style={{ width: isDesktopSiteOn ? 48 : 30, height: isDesktopSiteOn ? 48 : 30, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 18 : 11, flexShrink: 0 }}>{initials}</div>
-              <div>
-                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 20 : 13 }}>{user?.displayName?.split(' ')[0] || 'User'}</div>
-                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: isDesktopSiteOn ? 16 : 10 }}>{planLabel}</div>
+              <h1 style={{ fontSize: isDesktopSiteOn ? 24 : 16, fontWeight: 900, color: '#FAFAFA', letterSpacing: '-0.02em' }}>Alerts</h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: isDesktopSiteOn ? '6px 14px' : '3px 8px' }}>
+                <div style={{ width: isDesktopSiteOn ? 8 : 5, height: isDesktopSiteOn ? 8 : 5, borderRadius: '50%', background: '#22c55e', animation: 'pulse 2s infinite' }} />
+                <span style={{ color: '#22c55e', fontSize: isDesktopSiteOn ? 16 : 10, fontWeight: 700 }}>Live</span>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 20, padding: isDesktopSiteOn ? '6px 14px' : '3px 10px' }}>
-              <div style={{ width: isDesktopSiteOn ? 8 : 6, height: isDesktopSiteOn ? 8 : 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.8)', animation: 'pulse 2s infinite' }} />
-              <span style={{ color: '#22c55e', fontSize: isDesktopSiteOn ? 16 : 11, fontWeight: 700 }}>Live</span>
-            </div>
+            {/* Right — avatar + name + plan */}
+            <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 12 : 7, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: isDesktopSiteOn ? '8px 16px 8px 8px' : '4px 10px 4px 4px', textDecoration: 'none', flexShrink: 0 }}>
+              <div style={{ width: isDesktopSiteOn ? 44 : 26, height: isDesktopSiteOn ? 44 : 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 16 : 10, flexShrink: 0 }}>{initials}</div>
+              <div>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 20 : 12, lineHeight: 1.2 }}>{user?.displayName || 'User'}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: isDesktopSiteOn ? 15 : 10 }}>{planLabel}</div>
+              </div>
+            </Link>
           </header>
 
           {/* CONTENT */}

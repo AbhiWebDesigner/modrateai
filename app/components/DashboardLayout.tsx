@@ -238,32 +238,32 @@ export function DashboardBottomNav() {
 
         {/* User Profile */}
         {auth.currentUser && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-            <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 18 : 10, padding: isDesktopSiteOn ? "14px 24px 20px" : "10px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13, flexShrink: 0 }}>
               {(auth.currentUser.displayName || auth.currentUser.email || "U")[0].toUpperCase()}
             </div>
             <div>
-              <div style={{ color: "#FAFAFA", fontWeight: 700, fontSize: 14 }}>{auth.currentUser.displayName || "User"}</div>
-              <div style={{ color: "rgba(255,255,255,0.32)", fontSize: 11 }}>{auth.currentUser.email}</div>
+              <div style={{ color: "#FAFAFA", fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{auth.currentUser.displayName || "User"}</div>
+              <div style={{ color: "rgba(255,255,255,0.32)", fontSize: isDesktopSiteOn ? 20 : 11 }}>{auth.currentUser.email}</div>
             </div>
           </div>
         )}
 
         {/* Menu Items */}
-        <div style={{ padding: "6px 8px" }}>
+        <div style={{ padding: isDesktopSiteOn ? "10px 14px" : "6px 8px" }}>
           {MORE_LINKS.map((link) => {
             const active = pathname === link.href;
             return (
-              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.7)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
+              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: "none", fontSize: isDesktopSiteOn ? 24 : 14, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.7)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
                 {link.icon}{link.label}
               </Link>
             );
           })}
 
           {/* Logout */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: 6, paddingTop: 6, paddingBottom: 12 }}>
-            <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, fontSize: 14, fontWeight: 500, color: "#f87171", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
-              <LogOut size={18} color="#f87171" /> Logout
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: 6, paddingTop: 6, paddingBottom: isDesktopSiteOn ? 20 : 12 }}>
+            <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, fontSize: isDesktopSiteOn ? 24 : 14, fontWeight: 500, color: "#f87171", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
+              <LogOut size={isDesktopSiteOn ? 26 : 18} color="#f87171" /> Logout
             </button>
           </div>
         </div>

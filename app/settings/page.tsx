@@ -349,6 +349,14 @@ export default function SettingsPage() {
         .dso .r-mobile-topbar{display:flex!important;}
         .dso .r-bottom-nav{display:flex!important;}
 
+        /* ══ DSO bottom nav — bigger icons + labels ══ */
+        .dso .r-bnav-item{padding:14px 4px 18px!important;}
+        .dso .r-bnav-icon{width:64px!important;height:48px!important;border-radius:14px!important;}
+        .dso .r-bnav-icon svg{width:28px!important;height:28px!important;}
+        .dso .r-bnav-item > span:last-child{font-size:16px!important;}
+        .dso .r-bnav-fab{width:64px!important;height:64px!important;}
+        .dso .r-bnav-fab svg{width:30px!important;height:30px!important;}
+
         .dso.r-bg{
           display:block!important;
           width:100vw!important;

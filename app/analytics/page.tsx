@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { DashboardSidebar, DashboardBottomNav } from '@/app/components/DashboardLayout';
 
@@ -497,9 +497,7 @@ export default function AnalyticsPage() {
 
       // Immediate getDoc for fast first render
       try {
-        const snap = await import('firebase/firestore').then(({ getDoc, doc: firestoreDoc }) =>
-          getDoc(firestoreDoc(db, 'users', u.uid))
-        );
+        const snap = await getDoc(doc(db, 'users', u.uid));
         if (!mounted.current) return;
         if (snap.exists()) {
           const d = snap.data();

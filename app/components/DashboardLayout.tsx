@@ -225,45 +225,44 @@ export function DashboardBottomNav() {
       <div style={{
         position: "fixed",
         bottom: showMore ? 0 : -700,
-        top: showMore ? "auto" : "auto",
         left: 0, right: 0, zIndex: 49,
-        background: "rgba(20,8,45,0.95)",
+        background: "rgba(20,8,45,0.75)",
         borderTop: "1px solid rgba(124,58,237,0.3)",
         borderRadius: "20px 20px 0 0",
-        maxHeight: "calc(100vh - 60px)",
-        overflowY: "auto",
-        transition: "bottom 0.28s cubic-bezier(0.32,0.72,0,1)",
-        backdropFilter: "blur(20px)",
         boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)",
-        paddingBottom: "env(safe-area-inset-bottom, 80px)",
+        backdropFilter: "blur(28px)",
+        animation: showMore ? "slideUp 0.22s ease" : "none",
       }}>
-        <div style={{ width: isDesktopSiteOn ? 56 : 30, height: isDesktopSiteOn ? 6 : 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: isDesktopSiteOn ? "18px auto 12px" : "6px auto 12px" }} />
-        
-        {/* User profile */}
+        <div style={{ width: 30, height: 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: "6px auto 12px" }} />
+
+        {/* User Profile */}
         {auth.currentUser && (
-          <div style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 18 : 10, padding: isDesktopSiteOn ? "14px 24px 20px" : "10px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
-            <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
               {(auth.currentUser.displayName || auth.currentUser.email || "U")[0].toUpperCase()}
             </div>
             <div>
-              <div style={{ color: "#FAFAFA", fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{auth.currentUser.displayName || "User"}</div>
-              <div style={{ color: "rgba(255,255,255,0.32)", fontSize: isDesktopSiteOn ? 20 : 11 }}>{auth.currentUser.email}</div>
+              <div style={{ color: "#FAFAFA", fontWeight: 700, fontSize: 14 }}>{auth.currentUser.displayName || "User"}</div>
+              <div style={{ color: "rgba(255,255,255,0.32)", fontSize: 11 }}>{auth.currentUser.email}</div>
             </div>
           </div>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: isDesktopSiteOn ? "0 14px" : "0 8px" }}>
+        {/* Menu Items */}
+        <div style={{ padding: "6px 8px" }}>
           {MORE_LINKS.map((link) => {
             const active = pathname === link.href;
             return (
-              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: drawerPad, borderRadius: isDesktopSiteOn ? 16 : 12, textDecoration: "none", fontSize: drawerFont, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.7)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
+              <Link key={link.href} href={link.href} onClick={() => setShowMore(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: active ? 600 : 500, color: active ? "#F59E0B" : "rgba(255,255,255,0.7)", background: active ? "rgba(245,158,11,0.1)" : "transparent", border: active ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent", transition: "all 0.15s" }}>
                 {link.icon}{link.label}
               </Link>
             );
           })}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 6, paddingTop: 6, paddingBottom: isDesktopSiteOn ? 20 : 12 }}>
-            <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: drawerPad, borderRadius: isDesktopSiteOn ? 16 : 12, fontSize: drawerFont, fontWeight: 500, color: "rgba(255,80,80,0.8)", background: "none", border: "1px solid transparent", cursor: "pointer", width: "100%", transition: "all 0.15s" }}>
-              <LogOut size={drawerIcon} /> Logout
+
+          {/* Logout */}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: 6, paddingTop: 6, paddingBottom: 12 }}>
+            <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 10, fontSize: 14, fontWeight: 500, color: "#f87171", background: "none", border: "none", cursor: "pointer", width: "100%" }}>
+              <LogOut size={18} color="#f87171" /> Logout
             </button>
           </div>
         </div>

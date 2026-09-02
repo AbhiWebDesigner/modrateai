@@ -613,6 +613,14 @@ export default function AutomationPage() {
   const [moreOpen,          setMoreOpen]          = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
+  // ── Window width for responsive grid ────────────────────────────────────────
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  useEffect(() => {
+    const update = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   // ── V2 Rules list state ───────────────────────────────────────────────────
   const [searchQuery,  setSearchQuery]  = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
@@ -994,7 +1002,7 @@ export default function AutomationPage() {
             )}
 
             {/* ── Stats Cards ─────────────────────────────────────────────── */}
-            <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
+            <div style={{ display: "grid", gridTemplateColumns: windowWidth >= 1024 ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
               {[
                 { icon: "⚡", label: "Active Rules",       value: rules.filter(r => r.active).length.toString(), sub: "Running",           color: "#a78bfa", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.18)" },
                 { icon: "💬", label: "Comments Processed", value: (analytics?.totalScanned ?? 0).toLocaleString(), sub: "All time",        color: "#60a5fa", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.18)"  },

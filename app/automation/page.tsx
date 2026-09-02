@@ -1604,14 +1604,14 @@ export default function AutomationPage() {
       {moreOpen && (
         <>
           <div onClick={() => setMoreOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 55, background: "transparent" }} />
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, background: "rgba(20,8,45,0.75)", borderTop: "1px solid rgba(124,58,237,0.3)", borderRadius: "20px 20px 0 0", padding: "0 0 env(safe-area-inset-bottom,16px)", boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)", backdropFilter: "blur(20px)", animation: "slideUp 0.22s ease" }}>
-            <div style={{ width: 36, height: 4, background: "rgba(255,255,255,0.12)", borderRadius: 4, margin: "12px auto 8px" }} />
-            <div style={{ padding: "0 16px 8px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 13 }}>{user?.displayName?.[0] || "U"}</div>
+          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 60, background: "rgba(20,8,45,0.75)", borderTop: "1px solid rgba(124,58,237,0.3)", borderRadius: "20px 20px 0 0", padding: `0 0 env(safe-area-inset-bottom,${isDesktopSiteOn ? '20px' : '16px'})`, boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)", backdropFilter: "blur(20px)", animation: "slideUp 0.22s ease" }}>
+            <div style={{ width: isDesktopSiteOn ? 56 : 36, height: isDesktopSiteOn ? 6 : 4, background: "rgba(255,255,255,0.12)", borderRadius: 4, margin: isDesktopSiteOn ? "18px auto 12px" : "12px auto 8px" }} />
+            <div style={{ padding: isDesktopSiteOn ? "0 24px 16px" : "0 16px 8px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: isDesktopSiteOn ? 12 : 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 18 : 10 }}>
+                <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13 }}>{user?.displayName?.[0] || "U"}</div>
                 <div>
-                  <div style={{ color: "#FAFAFA", fontWeight: 700, fontSize: 14 }}>{user?.displayName?.split(" ")[0] || "User"}</div>
-                  <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>{user?.email}</div>
+                  <div style={{ color: "#FAFAFA", fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{user?.displayName?.split(" ")[0] || "User"}</div>
+                  <div style={{ color: "rgba(255,255,255,0.3)", fontSize: isDesktopSiteOn ? 20 : 11 }}>{user?.email}</div>
                 </div>
               </div>
             </div>
@@ -1621,13 +1621,13 @@ export default function AutomationPage() {
               { icon: "🛡️", label: "Moderation", href: "/moderation", color: "#60a5fa" },
               { icon: "⚙️", label: "Settings",   href: "/settings",   color: "#a78bfa" },
             ].map(item => (
-              <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", textDecoration: "none", color: "#ffffff", fontWeight: 500, fontSize: 15, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <span style={{ fontSize: 20 }}>{item.icon}</span>{item.label}
+              <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? "20px 28px" : "14px 20px", textDecoration: "none", color: "#ffffff", fontWeight: 500, fontSize: isDesktopSiteOn ? 24 : 15, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ fontSize: isDesktopSiteOn ? 28 : 20 }}>{item.icon}</span>{item.label}
               </Link>
             ))}
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 4 }}>
-              <button onClick={() => { setMoreOpen(false); router.push("/login"); }} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", background: "none", border: "none", cursor: "pointer", color: "#f87171", fontWeight: 500, fontSize: 15, width: "100%" }}>
-                <span style={{ fontSize: 20 }}>🚪</span> Logout
+              <button onClick={() => { setMoreOpen(false); router.push("/login"); }} style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? "20px 28px" : "14px 20px", background: "none", border: "none", cursor: "pointer", color: "#f87171", fontWeight: 500, fontSize: isDesktopSiteOn ? 24 : 15, width: "100%" }}>
+                <span style={{ fontSize: isDesktopSiteOn ? 28 : 20 }}>🚪</span> Logout
               </button>
             </div>
           </div>

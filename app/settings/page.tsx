@@ -11,7 +11,7 @@ import {
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 type TabId = 'profile' | 'security' | '2fa' | 'encryption';
@@ -94,7 +94,12 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     if (!user) return;
-    try { await setDoc(doc(db, 'users', user.uid), { displayName: fullName }, { merge: true }); } catch {}
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        name:       fullName,
+        updated_at: new Date().toISOString(),
+      });
+    } catch {}
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 2000);
   };
@@ -103,13 +108,13 @@ export default function SettingsPage() {
     if (!user) return;
     setDisconnecting(true);
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
-        youtube_connected: false, youtube_access_token: '', youtube_refresh_token: '',
-        youtube_channel_id: '', youtube_channel_name: '', youtube_channel_handle: '',
-        youtube_channel_thumbnail: '', youtube_subscriber_count: '0',
-        youtube_video_count: '0', youtube_view_count: '0',
+      const token = await user.getIdToken();
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/youtube/disconnect`, {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setYoutubeConnected(false); setYoutubeChannel('');
+      setYoutubeConnected(false);
+      setYoutubeChannel('');
     } catch {}
     setDisconnecting(false);
   };

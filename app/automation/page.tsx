@@ -612,6 +612,13 @@ export default function AutomationPage() {
   const [moreOpen,          setMoreOpen]          = useState(false);
   const [mobilePreviewOpen, setMobilePreviewOpen] = useState(false);
 
+  // ── V2 Rules list state ───────────────────────────────────────────────────
+  const [searchQuery,  setSearchQuery]  = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
+  const [analytics,    setAnalytics]    = useState<{
+    totalReplies: number; totalScanned: number; totalHidden: number;
+  } | null>(null);
+
   // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -673,7 +680,21 @@ export default function AutomationPage() {
     return () => unsub();
   }, [user]);
 
-  // ── Videos (lazy, on selector open) ──────────────────────────────────────
+  // ── Analytics (for stats cards) ───────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    const unsub = onSnapshot(doc(db, "analytics", user.uid), (snap) => {
+      if (snap.exists()) {
+        const d = snap.data();
+        setAnalytics({
+          totalReplies: d.totalReplies ?? 0,
+          totalScanned: d.totalScanned ?? 0,
+          totalHidden:  d.totalHidden  ?? 0,
+        });
+      }
+    });
+    return () => unsub();
+  }, [user]);
   useEffect(() => {
     if (!showVideoSelector || !user || videos.length > 0) return;
     setVideosLoading(true);
@@ -868,6 +889,14 @@ export default function AutomationPage() {
         @keyframes shimmer      { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         .rule-card { animation: fadeIn 0.2s ease; }
         .rule-card:hover { border-color: rgba(245,158,11,0.18) !important; background: rgba(255,255,255,0.045) !important; }
+        .rule-mobile-layout  { display: flex !important; }
+        .rule-desktop-layout { display: none !important; }
+        .rules-table-header  { display: none !important; }
+        @media (min-width: 1024px) {
+          .rule-mobile-layout  { display: none !important; }
+          .rule-desktop-layout { display: grid !important; }
+          .rules-table-header  { display: grid !important; }
+        }
         .template-btn:hover { border-color: rgba(245,158,11,0.30) !important; background: rgba(245,158,11,0.08) !important; color: #F59E0B !important; }
         .suggestion-chip:hover { background: rgba(245,158,11,0.18) !important; }
         .mobile-preview-fab { display: flex; }
@@ -926,6 +955,52 @@ export default function AutomationPage() {
               <YouTubeNotConnectedBanner />
             )}
 
+            {/* ── Stats Cards ─────────────────────────────────────────────── */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+              {[
+                { icon: "⚡", label: "Active Rules",       value: rules.filter(r => r.active).length.toString(), sub: "Running",           color: "#a78bfa", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.18)" },
+                { icon: "💬", label: "Comments Processed", value: (analytics?.totalScanned ?? 0).toLocaleString(), sub: "All time",        color: "#60a5fa", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.18)"  },
+                { icon: "🤖", label: "AI Replies Sent",    value: (analytics?.totalReplies ?? 0).toLocaleString(), sub: "All time",        color: "#34d399", bg: "rgba(52,211,153,0.10)",  border: "rgba(52,211,153,0.18)"  },
+                { icon: "🎯", label: "Reply Success Rate", value: analytics && analytics.totalScanned > 0 ? `${Math.round((analytics.totalReplies / analytics.totalScanned) * 100)}%` : "—", sub: "Avg accuracy", color: "#F59E0B", bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.18)" },
+              ].map(stat => (
+                <div key={stat.label} style={{ background: stat.bg, border: `1px solid ${stat.border}`, borderRadius: 14, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ fontSize: 24, flexShrink: 0 }}>{stat.icon}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 500, marginBottom: 2 }}>{stat.label}</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: stat.color, lineHeight: 1 }}>{stat.value}</div>
+                    <div style={{ color: "rgba(255,255,255,0.30)", fontSize: 10, marginTop: 2 }}>{stat.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Rules Table Header ───────────────────────────────────────── */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+              <div style={{ color: "rgba(255,255,255,0.60)", fontSize: 13, fontWeight: 600 }}>
+                All Automation Rules ({rules.length})
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <select
+                  value={filterStatus}
+                  onChange={e => setFilterStatus(e.target.value as "all" | "active" | "inactive")}
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "rgba(255,255,255,0.70)", fontSize: 12, padding: "6px 10px", cursor: "pointer" }}
+                >
+                  <option value="all">All Rules</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+                <div style={{ position: "relative" }}>
+                  <input
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search rules..."
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", fontSize: 12, padding: "6px 10px 6px 28px", width: 160 }}
+                  />
+                  <svg width="12" height="12" fill="none" stroke="rgba(255,255,255,0.30)" strokeWidth="2" viewBox="0 0 24 24" style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                </div>
+              </div>
+            </div>
+
             {rulesLoading ? (
               <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
                 <div style={{ width: 32, height: 32, border: "2px solid #F59E0B", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -949,41 +1024,121 @@ export default function AutomationPage() {
                   </Link>
                 )}
               </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {rules.map(rule => {
-                  const eligible = youtubeConnected && rule.active;
-                  return (
-                    <div key={rule.id} className="rule-card" style={{ background: "rgba(255,255,255,0.035)", border: `1px solid ${eligible ? "rgba(34,197,94,0.14)" : "rgba(255,255,255,0.07)"}`, borderRadius: 16, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, transition: "all 0.2s" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
-                        <div style={{ background: eligible ? "rgba(34,197,94,0.10)" : "rgba(245,158,11,0.12)", borderRadius: 10, width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>⚡</div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.name}</div>
-                          <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {(rule.video?.title ?? "").slice(0, 36)}{(rule.video?.title?.length ?? 0) > 36 ? "…" : ""} · {rule.keywords?.length ?? 0} kw
-                            {!youtubeConnected && rule.active && (
-                              <span style={{ color: "rgba(255,200,80,0.60)", marginLeft: 6, fontSize: 10 }}>· no channel</span>
-                            )}
+            ) : (() => {
+              const filtered = rules.filter(r => {
+                const matchSearch = !searchQuery.trim() || r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.keywords.some(k => k.toLowerCase().includes(searchQuery.toLowerCase()));
+                const matchStatus = filterStatus === "all" || (filterStatus === "active" ? r.active : !r.active);
+                return matchSearch && matchStatus;
+              });
+
+              if (filtered.length === 0) return (
+                <div style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.30)", fontSize: 13 }}>
+                  No rules match your search
+                </div>
+              );
+
+              return (
+                <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, overflow: "hidden" }}>
+                  {/* Table header — desktop only */}
+                  <div className="rules-table-header" style={{ display: "none", gridTemplateColumns: "2fr 1.5fr 1.5fr 1.5fr auto", gap: 12, padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                    {["Rule", "WHEN", "IF (Condition)", "THEN (Action)", ""].map(h => (
+                      <div key={h} style={{ color: h === "WHEN" ? "#a78bfa" : h === "IF (Condition)" ? "#60a5fa" : h === "THEN (Action)" ? "#34d399" : "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: 0.5 }}>{h}</div>
+                    ))}
+                  </div>
+
+                  {filtered.map((rule, idx) => {
+                    const eligible = youtubeConnected && rule.active;
+                    const whenText = "New Comment";
+                    const ifText   = rule.keywords.length > 0 ? `Keyword Match\n${rule.keywords.slice(0, 3).join(", ")}${rule.keywords.length > 3 ? `…` : ""}` : "Any Comment\nNo condition";
+                    const thenText = rule.replyMode === "ai" ? "AI Reply\nGenerate & post reply" : "Random Reply\nPost from list";
+
+                    return (
+                      <div key={rule.id} className="rule-card" style={{ borderBottom: idx < filtered.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none", padding: "14px 16px", transition: "all 0.2s" }}>
+                        {/* Mobile layout */}
+                        <div className="rule-mobile-layout" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+                            <div style={{ background: eligible ? "rgba(34,197,94,0.12)" : "rgba(245,158,11,0.12)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>⚡</div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{rule.name}</div>
+                              <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 2 }}>
+                                {rule.keywords.slice(0, 3).join(", ")}{rule.keywords.length > 3 ? "…" : ""} · {rule.replyMode === "ai" ? "AI Reply" : "Random Reply"}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                            <button
+                              onClick={() => toggleRule(rule)}
+                              style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 700, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
+                            >
+                              {rule.active ? "● On" : "○ Off"}
+                            </button>
+                            <button
+                              onClick={() => deleteRule(rule.id, rule.active)}
+                              disabled={deleting === rule.id}
+                              style={{ color: "rgba(255,80,80,0.55)", background: "none", border: "none", cursor: "pointer", opacity: deleting === rule.id ? 0.4 : 1, padding: "4px", fontSize: 15 }}
+                            >
+                              {deleting === rule.id ? "⏳" : "🗑️"}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Desktop WHEN/IF/THEN columns */}
+                        <div className="rule-desktop-layout" style={{ display: "none", gridTemplateColumns: "2fr 1.5fr 1.5fr 1.5fr auto", gap: 12, alignItems: "center" }}>
+                          {/* Rule name + toggle */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ background: eligible ? "rgba(34,197,94,0.12)" : "rgba(245,158,11,0.12)", borderRadius: 10, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>⚡</div>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: 13 }}>{rule.name}</div>
+                              <button
+                                onClick={() => toggleRule(rule)}
+                                style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "3px 8px", fontSize: 10, fontWeight: 700, border: "none", cursor: "pointer", marginTop: 4 }}
+                              >
+                                {rule.active ? "● ON" : "○ OFF"}
+                              </button>
+                            </div>
+                          </div>
+                          {/* WHEN */}
+                          <div>
+                            <div style={{ color: "#a78bfa", fontSize: 9, fontWeight: 700, letterSpacing: 0.5, marginBottom: 3 }}>WHEN</div>
+                            <div style={{ fontSize: 12, fontWeight: 600 }}>{whenText}</div>
+                            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>Any new comment</div>
+                          </div>
+                          {/* IF */}
+                          <div>
+                            <div style={{ color: "#60a5fa", fontSize: 9, fontWeight: 700, letterSpacing: 0.5, marginBottom: 3 }}>IF (Condition)</div>
+                            <div style={{ fontSize: 12, fontWeight: 600 }}>{rule.keywords.length > 0 ? "Keyword Match" : "Any Comment"}</div>
+                            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {rule.keywords.slice(0, 3).join(", ")}{rule.keywords.length > 3 ? "…" : rule.keywords.length === 0 ? "No condition" : ""}
+                            </div>
+                          </div>
+                          {/* THEN */}
+                          <div>
+                            <div style={{ color: "#34d399", fontSize: 9, fontWeight: 700, letterSpacing: 0.5, marginBottom: 3 }}>THEN (Action)</div>
+                            <div style={{ fontSize: 12, fontWeight: 600 }}>{rule.replyMode === "ai" ? "AI Reply" : "Random Reply"}</div>
+                            <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>Generate & post reply</div>
+                          </div>
+                          {/* Actions */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <button
+                              onClick={() => deleteRule(rule.id, rule.active)}
+                              disabled={deleting === rule.id}
+                              style={{ color: "rgba(255,80,80,0.55)", background: "none", border: "none", cursor: "pointer", opacity: deleting === rule.id ? 0.4 : 1, padding: "4px", fontSize: 15 }}
+                            >
+                              {deleting === rule.id ? "⏳" : "🗑️"}
+                            </button>
                           </div>
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                        <button
-                          onClick={() => toggleRule(rule)}
-                          style={{ background: rule.active ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)", color: rule.active ? "#22c55e" : "rgba(255,255,255,0.35)", borderRadius: 20, padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}
-                          title={rule.active ? "Rule is enabled" : "Rule is disabled"}
-                        >
-                          {rule.active ? "● On" : "○ Off"}
-                        </button>
-                        <button onClick={() => deleteRule(rule.id, rule.active)} disabled={deleting === rule.id} style={{ color: "rgba(255,100,100,0.55)", background: "none", border: "none", cursor: "pointer", fontSize: 16, opacity: deleting === rule.id ? 0.4 : 1, padding: "4px" }}>
-                          {deleting === rule.id ? "⏳" : "🗑️"}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+
+                  {/* Pagination info */}
+                  <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.30)", fontSize: 11 }}>
+                    Showing {filtered.length} of {rules.length} rules
+                  </div>
+                </div>
+              );
+            })()}
           </>
         ) : (
           <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>

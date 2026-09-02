@@ -928,10 +928,12 @@ export default function AutomationPage() {
         .rule-mobile-layout  { display: flex !important; }
         .rule-desktop-layout { display: none !important; }
         .rules-table-header  { display: none !important; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
         @media (min-width: 1024px) {
           .rule-mobile-layout  { display: none !important; }
           .rule-desktop-layout { display: grid !important; }
           .rules-table-header  { display: grid !important; }
+          .stats-grid          { grid-template-columns: repeat(4, 1fr) !important; }
         }
         .template-btn:hover { border-color: rgba(245,158,11,0.30) !important; background: rgba(245,158,11,0.08) !important; color: #F59E0B !important; }
         .suggestion-chip:hover { background: rgba(245,158,11,0.18) !important; }
@@ -992,7 +994,7 @@ export default function AutomationPage() {
             )}
 
             {/* ── Stats Cards ─────────────────────────────────────────────── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+            <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
               {[
                 { icon: "⚡", label: "Active Rules",       value: rules.filter(r => r.active).length.toString(), sub: "Running",           color: "#a78bfa", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.18)" },
                 { icon: "💬", label: "Comments Processed", value: (analytics?.totalScanned ?? 0).toLocaleString(), sub: "All time",        color: "#60a5fa", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.18)"  },

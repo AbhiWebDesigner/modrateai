@@ -659,7 +659,7 @@ export default function LiveFeedPage() {
   const lastScanTime = timeAgoFn(lastScanTimestamp);
 
   const isYouTubeConnected = getYouTubeConnected(userData);
-  const handleYouTubeConnect = () => { if (user) connectYouTube(user.uid); };
+  const handleYouTubeConnect = () => { if (user) connectYouTube(user); };
 
   const channelsCount: number = isYouTubeConnected
     ? ((userData?.channels_count as number) ?? 1)

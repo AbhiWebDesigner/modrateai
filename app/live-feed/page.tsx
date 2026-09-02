@@ -653,7 +653,7 @@ export default function LiveFeedPage() {
   void planLabel;
 
   const firstName = user?.displayName?.split(' ')[0] || 'there';
-  const initials  = (user?.displayName || 'U').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+  const initials  = (user?.displayName || 'U')[0].toUpperCase();
   const userPhoto = user?.photoURL ?? (userData?.photo as string) ?? null;
 
   const lastScanTime = timeAgoFn(lastScanTimestamp);
@@ -987,21 +987,17 @@ export default function LiveFeedPage() {
             {/* Spacer */}
             <div style={{ flex: '1 1 0' }} />
 
-            {/* Icon buttons */}
-            <button className="r-icon-btn" style={{ flexShrink: 0 }}>
-              <Bell size={12} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
-            </button>
-            <button className="r-icon-btn" style={{ flexShrink: 0 }}>
-              <Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} />
-            </button>
-
-            {/* ── Avatar button: flex-shrink:0 inline + overflow:visible via CSS class ── */}
+            {/* ── Avatar button with full name + plan ── */}
             <button
               className="r-avatar-btn"
-              style={{ flexShrink: 0 }}
+              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: '4px 11px 4px 4px', cursor: 'pointer' }}
               onClick={() => router.push('/settings')}
             >
-              <UserAvatar src={userPhoto} initials={initials} size={25} />
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 10, flexShrink: 0 }}>{initials}</div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12.5, lineHeight: 1.2 }}>{user?.displayName || 'User'}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10 }}>{userData?.plan === 'pro' ? 'Pro plan' : userData?.plan === 'agency' ? 'Agency plan' : 'Free plan'}</div>
+              </div>
             </button>
           </header>
 

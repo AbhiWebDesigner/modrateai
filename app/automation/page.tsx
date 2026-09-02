@@ -938,7 +938,10 @@ export default function AutomationPage() {
         .rule-desktop-layout { display: none !important; }
         .rules-table-header  { display: none !important; }
         .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        @media (min-width: 1280px) {
+        .rule-mobile-layout  { display: flex !important; }
+        .rule-desktop-layout { display: none !important; }
+        .rules-table-header  { display: none !important; }
+        @media screen and (min-width: 1280px) and (hover: hover) and (pointer: fine) {
           .rule-mobile-layout  { display: none !important; }
           .rule-desktop-layout { display: grid !important; }
           .rules-table-header  { display: grid !important; }
@@ -1003,7 +1006,7 @@ export default function AutomationPage() {
             )}
 
             {/* ── Stats Cards ─────────────────────────────────────────────── */}
-            <div style={{ display: "grid", gridTemplateColumns: windowWidth >= 1280 ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
+            <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }}>
               {[
                 { icon: "⚡", label: "Active Rules",       value: rules.filter(r => r.active).length.toString(), sub: "Running",           color: "#a78bfa", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.18)" },
                 { icon: "💬", label: "Comments Processed", value: (analytics?.totalScanned ?? 0).toLocaleString(), sub: "All time",        color: "#60a5fa", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.18)"  },

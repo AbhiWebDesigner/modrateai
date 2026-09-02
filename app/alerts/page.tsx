@@ -531,24 +531,27 @@ export default function AlertsPage() {
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }} />
             <div style={{
-              position: 'fixed', bottom: isDesktopSiteOn ? 100 : 68, left: isDesktopSiteOn ? 16 : 10, right: isDesktopSiteOn ? 16 : 10, zIndex: 60,
-              background: 'rgba(20,8,45,0.75)', border: '1px solid rgba(124,58,237,0.3)',
-              borderRadius: isDesktopSiteOn ? 26 : 20, overflow: 'hidden',
-              boxShadow: '0 -8px 48px rgba(0,0,0,0.7)', backdropFilter: 'blur(28px)',
+              position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60,
+              background: 'rgba(20,8,45,0.75)',
+              borderTop: '1px solid rgba(124,58,237,0.3)',
+              borderRadius: '20px 20px 0 0',
+              padding: `0 0 env(safe-area-inset-bottom,${isDesktopSiteOn ? '20px' : '16px'})`,
+              boxShadow: '0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(28px)',
               animation: 'slideUp 0.2s ease',
             }}>
-              <div style={{ width: isDesktopSiteOn ? 56 : 32, height: isDesktopSiteOn ? 6 : 3, background: 'rgba(255,255,255,0.1)', borderRadius: 4, margin: isDesktopSiteOn ? '18px auto 14px' : '12px auto 10px' }} />
+              <div style={{ width: isDesktopSiteOn ? 56 : 36, height: isDesktopSiteOn ? 6 : 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: isDesktopSiteOn ? '18px auto 12px' : '12px auto 8px' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 18 : 10, padding: isDesktopSiteOn ? '14px 24px 20px' : '10px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ width: isDesktopSiteOn ? 60 : 36, height: isDesktopSiteOn ? 60 : 36, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13, flexShrink: 0 }}>{user?.displayName?.[0] || 'U'}</div>
+                <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13, flexShrink: 0 }}>{user?.displayName?.[0] || 'U'}</div>
                 <div>
-                  <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 13.5 }}>{user?.displayName || 'User'}</div>
+                  <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{user?.displayName || 'User'}</div>
                   <div style={{ color: 'rgba(255,255,255,0.32)', fontSize: isDesktopSiteOn ? 20 : 11 }}>{planLabel}</div>
                 </div>
               </div>
               <div style={{ padding: isDesktopSiteOn ? '10px 14px' : '6px 8px' }}>
                 {MORE_ITEMS.map(({ href, icon: Icon, label, color }) => (
                   <Link key={href} href={href} onClick={() => setMoreOpen(false)}
-                    style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 13, padding: isDesktopSiteOn ? '18px 14px' : '11px 10px', borderRadius: isDesktopSiteOn ? 16 : 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 14, transition: 'background 0.15s' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 13, padding: isDesktopSiteOn ? '18px 14px' : '11px 10px', borderRadius: isDesktopSiteOn ? 16 : 12, textDecoration: 'none', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 15, transition: 'background 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
@@ -560,7 +563,7 @@ export default function AlertsPage() {
                 ))}
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 6, paddingTop: 6 }}>
                   <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 13, padding: isDesktopSiteOn ? '18px 14px' : '11px 10px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 14, width: '100%', borderRadius: isDesktopSiteOn ? 16 : 12 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 13, padding: isDesktopSiteOn ? '18px 14px' : '11px 10px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 15, width: '100%', borderRadius: isDesktopSiteOn ? 16 : 12 }}>
                     <div style={{ width: isDesktopSiteOn ? 54 : 34, height: isDesktopSiteOn ? 54 : 34, borderRadius: isDesktopSiteOn ? 15 : 10, background: 'rgba(248,113,113,0.09)', border: '1px solid rgba(248,113,113,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <LogOut size={isDesktopSiteOn ? 26 : 15} color="#f87171" strokeWidth={1.8} />
                     </div>

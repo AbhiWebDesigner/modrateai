@@ -556,12 +556,12 @@ export default function ModerationPage() {
   </div>
       )}
           <div style={{ flex: 1 }} />
-            <button className="r-icon-btn"><Sun size={12} color="rgba(255,255,255,0.38)" strokeWidth={1.8} /></button>
-            <button className="r-avatar-btn" onClick={() => router.push('/settings')}>
-              {userPhoto
-                ? <img src={userPhoto} style={{ width: 25, height: 25, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
-                : <div style={{ width: 25, height: 25, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 9 }}>{initials}</div>
-              }
+            <button onClick={() => router.push('/settings')} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 11, padding: '4px 11px 4px 4px', cursor: 'pointer', flexShrink: 0 }}>
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 10, flexShrink: 0 }}>{initials}</div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12.5, lineHeight: 1.2 }}>{user?.displayName || 'User'}</div>
+                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10 }}>{planLabel}</div>
+              </div>
             </button>
           </header>
 

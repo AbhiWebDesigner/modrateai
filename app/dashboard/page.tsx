@@ -561,7 +561,11 @@ export default function Dashboard() {
     { label: 'Avg. Response Time', value: fmtMs(avgResponseTime > 0 ? avgResponseTime : undefined),           raw: avgResponseTime > 0 ? avgResponseTime : undefined,                up: false, color: '#34d399', pct: trendResponse, icon: Activity      },
   ];
 
-  const chartLabels = ['11 Jul', '12 Jul', '13 Jul', '14 Jul', '15 Jul', '17 Jul'];
+  const chartLabels = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (5 - i));
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  });
   const chartData = [
     { label: 'Comments Scanned', color: '#a78bfa', values: weeklyScanned.length >= 6 ? weeklyScanned.slice(-6) : [0,0,0,0,0,0] },
     { label: 'AI Replies',       color: '#F59E0B', values: weeklyReplies.length >= 6 ? weeklyReplies.slice(-6) : [0,0,0,0,0,0] },
@@ -1022,7 +1026,9 @@ export default function Dashboard() {
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" style={{ width: 28, height: 28 }} onClick={() => router.push('/notifications')}>
                 <Bell size={11} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
-                <span style={{ position: 'absolute', top: 4, right: 4, width: 11, height: 11, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'white', fontWeight: 800 }}>3</span>
+                {notifCount > 0 && (
+                  <span style={{ position: 'absolute', top: 4, right: 4, width: 11, height: 11, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'white', fontWeight: 800 }}>{notifCount}</span>
+                )}
               </button>
             </div>
             <button className="r-avatar-btn" style={{ padding: '2px 6px 2px 2px', flexShrink: 0 }} onClick={() => router.push('/settings')}>
@@ -1376,7 +1382,7 @@ export default function Dashboard() {
                           <span>{usagePct.toFixed(1)}% used</span>
                           {plan === 'free' && trialDaysLeft !== null
                             ? <span style={{ color: trialDaysLeft <= 3 ? '#f87171' : '#F59E0B', fontWeight: 700 }}>Resets in {trialDaysLeft} days</span>
-                            : <span>Resets 1 Aug 2026</span>
+                            : <span>Resets {(() => { const d = new Date(); d.setMonth(d.getMonth() + 1); d.setDate(1); return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); })()}</span>
                           }
                         </div>
                         {plan === 'free'

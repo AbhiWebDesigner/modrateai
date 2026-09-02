@@ -648,7 +648,7 @@ export default function AnalyticsPage() {
           .stats-grid      { grid-template-columns: repeat(3,1fr) !important; }
         }
 
-        .desktop-only    { display: none; }
+        .desktop-only    { display: flex; }
         .header-padding  { padding: 12px 16px; }
         .content-padding { padding: 16px; }
         .charts-grid     { grid-template-columns: 1fr; }

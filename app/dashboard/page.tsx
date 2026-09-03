@@ -779,7 +779,7 @@ export default function Dashboard() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
-        /* ══ DSO — bigger bottom nav ══ */
+        /* ══ DSO — bigger bottom nav (touch + wide viewport only) ══ */
         @media (pointer: coarse) and (min-width: 600px) {
           .r-bnav-item{padding:14px 4px 18px!important;gap:6px!important;}
           .r-bnav-icon{width:64px!important;height:48px!important;border-radius:14px!important;}
@@ -799,7 +799,7 @@ export default function Dashboard() {
 
         .r-pending-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
 
-        @media(min-width:768px) and (max-width:1023px){
+        @media(min-width:768px) and (max-width:1023px) and (pointer: fine){
           .r-bnav-icon{width:44px!important;height:34px!important;}
           .r-bnav-item span:last-child{font-size:11px!important;}
           .r-bottom-nav{padding:10px 4px env(safe-area-inset-bottom,10px)!important;}
@@ -814,7 +814,7 @@ export default function Dashboard() {
           .r-bottom-grid{grid-template-columns:1fr 1fr 1fr;}
         }
 
-        @media(min-width:768px) and (max-width:1023px){
+        @media(min-width:768px) and (max-width:1023px) and (pointer: fine){
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;}
           .r-bottom-nav{display:flex!important;}
@@ -1456,15 +1456,15 @@ export default function Dashboard() {
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'transparent' }} />
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60, background: 'rgba(8,5,20,0.3)', borderTop: '1px solid rgba(124,58,237,0.25)', borderRadius: '10px 20px 0 0', padding: '0 0 env(safe-area-inset-bottom,16px)', boxShadow: '0 -12px 60px rgba(124,58,237,0.2), 0 -8px 40px rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', animation: 'slideUp 0.22s ease' }}>
               <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '8px auto 14px' }} />
-              <div style={{ padding: '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ padding: isDesktopSiteOn ? '0 24px 16px' : '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 18 : 10 }}>
                   {userPhoto
-                    ? <img src={userPhoto} style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
-                    : <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 13 }}>{initials}</div>
+                    ? <img src={userPhoto} style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
+                    : <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13 }}>{initials}</div>
                   }
                   <div>
-                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14 }}>{firstName}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>{user?.email}</div>
+                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{firstName}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: isDesktopSiteOn ? 20 : 11 }}>{user?.email}</div>
                   </div>
                 </div>
               </div>

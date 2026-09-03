@@ -753,7 +753,7 @@ export default function Dashboard() {
 
         .r-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;
           background:rgba(10,10,15,0.97);border-top:1px solid rgba(255,255,255,0.06);
-          backdrop-filter:blur(24px);padding:10px 4px env(safe-area-inset-bottom,10px);}
+          backdrop-filter:blur(24px);padding:8px 4px env(safe-area-inset-bottom,8px);}
         .r-bnav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;
           flex:1;padding:5px 4px;text-decoration:none;color:rgba(255,255,255,0.32);
           border:none;background:none;cursor:pointer;transition:color 0.18s;-webkit-tap-highlight-color:transparent;}
@@ -777,7 +777,7 @@ export default function Dashboard() {
 
         @media(min-width:768px) and (max-width:1023px){
           .r-bnav-icon{width:44px!important;height:34px!important;}
-          .r-bnav-item span:last-child{font-size:11px!important;}
+          .r-bnav-item span:last-child{font-size:14px!important;}
           .r-bottom-nav{padding:10px 4px env(safe-area-inset-bottom,10px)!important;}
         }
 
@@ -1402,25 +1402,25 @@ export default function Dashboard() {
         <nav className="r-bottom-nav">
           <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
             <span className="r-bnav-icon"><LayoutDashboard size={24} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>
-            <span style={{ fontSize: 11, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
+            <span style={{ fontSize: 14, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
           </Link>
           <Link href="/live-feed" className="r-bnav-item">
             <span className="r-bnav-icon"><Rss size={24} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 11, fontWeight: 500 }}>Live Feed</span>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>Live Feed</span>
           </Link>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
             <button className="r-bnav-fab" onClick={() => router.push('/automation')}>
               <Plus size={24} color="white" strokeWidth={2.5} />
             </button>
-            <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
+            <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
           </div>
           <Link href="/alerts" className="r-bnav-item">
             <span className="r-bnav-icon"><Bell size={24} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 11, fontWeight: 500 }}>Alerts</span>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>Alerts</span>
           </Link>
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
             <span className="r-bnav-icon"><MoreHorizontal size={24} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 11 }}>More</span>
+            <span style={{ fontSize: 14 }}>More</span>
           </button>
         </nav>
 

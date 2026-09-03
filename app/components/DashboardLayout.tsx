@@ -231,14 +231,12 @@ export function DashboardBottomNav() {
         borderRadius: "20px 20px 0 0",
         boxShadow: "0 -12px 60px rgba(124,58,237,0.25), 0 -8px 40px rgba(0,0,0,0.7)",
         backdropFilter: "blur(28px)",
-        animation: showMore ? "slideUp 0.22s ease" : "none",
-        paddingBottom: "env(safe-area-inset-bottom, 16px)",
       }}>
-        <div style={{ width: 30, height: 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: "6px auto 12px" }} />
+        <div style={{ width: 30, height: 3, background: "rgba(255,255,255,0.09)", borderRadius: 3, margin: "10px auto 8px" }} />
 
         {/* User Profile */}
         {auth.currentUser && (
-          <div style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 18 : 10, padding: isDesktopSiteOn ? "14px 24px 20px" : "10px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: "50%", background: "linear-gradient(135deg,#7C3AED,#F59E0B)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13, flexShrink: 0 }}>
               {(auth.currentUser.displayName || auth.currentUser.email || "U")[0].toUpperCase()}
             </div>
@@ -248,26 +246,26 @@ export function DashboardBottomNav() {
             </div>
           </div>
         )}
-        <div style={{ padding: isDesktopSiteOn ? "10px 14px" : "6px 8px" }}>
+        <div style={{ padding: isDesktopSiteOn ? "8px 14px" : "4px 8px" }}>
           {[
-            { icon: CreditCard, label: "Billing",    href: "/billing",    color: "#F59E0B" },
-            { icon: BarChart2,  label: "Analytics",  href: "/analytics",  color: "#34d399" },
-            { icon: Shield,     label: "Moderation", href: "/moderation", color: "#60a5fa" },
-            { icon: Settings,   label: "Settings",   href: "/settings",   color: "#a78bfa" },
+            { icon: CreditCard, label: "Billing",    href: "/billing",    color: "#F59E0B", bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.20)"  },
+            { icon: BarChart2,  label: "Analytics",  href: "/analytics",  color: "#34d399", bg: "rgba(52,211,153,0.08)",  border: "rgba(52,211,153,0.20)"  },
+            { icon: Shield,     label: "Moderation", href: "/moderation", color: "#60a5fa", bg: "rgba(96,165,250,0.08)",  border: "rgba(96,165,250,0.20)"  },
+            { icon: Settings,   label: "Settings",   href: "/settings",   color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.20)" },
           ].map(item => (
             <Link key={item.href} href={item.href} onClick={() => setShowMore(false)}
-              style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 14px" : "10px 12px", borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: "none", color: pathname === item.href ? "#F59E0B" : "rgba(255,255,255,0.72)", fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 13, background: pathname === item.href ? "rgba(245,158,11,0.1)" : "transparent", border: pathname === item.href ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent" }}>
-              <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <item.icon size={isDesktopSiteOn ? 26 : 14} color={item.color} strokeWidth={1.8} />
+              style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 13, padding: isDesktopSiteOn ? "18px 14px" : "11px 10px", borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: "none", color: pathname === item.href ? "#F59E0B" : "rgba(255,255,255,0.72)", fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 15, background: pathname === item.href ? "rgba(245,158,11,0.1)" : "transparent", border: pathname === item.href ? "1px solid rgba(245,158,11,0.2)" : "1px solid transparent" }}>
+              <div style={{ width: isDesktopSiteOn ? 54 : 34, height: isDesktopSiteOn ? 54 : 34, borderRadius: isDesktopSiteOn ? 15 : 10, background: item.bg, border: `1px solid ${item.border}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <item.icon size={isDesktopSiteOn ? 26 : 15} color={item.color} strokeWidth={1.8} />
               </div>
               {item.label}
             </Link>
           ))}
-          <div style={{ margin: isDesktopSiteOn ? "6px 14px 0" : "6px 12px 0", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 6, paddingBottom: isDesktopSiteOn ? 20 : 12 }}>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", marginTop: 4, paddingTop: 4, paddingBottom: 16 }}>
             <button onClick={handleLogout}
-              style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? "18px 0" : "10px 0", background: "none", border: "none", cursor: "pointer", color: "#f87171", fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 13, width: "100%" }}>
-              <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <LogOut size={isDesktopSiteOn ? 26 : 14} color="#f87171" strokeWidth={1.8} />
+              style={{ display: "flex", alignItems: "center", gap: isDesktopSiteOn ? 20 : 13, padding: isDesktopSiteOn ? "18px 14px" : "11px 10px", background: "none", border: "none", cursor: "pointer", color: "#f87171", fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 15, width: "100%", borderRadius: isDesktopSiteOn ? 16 : 10 }}>
+              <div style={{ width: isDesktopSiteOn ? 54 : 34, height: isDesktopSiteOn ? 54 : 34, borderRadius: isDesktopSiteOn ? 15 : 10, background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <LogOut size={isDesktopSiteOn ? 26 : 15} color="#f87171" strokeWidth={1.8} />
               </div>
               Logout
             </button>

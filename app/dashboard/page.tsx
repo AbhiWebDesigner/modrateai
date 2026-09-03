@@ -823,6 +823,8 @@ export default function Dashboard() {
           .r-topbar{display:none!important;}
           .r-mobile-topbar{display:flex!important;}
           .r-mobile-status-bar{display:flex!important;}
+          .r-bnav-icon svg{width:22px!important;height:22px!important;}
+          .r-bnav-item span:last-child{font-size:14px!important;}
           .r-content{padding:10px 10px 16px;width:100%!important;max-width:100%!important;box-sizing:border-box!important;overflow-x:hidden!important;}
           .r-hero{padding:14px 14px 14px;margin-bottom:10px;}
           .r-hero-shield{display:none!important;}

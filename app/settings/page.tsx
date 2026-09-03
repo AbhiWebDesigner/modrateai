@@ -6,7 +6,7 @@ import {
   Bell, LayoutDashboard, BarChart2, Zap, Settings, CreditCard,
   Monitor, Globe, LogOut, Shield, Rss, Bot,
   MessageSquare, AlertTriangle, Plus, MoreHorizontal,
-  ChevronRight, Hash, Search, Sun,
+  ChevronRight, Search, Sun,
 } from 'lucide-react';
 import Link from 'next/link';
 import { auth, db } from '@/lib/firebase';
@@ -959,7 +959,7 @@ export default function SettingsPage() {
               {[
                 { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
                 { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Hash,       label: 'Moderation', href: '/moderation', color: '#60a5fa' },
+                { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
@@ -970,9 +970,11 @@ export default function SettingsPage() {
                     padding: isDesktopSiteOn ? '16px 18px' : '10px 12px',
                     borderRadius: isDesktopSiteOn ? 16 : 10,
                     textDecoration: 'none',
-                    color: 'rgba(255,255,255,0.72)',
+                    color: currentPath === item.href ? '#F59E0B' : 'rgba(255,255,255,0.72)',
                     fontWeight: 600,
                     fontSize: isDesktopSiteOn ? 24 : 13,
+                    background: currentPath === item.href ? 'rgba(245,158,11,0.1)' : 'transparent',
+                    border: currentPath === item.href ? '1px solid rgba(245,158,11,0.2)' : '1px solid transparent',
                   }}>
                   <div style={{
                     width: isDesktopSiteOn ? 54 : 30,

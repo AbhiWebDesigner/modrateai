@@ -397,6 +397,16 @@ export default function Dashboard() {
   const [liveEvents, setLiveEvents]   = useState<any[]>([]);
   const [loadState, setLoadState]     = useState<LoadState>('auth');
   const [moreOpen, setMoreOpen]       = useState(false);
+  const [isDesktopSiteOn, setIsDesktopSiteOn] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      setIsDesktopSiteOn(navigator.maxTouchPoints > 0 && window.innerWidth >= 600);
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [notifOpen, setNotifOpen]     = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   const [chartRange, setChartRange]   = useState<'week' | 'month'>('week');
@@ -561,7 +571,11 @@ export default function Dashboard() {
     { label: 'Avg. Response Time', value: fmtMs(avgResponseTime > 0 ? avgResponseTime : undefined),           raw: avgResponseTime > 0 ? avgResponseTime : undefined,                up: false, color: '#34d399', pct: trendResponse, icon: Activity      },
   ];
 
-  const chartLabels = ['11 Jul', '12 Jul', '13 Jul', '14 Jul', '15 Jul', '17 Jul'];
+  const chartLabels = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (5 - i));
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  });
   const chartData = [
     { label: 'Comments Scanned', color: '#a78bfa', values: weeklyScanned.length >= 6 ? weeklyScanned.slice(-6) : [0,0,0,0,0,0] },
     { label: 'AI Replies',       color: '#F59E0B', values: weeklyReplies.length >= 6 ? weeklyReplies.slice(-6) : [0,0,0,0,0,0] },
@@ -765,6 +779,16 @@ export default function Dashboard() {
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
 
+        /* ══ DSO — bigger bottom nav (touch + wide viewport only) ══ */
+        @media (pointer: coarse) and (min-width: 600px) {
+          .r-bnav-item{padding:14px 4px 18px!important;gap:6px!important;}
+          .r-bnav-icon{width:64px!important;height:48px!important;border-radius:14px!important;}
+          .r-bnav-icon svg{width:28px!important;height:28px!important;}
+          .r-bnav-item span:last-child{font-size:16px!important;}
+          .r-bnav-fab{width:64px!important;height:64px!important;}
+          .r-bnav-fab svg{width:30px!important;height:30px!important;}
+        }
+
         .r-live-panel{background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);border-radius:14px;
           display:flex;flex-direction:column;overflow:hidden;}
         .r-mobile-live{display:none;}
@@ -775,7 +799,7 @@ export default function Dashboard() {
 
         .r-pending-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
 
-        @media(min-width:768px) and (max-width:1023px){
+        @media(min-width:768px) and (max-width:1023px) and (pointer: fine){
           .r-bnav-icon{width:44px!important;height:34px!important;}
           .r-bnav-item span:last-child{font-size:11px!important;}
           .r-bottom-nav{padding:10px 4px env(safe-area-inset-bottom,10px)!important;}
@@ -790,7 +814,7 @@ export default function Dashboard() {
           .r-bottom-grid{grid-template-columns:1fr 1fr 1fr;}
         }
 
-        @media(min-width:768px) and (max-width:1023px){
+        @media(min-width:768px) and (max-width:1023px) and (pointer: fine){
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;width:100%!important;padding-bottom:76px;}
           .r-bottom-nav{display:flex!important;}
@@ -807,6 +831,16 @@ export default function Dashboard() {
           .r-pending-row{grid-template-columns:1fr 1fr;}
           .r-live-panel{display:none!important;}
           .r-mobile-live{display:flex!important;flex-direction:column;}
+        }
+
+        /* Touch device — always mobile layout regardless of width */
+        @media (pointer: coarse) and (min-width: 600px) {
+          .r-bnav-item{padding:14px 4px 18px!important;gap:6px!important;}
+          .r-bnav-icon{width:64px!important;height:48px!important;border-radius:14px!important;}
+          .r-bnav-icon svg{width:28px!important;height:28px!important;}
+          .r-bnav-item span:last-child{font-size:16px!important;}
+          .r-bnav-fab{width:64px!important;height:64px!important;}
+          .r-bnav-fab svg{width:30px!important;height:30px!important;}
         }
 
         @media(max-width:767px){
@@ -1022,7 +1056,9 @@ export default function Dashboard() {
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" style={{ width: 28, height: 28 }} onClick={() => router.push('/notifications')}>
                 <Bell size={11} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
-                <span style={{ position: 'absolute', top: 4, right: 4, width: 11, height: 11, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'white', fontWeight: 800 }}>3</span>
+                {notifCount > 0 && (
+                  <span style={{ position: 'absolute', top: 4, right: 4, width: 11, height: 11, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'white', fontWeight: 800 }}>{notifCount}</span>
+                )}
               </button>
             </div>
             <button className="r-avatar-btn" style={{ padding: '2px 6px 2px 2px', flexShrink: 0 }} onClick={() => router.push('/settings')}>
@@ -1376,7 +1412,7 @@ export default function Dashboard() {
                           <span>{usagePct.toFixed(1)}% used</span>
                           {plan === 'free' && trialDaysLeft !== null
                             ? <span style={{ color: trialDaysLeft <= 3 ? '#f87171' : '#F59E0B', fontWeight: 700 }}>Resets in {trialDaysLeft} days</span>
-                            : <span>Resets 1 Aug 2026</span>
+                            : <span>Resets {(() => { const d = new Date(); d.setMonth(d.getMonth() + 1); d.setDate(1); return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); })()}</span>
                           }
                         </div>
                         {plan === 'free'
@@ -1430,34 +1466,34 @@ export default function Dashboard() {
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'transparent' }} />
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60, background: 'rgba(8,5,20,0.3)', borderTop: '1px solid rgba(124,58,237,0.25)', borderRadius: '10px 20px 0 0', padding: '0 0 env(safe-area-inset-bottom,16px)', boxShadow: '0 -12px 60px rgba(124,58,237,0.2), 0 -8px 40px rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', animation: 'slideUp 0.22s ease' }}>
               <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '8px auto 14px' }} />
-              <div style={{ padding: '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ padding: isDesktopSiteOn ? '0 24px 16px' : '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 18 : 10 }}>
                   {userPhoto
-                    ? <img src={userPhoto} style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
-                    : <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 13 }}>{initials}</div>
+                    ? <img src={userPhoto} style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
+                    : <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13 }}>{initials}</div>
                   }
                   <div>
-                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14 }}>{firstName}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>{user?.email}</div>
+                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{firstName}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: isDesktopSiteOn ? 20 : 11 }}>{user?.email}</div>
                   </div>
                 </div>
               </div>
               {[
                 { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
                 { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Hash,       label: 'Moderation', href: '/moderation', color: '#60a5fa' },
+                { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', color: '#ffffff', fontWeight: 500, fontSize: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <item.icon size={20} color={item.color} strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? '18px 20px' : '14px 20px', textDecoration: 'none', color: currentPath === item.href ? '#F59E0B' : '#ffffff', fontWeight: isDesktopSiteOn ? 600 : 500, fontSize: isDesktopSiteOn ? 22 : 15, borderBottom: '1px solid rgba(255,255,255,0.05)', background: currentPath === item.href ? 'rgba(245,158,11,0.08)' : 'transparent' }}>
+                  <item.icon size={isDesktopSiteOn ? 26 : 20} color={item.color} strokeWidth={1.8} />
                   {item.label}
                 </Link>
               ))}
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 500, fontSize: 15, width: '100%' }}>
-                  <LogOut size={20} color="#f87171" strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? '18px 20px' : '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: isDesktopSiteOn ? 600 : 500, fontSize: isDesktopSiteOn ? 22 : 15, width: '100%' }}>
+                  <LogOut size={isDesktopSiteOn ? 26 : 20} color="#f87171" strokeWidth={1.8} />
                   Logout
                 </button>
               </div>

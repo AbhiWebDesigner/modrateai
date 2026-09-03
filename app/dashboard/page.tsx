@@ -397,6 +397,16 @@ export default function Dashboard() {
   const [liveEvents, setLiveEvents]   = useState<any[]>([]);
   const [loadState, setLoadState]     = useState<LoadState>('auth');
   const [moreOpen, setMoreOpen]       = useState(false);
+  const [isDesktopSiteOn, setIsDesktopSiteOn] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      setIsDesktopSiteOn(navigator.maxTouchPoints > 0 && window.innerWidth >= 600);
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [notifOpen, setNotifOpen]     = useState(false);
   const [notifCount, setNotifCount] = useState(0);
   const [chartRange, setChartRange]   = useState<'week' | 'month'>('week');
@@ -768,6 +778,16 @@ export default function Dashboard() {
           display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
           box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
         .r-bnav-fab:active{transform:scale(0.93);}
+
+        /* ══ DSO — bigger bottom nav ══ */
+        @media (pointer: coarse) and (min-width: 600px) {
+          .r-bnav-item{padding:14px 4px 18px!important;gap:6px!important;}
+          .r-bnav-icon{width:64px!important;height:48px!important;border-radius:14px!important;}
+          .r-bnav-icon svg{width:28px!important;height:28px!important;}
+          .r-bnav-item span:last-child{font-size:16px!important;}
+          .r-bnav-fab{width:64px!important;height:64px!important;}
+          .r-bnav-fab svg{width:30px!important;height:30px!important;}
+        }
 
         .r-live-panel{background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);border-radius:14px;
           display:flex;flex-direction:column;overflow:hidden;}
@@ -1451,19 +1471,19 @@ export default function Dashboard() {
               {[
                 { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
                 { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Hash,       label: 'Moderation', href: '/moderation', color: '#60a5fa' },
+                { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
                 { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', color: '#ffffff', fontWeight: 500, fontSize: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <item.icon size={20} color={item.color} strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? '18px 20px' : '14px 20px', textDecoration: 'none', color: currentPath === item.href ? '#F59E0B' : '#ffffff', fontWeight: isDesktopSiteOn ? 600 : 500, fontSize: isDesktopSiteOn ? 22 : 15, borderBottom: '1px solid rgba(255,255,255,0.05)', background: currentPath === item.href ? 'rgba(245,158,11,0.08)' : 'transparent' }}>
+                  <item.icon size={isDesktopSiteOn ? 26 : 20} color={item.color} strokeWidth={1.8} />
                   {item.label}
                 </Link>
               ))}
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 500, fontSize: 15, width: '100%' }}>
-                  <LogOut size={20} color="#f87171" strokeWidth={1.8} />
+                  style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? '18px 20px' : '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: isDesktopSiteOn ? 600 : 500, fontSize: isDesktopSiteOn ? 22 : 15, width: '100%' }}>
+                  <LogOut size={isDesktopSiteOn ? 26 : 20} color="#f87171" strokeWidth={1.8} />
                   Logout
                 </button>
               </div>

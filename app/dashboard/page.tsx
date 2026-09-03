@@ -768,10 +768,9 @@ export default function Dashboard() {
         .r-bnav-item.active{color:#F59E0B;}
         .r-bnav-icon{width:44px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;transition:all 0.2s;}
         .r-bnav-item.active .r-bnav-icon{background:rgba(245,158,11,0.15);box-shadow:0 0 14px rgba(245,158,11,0.4);}
-        .r-bnav-fab{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6D28D9);
-          display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;
-          box-shadow:0 4px 16px rgba(124,58,237,0.45);margin-bottom:2px;transition:transform 0.18s;}
-        .r-bnav-fab:active{transform:scale(0.93);}
+        .r-bnav-fab{width:44px;height:34px;border-radius:10px;background:none;
+          display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:all 0.2s;}
+        .r-bnav-fab-active{background:rgba(245,158,11,0.15);box-shadow:0 0 14px rgba(245,158,11,0.4);}
 
         .r-live-panel{background:rgba(13,12,20,0.99);border:1px solid rgba(255,255,255,0.07);border-radius:14px;
           display:flex;flex-direction:column;overflow:hidden;}
@@ -1408,29 +1407,25 @@ export default function Dashboard() {
 
         {/* BOTTOM NAV */}
         <nav className="r-bottom-nav">
-          <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
-            {currentPath === '/dashboard' && <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, background: 'linear-gradient(90deg,#F59E0B,#EA580C)', borderRadius: '0 0 4px 4px' }} />}
-            <span className="r-bnav-icon"><LayoutDashboard size={isDesktopSiteOn ? 28 : 22} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>
-            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: currentPath === '/dashboard' ? 600 : 500, lineHeight: 1 }}>Overview</span>
-          </Link>
-          <Link href="/live-feed" className="r-bnav-item">
-            <span className="r-bnav-icon"><Rss size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: 500, lineHeight: 1 }}>Live Feed</span>
-          </Link>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: isDesktopSiteOn ? '14px 2px 18px' : '7px 2px 9px', gap: 3 }}>
-            <button className="r-bnav-fab" onClick={() => router.push('/automation')}>
-              <Plus size={isDesktopSiteOn ? 30 : 24} color="white" strokeWidth={2.5} />
-            </button>
-            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: 500, color: 'rgba(255,255,255,0.32)', lineHeight: 1 }}>Automation</span>
-          </div>
-          <Link href="/alerts" className="r-bnav-item">
-            <span className="r-bnav-icon"><Bell size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: 500, lineHeight: 1 }}>Alerts</span>
-          </Link>
+          {[
+            { href: '/dashboard',  label: 'Overview',   icon: <LayoutDashboard size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /> },
+            { href: '/live-feed',  label: 'Live Feed',  icon: <Rss             size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /> },
+            { href: '/automation', label: 'Automation', icon: <Zap             size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /> },
+            { href: '/alerts',     label: 'Alerts',     icon: <Bell            size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /> },
+          ].map(link => {
+            const active = currentPath === link.href;
+            return (
+              <Link key={link.href} href={link.href} className={`r-bnav-item${active ? ' active' : ''}`}>
+                {active && <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, background: 'linear-gradient(90deg,#F59E0B,#EA580C)', borderRadius: '0 0 4px 4px' }} />}
+                <span className="r-bnav-icon">{link.icon}</span>
+                <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
+              </Link>
+            );
+          })}
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
             {moreOpen && <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, background: 'linear-gradient(90deg,#F59E0B,#EA580C)', borderRadius: '0 0 4px 4px' }} />}
             <span className="r-bnav-icon"><MoreHorizontal size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, lineHeight: 1 }}>More</span>
+            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
           </button>
         </nav>
 

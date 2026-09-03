@@ -833,6 +833,16 @@ export default function Dashboard() {
           .r-mobile-live{display:flex!important;flex-direction:column;}
         }
 
+        /* Touch device — always mobile layout regardless of width */
+        @media (pointer: coarse) {
+          .r-sidebar{display:none!important;}
+          .r-main{margin-left:0!important;width:100%!important;padding-bottom:80px;}
+          .r-bottom-nav{display:flex!important;}
+          .r-topbar{display:none!important;}
+          .r-mobile-topbar{display:flex!important;}
+          .r-mobile-status-bar{display:flex!important;}
+        }
+
         @media(max-width:767px){
           .r-sidebar{display:none!important;}
           .r-main{margin-left:0!important;width:100%!important;max-width:100vw!important;overflow-x:hidden!important;padding-bottom:80px;}

@@ -1443,21 +1443,21 @@ export default function Dashboard() {
                 </div>
               </div>
               {[
-                { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
-                { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                { icon: Hash,       label: 'Moderation', href: '/moderation', color: '#60a5fa' },
-                { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
+                { emoji: '💳', label: 'Billing',    href: '/billing' },
+                { emoji: '📊', label: 'Analytics',  href: '/analytics' },
+                { emoji: '🛡️', label: 'Moderation', href: '/moderation' },
+                { emoji: '⚙️', label: 'Settings',   href: '/settings' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
                   style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', color: '#ffffff', fontWeight: 500, fontSize: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <item.icon size={20} color={item.color} strokeWidth={1.8} />
+                  <span style={{ fontSize: 20 }}>{item.emoji}</span>
                   {item.label}
                 </Link>
               ))}
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
                   style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 500, fontSize: 15, width: '100%' }}>
-                  <LogOut size={20} color="#f87171" strokeWidth={1.8} />
+                  <span style={{ fontSize: 20 }}>🚪</span>
                   Logout
                 </button>
               </div>

@@ -821,15 +821,15 @@ export default function ModerationPage() {
               </div>
               <div style={{ padding: isDesktopSiteOn ? '10px 14px' : '6px 8px' }}>
                 {[
-                  { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B' },
-                  { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399' },
-                  { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa' },
-                  { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa' },
+                  { icon: CreditCard, label: 'Billing',    href: '/billing',    color: '#F59E0B', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(245,158,11,0.20)'  },
+                  { icon: BarChart2,  label: 'Analytics',  href: '/analytics',  color: '#34d399', bg: 'rgba(52,211,153,0.08)',  border: 'rgba(52,211,153,0.20)'  },
+                  { icon: Shield,     label: 'Moderation', href: '/moderation', color: '#60a5fa', bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.20)'  },
+                  { icon: Settings,   label: 'Settings',   href: '/settings',   color: '#a78bfa', bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.20)' },
                 ].map(item => (
                   <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                    style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 12, padding: isDesktopSiteOn ? '18px 14px' : '10px 12px', borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: 'none', color: 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 13 }}>
-                    <div style={{ width: isDesktopSiteOn ? 54 : 30, height: isDesktopSiteOn ? 54 : 30, borderRadius: isDesktopSiteOn ? 15 : 9, background: `${item.color}12`, border: `1px solid ${item.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <item.icon size={isDesktopSiteOn ? 26 : 14} color={item.color} strokeWidth={1.8} />
+                    style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 13, padding: isDesktopSiteOn ? '18px 14px' : '11px 10px', borderRadius: isDesktopSiteOn ? 16 : 10, textDecoration: 'none', color: currentPath === item.href ? '#F59E0B' : 'rgba(255,255,255,0.72)', fontWeight: 600, fontSize: isDesktopSiteOn ? 24 : 15, background: currentPath === item.href ? 'rgba(245,158,11,0.1)' : 'transparent', border: currentPath === item.href ? '1px solid rgba(245,158,11,0.2)' : '1px solid transparent' }}>
+                    <div style={{ width: isDesktopSiteOn ? 54 : 34, height: isDesktopSiteOn ? 54 : 34, borderRadius: isDesktopSiteOn ? 15 : 10, background: item.bg, border: `1px solid ${item.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <item.icon size={isDesktopSiteOn ? 26 : 15} color={item.color} strokeWidth={1.8} />
                     </div>
                     {item.label}
                   </Link>

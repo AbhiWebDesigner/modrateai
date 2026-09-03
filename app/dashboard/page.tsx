@@ -398,6 +398,14 @@ export default function Dashboard() {
   const [loadState, setLoadState]     = useState<LoadState>('auth');
   const [moreOpen, setMoreOpen]       = useState(false);
   const [notifOpen, setNotifOpen]     = useState(false);
+  const [isDesktopSiteOn, setIsDesktopSiteOn] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsDesktopSiteOn(navigator.maxTouchPoints > 0 && window.innerWidth >= 600);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [notifCount, setNotifCount] = useState(0);
   const [chartRange, setChartRange]   = useState<'week' | 'month'>('week');
   const unsubRefs = useRef<Array<() => void>>([]);
@@ -1402,25 +1410,25 @@ export default function Dashboard() {
         <nav className="r-bottom-nav">
           <Link href="/dashboard" className={`r-bnav-item${currentPath === '/dashboard' ? ' active' : ''}`}>
             <span className="r-bnav-icon"><LayoutDashboard size={24} strokeWidth={currentPath === '/dashboard' ? 2.2 : 1.7} /></span>
-            <span style={{ fontSize: 14, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
+            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: currentPath === '/dashboard' ? 700 : 500 }}>Overview</span>
           </Link>
           <Link href="/live-feed" className="r-bnav-item">
             <span className="r-bnav-icon"><Rss size={24} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 14, fontWeight: 500 }}>Live Feed</span>
+            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: 500 }}>Live Feed</span>
           </Link>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
             <button className="r-bnav-fab" onClick={() => router.push('/automation')}>
               <Plus size={24} color="white" strokeWidth={2.5} />
             </button>
-            <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
+            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: 500, color: 'rgba(255,255,255,0.32)', marginTop: 2 }}>Automation</span>
           </div>
           <Link href="/alerts" className="r-bnav-item">
             <span className="r-bnav-icon"><Bell size={24} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 14, fontWeight: 500 }}>Alerts</span>
+            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: 500 }}>Alerts</span>
           </Link>
           <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
             <span className="r-bnav-icon"><MoreHorizontal size={24} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: 14 }}>More</span>
+            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14 }}>More</span>
           </button>
         </nav>
 
@@ -1428,17 +1436,17 @@ export default function Dashboard() {
         {moreOpen && (
           <>
             <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55, background: 'transparent' }} />
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60, background: 'rgba(8,5,20,0.3)', borderTop: '1px solid rgba(124,58,237,0.25)', borderRadius: '10px 20px 0 0', padding: '0 0 env(safe-area-inset-bottom,16px)', boxShadow: '0 -12px 60px rgba(124,58,237,0.2), 0 -8px 40px rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', animation: 'slideUp 0.22s ease' }}>
-              <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '8px auto 14px' }} />
-              <div style={{ padding: '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 60, background: 'rgba(8,5,20,0.3)', borderTop: '1px solid rgba(124,58,237,0.25)', borderRadius: '10px 20px 0 0', padding: `0 0 env(safe-area-inset-bottom,${isDesktopSiteOn ? '20px' : '16px'})`, boxShadow: '0 -12px 60px rgba(124,58,237,0.2), 0 -8px 40px rgba(0,0,0,0.7)', backdropFilter: 'blur(5px)', animation: 'slideUp 0.22s ease' }}>
+              <div style={{ width: isDesktopSiteOn ? 56 : 36, height: isDesktopSiteOn ? 6 : 4, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: isDesktopSiteOn ? '18px auto 12px' : '8px auto 14px' }} />
+              <div style={{ padding: isDesktopSiteOn ? '0 24px 16px' : '0 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: isDesktopSiteOn ? 12 : 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 18 : 10 }}>
                   {userPhoto
-                    ? <img src={userPhoto} style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
-                    : <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 13 }}>{initials}</div>
+                    ? <img src={userPhoto} style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', objectFit: 'cover' }} alt="av" />
+                    : <div style={{ width: isDesktopSiteOn ? 60 : 38, height: isDesktopSiteOn ? 60 : 38, borderRadius: '50%', background: 'linear-gradient(135deg,#7C3AED,#F59E0B)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: isDesktopSiteOn ? 22 : 13 }}>{initials}</div>
                   }
                   <div>
-                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 14 }}>{firstName}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>{user?.email}</div>
+                    <div style={{ color: '#FAFAFA', fontWeight: 700, fontSize: isDesktopSiteOn ? 26 : 14 }}>{firstName}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: isDesktopSiteOn ? 20 : 11 }}>{user?.email}</div>
                   </div>
                 </div>
               </div>
@@ -1449,15 +1457,15 @@ export default function Dashboard() {
                 { emoji: '⚙️', label: 'Settings',   href: '/settings' },
               ].map(item => (
                 <Link key={item.href} href={item.href} onClick={() => setMoreOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', color: '#ffffff', fontWeight: 500, fontSize: 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ fontSize: 20 }}>{item.emoji}</span>
+                  style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? '20px 28px' : '14px 20px', textDecoration: 'none', color: '#ffffff', fontWeight: 500, fontSize: isDesktopSiteOn ? 24 : 15, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <span style={{ fontSize: isDesktopSiteOn ? 28 : 20 }}>{item.emoji}</span>
                   {item.label}
                 </Link>
               ))}
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 4 }}>
                 <button onClick={() => { setMoreOpen(false); handleLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 500, fontSize: 15, width: '100%' }}>
-                  <span style={{ fontSize: 20 }}>🚪</span>
+                  style={{ display: 'flex', alignItems: 'center', gap: isDesktopSiteOn ? 20 : 14, padding: isDesktopSiteOn ? '20px 28px' : '14px 20px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontWeight: 500, fontSize: isDesktopSiteOn ? 24 : 15, width: '100%' }}>
+                  <span style={{ fontSize: isDesktopSiteOn ? 28 : 20 }}>🚪</span>
                   Logout
                 </button>
               </div>

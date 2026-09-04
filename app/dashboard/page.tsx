@@ -556,6 +556,12 @@ export default function Dashboard() {
     ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000))
     : trialDays;
 
+  // ── Plan / Trial expiry logic ──────────────────────────────────────────────
+  const trialExpired    = plan === 'free' && !trialActive;
+  const planExpiresAt   = userData!.plan_expires_at?.toDate?.() as Date | undefined;
+  const proExpired      = (plan === 'pro' || plan === 'agency') && planExpiresAt != null && new Date() > planExpiresAt;
+  const servicesStopped = trialExpired || proExpired;
+
   const moderationAcc   = (analyticsData?.moderationAccuracy as number) ?? (userData!.moderation_accuracy as number) ?? 99.9;
   const totalScanned    = (analyticsData?.totalScanned       as number) ?? 0;
   const totalHidden     = (analyticsData?.totalHidden        as number) ?? 0;
@@ -1102,6 +1108,51 @@ export default function Dashboard() {
 
           {/* CONTENT */}
           <div className="r-content">
+
+            {/* ── TRIAL / PRO EXPIRED BANNER ── */}
+            {servicesStopped && (
+              <div style={{
+                background: trialExpired ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
+                border: `1px solid ${trialExpired ? 'rgba(239,68,68,0.28)' : 'rgba(245,158,11,0.28)'}`,
+                borderRadius: 14, padding: '14px 18px', marginBottom: 13,
+                display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+              }}>
+                <AlertTriangle size={18} color={trialExpired ? '#f87171' : '#F59E0B'} strokeWidth={2} style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: '#FAFAFA', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
+                    {trialExpired ? '⛔ Free Trial Expired — Services Stopped' : '⛔ Pro Plan Expired — Services Stopped'}
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
+                    {trialExpired
+                      ? 'Your 19-day free trial has ended. All AI moderation, scanning and auto-replies are paused.'
+                      : 'Your Pro plan has expired. Renew to resume AI moderation and scanning.'}
+                  </div>
+                </div>
+                <Link href="/billing" style={{
+                  background: trialExpired ? '#f87171' : '#F59E0B',
+                  color: '#080808', fontWeight: 700, fontSize: 12,
+                  padding: '8px 16px', borderRadius: 9, textDecoration: 'none',
+                  flexShrink: 0, whiteSpace: 'nowrap',
+                }}>
+                  {trialExpired ? 'Upgrade to Pro →' : 'Renew Plan →'}
+                </Link>
+              </div>
+            )}
+
+            {/* ── TRIAL WARNING (3 days left) ── */}
+            {!servicesStopped && plan === 'free' && trialActive && trialDaysLeft !== null && trialDaysLeft <= 3 && trialDaysLeft > 0 && (
+              <div style={{
+                background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.25)',
+                borderRadius: 14, padding: '12px 16px', marginBottom: 13,
+                display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+              }}>
+                <Clock size={15} color="#F59E0B" strokeWidth={2} style={{ flexShrink: 0 }} />
+                <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12.5, flex: 1 }}>
+                  <strong style={{ color: '#F59E0B' }}>{trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} left</strong> on your free trial — upgrade to keep services running.
+                </span>
+                <Link href="/billing" style={{ color: '#F59E0B', fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>Upgrade →</Link>
+              </div>
+            )}
 
             {/* HERO */}
             <div className="r-hero">

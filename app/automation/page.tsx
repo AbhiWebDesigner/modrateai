@@ -1438,10 +1438,13 @@ export default function AutomationPage() {
                       </div>
 
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>Reply Delay</div>
-                        <div className="delay-row">
-                          {[20, 40, 60].map(d => (
-                            <button key={d} onClick={() => setReplyDelay(d)} style={{ flex: 1, padding: "9px 0", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: replyDelay === d ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: replyDelay === d ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyDelay === d ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{d}s</button>
+                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Reply Delay</div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Wait before posting reply (feels more natural)</div>
+                        <div className="delay-row" style={{ flexWrap: "wrap", gap: 8 }}>
+                          {[10, 20, 30, 60, 120, 300].map(d => (
+                            <button key={d} onClick={() => setReplyDelay(d)} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: replyDelay === d ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: replyDelay === d ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyDelay === d ? "1px solid rgba(245,158,11,0.30)" : "none" }}>
+                              {d < 60 ? `${d}s` : d === 120 ? "2m" : "5m"}
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -1460,8 +1463,10 @@ export default function AutomationPage() {
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Cooldown Period</div>
                         <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Wait before replying to same user again</div>
                         <div className="cooldown-row">
-                          {[15, 30, 60, 120, 1440].map(n => (
-                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, cooldownMinutes: n }))} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.cooldownMinutes === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.cooldownMinutes === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.cooldownMinutes === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n < 60 ? `${n}m` : n === 1440 ? "24h" : `${n / 60}h`}</button>
+                          {[0, 2, 5, 10, 30, 60, 120, 1440].map(n => (
+                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, cooldownMinutes: n }))} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.cooldownMinutes === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.cooldownMinutes === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.cooldownMinutes === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>
+                              {n === 0 ? "No Period" : n < 60 ? `${n}m` : n === 1440 ? "24h" : `${n / 60}h`}
+                            </button>
                           ))}
                         </div>
                       </div>

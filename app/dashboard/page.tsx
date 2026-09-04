@@ -30,8 +30,8 @@ interface AutomationRule {
   keywords?: string[];
   video?: { id: string; title: string } | null;
   replyMode?: string;
-  updatedAt?: { toDate?: () => Date } | null;
-  createdAt?: { toDate?: () => Date } | null;
+  updatedAt?: any;
+  createdAt?: any;
 }
 
 function Sparkline({ color, up = true, width = 72, height = 32 }: { color: string; up?: boolean; width?: number; height?: number }) {
@@ -309,7 +309,6 @@ function RealAutomationRow({ rule, uid }: { rule: AutomationRule; uid: string })
 
 // ─── Recent Automations widget ───────────────────────────────────────────────
 // Collection: automations/{uid}/rules
-// FIX: orderBy('updatedAt', 'desc') so most-recently-modified rules surface first
 function RecentAutomations({ uid }: { uid: string }) {
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -317,15 +316,21 @@ function RecentAutomations({ uid }: { uid: string }) {
   useEffect(() => {
     if (!uid) return;
 
+    // No orderBy — avoids index errors when createdAt/updatedAt field is missing
     const ref = collection(db, 'automations', uid, 'rules');
-    const q = query(ref, orderBy('updatedAt', 'desc'), limit(5));
+    const q = query(ref, limit(5));
 
     const unsub = onSnapshot(q, (snap) => {
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as AutomationRule));
+      // Sort client-side by updatedAt or createdAt, newest first
+      docs.sort((a, b) => {
+        const aTime = a.updatedAt?.toDate?.()?.getTime?.() ?? a.createdAt?.toDate?.()?.getTime?.() ?? 0;
+        const bTime = b.updatedAt?.toDate?.()?.getTime?.() ?? b.createdAt?.toDate?.()?.getTime?.() ?? 0;
+        return bTime - aTime;
+      });
       setRules(docs);
       setLoading(false);
-    }, (err) => {
-      console.error('Automations listener error:', err);
+    }, () => {
       setLoading(false);
     });
 
@@ -428,7 +433,7 @@ export default function Dashboard() {
       }
       setUser(firebaseUser);
       setLoadState('firestore');
-
+      if (process.env.NODE_ENV === 'development') console.log('Dashboard UID:', firebaseUser.uid);
 
       unsubRefs.current.forEach(u => u());
       unsubRefs.current = [];
@@ -442,7 +447,7 @@ export default function Dashboard() {
       const unsubUser = onSnapshot(userDocRef, (snap) => {
         if (!snap.exists()) { setLoadState('missing'); return; }
         const data = snap.data();
-
+        if (process.env.NODE_ENV === 'development') console.log('Dashboard Firestore:', data);
         setUserData(data);
         setLoadState('ready');
       });
@@ -538,15 +543,6 @@ export default function Dashboard() {
     ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86400000))
     : trialDays;
 
-  // ── Plan / Trial expiry logic ──────────────────────────────────────────────
-  // Trial expired: free plan + trial_active false
-  const trialExpired = plan === 'free' && !trialActive;
-  // Pro expired: pro/agency plan + plan_expires_at in the past
-  const planExpiresAt = userData!.plan_expires_at?.toDate?.() as Date | undefined;
-  const proExpired    = (plan === 'pro' || plan === 'agency') && planExpiresAt != null && new Date() > planExpiresAt;
-  // Services are stopped when either trial or pro has expired
-  const servicesStopped = trialExpired || proExpired;
-
   const moderationAcc   = (analyticsData?.moderationAccuracy as number) ?? (userData!.moderation_accuracy as number) ?? 99.9;
   const totalScanned    = (analyticsData?.totalScanned       as number) ?? 0;
   const totalHidden     = (analyticsData?.totalHidden        as number) ?? 0;
@@ -582,11 +578,7 @@ export default function Dashboard() {
     { label: 'Avg. Response Time', value: fmtMs(avgResponseTime > 0 ? avgResponseTime : undefined),           raw: avgResponseTime > 0 ? avgResponseTime : undefined,                up: false, color: '#34d399', pct: trendResponse, icon: Activity      },
   ];
 
-  const chartLabels = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (5 - i));
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-  });
+  const chartLabels = ['11 Jul', '12 Jul', '13 Jul', '14 Jul', '15 Jul', '17 Jul'];
   const chartData = [
     { label: 'Comments Scanned', color: '#a78bfa', values: weeklyScanned.length >= 6 ? weeklyScanned.slice(-6) : [0,0,0,0,0,0] },
     { label: 'AI Replies',       color: '#F59E0B', values: weeklyReplies.length >= 6 ? weeklyReplies.slice(-6) : [0,0,0,0,0,0] },
@@ -1048,7 +1040,7 @@ export default function Dashboard() {
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <button className="r-icon-btn" style={{ width: 28, height: 28 }} onClick={() => router.push('/notifications')}>
                 <Bell size={11} color="rgba(255,255,255,0.4)" strokeWidth={1.8} />
-                {notifCount > 0 && <span style={{ position: 'absolute', top: 4, right: 4, width: 11, height: 11, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'white', fontWeight: 800 }}>{notifCount > 9 ? '9+' : notifCount}</span>}
+                <span style={{ position: 'absolute', top: 4, right: 4, width: 11, height: 11, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 6.5, color: 'white', fontWeight: 800 }}>3</span>
               </button>
             </div>
             <button className="r-avatar-btn" style={{ padding: '2px 6px 2px 2px', flexShrink: 0 }} onClick={() => router.push('/settings')}>
@@ -1076,75 +1068,6 @@ export default function Dashboard() {
 
           {/* CONTENT */}
           <div className="r-content">
-
-            {/* ── TRIAL / PRO EXPIRED BANNER ── */}
-            {servicesStopped && (
-              <div style={{
-                background: trialExpired ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
-                border: `1px solid ${trialExpired ? 'rgba(239,68,68,0.28)' : 'rgba(245,158,11,0.28)'}`,
-                borderRadius: 14,
-                padding: '14px 18px',
-                marginBottom: 13,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                flexWrap: 'wrap',
-              }}>
-                <AlertTriangle size={18} color={trialExpired ? '#f87171' : '#F59E0B'} strokeWidth={2} style={{ flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: '#FAFAFA', fontSize: 13, fontWeight: 700, marginBottom: 2 }}>
-                    {trialExpired ? '⛔ Free Trial Expired — Services Stopped' : '⛔ Pro Plan Expired — Services Stopped'}
-                  </div>
-                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>
-                    {trialExpired
-                      ? 'Your 19-day free trial has ended. All AI moderation, scanning and auto-replies are paused.'
-                      : 'Your Pro plan has expired. Renew to resume AI moderation and scanning.'}
-                  </div>
-                </div>
-                <Link
-                  href="/billing"
-                  style={{
-                    background: trialExpired ? '#f87171' : '#F59E0B',
-                    color: '#080808',
-                    fontWeight: 700,
-                    fontSize: 12,
-                    padding: '8px 16px',
-                    borderRadius: 9,
-                    textDecoration: 'none',
-                    flexShrink: 0,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {trialExpired ? 'Upgrade to Pro →' : 'Renew Plan →'}
-                </Link>
-              </div>
-            )}
-
-            {/* ── TRIAL WARNING (3 days left) ── */}
-            {!servicesStopped && plan === 'free' && trialActive && trialDaysLeft !== null && trialDaysLeft <= 3 && trialDaysLeft > 0 && (
-              <div style={{
-                background: 'rgba(245,158,11,0.07)',
-                border: '1px solid rgba(245,158,11,0.25)',
-                borderRadius: 14,
-                padding: '12px 16px',
-                marginBottom: 13,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                flexWrap: 'wrap',
-              }}>
-                <Clock size={15} color="#F59E0B" strokeWidth={2} style={{ flexShrink: 0 }} />
-                <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12.5, flex: 1 }}>
-                  <strong style={{ color: '#F59E0B' }}>{trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} left</strong> on your free trial — upgrade to keep services running.
-                </span>
-                <Link
-                  href="/billing"
-                  style={{ color: '#F59E0B', fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}
-                >
-                  Upgrade →
-                </Link>
-              </div>
-            )}
 
             {/* HERO */}
             <div className="r-hero">
@@ -1469,20 +1392,17 @@ export default function Dashboard() {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'rgba(255,255,255,0.26)', marginBottom: 12 }}>
                           <span>{usagePct.toFixed(1)}% used</span>
-                          {plan === 'free' && trialDaysLeft !== null
-                            ? <span style={{ color: trialDaysLeft <= 3 ? '#f87171' : '#F59E0B', fontWeight: 700 }}>Resets in {trialDaysLeft} days</span>
+                          {plan === 'free' && trialActive && trialDaysLeft !== null && trialDaysLeft > 0
+                            ? <span style={{ color: trialDaysLeft <= 3 ? '#f87171' : '#F59E0B', fontWeight: 700 }}>Trial: {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} left</span>
+                            : plan === 'free' && !trialActive
+                            ? <span style={{ color: '#f87171', fontWeight: 700 }}>Trial Expired</span>
                             : <span>Resets {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                           }
                         </div>
-                        {servicesStopped ? (
-                          <Link href="/billing" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, width: '100%', background: '#f87171', color: '#080808', fontWeight: 700, fontSize: 11.5, padding: '8px', borderRadius: 8, textDecoration: 'none' }}>
-                            <AlertTriangle size={12} /> {trialExpired ? 'Upgrade to Resume' : 'Renew to Resume'}
-                          </Link>
-                        ) : plan === 'free' ? (
-                          <Link href="/billing" className="r-btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: 11.5 }}><Zap size={12} /> Upgrade to Pro</Link>
-                        ) : (
-                          <Link href="/billing" className="r-btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: 11.5 }}>Manage Plan</Link>
-                        )}
+                        {plan === 'free'
+                          ? <Link href="/billing" className="r-btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: 11.5 }}><Zap size={12} /> Upgrade to Pro</Link>
+                          : <Link href="/billing" className="r-btn-ghost" style={{ width: '100%', justifyContent: 'center', fontSize: 11.5 }}>Manage Plan</Link>
+                        }
                       </div>
                     </div>
                   </div>

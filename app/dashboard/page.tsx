@@ -467,12 +467,22 @@ export default function Dashboard() {
       });
       unsubRefs.current.push(unsubEvents); 
      const notifsRef = collection(db, 'users', firebaseUser.uid, 'notifications');
-     const notifsQ = query(notifsRef, orderBy('createdAt', 'desc'), limit(10));
+     const notifsQ = query(notifsRef, limit(20));
       const unsubNotifCount = onSnapshot(notifsQ, (snap) => {
         const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; title: string; body: string; read: boolean; type: string; timestamp?: { toDate?: () => Date } }));
+        // Sort client-side newest first
+        docs.sort((a, b) => {
+          const aTime = a.timestamp?.toDate?.()?.getTime?.() ?? 0;
+          const bTime = b.timestamp?.toDate?.()?.getTime?.() ?? 0;
+          return bTime - aTime;
+        });
         const unread = docs.filter(d => d.read === false).length;
         setNotifCount(unread);
         setNotifications(docs);
+      }, () => {
+        // Query failed — reset counts
+        setNotifCount(0);
+        setNotifications([]);
       });
       unsubRefs.current.push(unsubNotifCount);
     });

@@ -399,9 +399,13 @@ export default function Dashboard() {
   const [moreOpen, setMoreOpen]       = useState(false);
   const [notifOpen, setNotifOpen]     = useState(false);
   const [isDesktopSiteOn, setIsDesktopSiteOn] = useState(false);
+  const [showBottomNav, setShowBottomNav] = useState(true);
 
   useEffect(() => {
-    const check = () => setIsDesktopSiteOn(navigator.maxTouchPoints > 0 && window.innerWidth >= 600);
+    const check = () => {
+      setIsDesktopSiteOn(navigator.maxTouchPoints > 0 && window.innerWidth >= 600);
+      setShowBottomNav(window.innerWidth < 1024);
+    };
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -1408,28 +1412,31 @@ export default function Dashboard() {
         </div>
 
         {/* BOTTOM NAV */}
-        <nav className="r-bottom-nav">
+        {showBottomNav && <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, background: 'rgba(9,9,11,0.97)', borderTop: '1px solid rgba(255,255,255,0.055)', display: 'flex', backdropFilter: 'blur(28px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
           {[
-            { href: '/dashboard',  label: 'Overview',   icon: <LayoutDashboard size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /> },
-            { href: '/live-feed',  label: 'Live Feed',  icon: <Rss             size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /> },
-            { href: '/automation', label: 'Automation', icon: <Zap             size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /> },
-            { href: '/alerts',     label: 'Alerts',     icon: <Bell            size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /> },
+            { href: '/dashboard',  label: 'Overview',   icon: <svg width={isDesktopSiteOn?28:16} height={isDesktopSiteOn?28:16} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> },
+            { href: '/live-feed',  label: 'Live Feed',  icon: <svg width={isDesktopSiteOn?28:16} height={isDesktopSiteOn?28:16} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 7.76a6 6 0 0 0 0 8.49"/><path d="M20.07 4.93a10 10 0 0 1 0 14.14"/><path d="M3.93 4.93a10 10 0 0 0 0 14.14"/></svg> },
+            { href: '/automation', label: 'Automation', icon: <svg width={isDesktopSiteOn?28:16} height={isDesktopSiteOn?28:16} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+            { href: '/alerts',     label: 'Alerts',     icon: <svg width={isDesktopSiteOn?28:16} height={isDesktopSiteOn?28:16} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> },
           ].map(link => {
             const active = currentPath === link.href;
+            const iDSO = isDesktopSiteOn;
             return (
-              <Link key={link.href} href={link.href} className={`r-bnav-item${active ? ' active' : ''}`}>
+              <Link key={link.href} href={link.href} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: iDSO ? '14px 2px 18px' : '7px 2px 9px', textDecoration: 'none', color: active ? '#F59E0B' : 'rgba(255,255,255,0.35)', transition: 'color 0.18s', position: 'relative' }}>
                 {active && <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, background: 'linear-gradient(90deg,#F59E0B,#EA580C)', borderRadius: '0 0 4px 4px' }} />}
-                <span className="r-bnav-icon">{link.icon}</span>
-                <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: iDSO?64:44, height: iDSO?48:34, borderRadius: 10, background: active ? 'rgba(245,158,11,0.15)' : 'transparent', boxShadow: active ? '0 0 14px rgba(245,158,11,0.4)' : 'none', transition: 'all 0.2s' }}>{link.icon}</span>
+                <span style={{ fontSize: iDSO?16:14, fontWeight: active ? 600 : 500, lineHeight: 1 }}>{link.label}</span>
               </Link>
             );
           })}
-          <button className={`r-bnav-item${moreOpen ? ' active' : ''}`} onClick={() => setMoreOpen(v => !v)}>
+          <button onClick={() => setMoreOpen(v => !v)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: isDesktopSiteOn ? '14px 2px 18px' : '7px 2px 9px', background: 'none', border: 'none', cursor: 'pointer', color: moreOpen ? '#F59E0B' : 'rgba(255,255,255,0.35)', position: 'relative' }}>
             {moreOpen && <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2, background: 'linear-gradient(90deg,#F59E0B,#EA580C)', borderRadius: '0 0 4px 4px' }} />}
-            <span className="r-bnav-icon"><MoreHorizontal size={isDesktopSiteOn ? 28 : 22} strokeWidth={1.7} /></span>
-            <span style={{ fontSize: isDesktopSiteOn ? 16 : 14, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: isDesktopSiteOn?64:44, height: isDesktopSiteOn?48:34, borderRadius: 10, background: moreOpen ? 'rgba(245,158,11,0.15)' : 'transparent', boxShadow: moreOpen ? '0 0 14px rgba(245,158,11,0.4)' : 'none', transition: 'all 0.2s' }}>
+              <svg width={isDesktopSiteOn?28:16} height={isDesktopSiteOn?28:16} fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+            </span>
+            <span style={{ fontSize: isDesktopSiteOn?16:14, fontWeight: moreOpen ? 600 : 500, lineHeight: 1 }}>More</span>
           </button>
-        </nav>
+        </nav>}
 
         {/* MORE DRAWER */}
         {moreOpen && (

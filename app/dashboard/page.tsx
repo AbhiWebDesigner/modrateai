@@ -415,7 +415,8 @@ export default function Dashboard() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-  const [notifCount, setNotifCount] = useState(0);
+  const [notifCount, setNotifCount]   = useState(0);
+  const [notifications, setNotifications] = useState<{ id: string; title: string; body: string; read: boolean; type: string; timestamp?: { toDate?: () => Date } }[]>([]);
   const [chartRange, setChartRange]   = useState<'week' | 'month'>('week');
   const unsubRefs = useRef<Array<() => void>>([]);
 
@@ -466,10 +467,12 @@ export default function Dashboard() {
       });
       unsubRefs.current.push(unsubEvents); 
      const notifsRef = collection(db, 'users', firebaseUser.uid, 'notifications');
-     const notifsQ = query(notifsRef);
+     const notifsQ = query(notifsRef, orderBy('createdAt', 'desc'), limit(10));
       const unsubNotifCount = onSnapshot(notifsQ, (snap) => {
-        const unread = snap.docs.filter(d => d.data().read === false).length;
+        const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; title: string; body: string; read: boolean; type: string; timestamp?: { toDate?: () => Date } }));
+        const unread = docs.filter(d => d.read === false).length;
         setNotifCount(unread);
+        setNotifications(docs);
       });
       unsubRefs.current.push(unsubNotifCount);
     });
@@ -979,28 +982,49 @@ export default function Dashboard() {
             </button>
 
             <div style={{ position: 'relative', flexShrink: 0 }}>
-              <button className="r-icon-btn" onClick={() => router.push('/notifications')}>
+              <button className="r-icon-btn" onClick={() => setNotifOpen(v => !v)}>
                 <Bell size={12} color={notifOpen ? '#a78bfa' : 'rgba(255,255,255,0.4)'} strokeWidth={1.8} />
                 {notifCount > 0 && (
-  <span style={{ position: 'absolute', top: 6, right: 6, width: 13, height: 13, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7.5, color: 'white', fontWeight: 800 }}>{notifCount}</span>
+  <span style={{ position: 'absolute', top: 6, right: 6, width: 13, height: 13, background: '#7C3AED', borderRadius: '50%', border: '1.5px solid #0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 7.5, color: 'white', fontWeight: 800 }}>{notifCount > 9 ? '9+' : notifCount}</span>
 )}
               </button>
               {notifOpen && (
                 <>
                   <div onClick={() => setNotifOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 55 }} />
-                  <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 60, width: 290, background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 13, boxShadow: '0 8px 36px rgba(0,0,0,0.55)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.16s ease', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 60, width: 300, background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 13, boxShadow: '0 8px 36px rgba(0,0,0,0.55)', backdropFilter: 'blur(24px)', animation: 'fadeIn 0.16s ease', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 14px 8px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ color: '#FAFAFA', fontWeight: 700, fontSize: 12 }}>Notifications</span>
-                      <span style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.22)', borderRadius: 6, padding: '2px 7px', fontSize: 9, fontWeight: 800, color: '#a78bfa'}}>{notifCount} NEW</span>
+                      {notifCount > 0 && <span style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.22)', borderRadius: 6, padding: '2px 7px', fontSize: 9, fontWeight: 800, color: '#a78bfa'}}>{notifCount} NEW</span>}
                     </div>
-              <div style={{ padding: '16px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 11.5, textAlign: 'center' }}>
-                {notifCount > 0 ? `${notifCount} unread notifications` : 'No new notifications'}
-              </div>
-                   <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <Link href="/notifications" onClick={() => setNotifOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#a78bfa', fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>
-                      View All Notifications <ChevronRight size={11} />
-                    </Link>
-                  </div>
+                    <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+                      {notifications.length === 0 ? (
+                        <div style={{ padding: '20px 14px', color: 'rgba(255,255,255,0.35)', fontSize: 11.5, textAlign: 'center' }}>
+                          No notifications yet
+                        </div>
+                      ) : notifications.map(n => (
+                        <div key={n.id} style={{
+                          padding: '10px 14px',
+                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          background: !n.read ? 'rgba(124,58,237,0.04)' : 'transparent',
+                          display: 'flex', gap: 10, alignItems: 'flex-start',
+                        }}>
+                          <div style={{
+                            width: 7, height: 7, borderRadius: '50%', marginTop: 4, flexShrink: 0,
+                            background: !n.read ? '#7C3AED' : 'transparent',
+                            border: n.read ? '1px solid rgba(255,255,255,0.15)' : 'none',
+                          }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ color: '#FAFAFA', fontSize: 11.5, fontWeight: 600, marginBottom: 2 }}>{n.title}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10.5, lineHeight: 1.4 }}>{n.body}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                      <Link href="/notifications" onClick={() => setNotifOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, color: '#a78bfa', fontSize: 11.5, fontWeight: 700, textDecoration: 'none' }}>
+                        View All Notifications <ChevronRight size={11} />
+                      </Link>
+                    </div>
                   </div>
                 </>
               )}
@@ -1134,7 +1158,13 @@ export default function Dashboard() {
                     </div>
                     {channelHandle && (
                       <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        @{channelHandle.replace('@', '')} · Connected on {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        @{channelHandle.replace('@', '')} · Connected on {userData?.created_at
+                          ? (typeof userData.created_at === 'string'
+                              ? new Date(userData.created_at)
+                              : userData.created_at?.toDate?.()
+                            )?.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+                        }
                       </div>
                     )}
                   </div>

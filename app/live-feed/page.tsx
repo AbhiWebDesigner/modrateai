@@ -34,7 +34,6 @@ interface FeedComment {
   aiDecision: AiDecision;
   category: string | null;
   confidence: number;
-  aiReply: string | null;
   isNew?: boolean;
 }
 
@@ -305,21 +304,6 @@ function CommentRow({
             color: 'rgba(255,255,255,0.6)', fontSize: 12, lineHeight: 1.5,
             marginBottom: 5, wordBreak: 'break-word',
           }}>{comment.text}</p>
-
-          {/* AI Reply — shown only when action is replied */}
-          {comment.aiDecision === 'replied' && comment.aiReply && (
-            <div style={{
-              display: 'flex', alignItems: 'flex-start', gap: 7,
-              background: 'rgba(96,165,250,0.06)',
-              border: '1px solid rgba(96,165,250,0.15)',
-              borderRadius: 8, padding: '7px 10px', marginBottom: 6,
-            }}>
-              <Bot size={11} color="#60a5fa" style={{ marginTop: 2, flexShrink: 0 }} />
-              <span style={{ color: 'rgba(96,165,250,0.85)', fontSize: 11, lineHeight: 1.5 }}>
-                {comment.aiReply}
-              </span>
-            </div>
-          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <MessageSquare size={9} color="rgba(255,255,255,0.2)" />
             <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>
@@ -350,23 +334,28 @@ function CommentRow({
               onClick={() => setActionsOpen(v => !v)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 3,
-                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: 6, padding: '3px 7px', cursor: 'pointer', transition: 'all 0.15s',
-                color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: 600,
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)',
+                borderRadius: 6, padding: '4px 8px', cursor: 'pointer', transition: 'all 0.15s',
+                color: 'rgba(255,255,255,0.55)', fontSize: 10, fontWeight: 600,
               }}
             >
               Actions <ChevronDown size={9} />
             </button>
             {actionsOpen && (
               <>
-                <div onClick={() => setActionsOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 100 }} />
+                <div onClick={() => setActionsOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
                 <div style={{
-                  position: 'absolute', right: 0, top: '110%', zIndex: 101,
-                  background: 'rgba(13,12,20,0.99)', border: '1px solid rgba(255,255,255,0.09)',
-                  borderRadius: 10, padding: '5px', minWidth: 130,
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)',
-                  animation: 'slideUp 0.14s ease',
+                  position: 'fixed',
+                  zIndex: 9999,
+                  background: '#0D0B14',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 10,
+                  padding: '5px',
+                  minWidth: 140,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
+                  backdropFilter: 'blur(20px)',
                 }}>
+                  {/* Approve — show when not already approved */}
                   {comment.aiDecision !== 'approved' && (
                     <button
                       onClick={() => { onApprove(comment.id); setActionsOpen(false); }}
@@ -379,6 +368,7 @@ function CommentRow({
                       <CheckCircle size={12} color="#34d399" /> Approve
                     </button>
                   )}
+                  {/* Hide — show when not already hidden */}
                   {comment.aiDecision !== 'hidden' && (
                     <button
                       onClick={() => { onHide(comment.id); setActionsOpen(false); }}
@@ -391,6 +381,7 @@ function CommentRow({
                       <EyeOff size={12} color="#F59E0B" /> Hide
                     </button>
                   )}
+                  {/* Delete — always show */}
                   <button
                     onClick={() => { onDelete(comment.id); setActionsOpen(false); }}
                     style={{
@@ -434,7 +425,6 @@ function firestoreCommentToFeed(id: string, data: DocumentData): FeedComment {
     aiDecision: (data.aiDecision as AiDecision) || 'approved',
     category: (data.category as string) || null,
     confidence: typeof data.confidence === 'number' ? data.confidence : 100,
-    aiReply:    typeof data.aiReply === 'string' ? data.aiReply : null,
     isNew: false,
   };
 }

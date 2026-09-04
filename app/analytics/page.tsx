@@ -660,6 +660,18 @@ export default function AnalyticsPage() {
         .bottom-nav-wrap { display: flex; }
         .main-content    { margin-left: 0; padding-bottom: 80px; }
 
+        /* ══ DSO — bigger bottom nav ══ */
+        @media (pointer: coarse) and (min-width: 600px) {
+          .bottom-nav-wrap nav > a,
+          .bottom-nav-wrap nav > button { padding: 14px 2px 18px !important; }
+          .bottom-nav-wrap nav > a > span:first-of-type,
+          .bottom-nav-wrap nav > button > span:first-of-type { width: 64px !important; height: 48px !important; border-radius: 14px !important; }
+          .bottom-nav-wrap nav > a > span:first-of-type svg,
+          .bottom-nav-wrap nav > button > span:first-of-type svg { width: 28px !important; height: 28px !important; }
+          .bottom-nav-wrap nav > a > span:last-child,
+          .bottom-nav-wrap nav > button > span:last-child { font-size: 16px !important; }
+        }
+
         @media (min-width: 1024px) {
           .desktop-sidebar { display: flex !important; flex-direction: column; }
           .bottom-nav-wrap { display: none !important; }

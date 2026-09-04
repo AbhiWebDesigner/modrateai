@@ -12,6 +12,7 @@ import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import {
   doc, onSnapshot, collection, query, orderBy,
   updateDoc, writeBatch, DocumentData, Timestamp, addDoc, serverTimestamp,
+  deleteDoc, limit,
 } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
@@ -158,7 +159,7 @@ export default function NotificationsPage() {
       });
 
       const notifsRef = collection(db, 'users', u.uid, 'notifications');
-      const q = query(notifsRef, orderBy('createdAt', 'desc'));
+      const q = query(notifsRef, limit(50));
 
       unsubNotifs = onSnapshot(q, async (snap) => {
         if (snap.empty) {
@@ -180,7 +181,11 @@ export default function NotificationsPage() {
             link: data.link,
           };
         });
+        // Sort client-side newest first — avoids Firestore index requirement
+        docs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         setNotifs(docs);
+        setLoading(false);
+      }, () => {
         setLoading(false);
       });
     });
@@ -210,7 +215,6 @@ export default function NotificationsPage() {
 
   const deleteNotif = async (id: string) => {
     if (!user) return;
-    const { deleteDoc } = await import('firebase/firestore');
     await deleteDoc(doc(db, 'users', user.uid, 'notifications', id));
   };
 

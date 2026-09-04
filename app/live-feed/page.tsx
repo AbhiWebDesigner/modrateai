@@ -34,6 +34,7 @@ interface FeedComment {
   aiDecision: AiDecision;
   category: string | null;
   confidence: number;
+  aiReply: string | null;
   isNew?: boolean;
 }
 
@@ -304,6 +305,21 @@ function CommentRow({
             color: 'rgba(255,255,255,0.6)', fontSize: 12, lineHeight: 1.5,
             marginBottom: 5, wordBreak: 'break-word',
           }}>{comment.text}</p>
+
+          {/* AI Reply — shown only when action is replied */}
+          {comment.aiDecision === 'replied' && comment.aiReply && (
+            <div style={{
+              display: 'flex', alignItems: 'flex-start', gap: 7,
+              background: 'rgba(96,165,250,0.06)',
+              border: '1px solid rgba(96,165,250,0.15)',
+              borderRadius: 8, padding: '7px 10px', marginBottom: 6,
+            }}>
+              <Bot size={11} color="#60a5fa" style={{ marginTop: 2, flexShrink: 0 }} />
+              <span style={{ color: 'rgba(96,165,250,0.85)', fontSize: 11, lineHeight: 1.5 }}>
+                {comment.aiReply}
+              </span>
+            </div>
+          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <MessageSquare size={9} color="rgba(255,255,255,0.2)" />
             <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>
@@ -418,6 +434,7 @@ function firestoreCommentToFeed(id: string, data: DocumentData): FeedComment {
     aiDecision: (data.aiDecision as AiDecision) || 'approved',
     category: (data.category as string) || null,
     confidence: typeof data.confidence === 'number' ? data.confidence : 100,
+    aiReply:    typeof data.aiReply === 'string' ? data.aiReply : null,
     isNew: false,
   };
 }

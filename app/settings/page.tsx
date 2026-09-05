@@ -53,6 +53,20 @@ export default function SettingsPage() {
   const [moreOpen, setMoreOpen]                   = useState(false);
   const [notifOpen, setNotifOpen]                 = useState(false);
   const [isDesktopSiteOn, setIsDesktopSiteOn]     = useState(false);
+  const [connectError, setConnectError]           = useState('');
+
+  // Check for error query param from OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    if (err === 'channel_not_found') {
+      setConnectError('No YouTube channel found on this Google account. Please create a YouTube channel at youtube.com first, then try connecting again.');
+    } else if (err === 'oauth_denied') {
+      setConnectError('YouTube connection was cancelled. Please try again.');
+    } else if (err === 'csrf_mismatch') {
+      setConnectError('Security error during connection. Please try again.');
+    }
+  }, []);
 
   const currentPath = '/settings';
 
@@ -71,7 +85,6 @@ export default function SettingsPage() {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) { router.push('/login'); return; }
       setUser(firebaseUser);
-      setFullName(firebaseUser.displayName || '');
       if (firebaseUser.metadata.creationTime) {
         const date = new Date(firebaseUser.metadata.creationTime);
         setMemberSince(date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }));
@@ -81,12 +94,16 @@ export default function SettingsPage() {
         if (snap.exists()) {
           const data = snap.data();
           setUserPlan(data.plan || 'free');
+          // Load name from Firestore first, fallback to Firebase Auth displayName
+          setFullName(data.name || data.displayName || firebaseUser.displayName || '');
           const isConnected = data.youtube_connected === true;
           const channelName = data.youtube_channel_name || data.youtube_channel_handle || '';
           setYoutubeConnected(isConnected);
           if (isConnected && channelName) setYoutubeChannel(channelName);
         }
-      } catch {}
+      } catch {
+        setFullName(firebaseUser.displayName || '');
+      }
       setLoading(false);
     });
     return () => unsub();
@@ -781,10 +798,22 @@ export default function SettingsPage() {
                       </button>
                     </div>
                   ) : (
-                    <button onClick={handleConnectYouTube} className="btn-primary">
-                      <svg width="13" height="13" viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="white"/><path d="M9.8 15.6V8.4l6.2 3.6-6.2 3.6z" fill="white"/></svg>
-                      Connect YouTube
-                    </button>
+                    <>
+                      {connectError && (
+                        <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10, padding: '10px 13px', marginBottom: 12, fontSize: 12, color: '#f87171', lineHeight: 1.5 }}>
+                          ⚠️ {connectError}
+                          {connectError.includes('create a YouTube channel') && (
+                            <a href="https://www.youtube.com/create_channel" target="_blank" rel="noreferrer" style={{ color: '#f87171', fontWeight: 700, display: 'block', marginTop: 6 }}>
+                              → Create YouTube Channel ↗
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      <button onClick={handleConnectYouTube} className="btn-primary">
+                        <svg width="13" height="13" viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.8 3.5 12 3.5 12 3.5s-7.8 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.6.6 9.4.6 9.4.6s7.8 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8z" fill="white"/><path d="M9.8 15.6V8.4l6.2 3.6-6.2 3.6z" fill="white"/></svg>
+                        Connect YouTube
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

@@ -935,8 +935,35 @@ function SharedAPITab({ userData, user, router, showToast }: { userData: UserDat
 
 function GCPTab({ userData, user, router, showToast }: { userData: UserData; user: User; router: ReturnType<typeof useRouter>; showToast: (msg: string, type?: "success" | "error" | "info") => void }) {
   const [activeChart, setActiveChart] = useState<"7D" | "30D" | "90D">("7D");
-  const [currentStep, setCurrentStep] = useState<number>(0);
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const gcpConnected = userData.gcp_connected ?? false;
+
+  // ── Step progress — persist in localStorage, reset when GCP disconnected ──
+  const STORAGE_KEY_STEP      = `gcp_step_${user.uid}`;
+  const STORAGE_KEY_COMPLETED = `gcp_done_${user.uid}`;
+
+  const [currentStep, setCurrentStep] = useState<number>(() => {
+    if (gcpConnected) return 6; // already connected — show last step
+    try { return parseInt(localStorage.getItem(STORAGE_KEY_STEP) || '0', 10); } catch { return 0; }
+  });
+
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(() => {
+    if (gcpConnected) return new Set([0,1,2,3,4,5,6]); // all complete
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_COMPLETED);
+      return saved ? new Set(JSON.parse(saved) as number[]) : new Set();
+    } catch { return new Set(); }
+  });
+
+  // Persist progress to localStorage
+  useEffect(() => {
+    if (gcpConnected) return; // don't overwrite when connected
+    try { localStorage.setItem(STORAGE_KEY_STEP, String(currentStep)); } catch {}
+  }, [currentStep, gcpConnected]);
+
+  useEffect(() => {
+    if (gcpConnected) return;
+    try { localStorage.setItem(STORAGE_KEY_COMPLETED, JSON.stringify([...completedSteps])); } catch {}
+  }, [completedSteps, gcpConnected]);
   const [gcpRefreshing, setGcpRefreshing] = useState(false);
   const [gcpDisconnecting, setGcpDisconnecting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -972,7 +999,6 @@ function GCPTab({ userData, user, router, showToast }: { userData: UserData; use
     }).catch(() => {});
   }, [user]);
 
-  const gcpConnected = userData.gcp_connected ?? false;
   const gcpProjectName = userData.gcp_project_name || "—";
   const gcpProjectId = userData.gcp_project_id || "—";
   const gcpProjectNumber = userData.gcp_project_number || "—";

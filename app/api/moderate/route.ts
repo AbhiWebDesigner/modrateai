@@ -93,39 +93,46 @@ reply: warm same-language string when REPLIED, null otherwise
 language: detected language name
 confidence: 0-100 number`;
 
-// ─── Rate limit store (edge-compatible in-memory per isolate) ─────────────────
-// Resets when the edge isolate restarts — good enough for basic abuse prevention
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_MAX      = 20;   // requests
-const RATE_LIMIT_WINDOW   = 60_000; // 1 minute
+// ─── Token verification via backend ──────────────────────────────────────────
+// Edge runtime లో firebase-admin use చేయలేం (Node.js only).
+// Backend /api/auth/verify endpoint కి token forward చేసి verify చేయించడం
+// correct + secure pattern — token header లో మాత్రమే travels, URL లో కాదు.
+async function verifyFirebaseToken(token: string): Promise<boolean> {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (!backendUrl) return false;
 
-function isRateLimited(ip: string): boolean {
-  const now    = Date.now();
-  const record = rateLimitMap.get(ip);
-
-  if (!record || now > record.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+  try {
+    const res = await fetch(`${backendUrl}/api/auth/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return res.ok;
+  } catch {
     return false;
   }
-
-  if (record.count >= RATE_LIMIT_MAX) return true;
-
-  record.count++;
-  return false;
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  // ── 1. Auth check — require Firebase ID token ──────────────────────────────
+
+  // ── 1. Auth — extract Bearer token ────────────────────────────────────────
   const authHeader = req.headers.get('authorization') ?? '';
-  if (!authHeader.startsWith('Bearer ') || authHeader.length < 20) {
+  if (!authHeader.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // ── 2. Rate limiting per IP ────────────────────────────────────────────────
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  if (isRateLimited(ip)) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  const token = authHeader.slice(7).trim();
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // ── 2. Verify token via backend (real Firebase Admin verify) ───────────────
+  const isValid = await verifyFirebaseToken(token);
+  if (!isValid) {
+    return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
   }
 
   // ── 3. Env guard ───────────────────────────────────────────────────────────
@@ -148,29 +155,41 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'comment is required' }, { status: 400 });
   }
   if (comment.length > 1000) {
-    return NextResponse.json(
-      { action: 'SPAM', reason: 'Comment too long — spam detected', reply: null, language: 'Unknown', confidence: 95 },
-    );
+    return NextResponse.json({
+      action: 'SPAM',
+      reason: 'Comment too long — spam detected',
+      reply: null,
+      language: 'Unknown',
+      confidence: 95,
+    });
   }
 
   // ── 5. Local fast-checks (no Groq call needed) ────────────────────────────
   if (SECURITY_PATTERNS.test(comment)) {
-    return NextResponse.json(
-      { action: 'HIDDEN', reason: 'Security violation — removed', reply: null, language: 'Unknown', confidence: 99 },
-    );
+    return NextResponse.json({
+      action: 'HIDDEN',
+      reason: 'Security violation — removed',
+      reply: null,
+      language: 'Unknown',
+      confidence: 99,
+    });
   }
   if (SPAM_PATTERNS.test(comment)) {
-    return NextResponse.json(
-      { action: 'SPAM', reason: 'Spam or link detected — hidden', reply: null, language: 'Unknown', confidence: 97 },
-    );
+    return NextResponse.json({
+      action: 'SPAM',
+      reason: 'Spam or link detected — hidden',
+      reply: null,
+      language: 'Unknown',
+      confidence: 97,
+    });
   }
   if (TOXIC_PATTERNS.test(comment)) {
     const isSevere = TOXIC_SEVERE.test(comment);
     return NextResponse.json({
-      action:     isSevere ? 'HIDDEN'  : 'TIMEOUT',
-      reason:     isSevere ? 'Severe abuse — hidden from public' : 'Abusive language — timed out',
-      reply:      null,
-      language:   'Unknown',
+      action: isSevere ? 'HIDDEN' : 'TIMEOUT',
+      reason: isSevere ? 'Severe abuse — hidden from public' : 'Abusive language — timed out',
+      reply: null,
+      language: 'Unknown',
       confidence: isSevere ? 97 : 91,
     });
   }
@@ -178,18 +197,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── 6. Send to Groq for nuanced analysis ──────────────────────────────────
   try {
     const groqRes = await fetch(GROQ_API_URL, {
-      method:  'POST',
+      method: 'POST',
       headers: {
-        'Content-Type':  'application/json',
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${groqKey}`,
       },
       body: JSON.stringify({
-        model:       'llama-3.1-8b-instant',
-        max_tokens:  300,
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 300,
         temperature: 0.1,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user',   content: `Analyze this comment and return ONLY JSON: "${comment}"` },
+          { role: 'user', content: `Analyze this comment and return ONLY JSON: "${comment}"` },
         ],
       }),
     });
@@ -202,17 +221,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       choices?: { message?: { content?: string } }[];
     };
 
-    const raw   = groqData.choices?.[0]?.message?.content ?? '';
+    const raw = groqData.choices?.[0]?.message?.content ?? '';
     const clean = raw.replace(/```json|```/g, '').trim();
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(clean) as Record<string, unknown>;
     } catch {
-      // Groq returned non-JSON — safe fallback
-      return NextResponse.json(
-        { action: 'KEPT', reason: 'AI parse error', reply: null, language: 'Unknown', confidence: 50 },
-      );
+      return NextResponse.json({
+        action: 'KEPT',
+        reason: 'AI parse error — kept for review',
+        reply: null,
+        language: 'Unknown',
+        confidence: 50,
+      });
     }
 
     const action = VALID_ACTIONS.has(parsed.action as string)
@@ -221,31 +243,34 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Safety override: if Groq missed a toxic pattern
     if (['REPLIED', 'KEPT'].includes(action) && TOXIC_PATTERNS.test(comment)) {
-      return NextResponse.json(
-        { action: 'TIMEOUT', reason: 'Abusive language detected', reply: null, language: String(parsed.language ?? 'Unknown'), confidence: 91 },
-      );
+      return NextResponse.json({
+        action: 'TIMEOUT',
+        reason: 'Abusive language detected',
+        reply: null,
+        language: String(parsed.language ?? 'Unknown'),
+        confidence: 91,
+      });
     }
 
     // Default reply fallback for REPLIED with no reply text
     let reply: string | null = null;
     if (action === 'REPLIED') {
-      reply = typeof parsed.reply === 'string' && parsed.reply !== 'null' && parsed.reply.length > 0
-        ? parsed.reply
-        : 'Thank you so much! 🙏 Really appreciate your support!';
+      reply =
+        typeof parsed.reply === 'string' &&
+        parsed.reply !== 'null' &&
+        parsed.reply.length > 0
+          ? parsed.reply
+          : 'Thank you so much! 🙏 Really appreciate your support!';
     }
 
     return NextResponse.json({
       action,
-      reason:     typeof parsed.reason     === 'string' ? parsed.reason     : 'AI analyzed',
+      reason: typeof parsed.reason === 'string' ? parsed.reason : 'AI analyzed',
       reply,
-      language:   typeof parsed.language   === 'string' ? parsed.language   : 'Unknown',
+      language: typeof parsed.language === 'string' ? parsed.language : 'Unknown',
       confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 85,
     });
-
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Analysis failed' },
-      { status: 500 },
-    );
+  } catch {
+    return NextResponse.json({ error: 'Analysis failed' }, { status: 500 });
   }
 }

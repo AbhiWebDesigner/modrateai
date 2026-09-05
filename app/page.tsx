@@ -269,20 +269,67 @@ const PLANS = [
   {
     name: 'Free Trial', monthly: 0, annual: 0,
     desc: 'Try ModerateAI free for 19 days.',
-    features: ['19-Day Free Trial', '1 YouTube Channel', '2,000 Comments Scanned', 'AI Toxic Detection', 'AI Spam Detection', 'Review Queue', '250 AI Actions', 'Smart AI Replies (Max 3 Per Video)', 'Basic Analytics Dashboard', '10+ Languages', 'Email Support'],
+    features: [
+      '19-Day Free Trial',
+      '1 YouTube Channel',
+      'YouTube API Quota: 500 units / day',
+      'GCP Connected: +10,000 units / day',
+      '2 Videos Scan (Automation Selected)',
+      '5 Automation Rules',
+      'Specific Video Selection Only',
+      '250 AI Credits / 19 Days',
+      '1 AI Reply Per User',
+      'Bad / Toxic / Spam → Hide for Review',
+      'Review Queue',
+      'Basic Analytics Dashboard',
+      '25 Languages',
+      'Email Support',
+      'Extend Trial: ₹69 for 30 More Days',
+    ],
     missing: [], cta: 'Start Free Trial', primary: false, hl: false, badge: null,
   },
   {
     name: 'Pro', monthly: 349, annual: 299,
     desc: 'Perfect for growing creators.',
-    features: ['1 YouTube Channel', '25,000 Comments Scanned / Month', 'AI Toxic Detection', 'AI Spam Detection', 'Auto Hide', 'Review Queue', 'Live Chat Moderation', 'Progressive Live Chat Timeouts', '1,900 AI Actions / Month', 'Smart AI Replies (Max 3 Per Video)', 'Unlimited Automation Rules', 'Full Analytics Dashboard', '50+ Languages', 'Priority Email Support'],
+    features: [
+      '1 YouTube Channel',
+      'YouTube API Quota: 1,500 units / day',
+      'GCP Connected: +10,000 units / day',
+      '100 Videos / Shorts / Posts Scan',
+      'Unlimited Live Stream Moderation (Quota Based)',
+      '20 Automation Rules',
+      'Specific + Future + Latest Video Selection',
+      '1,900 AI Credits / Month',
+      '3 AI Replies Per User',
+      'Bad / Toxic / Spam → Hide for Review',
+      'Review Queue',
+      'Full Analytics Dashboard',
+      '65 Languages',
+      'Priority Email Support',
+      'Scan Interval: 100 Seconds',
+    ],
     missing: [], cta: 'Start 19-Day Trial', primary: true, hl: true, badge: 'Most Popular',
   },
   {
     name: 'Agency', monthly: 2499, annual: 2149,
     desc: 'Built for businesses & agencies.',
-    features: ['2 YouTube Channels', '150,000 Comments Scanned / Month', 'AI Toxic Detection', 'AI Spam Detection', 'Auto Hide', 'Review Queue', 'Live Chat Moderation', 'Progressive Live Chat Timeouts', '15,000 AI Actions / Month', 'Smart AI Replies (Max 3 Per Video)', 'Unlimited Automation Rules', 'Advanced Analytics Dashboard', 'Telegram Alerts', '100+ Languages', 'Dedicated Priority Support'],
-    missing: [], cta: 'Get Agency', primary: false, hl: false, badge: null,
+    features: [
+      'Multiple YouTube Channels',
+      'Custom YouTube API Quota',
+      'GCP Connected: +10,000 units / day',
+      'Unlimited Videos / Shorts / Posts Scan',
+      'Unlimited Live Stream Moderation',
+      'Unlimited Automation Rules',
+      'All Video Selection Types',
+      'Custom AI Credits',
+      'Unlimited AI Replies',
+      'Bad / Toxic / Spam → Hide for Review',
+      'Advanced Analytics Dashboard',
+      '100+ Languages',
+      'Team Access',
+      'Dedicated Priority Support',
+    ],
+    missing: [], cta: '🔒 Coming Soon', primary: false, hl: false, badge: 'Coming Soon',
   },
 ];
 
@@ -1065,7 +1112,10 @@ export default function LandingPage() {
                         <div key={f} className="p-feat"><Check size={13} style={{ color: '#10B981', flexShrink: 0 }} />{f}</div>
                       ))}
                     </div>
-                    <Link href="/login" className={p.primary ? 'cta-p' : p.hl ? 'cta-dgl' : 'cta-gl'}>{p.cta}</Link>
+                    {p.name === 'Agency'
+                      ? <span className="cta-gl" style={{ opacity: 0.4, cursor: 'not-allowed', display: 'block', textAlign: 'center' }}>{p.cta}</span>
+                      : <Link href="/login" className={p.primary ? 'cta-p' : p.hl ? 'cta-dgl' : 'cta-gl'}>{p.cta}</Link>
+                    }
                   </div>
                 </FadeIn>
               ))}

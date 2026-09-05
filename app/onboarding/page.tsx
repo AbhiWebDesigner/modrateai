@@ -37,9 +37,12 @@ export default function OnboardingPage() {
     setStep('youtube');
   };
 
-  const handleGcpDone = () => {
-    // Redirect to API Access page for actual GCP setup
-    router.push('/dashboard/settings/api-access');
+  const handleGcpSetup = () => {
+    // Open Google Cloud Console in new tab for actual setup
+    window.open('https://console.cloud.google.com', '_blank');
+    // Move to YouTube step — GCP setup happens separately in Settings
+    setGcpSkipped(false);
+    setStep('youtube');
   };
 
   const handleConnectYouTube = async () => {
@@ -57,7 +60,9 @@ export default function OnboardingPage() {
 
   const handleSkipYouTube = async () => {
     if (!uid) return;
-    await updateDoc(doc(db, 'users', uid), { onboarding_completed: true });
+    try {
+      await updateDoc(doc(db, 'users', uid), { onboarding_completed: true });
+    } catch {}
     router.replace('/dashboard');
   };
 
@@ -65,6 +70,7 @@ export default function OnboardingPage() {
     return (
       <div style={{ minHeight: '100vh', background: '#09090B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: 32, height: 32, border: '3px solid rgba(245,158,11,0.2)', borderTopColor: '#F59E0B', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -84,7 +90,6 @@ export default function OnboardingPage() {
         .btn-ghost { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 24px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; }
         .btn-ghost:hover { background: rgba(255,255,255,0.09); color: rgba(255,255,255,0.75); }
         .step-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 12px; }
-        .step-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.30); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #F59E0B; flex-shrink: 0; margin-top: 1px; }
       `}</style>
 
       <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,0.08) 0%, transparent 60%), #09090B', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
@@ -102,7 +107,14 @@ export default function OnboardingPage() {
           <div className="fade-up" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 32, justifyContent: 'center' }}>
             {(['gcp', 'youtube'] as Step[]).map((s, i) => (
               <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: step === s ? 'rgba(245,158,11,0.15)' : s === 'gcp' && step === 'youtube' ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${step === s ? 'rgba(245,158,11,0.50)' : s === 'gcp' && step === 'youtube' ? 'rgba(34,197,94,0.40)' : 'rgba(255,255,255,0.08)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: step === s ? '#F59E0B' : s === 'gcp' && step === 'youtube' ? '#4ade80' : 'rgba(255,255,255,0.25)' }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: step === s ? 'rgba(245,158,11,0.15)' : s === 'gcp' && step === 'youtube' ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)',
+                  border: `1.5px solid ${step === s ? 'rgba(245,158,11,0.50)' : s === 'gcp' && step === 'youtube' ? 'rgba(34,197,94,0.40)' : 'rgba(255,255,255,0.08)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 11, fontWeight: 800,
+                  color: step === s ? '#F59E0B' : s === 'gcp' && step === 'youtube' ? '#4ade80' : 'rgba(255,255,255,0.25)'
+                }}>
                   {s === 'gcp' && step === 'youtube' ? '✓' : i + 1}
                 </div>
                 <span style={{ fontSize: 12, fontWeight: 600, color: step === s ? '#FAFAFA' : 'rgba(255,255,255,0.30)' }}>
@@ -126,7 +138,6 @@ export default function OnboardingPage() {
                 </p>
               </div>
 
-              {/* Why GCP */}
               <div style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 12, padding: '12px 14px', marginBottom: 20 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', marginBottom: 8 }}>Why connect GCP?</div>
                 {['Your own 10,000 API units/day (free)', 'More videos and comments scanned', 'Faster moderation, less rate limiting', 'Better performance overall'].map(t => (
@@ -137,9 +148,10 @@ export default function OnboardingPage() {
                 ))}
               </div>
 
-              {/* Video Tutorial */}
-              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.10)', borderRadius: 12, padding: '14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-                onClick={() => window.open('https://www.youtube.com/@moderateai', '_blank')}>
+              <div
+                style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.10)', borderRadius: 12, padding: '14px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                onClick={() => window.open('https://www.youtube.com/@moderateai', '_blank')}
+              >
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Youtube size={18} color="#f87171" />
                 </div>
@@ -151,13 +163,17 @@ export default function OnboardingPage() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button className="btn-primary" onClick={handleGcpDone}>
-                  Set Up GCP Now <ChevronRight size={16} />
+                <button className="btn-primary" onClick={handleGcpSetup}>
+                  Open Google Cloud Console <ExternalLink size={15} />
                 </button>
                 <button className="btn-ghost" onClick={handleSkipGcp}>
                   <SkipForward size={14} /> Skip — use shared quota (500 units/day)
                 </button>
               </div>
+
+              <p style={{ textAlign: 'center', fontSize: 11.5, color: 'rgba(255,255,255,0.25)', marginTop: 12, lineHeight: 1.5 }}>
+                You can also complete GCP setup later in Settings → API Access
+              </p>
             </div>
           )}
 
@@ -176,7 +192,13 @@ export default function OnboardingPage() {
 
               {gcpSkipped && (
                 <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
-                  ⚡ Running on <strong style={{ color: '#F59E0B' }}>shared quota (500 units/day)</strong>. Connect GCP anytime in Settings for 10,000 units/day.
+                  ⚡ Running on <strong style={{ color: '#F59E0B' }}>shared quota (500 units/day)</strong>. Connect GCP anytime in Settings → API Access.
+                </div>
+              )}
+
+              {!gcpSkipped && (
+                <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 12, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>
+                  ✅ Google Cloud Console opened. Complete the setup and come back — <strong style={{ color: '#4ade80' }}>finish GCP in Settings → API Access</strong> after connecting YouTube.
                 </div>
               )}
 

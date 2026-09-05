@@ -5,11 +5,11 @@ const PLANS = [
   {
     id: "free",
     name: "Free Trial ✦",
-    tagline: "Perfect for trying ModerateAI",
+    tagline: "Test before you commit",
     price: "₹0",
-    period: "/month",
+    period: "/19 days",
     badge: null,
-    trialNote: "✦ 19-day free trial",
+    trialNote: "✦ 19-day free trial · Extend for ₹69",
     color: "rgba(255,255,255,0.06)",
     borderColor: "rgba(255,255,255,0.09)",
     btnStyle: { background: "rgba(255,255,255,0.08)", color: "#FAFAFA" },
@@ -18,21 +18,25 @@ const PLANS = [
     features: [
       "19-Day Free Trial",
       "1 YouTube Channel",
-      "2,000 Comments Scanned",
-      "AI Toxic Detection",
-      "AI Spam Detection",
+      "YouTube API Quota: 500 units / day",
+      "GCP Connected: +10,000 units / day",
+      "2 Videos Scan (Automation Selected)",
+      "5 Automation Rules",
+      "Specific Video Selection Only",
+      "250 AI Credits / 19 Days",
+      "1 AI Reply Per User",
+      "Bad / Toxic / Spam → Hide for Review",
       "Review Queue",
-      "250 AI Actions",
-      "Smart AI Replies (Max 3 Per Video)",
       "Basic Analytics Dashboard",
-      "10+ Languages",
+      "25 Languages",
       "Email Support",
+      "Extend Trial: ₹69 for 30 More Days",
     ],
   },
   {
     id: "pro",
     name: "Pro ✦",
-    tagline: "Perfect for growing creators",
+    tagline: "For growing creators",
     price: "₹349",
     period: "/month",
     badge: "MOST POPULAR",
@@ -44,19 +48,20 @@ const PLANS = [
     btnHref: "/login",
     features: [
       "1 YouTube Channel",
-      "25,000 Comments Scanned / Month",
-      "AI Toxic Detection",
-      "AI Spam Detection",
-      "Auto Hide",
+      "YouTube API Quota: 1,500 units / day",
+      "GCP Connected: +10,000 units / day",
+      "100 Videos / Shorts / Posts Scan",
+      "Unlimited Live Stream Moderation (Quota Based)",
+      "20 Automation Rules",
+      "Specific + Future + Latest Video Selection",
+      "1,900 AI Credits / Month",
+      "3 AI Replies Per User",
+      "Bad / Toxic / Spam → Hide for Review",
       "Review Queue",
-      "Live Chat Moderation",
-      "Progressive Live Chat Timeouts",
-      "1,900 AI Actions / Month",
-      "Smart AI Replies (Max 3 Per Video)",
-      "Unlimited Automation Rules",
       "Full Analytics Dashboard",
-      "50+ Languages",
+      "65 Languages",
       "Priority Email Support",
+      "Scan Interval: 100 Seconds",
     ],
   },
   {
@@ -65,43 +70,46 @@ const PLANS = [
     tagline: "Built for businesses & agencies",
     price: "₹2,499",
     period: "/month",
-    badge: null,
+    badge: "COMING SOON",
     trialNote: null,
     color: "rgba(124,58,237,0.07)",
     borderColor: "rgba(124,58,237,0.30)",
-    btnStyle: { background: "linear-gradient(135deg,#7C3AED,#4F46E5)", color: "white" },
-    btnLabel: "Get Agency",
-    btnHref: "/login",
+    btnStyle: { background: "rgba(124,58,237,0.10)", color: "rgba(255,255,255,0.25)" },
+    btnLabel: "🔒 Coming Soon",
+    btnHref: "#",
     features: [
-      "2 YouTube Channels",
-      "150,000 Comments Scanned / Month",
-      "AI Toxic Detection",
-      "AI Spam Detection",
-      "Auto Hide",
-      "Review Queue",
-      "Live Chat Moderation",
-      "Progressive Live Chat Timeouts",
-      "15,000 AI Actions / Month",
-      "Smart AI Replies (Max 3 Per Video)",
+      "Multiple YouTube Channels",
+      "Custom YouTube API Quota",
+      "GCP Connected: +10,000 units / day",
+      "Unlimited Videos / Shorts / Posts Scan",
+      "Unlimited Live Stream Moderation",
       "Unlimited Automation Rules",
+      "All Video Selection Types",
+      "Custom AI Credits",
+      "Unlimited AI Replies",
+      "Bad / Toxic / Spam → Hide for Review",
       "Advanced Analytics Dashboard",
-      "Telegram Alerts",
       "100+ Languages",
+      "Team Access",
       "Dedicated Priority Support",
     ],
   },
 ];
 
 const COMPARISON = [
-  { feature: "AI Spam Detection",        free: true,  pro: true,  agency: true  },
-  { feature: "AI Toxic Detection",       free: true,  pro: true,  agency: true  },
-  { feature: "Review Queue",             free: true,  pro: true,  agency: true  },
-  { feature: "Auto Hide",                free: false, pro: true,  agency: true  },
-  { feature: "Live Chat Moderation",     free: false, pro: true,  agency: true  },
-  { feature: "Unlimited Automation Rules", free: false, pro: true, agency: true },
-  { feature: "Telegram Alerts",          free: false, pro: false, agency: true  },
-  { feature: "Export Reports",           free: false, pro: false, agency: true  },
-  { feature: "Priority Support",         free: false, pro: true,  agency: true  },
+  { feature: "Bad / Toxic / Spam Hide",       free: true,  pro: true,  agency: true  },
+  { feature: "Review Queue",                  free: true,  pro: true,  agency: true  },
+  { feature: "Automation Rules",              free: "5",   pro: "20",  agency: "Unlimited" },
+  { feature: "Videos Scan",                   free: "2",   pro: "100", agency: "Unlimited" },
+  { feature: "AI Credits",                    free: "250", pro: "1,900", agency: "Custom" },
+  { feature: "AI Replies Per User",           free: "1",   pro: "3",   agency: "Unlimited" },
+  { feature: "Live Stream Moderation",        free: false, pro: true,  agency: true  },
+  { feature: "Future + Latest Video Select",  free: false, pro: true,  agency: true  },
+  { feature: "Working Hours Setting",         free: false, pro: true,  agency: true  },
+  { feature: "Full Analytics",                free: false, pro: true,  agency: true  },
+  { feature: "65+ Languages",                 free: false, pro: true,  agency: true  },
+  { feature: "Team Access",                   free: false, pro: false, agency: true  },
+  { feature: "Priority Support",              free: false, pro: true,  agency: true  },
 ];
 
 export default function PricingPage() {
@@ -182,21 +190,14 @@ export default function PricingPage() {
                 ))}
               </div>
 
-              <Link href={plan.btnHref} style={{
-                ...plan.btnStyle,
-                display: "block",
-                width: "100%",
-                padding: "12px",
-                borderRadius: 12,
-                fontSize: 14,
-                fontWeight: 700,
-                border: "none",
-                cursor: "pointer",
-                textAlign: "center",
-                textDecoration: "none",
-              }}>
-                {plan.btnLabel} →
-              </Link>
+              {plan.id === 'agency'
+                ? <span style={{ ...plan.btnStyle, display: "block", width: "100%", padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 700, border: "none", cursor: "not-allowed", textAlign: "center", textDecoration: "none" }}>
+                    {plan.btnLabel}
+                  </span>
+                : <Link href={plan.btnHref} style={{ ...plan.btnStyle, display: "block", width: "100%", padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 700, border: "none", cursor: "pointer", textAlign: "center", textDecoration: "none" }}>
+                    {plan.btnLabel} →
+                  </Link>
+              }
             </div>
           ))}
         </div>
@@ -225,9 +226,9 @@ export default function PricingPage() {
                 {COMPARISON.map(row => (
                   <tr key={row.feature}>
                     <td>{row.feature}</td>
-                    <td>{row.free  ? "✅" : "❌"}</td>
-                    <td>{row.pro   ? "✅" : "❌"}</td>
-                    <td>{row.agency ? "✅" : "❌"}</td>
+                    <td>{typeof row.free   === 'boolean' ? (row.free   ? "✅" : "❌") : row.free}</td>
+                    <td>{typeof row.pro    === 'boolean' ? (row.pro    ? "✅" : "❌") : row.pro}</td>
+                    <td>{typeof row.agency === 'boolean' ? (row.agency ? "✅" : "❌") : row.agency}</td>
                   </tr>
                 ))}
               </tbody>

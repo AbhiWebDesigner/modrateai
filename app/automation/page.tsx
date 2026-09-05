@@ -583,6 +583,8 @@ export default function AutomationPage() {
 
   const [user,        setUser]        = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [userPlan,    setUserPlan]    = useState<'free' | 'pro' | 'agency'>('free');
+  const isPro = userPlan === 'pro' || userPlan === 'agency';
 
   const [youtubeConnected,        setYoutubeConnected]        = useState(false);
   const [youtubeConnectionLoading, setYoutubeConnectionLoading] = useState(true);
@@ -616,7 +618,7 @@ export default function AutomationPage() {
 
   const [advanced,   setAdvanced]   = useState<AdvancedSettings>(DEFAULT_ADVANCED);
   const [ruleActive, setRuleActive] = useState(true);
-  const [replyDelay, setReplyDelay] = useState(20);
+  const [replyDelay, setReplyDelay] = useState(60); // default 1 min for free, pro can change
 
   const [moreOpen,          setMoreOpen]          = useState(false);
   const [isDesktopSiteOn,   setIsDesktopSiteOn]   = useState(false);
@@ -659,7 +661,7 @@ export default function AutomationPage() {
     return () => unsub();
   }, [router]);
 
-  // ── YouTube connection check ──────────────────────────────────────────────
+  // ── YouTube connection check + plan fetch ────────────────────────────────
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -670,6 +672,14 @@ export default function AutomationPage() {
         setYoutubeConnectionLoading(false);
       }
     });
+    // Fetch user plan
+    getDoc(doc(db, 'users', user.uid)).then((snap) => {
+      if (!cancelled && snap.exists()) {
+        const plan = snap.data()?.plan as string;
+        if (plan === 'pro' || plan === 'agency') setUserPlan(plan);
+        else setUserPlan('free');
+      }
+    }).catch(() => {});
     return () => { cancelled = true; };
   }, [user]);
 
@@ -1319,11 +1329,29 @@ export default function AutomationPage() {
                           </>
                         )}
                       </button>
-                      {[{ label: "Future Videos", icon: "🔮" }, { label: "Latest Video", icon: "🆕" }, { label: "All Videos", icon: "📺" }].map(opt => (
-                        <div key={opt.label} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: 14, opacity: 0.45, position: "relative", minHeight: 90 }}>
+
+                      {[
+                        { label: "Future Videos", icon: "🔮", desc: "All upcoming videos" },
+                        { label: "Latest Video", icon: "🆕", desc: "Most recent upload" },
+                      ].map(opt => (
+                        <div
+                          key={opt.label}
+                          onClick={() => !isPro && window.location.assign('/billing')}
+                          style={{
+                            background: "rgba(255,255,255,0.02)",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                            borderRadius: 14, padding: 14,
+                            opacity: isPro ? 1 : 0.45,
+                            position: "relative", minHeight: 90,
+                            cursor: isPro ? "pointer" : "not-allowed",
+                          }}
+                        >
                           <div style={{ fontSize: 22, marginBottom: 7 }}>{opt.icon}</div>
                           <div style={{ fontWeight: 600, fontSize: 13 }}>{opt.label}</div>
-                          <span style={{ background: "rgba(234,179,8,0.18)", color: "#eab308", borderRadius: 6, fontSize: 9, padding: "2px 6px", fontWeight: 700, position: "absolute", top: 12, right: 12 }}>PRO</span>
+                          <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 3 }}>{opt.desc}</div>
+                          {!isPro && (
+                            <span style={{ background: "rgba(234,179,8,0.18)", color: "#eab308", borderRadius: 6, fontSize: 9, padding: "2px 6px", fontWeight: 700, position: "absolute", top: 12, right: 12 }}>PRO</span>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1438,24 +1466,33 @@ export default function AutomationPage() {
                       </div>
 
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Reply Delay</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Wait before posting reply (feels more natural)</div>
-                        <div className="delay-row" style={{ flexWrap: "wrap", gap: 8 }}>
-                          {[10, 20, 30, 60, 120, 300].map(d => (
-                            <button key={d} onClick={() => setReplyDelay(d)} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: replyDelay === d ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: replyDelay === d ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyDelay === d ? "1px solid rgba(245,158,11,0.30)" : "none" }}>
-                              {d < 60 ? `${d}s` : d === 120 ? "2m" : "5m"}
-                            </button>
-                          ))}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>Reply Delay</div>
+                          {!isPro && <span style={{ background: "rgba(234,179,8,0.18)", color: "#eab308", borderRadius: 6, fontSize: 9, padding: "2px 6px", fontWeight: 700 }}>PRO</span>}
                         </div>
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Wait before posting reply (feels more natural)</div>
+                        {isPro ? (
+                          <div className="delay-row" style={{ flexWrap: "wrap", gap: 8 }}>
+                            {[30, 50, 60, 120].map(d => (
+                              <button key={d} onClick={() => setReplyDelay(d)} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: replyDelay === d ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: replyDelay === d ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: replyDelay === d ? "1px solid rgba(245,158,11,0.30)" : "none" }}>
+                                {d === 30 ? "30s" : d === 50 ? "50s" : d === 60 ? "1m" : "2m"}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "rgba(255,255,255,0.35)", display: "inline-block" }}>
+                            🔒 1 minute (fixed for free plan)
+                          </div>
+                        )}
                       </div>
 
                       <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
                         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Max Replies per User</div>
-                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Limit replies to same user</div>
-                        <div className="max-replies-row">
-                          {[1, 2, 3, 5, 10].map(n => (
-                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, maxRepliesPerUser: n }))} style={{ padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.maxRepliesPerUser === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.maxRepliesPerUser === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.maxRepliesPerUser === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n}</button>
-                          ))}
+                        <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>
+                          {isPro ? "Limited to 3 for Pro plan" : "Limited to 1 for free plan"}
+                        </div>
+                        <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.20)", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#F59E0B", fontWeight: 700, display: "inline-block" }}>
+                          {isPro ? "3 replies max" : "1 reply max"}
                         </div>
                       </div>
 
@@ -1471,49 +1508,63 @@ export default function AutomationPage() {
                         </div>
                       </div>
 
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${advanced.workingHoursEnd <= advanced.workingHoursStart ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.07)"}`, borderRadius: 12, padding: "13px 14px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 10 }}>Working Hours</div>
-                        <div className="working-hours-row">
+                      {/* Working Hours — PRO only */}
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${!isPro ? "rgba(255,255,255,0.05)" : advanced.workingHoursEnd <= advanced.workingHoursStart ? "rgba(239,68,68,0.35)" : "rgba(255,255,255,0.07)"}`, borderRadius: 12, padding: "13px 14px", opacity: isPro ? 1 : 0.45 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>Working Hours</div>
+                          {!isPro && <span style={{ background: "rgba(234,179,8,0.18)", color: "#eab308", borderRadius: 6, fontSize: 9, padding: "2px 6px", fontWeight: 700 }}>PRO</span>}
+                        </div>
+                        <div className="working-hours-row" style={{ pointerEvents: isPro ? "auto" : "none" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <label style={{ fontSize: 12, color: "rgba(255,255,255,0.50)", whiteSpace: "nowrap" }}>From</label>
-                            <select value={advanced.workingHoursStart} onChange={e => setAdvanced(a => ({ ...a, workingHoursStart: parseInt(e.target.value) }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "7px 10px", fontSize: 13, cursor: "pointer" }}>
+                            <select value={advanced.workingHoursStart} onChange={e => setAdvanced(a => ({ ...a, workingHoursStart: parseInt(e.target.value) }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "7px 10px", fontSize: 13, cursor: isPro ? "pointer" : "not-allowed" }}>
                               {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>)}
                             </select>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <label style={{ fontSize: 12, color: "rgba(255,255,255,0.50)", whiteSpace: "nowrap" }}>To</label>
-                            <select value={advanced.workingHoursEnd} onChange={e => setAdvanced(a => ({ ...a, workingHoursEnd: parseInt(e.target.value) }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "7px 10px", fontSize: 13, cursor: "pointer" }}>
+                            <select value={advanced.workingHoursEnd} onChange={e => setAdvanced(a => ({ ...a, workingHoursEnd: parseInt(e.target.value) }))} style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 8, color: "white", padding: "7px 10px", fontSize: 13, cursor: isPro ? "pointer" : "not-allowed" }}>
                               {Array.from({ length: 24 }, (_, i) => <option key={i} value={i}>{String(i).padStart(2, "0")}:00</option>)}
                             </select>
                           </div>
                         </div>
-                        {advanced.workingHoursEnd <= advanced.workingHoursStart && (
+                        {isPro && advanced.workingHoursEnd <= advanced.workingHoursStart && (
                           <div style={{ marginTop: 8, fontSize: 11, color: "rgba(239,68,68,0.80)" }}>⚠️ End time must be after start time</div>
                         )}
                       </div>
 
-                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px" }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3 }}>Min Comment Length</div>
+                      {/* Min Comment Length — PRO only */}
+                      <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "13px 14px", opacity: isPro ? 1 : 0.45 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>Min Comment Length</div>
+                          {!isPro && <span style={{ background: "rgba(234,179,8,0.18)", color: "#eab308", borderRadius: 6, fontSize: 9, padding: "2px 6px", fontWeight: 700 }}>PRO</span>}
+                        </div>
                         <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginBottom: 10 }}>Ignore very short comments</div>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", pointerEvents: isPro ? "auto" : "none" }}>
                           {[0, 5, 10, 20, 50].map(n => (
-                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, minCommentLength: n }))} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", background: advanced.minCommentLength === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.minCommentLength === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.minCommentLength === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n === 0 ? "Any" : `${n}+`}</button>
+                            <button key={n} onClick={() => setAdvanced(a => ({ ...a, minCommentLength: n }))} style={{ padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: isPro ? "pointer" : "not-allowed", border: "none", background: advanced.minCommentLength === n ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.06)", color: advanced.minCommentLength === n ? "#F59E0B" : "rgba(255,255,255,0.45)", outline: advanced.minCommentLength === n ? "1px solid rgba(245,158,11,0.30)" : "none" }}>{n === 0 ? "Any" : `${n}+`}</button>
                           ))}
                         </div>
                       </div>
 
                       {[
-                        { key: "enableWeekends",   label: "Enable Weekends",            sub: "Reply on Saturdays and Sundays" },
-                        { key: "ignoreLinks",      label: "Ignore Comments with Links", sub: "Skip comments containing URLs" },
-                        { key: "ignoreEmojisOnly", label: "Ignore Emoji-only",          sub: "Skip emoji-only comments" },
-                        { key: "ignoreBots",       label: "Ignore Bots",               sub: "Auto-detect and skip bot comments" },
+                        { key: "enableWeekends",   label: "Enable Weekends",            sub: "Reply on Saturdays and Sundays",    proOnly: true  },
+                        { key: "ignoreLinks",      label: "Ignore Comments with Links", sub: "Skip comments containing URLs",     proOnly: false },
+                        { key: "ignoreEmojisOnly", label: "Ignore Emoji-only",          sub: "Skip emoji-only comments",          proOnly: true  },
+                        { key: "ignoreBots",       label: "Ignore Bots",               sub: "Auto-detect and skip bot comments",  proOnly: false },
                       ].map(item => (
-                        <div key={item.key} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", gap: 12 }}>
+                        <div key={item.key} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 14px", gap: 12, opacity: item.proOnly && !isPro ? 0.45 : 1 }}>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, fontSize: 14 }}>{item.label}</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ fontWeight: 600, fontSize: 14 }}>{item.label}</span>
+                              {item.proOnly && !isPro && <span style={{ background: "rgba(234,179,8,0.18)", color: "#eab308", borderRadius: 6, fontSize: 9, padding: "2px 6px", fontWeight: 700 }}>PRO</span>}
+                            </div>
                             <div style={{ color: "rgba(255,255,255,0.40)", fontSize: 11, marginTop: 2 }}>{item.sub}</div>
                           </div>
-                          <button onClick={() => setAdvanced(a => ({ ...a, [item.key]: !a[item.key as keyof AdvancedSettings] }))} style={{ background: advanced[item.key as keyof AdvancedSettings] ? "#F59E0B" : "rgba(255,255,255,0.10)", borderRadius: 20, width: 44, height: 24, border: "none", cursor: "pointer", position: "relative", flexShrink: 0, transition: "all 0.2s" }}>
+                          <button
+                            onClick={() => (!item.proOnly || isPro) && setAdvanced(a => ({ ...a, [item.key]: !a[item.key as keyof AdvancedSettings] }))}
+                            style={{ background: advanced[item.key as keyof AdvancedSettings] ? "#F59E0B" : "rgba(255,255,255,0.10)", borderRadius: 20, width: 44, height: 24, border: "none", cursor: (!item.proOnly || isPro) ? "pointer" : "not-allowed", position: "relative", flexShrink: 0, transition: "all 0.2s" }}
+                          >
                             <div style={{ background: "white", borderRadius: "50%", width: 18, height: 18, position: "absolute", top: 3, left: advanced[item.key as keyof AdvancedSettings] ? 23 : 3, transition: "all 0.2s" }} />
                           </button>
                         </div>
